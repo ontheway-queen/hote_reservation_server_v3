@@ -1,0 +1,348 @@
+import { ImUpdateRoomAmenitiesPayload } from "../../../appM360/utlis/interfaces/mHotel.common.interface";
+import { TDB } from "../../../common/types/commontypes";
+import Schema from "../../../utils/miscellaneous/schema";
+
+class MConfigurationModel extends Schema {
+  private db: TDB;
+
+  constructor(db: TDB) {
+    super();
+    this.db = db;
+  }
+
+  public async getAllAccomodation({ status }: { status?: string }) {
+    return await this.db("accomodation_type")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .select("*")
+      .where((query) => {
+        if (status) {
+          query.where("status", status);
+        }
+      });
+  }
+
+  public async getSingleAccomodation(id: number) {
+    return await this.db("accomodation_type")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .select("*")
+      .where({ id });
+  }
+
+  public async insertCity(body: {
+    city_code: number;
+    city_name: string;
+    country_code: string;
+  }) {
+    return await this.db("city").withSchema(this.PUBLIC_SCHEMA).insert(body);
+  }
+
+  public async getAllCity({
+    limit,
+    skip,
+    search,
+    country_code,
+  }: {
+    limit?: number;
+    skip?: number;
+    search?: string;
+    country_code?: string;
+  }) {
+    return await this.db("city")
+      .withSchema(this.PUBLIC_SCHEMA)
+      .select("*")
+      .where((query) => {
+        if (search) {
+          query.where("status", "ilike", `%${search}%`);
+        }
+        if (country_code) {
+          query.where("country_code", country_code);
+        }
+      })
+      .limit(limit || 30)
+      .offset(skip || 0);
+  }
+
+  public async getLastCityCode() {
+    const data = await this.db("city")
+      .withSchema(this.PUBLIC_SCHEMA)
+      .select("city_code")
+      .orderBy("city_code", "desc")
+      .limit(1);
+
+    return data.length ? data[0].city_code : 2025;
+  }
+
+  public async getAllCountry({
+    limit,
+    skip,
+    search,
+  }: {
+    limit?: number;
+    skip?: number;
+    search?: string;
+  }) {
+    return await this.db("country")
+      .withSchema(this.PUBLIC_SCHEMA)
+      .select("*")
+      .where((query) => {
+        if (search) {
+          query
+            .where("country_code_2_letter", "ilike", `%${search}%`)
+            .orWhere("country_name", "ilike", `${search}`);
+        }
+      })
+      .limit(limit || 30)
+      .offset(skip || 0);
+  }
+
+  // create permission group
+  public async createPermissionGroup(body: any) {
+    return await this.db("permission_group")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .insert(body);
+  }
+
+  // get all permission group
+  public async getAllRolePermissionGroup(payload: {
+    name?: string;
+    id?: number;
+  }) {
+    const { id, name } = payload;
+
+    return await this.db("permission_group")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .select("id", "name")
+      .where(function () {
+        if (name) {
+          this.where("name", "like", `%${name}%`);
+        }
+
+        if (id) {
+          this.andWhere({ id });
+        }
+      });
+  }
+
+  // create permission
+  public async createPermission({
+    permission_group_id,
+    name,
+    created_by,
+  }: {
+    permission_group_id: number;
+    name: string[];
+    created_by: number;
+  }) {
+    const insertObj = name.map((item: string) => {
+      return {
+        permission_group_id,
+        name: item,
+        created_by,
+      };
+    });
+
+    return await this.db("permission")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .insert(insertObj);
+  }
+
+  // get all permission
+  public async getAllPermissionByHotel(hotel_code?: number) {
+    const res = await this.db("hotel_permission_view")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .select("*")
+      .where({ hotel_code });
+
+    return res;
+  }
+
+  // get all permission
+  public async getAllPermission() {
+    const res = await this.db("permission AS p")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .select(
+        "p.id AS permission_id",
+        "p.name As permission_name",
+        "p.permission_group_id",
+        "pg.name AS permission_group_name"
+      )
+      .join("permission_group AS pg", "p.permission_group_id", "pg.id");
+    return res;
+  }
+
+  // added hotel permission
+  public async addedHotelPermission(
+    payload: {
+      hotel_code: number;
+      permission_id: number;
+    }[]
+  ) {
+    return await this.db("hotel_permission")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .insert(payload);
+  }
+
+  // create hotel permission
+  public async deleteHotelPermission(
+    hotel_code: number,
+    permission_id: number[]
+  ) {
+    return await this.db("hotel_permission")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .whereIn("permission_id", permission_id)
+      .andWhere({ hotel_code })
+      .delete();
+  }
+
+  // delete hotel hotel role permission
+  public async deleteHotelRolePermission(
+    hotel_code: number,
+    h_permission_id: number[]
+  ) {
+    return await this.db("role_permission")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .whereIn("h_permission_id", h_permission_id)
+      .andWhere({ hotel_code })
+      .delete();
+  }
+
+  // ----------------- room type amenities ------------------ //
+
+  // create Room Amenities
+  public async createRoomTypeAmenitiesHead(payload: {
+    name: string;
+    icon: string;
+  }) {
+    return await this.db("amenities_head")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .insert(payload);
+  }
+
+  // Get All Room Amenities head
+  public async getAllRoomTypeAmenitiesHead(payload: {
+    limit?: string;
+    skip?: string;
+    status?: string;
+    search?: string;
+  }) {
+    const { limit, skip, search, status } = payload;
+
+    const dtbs = this.db("amenities_head");
+
+    if (limit && skip) {
+      dtbs.limit(parseInt(limit as string));
+      dtbs.offset(parseInt(skip as string));
+    }
+
+    const data = await dtbs
+      .withSchema(this.RESERVATION_SCHEMA)
+      .select("id", "name", "icon", "status")
+      .where(function () {
+        if (search) {
+          this.andWhere("name", "like", `%${search}%`);
+        }
+        if (status) {
+          this.andWhere("status", status);
+        }
+      })
+      .orderBy("id", "desc");
+
+    return { data };
+  }
+
+  // Update Room Amenities
+  public async updateRoomTypeAmenitiesHead(
+    id: number,
+    payload: { name: string; status: number }
+  ) {
+    return await this.db("amenities_head")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .where({ id })
+      .update(payload);
+  }
+
+  // create Room Amenities
+  public async createRoomTypeAmenities(payload: {
+    name: string;
+    icon: string;
+    rtahead_id: number;
+  }) {
+    return await this.db("amenities")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .insert(payload);
+  }
+
+  // Get All Room Amenities
+  public async getAllRoomTypeAmenities(payload: {
+    limit?: string;
+    skip?: string;
+    status?: string;
+    search?: string;
+    hotel_code?: number;
+    rt_ids?: number[];
+  }) {
+    const { limit, skip, search, status, rt_ids } = payload;
+
+    const dtbs = this.db("amenities");
+
+    if (limit && skip) {
+      dtbs.limit(parseInt(limit as string));
+      dtbs.offset(parseInt(skip as string));
+    }
+
+    const data = await dtbs
+      .withSchema(this.RESERVATION_SCHEMA)
+      .select("id", "name", "icon", "status")
+      .where(function () {
+        if (search) {
+          this.andWhere("name", "like", `%${search}%`);
+        }
+        if (status) {
+          this.andWhere("status", status);
+        }
+        if (rt_ids) {
+          this.whereIn("id", rt_ids);
+        }
+      })
+      .orderBy("id", "desc");
+
+    const total = await this.db("amenities")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .count("id as total")
+      .where(function () {
+        if (search) {
+          this.andWhere("name", "like", `%${search}%`);
+        }
+        if (status) {
+          this.andWhere("status", status);
+        }
+
+        if (rt_ids) {
+          this.whereIn("id", rt_ids);
+        }
+      });
+
+    return { total: total[0].total, data };
+  }
+
+  // Update Room  type Amenities
+  public async updateRoomTypeAmenities(
+    id: number,
+
+    payload: ImUpdateRoomAmenitiesPayload
+  ) {
+    return await this.db("amenities")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .where({ id })
+      .update(payload);
+  }
+
+  // Delete Room Amenities
+  public async deleteRoomTypeAmenities(id: number) {
+    return await this.db("hotel_room_amenities_head")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .where({ id })
+      .del();
+  }
+}
+export default MConfigurationModel;

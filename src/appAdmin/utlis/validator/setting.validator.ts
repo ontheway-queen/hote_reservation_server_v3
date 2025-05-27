@@ -1,0 +1,547 @@
+import Joi from "joi";
+
+class SettingValidator {
+  // create room Type validation
+  public createRoomTypeValidator = Joi.object({
+    name: Joi.string().required(),
+    description: Joi.string().required(),
+    categories_type_id: Joi.number().required(),
+    base_occupancy: Joi.number().required(),
+    max_occupancy: Joi.number().required(),
+    max_adults: Joi.number().required(),
+    max_children: Joi.number().required(),
+    bed_count: Joi.number().required(),
+    area: Joi.number().required(),
+    room_info: Joi.string().required(),
+    rt_amenities: Joi.string().required(),
+
+    beds: Joi.alternatives()
+      .try(
+        Joi.array().items(
+          Joi.object({
+            bed_type_id: Joi.number().required(),
+            quantity: Joi.number().min(1).required(),
+          })
+        ),
+        Joi.string().custom((value, helpers) => {
+          try {
+            const parsed = JSON.parse(value);
+
+            if (!Array.isArray(parsed)) return helpers.error("any.invalid");
+
+            for (const item of parsed) {
+              if (
+                typeof item !== "object" ||
+                typeof item.bed_type_id !== "number" ||
+                typeof item.quantity !== "number" ||
+                item.quantity < 1
+              ) {
+                return helpers.error("any.invalid");
+              }
+            }
+
+            return parsed;
+          } catch {
+            return helpers.error("any.invalid");
+          }
+        })
+      )
+      .required(),
+  });
+
+  // create room Type Categories  validation
+  public createRoomTypeCategoriesValidator = Joi.object({
+    name: Joi.string().required(),
+  });
+
+  // get all room Type query validator
+  public getAllRoomTypeQueryValidator = Joi.object({
+    limit: Joi.string().allow("").optional(),
+    skip: Joi.string().allow("").optional(),
+    search: Joi.string().allow("").optional(),
+    is_active: Joi.boolean().optional(),
+  });
+
+  // update room type validation
+  public updateRoomTypeValidator = Joi.object({
+    name: Joi.string().optional(),
+    description: Joi.string().optional(),
+    categories_type_id: Joi.number().optional(),
+    base_occupancy: Joi.number().optional(),
+    max_occupancy: Joi.number().optional(),
+    max_adults: Joi.number().optional(),
+    max_children: Joi.number().optional(),
+    bed_count: Joi.number().optional(),
+    area: Joi.number().optional(),
+    room_info: Joi.string().optional(),
+    rt_amenities: Joi.string().optional(),
+    beds: Joi.alternatives()
+      .try(
+        Joi.array().items(
+          Joi.object({
+            bed_type_id: Joi.number().required(),
+            quantity: Joi.number().min(1).required(),
+          })
+        ),
+        Joi.string().custom((value, helpers) => {
+          try {
+            const parsed = JSON.parse(value);
+
+            if (!Array.isArray(parsed)) return helpers.error("any.invalid");
+
+            for (const item of parsed) {
+              if (
+                typeof item !== "object" ||
+                typeof item.bed_type_id !== "number" ||
+                typeof item.quantity !== "number" ||
+                item.quantity < 1
+              ) {
+                return helpers.error("any.invalid");
+              }
+            }
+
+            return parsed;
+          } catch {
+            return helpers.error("any.invalid");
+          }
+        })
+      )
+      .optional(),
+    remove_beds: Joi.alternatives()
+      .try(
+        Joi.array().items(Joi.number().required()),
+        Joi.string().custom((value, helpers) => {
+          try {
+            const parsed = JSON.parse(value);
+
+            if (!Array.isArray(parsed)) {
+              return helpers.error("any.invalid");
+            }
+
+            if (
+              parsed.some((item) => typeof item !== "number" || isNaN(item))
+            ) {
+              return helpers.error("any.invalid");
+            }
+
+            return parsed;
+          } catch {
+            return helpers.error("any.invalid");
+          }
+        })
+      )
+      .optional(),
+    remove_photos: Joi.alternatives()
+      .try(
+        Joi.array().items(Joi.number().required()),
+        Joi.string().custom((value, helpers) => {
+          try {
+            const parsed = JSON.parse(value);
+
+            if (!Array.isArray(parsed)) {
+              return helpers.error("any.invalid");
+            }
+
+            if (
+              parsed.some((item) => typeof item !== "number" || isNaN(item))
+            ) {
+              return helpers.error("any.invalid");
+            }
+
+            return parsed;
+          } catch {
+            return helpers.error("any.invalid");
+          }
+        })
+      )
+      .optional(),
+  });
+
+  // update room type Categories validation
+  public UpdateRoomTypeCategoriesValidator = Joi.object({
+    name: Joi.string().optional(),
+    is_active: Joi.boolean().optional(),
+  });
+
+  //=================== Bed Type validation ======================//
+
+  // create bed Type validation
+  public createBedTypeValidator = Joi.object({
+    name: Joi.string().required(),
+    width: Joi.number().optional(),
+    height: Joi.number().optional(),
+    unit: Joi.string().optional(),
+  });
+
+  // get all Bed Type query validator
+  public getAllBedTypeQueryValidator = Joi.object({
+    limit: Joi.string().allow("").optional(),
+    skip: Joi.string().allow("").optional(),
+    bed_type: Joi.string().allow("").optional(),
+    status: Joi.string().allow("").optional(),
+  });
+
+  // update bed type validation
+  public UpdateBedTypeValidator = Joi.object({
+    name: Joi.string().optional(),
+    width: Joi.number().allow("").optional(),
+    height: Joi.number().allow("").optional(),
+    unit: Joi.string().allow("").optional(),
+    status: Joi.boolean().optional(),
+  });
+
+  //=================== Bank Name validation ======================//
+
+  // create Bank Name
+  public createBankNameValidator = Joi.object({
+    name: Joi.string().allow("").required(),
+  });
+
+  // get all Bank Name
+  public getAllBankNameQueryValidator = Joi.object({
+    limit: Joi.string().allow("").optional(),
+    skip: Joi.string().allow("").optional(),
+    name: Joi.string().allow("").optional(),
+  });
+
+  // update Bank Name
+  public UpdateBankNameValidator = Joi.object({
+    name: Joi.string().required(),
+    status: Joi.number().valid(0, 1).optional(),
+  });
+
+  //=================== designation validation ======================//
+
+  // create designation validation
+  public createdesignationValidator = Joi.object({
+    name: Joi.string().allow("").required(),
+  });
+
+  // get all designation query validation
+  public getAlldesignationQueryValidator = Joi.object({
+    limit: Joi.string().allow("").optional(),
+    skip: Joi.string().allow("").optional(),
+    name: Joi.string().allow("").optional(),
+    status: Joi.string().allow("").optional(),
+  });
+
+  // update designation validation
+  public UpdatedesignationValidator = Joi.object({
+    name: Joi.string().required(),
+    status: Joi.number().valid(0, 1).optional(),
+  });
+
+  //=================== department validation ======================//
+
+  // create department validation
+  public createdepartmentValidator = Joi.object({
+    name: Joi.string().allow("").required(),
+  });
+
+  // get all department query validation
+  public getAlldepartmentQueryValidator = Joi.object({
+    limit: Joi.string().allow("").optional(),
+    skip: Joi.string().allow("").optional(),
+    name: Joi.string().allow("").optional(),
+    status: Joi.string().allow("").optional(),
+  });
+
+  // update department validation
+  public UpdatedepatmentValidator = Joi.object({
+    name: Joi.string().required(),
+    status: Joi.number().valid(0, 1).optional(),
+  });
+
+  //=================== Hall Amenities validation ======================//
+
+  // create Hall Amenities validation
+  public createHallAmenitiesValidator = Joi.object({
+    name: Joi.string().allow("").required(),
+    description: Joi.string().allow("").optional(),
+  });
+
+  // get all Hall Amenities query validator
+  public getAllHallAmenitiesQueryValidator = Joi.object({
+    limit: Joi.string().allow("").optional(),
+    skip: Joi.string().allow("").optional(),
+    name: Joi.string().allow("").optional(),
+    status: Joi.string().allow("").optional(),
+  });
+
+  // update Hall Amenities validation
+  public UpdateHallAmenitiesValidator = Joi.object({
+    name: Joi.string().required(),
+    description: Joi.string().allow("").optional(),
+    status: Joi.number().valid(0, 1).optional(),
+  });
+
+  //=================== PayRoll Months validation ======================//
+
+  // create PayRoll Months validation
+  public createPayRollMonthsValidator = Joi.object({
+    name: Joi.string().allow("").required(),
+    days: Joi.number().optional(),
+    hours: Joi.number().allow("").required(),
+  });
+
+  // get all PayRoll Months query validation
+  public getAllPayrollMonthsQueryValidator = Joi.object({
+    limit: Joi.string().allow("").optional(),
+    skip: Joi.string().allow("").optional(),
+    name: Joi.string().allow("").optional(),
+  });
+
+  // update PayRoll Months validation
+  public UpdatePayrollMonthsValidator = Joi.object({
+    name: Joi.string().allow("").optional(),
+    days: Joi.number().optional(),
+    hours: Joi.number().allow("").optional(),
+  });
+
+  //=================== Common Module validation ======================//
+
+  // create Common validation
+  public createCommonModuleValidator = Joi.object({
+    name: Joi.string().allow("").required(),
+    description: Joi.string().allow("").optional(),
+  });
+
+  // get all Common query validator
+  public getAllCommonModuleQueryValidator = Joi.object({
+    limit: Joi.string().allow("").optional(),
+    skip: Joi.string().allow("").optional(),
+    name: Joi.string().allow("").optional(),
+    status: Joi.string().allow("").optional(),
+  });
+
+  // update Common validation
+  public UpdateCommonModuleValidator = Joi.object({
+    name: Joi.string().required(),
+    description: Joi.string().allow("").optional(),
+    status: Joi.number().valid(0, 1).optional(),
+  });
+
+  //----------------------- Accomodation -------------------//
+  public insertAccomodationValidator = Joi.object({
+    check_in_time: Joi.string().required(),
+    check_out_time: Joi.string().required(),
+    has_child_rates: Joi.boolean().required(),
+    child_age_policies: Joi.array()
+      .items(
+        Joi.object({
+          age_from: Joi.number().required(),
+          age_to: Joi.number().required(),
+          charge_type: Joi.string()
+            .allow("free", "fixed", "percentage", "same_as_adult")
+            .required(),
+        })
+      )
+      .optional(),
+  });
+
+  public updateAccomodationValidator = Joi.object({
+    check_in_time: Joi.string().optional(),
+    check_out_time: Joi.string().optional(),
+    has_child_rates: Joi.boolean().optional(),
+    add_child_age_policies: Joi.array()
+      .items(
+        Joi.object({
+          age_from: Joi.number().required(),
+          age_to: Joi.number().required(),
+          charge_type: Joi.string()
+            .allow("free", "fixed", "percentage", "same_as_adult")
+            .required(),
+        })
+      )
+      .optional(),
+    remove_child_age_policies: Joi.array()
+      .items(Joi.number().required())
+      .optional(),
+  });
+
+  //----------------------- Cancellation  -------------------//
+
+  public insertCancellationPolicyValidator = Joi.object({
+    policy_name: Joi.string().required(),
+    description: Joi.string().required(),
+    rules: Joi.array()
+      .items(
+        Joi.object({
+          days_before: Joi.number().required(),
+          rule_type: Joi.string().allow("free", "charge", "no_show").required(),
+          fee_type: Joi.string().allow("fixed", "percentage").optional(),
+          fee_value: Joi.number().optional(),
+        })
+      )
+      .required(),
+  });
+
+  public updateCancellationPolicyValidator = Joi.object({
+    policy_name: Joi.string().optional(),
+    description: Joi.string().optional(),
+    // add_rules: Joi.array()
+    //   .items(
+    //     Joi.object({
+    //       days_before: Joi.number().required(),
+    //       rule_type: Joi.string().allow("free", "charge", "no_show").required(),
+    //       fee_type: Joi.string().allow("fixed", "percentage").optional(),
+    //       fee_value: Joi.number().optional(),
+    //     })
+    //   )
+    //   .optional(),
+    status: Joi.boolean().optional(),
+    // remove_rules: Joi.array().items(Joi.number().required()).optional(),
+  });
+
+  // room rates
+  public createRoomRateValidator = Joi.object({
+    name: Joi.string().required(),
+    cancellation_policy_id: Joi.number().integer().required(),
+    sources: Joi.array().items(Joi.number().integer().required()).optional(),
+    meal_plan_items: Joi.array()
+      .items(Joi.number().integer().required())
+      .optional(),
+    room_type_prices: Joi.array()
+      .items(
+        Joi.object({
+          room_type_id: Joi.number().integer().required(),
+          base_rate: Joi.number().precision(2).min(0).required(),
+          extra_adult_rate: Joi.number()
+            .default(0)
+            .precision(2)
+            .min(0)
+            .optional(),
+          extra_child_rate: Joi.number()
+            .default(0)
+            .precision(2)
+            .min(0)
+            .optional(),
+          child_rate_groups: Joi.array()
+            .items(
+              Joi.object({
+                age_from: Joi.number().integer().min(0).required(),
+                age_to: Joi.number()
+                  .integer()
+                  .min(Joi.ref("age_from"))
+                  .required(),
+                rate_type: Joi.string()
+                  .valid("fixed", "percentage", "free")
+                  .required(),
+                rate_value: Joi.number().precision(2).min(0).required(),
+              })
+            )
+            .optional(),
+          specific_dates: Joi.array()
+            .items(
+              Joi.object({
+                date: Joi.array().items(Joi.string()).required(),
+                type: Joi.string()
+                  .valid("for_all_specific_day", "specific_day")
+                  .required(),
+                rate: Joi.number().precision(2).min(0).required(),
+                extra_adult_rate: Joi.number()
+                  .precision(2)
+                  .min(0)
+                  .optional()
+                  .default(0),
+                extra_child_rate: Joi.number()
+                  .precision(2)
+                  .min(0)
+                  .optional()
+                  .default(0),
+              })
+            )
+            .optional(),
+        })
+      )
+      .required(),
+  });
+
+  public updateRoomRateValidator = Joi.object({
+    name: Joi.string().required(),
+    cancellation_policy_id: Joi.number().integer().required(),
+    sources: Joi.array().items(Joi.number().integer().required()).optional(),
+    meal_plan_items: Joi.array()
+      .items(Joi.number().integer().required())
+      .optional(),
+
+    room_type_prices: Joi.array()
+      .items(
+        Joi.object({
+          room_type_id: Joi.number().integer().required(),
+          base_rate: Joi.number().precision(2).min(0).required(),
+          extra_adult_rate: Joi.number().precision(2).min(0).required(),
+          extra_child_rate: Joi.number().precision(2).min(0).required(),
+          child_rate_groups: Joi.array()
+            .items(
+              Joi.object({
+                age_from: Joi.number().integer().min(0).required(),
+                age_to: Joi.number()
+                  .integer()
+                  .min(Joi.ref("age_from"))
+                  .required(),
+                rate_type: Joi.string()
+                  .valid("fixed", "percentage", "free")
+                  .required(),
+                rate_value: Joi.number().precision(2).min(0).required(),
+              })
+            )
+            .optional(),
+
+          specific_dates: Joi.array()
+            .items(
+              Joi.object({
+                date: Joi.array().items(Joi.string()).required(),
+                type: Joi.string()
+                  .valid("for_all_specific_day", "specific_day")
+                  .required(),
+                rate: Joi.number().precision(2).min(0).required(),
+                extra_adult_rate: Joi.number().precision(2).min(0).optional(),
+                extra_child_rate: Joi.number().precision(2).min(0).optional(),
+              })
+            )
+            .optional(),
+        })
+      )
+      .required(),
+  });
+
+  public roomBookingMealOption = Joi.object({
+    is_possible_book_meal_opt_with_room: Joi.boolean().optional(),
+    add_meal_items: Joi.array()
+      .items(
+        Joi.object({
+          meal_plan_id: Joi.number().integer().required(),
+          price: Joi.number().required(),
+          vat: Joi.number().required(),
+        })
+      )
+      .optional(),
+    update_meal_items: Joi.array()
+      .items(
+        Joi.object({
+          meal_plan_id: Joi.number().integer().required(),
+          price: Joi.number().required(),
+          vat: Joi.number().required(),
+        })
+      )
+      .optional(),
+    remove_meal_items: Joi.array().items(Joi.number().required()).optional(),
+  });
+
+  public updateRoomBookingMealOption = Joi.object({
+    is_possible_book_meal_opt_with_room: Joi.string().optional(),
+    add_meal_items: Joi.array()
+      .items(
+        Joi.object({
+          meal_plan_id: Joi.number().integer().required(),
+          price: Joi.number().required(),
+          vat: Joi.number().required(),
+        })
+      )
+      .optional(),
+
+    remove_meal_items: Joi.array().items(Joi.number().required()).optional(),
+  });
+}
+export default SettingValidator;

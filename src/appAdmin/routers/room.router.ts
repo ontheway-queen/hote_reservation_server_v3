@@ -1,0 +1,38 @@
+import AbstractRouter from "../../abstarcts/abstract.router";
+import RoomController from "../controllers/room.controller";
+
+class RoomRouter extends AbstractRouter {
+  private roomController;
+  constructor() {
+    super();
+    this.roomController = new RoomController();
+    this.callRouter();
+  }
+  private callRouter() {
+    this.router
+      .route("/")
+      .post(
+        this.uploader.cloudUploadRaw(this.fileFolders.ROOM_FILES),
+        this.roomController.createroom
+      )
+      .get(this.roomController.getAllRoom);
+
+    this.router
+      .route("/by/room-types")
+      .get(this.roomController.getAllRoomByRoomTypes);
+
+    this.router.route("/search").get(this.roomController.getAllAvailableRooms);
+
+    this.router
+      .route("/status/:room_id")
+      .patch(this.roomController.updateHotelRoomStatus);
+
+    this.router
+      .route("/:room_id")
+      .patch(
+        this.uploader.cloudUploadRaw(this.fileFolders.ROOM_FILES),
+        this.roomController.updateHotelRoom
+      );
+  }
+}
+export default RoomRouter;
