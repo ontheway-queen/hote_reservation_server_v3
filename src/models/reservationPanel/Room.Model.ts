@@ -167,6 +167,8 @@ class RoomModel extends Schema {
     const { limit, skip, hotel_code, room_type_id, search, exact_name } =
       payload;
 
+    console.log("here");
+
     const dtbs = this.db("room_types as rt");
 
     const data = await dtbs
@@ -174,37 +176,37 @@ class RoomModel extends Schema {
       .select(
         "rt.id",
         "rt.name",
-        "rt.base_occupancy",
-        "rt.max_occupancy",
-        "rt.max_adults",
-        "rt.max_children",
         "rt.name as room_type_name",
         this.db.raw(
-          `(SELECT JSON_AGG(JSON_BUILD_OBJECT('id', r.id, 'room_name', r.room_name, 'status',r.status) ) )AS rooms`
+          `COALESCE(
+          JSON_AGG(
+            CASE
+              WHEN r.id IS NOT NULL AND r.status != 'out_of_service' THEN
+                JSON_BUILD_OBJECT('id', r.id, 'room_name', r.room_name, 'status', r.status)
+            END
+          ) FILTER (WHERE r.id IS NOT NULL AND r.status != 'out_of_service'),
+          '[]'
+        ) AS rooms`
         )
       )
+      .from("room_types as rt")
       .leftJoin("rooms as r", "rt.id", "r.room_type_id")
       .where("rt.is_active", true)
+      .andWhere("rt.hotel_code", hotel_code)
+      .groupBy("rt.id", "rt.name")
+      .orderBy("rt.name", "asc");
+
+    const total = await this.db("room_types as rt")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .count("rt.id as total")
+      .leftJoin("rooms as r", "rt.id", "r.room_type_id")
+      .where("rt.is_active", true)
+      .where("rt.hotel_code", hotel_code)
       .andWhereNot("r.status", "out_of_service")
       .orderBy("rt.name", "asc")
       .groupBy("rt.id", "r.room_type_id");
 
-    const total = await this.db("room_types as rt")
-      .withSchema(this.RESERVATION_SCHEMA)
-      .select(
-        "rt.id",
-        "rt.name",
-        "rt.base_occupancy",
-        "rt.max_occupancy",
-        "rt.max_adults",
-        "rt.max_children",
-        "rt.name as room_type_name"
-      )
-      .leftJoin("rooms as r", "rt.id", "r.room_type_id")
-      .where("rt.is_active", true)
-      .orderBy("id", "desc");
-
-    return { data, total: total[0].total };
+    return { data, total: total[0]?.total };
   }
 
   public async getSingleRoom(hotel_code: number, room_id: number) {

@@ -6,15 +6,9 @@ class SettingValidator {
     name: Joi.string().required(),
     description: Joi.string().required(),
     categories_type_id: Joi.number().required(),
-    base_occupancy: Joi.number().required(),
-    max_occupancy: Joi.number().required(),
-    max_adults: Joi.number().required(),
-    max_children: Joi.number().required(),
-    bed_count: Joi.number().required(),
     area: Joi.number().required(),
     room_info: Joi.string().required(),
     rt_amenities: Joi.string().required(),
-
     beds: Joi.alternatives()
       .try(
         Joi.array().items(
@@ -325,12 +319,12 @@ class SettingValidator {
   public insertAccomodationValidator = Joi.object({
     check_in_time: Joi.string().required(),
     check_out_time: Joi.string().required(),
-    has_child_rates: Joi.boolean().required(),
     child_age_policies: Joi.array()
       .items(
         Joi.object({
           age_from: Joi.number().required(),
           age_to: Joi.number().required(),
+          charge_value: Joi.number().required(),
           charge_type: Joi.string()
             .allow("free", "fixed", "percentage", "same_as_adult")
             .required(),
@@ -348,6 +342,7 @@ class SettingValidator {
         Joi.object({
           age_from: Joi.number().required(),
           age_to: Joi.number().required(),
+          charge_value: Joi.number().required(),
           charge_type: Joi.string()
             .allow("free", "fixed", "percentage", "same_as_adult")
             .required(),

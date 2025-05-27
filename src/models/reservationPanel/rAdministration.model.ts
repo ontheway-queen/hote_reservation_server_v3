@@ -221,7 +221,6 @@ class RAdministrationModel extends Schema {
       )
       .withSchema(this.RESERVATION_SCHEMA)
       .join("hotels as h", "ua.hotel_code", "h.hotel_code")
-      .join("hotel_others_info as hoi", "ua.hotel_code", "h.hotel_code")
       .join("roles AS r", "ua.role", "r.id")
       .where(function () {
         if (id) {

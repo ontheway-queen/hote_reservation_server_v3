@@ -33,7 +33,7 @@ class SettingRootService extends abstract_service_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
                 const { hotel_code } = req.hotel_admin;
-                const _a = req.body, { child_age_policies, has_child_rates } = _a, rest = __rest(_a, ["child_age_policies", "has_child_rates"]);
+                const _a = req.body, { child_age_policies } = _a, rest = __rest(_a, ["child_age_policies"]);
                 const model = this.Model.settingModel(trx);
                 // get accomodation
                 const getAccomodation = yield model.getAccomodation(hotel_code);
@@ -45,15 +45,15 @@ class SettingRootService extends abstract_service_1.default {
                     };
                 }
                 // insert in accomodation
-                const res = yield model.insertAccomodationSetting(Object.assign(Object.assign({}, rest), { hotel_code,
-                    has_child_rates }));
+                const res = yield model.insertAccomodationSetting(Object.assign(Object.assign({}, rest), { hotel_code }));
                 // insert in child age policies
-                if (has_child_rates && child_age_policies) {
+                if (child_age_policies) {
                     const payload = child_age_policies.map((item) => {
                         return {
                             hotel_code,
                             age_from: item.age_from,
                             age_to: item.age_to,
+                            charge_value: item.charge_value,
                             charge_type: item.charge_type,
                             acs_id: res[0].id,
                         };
@@ -63,7 +63,7 @@ class SettingRootService extends abstract_service_1.default {
                 return {
                     success: true,
                     code: this.StatusCode.HTTP_OK,
-                    message: this.StatusCode.HTTP_OK,
+                    message: this.ResMsg.HTTP_OK,
                 };
             }));
         });
@@ -85,7 +85,7 @@ class SettingRootService extends abstract_service_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
                 const { hotel_code } = req.hotel_admin;
-                const _a = req.body, { add_child_age_policies, has_child_rates, remove_child_age_policies } = _a, rest = __rest(_a, ["add_child_age_policies", "has_child_rates", "remove_child_age_policies"]);
+                const _a = req.body, { add_child_age_policies, remove_child_age_policies } = _a, rest = __rest(_a, ["add_child_age_policies", "remove_child_age_policies"]);
                 const model = this.Model.settingModel(trx);
                 // get accomodation
                 const getAccomodation = yield model.getAccomodation(hotel_code);
@@ -96,15 +96,18 @@ class SettingRootService extends abstract_service_1.default {
                         message: this.ResMsg.HTTP_NOT_FOUND,
                     };
                 }
-                yield model.updateAccomodationSetting(hotel_code, Object.assign(Object.assign({}, rest), { has_child_rates }));
+                if (rest.check_in_time || rest.check_out_time) {
+                    yield model.updateAccomodationSetting(hotel_code, Object.assign({}, rest));
+                }
                 // insert in child age policies
-                if (has_child_rates && add_child_age_policies) {
+                if (add_child_age_policies) {
                     const payload = add_child_age_policies.map((item) => {
                         return {
                             hotel_code,
                             age_from: item.age_from,
                             age_to: item.age_to,
                             charge_type: item.charge_type,
+                            charge_value: item.charge_value,
                             acs_id: getAccomodation[0].id,
                         };
                     });

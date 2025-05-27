@@ -20,7 +20,6 @@ class RoomSettingService extends AbstractServices {
       const { beds, rt_amenities, categories_type_id, ...rest } =
         req.body as ICreateRoomTypeBodyPayload;
 
-      const configModel = this.Model.mConfigurationModel(trx);
       const settingModel = this.Model.settingModel(trx);
 
       // check room type by name
@@ -56,13 +55,8 @@ class RoomSettingService extends AbstractServices {
 
       // insert in room type
       const roomTypeRes = await settingModel.createRoomType({
-        base_occupancy: rest.base_occupancy,
-        bed_count: rest.bed_count,
         description: rest.description,
         hotel_code,
-        max_adults: rest.max_adults,
-        max_children: rest.max_children,
-        max_occupancy: rest.max_occupancy,
         categories_type_id,
         name: rest.name,
         room_info: rest.room_info,

@@ -38,7 +38,7 @@ class SettingModel extends schema_1.default {
             }
             const data = yield dtbs
                 .withSchema(this.RESERVATION_SCHEMA)
-                .select("rt.id", "rt.name", "rt.area", "rt.base_occupancy", "rt.max_occupancy", "rt.max_adults", "rt.max_children", "rtc.name as rt_category_name", "rt.is_active")
+                .select("rt.id", "rt.name", "rt.area", "rtc.name as rt_category_name", "rt.is_active")
                 .join("room_type_categories as rtc", "rt.categories_type_id", "rtc.id")
                 .where(function () {
                 this.andWhere("rt.hotel_code", hotel_code);
@@ -76,7 +76,7 @@ class SettingModel extends schema_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("room_types as rt")
                 .withSchema(this.RESERVATION_SCHEMA)
-                .select("rt.id", "rt.name", "rt.area", "rta.rt_amenities", "rtc.name as rt_category_name", "rt.is_active", "rt.description", "rt.base_occupancy", "rt.max_occupancy", "rt.max_adults", "rt.max_children", "rt.area", "rt.bed_count", "rt.is_active", "rt.room_info", "rt.categories_type_id", this.db.raw(`
+                .select("rt.id", "rt.name", "rt.area", "rta.rt_amenities", "rtc.name as rt_category_name", "rt.is_active", "rt.description", "rt.area", "rt.is_active", "rt.room_info", "rt.categories_type_id", this.db.raw(`
         JSON_AGG(DISTINCT JSONB_BUILD_OBJECT(
           'bed_type_id', bt.id,
           'bed_type_name', bt.name,
@@ -335,7 +335,7 @@ class SettingModel extends schema_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("accommodation_settings as acs")
                 .withSchema(this.RESERVATION_SCHEMA)
-                .select("acs.id", "acs.check_in_time", "acs.check_out_time", "acs.has_child_rates", this.db.raw(`
+                .select("acs.id", "acs.check_in_time", "acs.check_out_time", this.db.raw(`
           COALESCE(JSON_AGG(
             JSON_BUILD_OBJECT(
               'id', cap.id,

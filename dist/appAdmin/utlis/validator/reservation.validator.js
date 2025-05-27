@@ -7,15 +7,9 @@ exports.ReservationValidator = void 0;
 const joi_1 = __importDefault(require("joi"));
 class ReservationValidator {
     constructor() {
-        this.getAvailableRoomsValidator = joi_1.default.object({
-            booking_type: joi_1.default.string().allow("single", "group").required(),
+        this.getAvailableRoomsQueryValidator = joi_1.default.object({
             check_in: joi_1.default.date().required(),
             check_out: joi_1.default.date().required(),
-            rooms: joi_1.default.array().items(joi_1.default.object({
-                adults: joi_1.default.number().required(),
-                children: joi_1.default.number().required(),
-                children_ages: joi_1.default.array().items(joi_1.default.number().required()).optional(),
-            })),
         });
         this.createBookingValidator = joi_1.default.object({
             hotel_code: joi_1.default.string().required(),

@@ -1,16 +1,8 @@
 import Joi from "joi";
 export class ReservationValidator {
-  public getAvailableRoomsValidator = Joi.object({
-    booking_type: Joi.string().allow("single", "group").required(),
+  public getAvailableRoomsQueryValidator = Joi.object({
     check_in: Joi.date().required(),
     check_out: Joi.date().required(),
-    rooms: Joi.array().items(
-      Joi.object({
-        adults: Joi.number().required(),
-        children: Joi.number().required(),
-        children_ages: Joi.array().items(Joi.number().required()).optional(),
-      })
-    ),
   });
 
   public createBookingValidator = Joi.object({

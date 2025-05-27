@@ -32,16 +32,23 @@ class ReservationController extends abstract_controller_1.default {
         super();
         this.service = new reservation_service_1.default();
         this.validator = new reservation_validator_1.ReservationValidator();
-        this.getAllAvailableRooms = this.asyncWrapper.wrap({
-            bodySchema: this.validator.getAvailableRoomsValidator,
+        this.getAllAvailableRoomsTypeWithAvailableRoomCount = this.asyncWrapper.wrap({
+            querySchema: this.validator.getAvailableRoomsQueryValidator,
         }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _a = yield this.service.getAllAvailableRooms(req), { code } = _a, data = __rest(_a, ["code"]);
+            const _a = yield this.service.getAllAvailableRoomsTypeWithAvailableRoomCount(req), { code } = _a, data = __rest(_a, ["code"]);
+            res.status(code).json(data);
+        }));
+        this.getAllAvailableRoomsByRoomType = this.asyncWrapper.wrap({
+            paramSchema: this.commonValidator.singleParamValidator(),
+            querySchema: this.validator.getAvailableRoomsQueryValidator,
+        }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _b = yield this.service.getAllAvailableRoomsByRoomType(req), { code } = _b, data = __rest(_b, ["code"]);
             res.status(code).json(data);
         }));
         this.createBooking = this.asyncWrapper.wrap({
             bodySchema: this.validator.createBookingValidator,
         }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _b = yield this.service.createBooking(req), { code } = _b, data = __rest(_b, ["code"]);
+            const _c = yield this.service.createBooking(req), { code } = _c, data = __rest(_c, ["code"]);
             res.status(code).json(data);
         }));
     }

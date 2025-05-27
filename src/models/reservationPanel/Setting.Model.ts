@@ -63,10 +63,6 @@ class SettingModel extends Schema {
         "rt.id",
         "rt.name",
         "rt.area",
-        "rt.base_occupancy",
-        "rt.max_occupancy",
-        "rt.max_adults",
-        "rt.max_children",
         "rtc.name as rt_category_name",
         "rt.is_active"
       )
@@ -119,12 +115,7 @@ class SettingModel extends Schema {
         "rtc.name as rt_category_name",
         "rt.is_active",
         "rt.description",
-        "rt.base_occupancy",
-        "rt.max_occupancy",
-        "rt.max_adults",
-        "rt.max_children",
         "rt.area",
-        "rt.bed_count",
         "rt.is_active",
         "rt.room_info",
         "rt.categories_type_id",
@@ -430,7 +421,6 @@ class SettingModel extends Schema {
   public async insertAccomodationSetting(payload: {
     check_in_time: string;
     check_out_time: string;
-    has_child_rates: boolean;
     hotel_code: number;
   }) {
     return await this.db("accommodation_settings")
@@ -443,7 +433,6 @@ class SettingModel extends Schema {
     payload: {
       check_in_time: string;
       check_out_time: string;
-      has_child_rates: boolean;
     }
   ) {
     return await this.db("accommodation_settings")
@@ -458,6 +447,7 @@ class SettingModel extends Schema {
       age_from: number;
       age_to: number;
       charge_type: "fixed" | "free" | "percentage" | "same_as_adult";
+      charge_value: number;
       acs_id: number;
     }[]
   ) {
@@ -473,7 +463,6 @@ class SettingModel extends Schema {
         "acs.id",
         "acs.check_in_time",
         "acs.check_out_time",
-        "acs.has_child_rates",
         this.db.raw(`
           COALESCE(JSON_AGG(
             JSON_BUILD_OBJECT(

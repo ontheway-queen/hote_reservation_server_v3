@@ -10,12 +10,28 @@ export class ReservationController extends AbstractController {
     super();
   }
 
-  public getAllAvailableRooms = this.asyncWrapper.wrap(
+  public getAllAvailableRoomsTypeWithAvailableRoomCount =
+    this.asyncWrapper.wrap(
+      {
+        querySchema: this.validator.getAvailableRoomsQueryValidator,
+      },
+      async (req: Request, res: Response) => {
+        const { code, ...data } =
+          await this.service.getAllAvailableRoomsTypeWithAvailableRoomCount(
+            req
+          );
+        res.status(code).json(data);
+      }
+    );
+
+  public getAllAvailableRoomsByRoomType = this.asyncWrapper.wrap(
     {
-      bodySchema: this.validator.getAvailableRoomsValidator,
+      paramSchema: this.commonValidator.singleParamValidator(),
+      querySchema: this.validator.getAvailableRoomsQueryValidator,
     },
     async (req: Request, res: Response) => {
-      const { code, ...data } = await this.service.getAllAvailableRooms(req);
+      const { code, ...data } =
+        await this.service.getAllAvailableRoomsByRoomType(req);
       res.status(code).json(data);
     }
   );

@@ -18,7 +18,7 @@ export class SettingRootService extends AbstractServices {
   public async insertAccomodation(req: Request) {
     return await this.db.transaction(async (trx) => {
       const { hotel_code } = req.hotel_admin;
-      const { child_age_policies, has_child_rates, ...rest } =
+      const { child_age_policies, ...rest } =
         req.body as IAccomodationReqBodyPayload;
 
       const model = this.Model.settingModel(trx);
@@ -38,16 +38,16 @@ export class SettingRootService extends AbstractServices {
       const res = await model.insertAccomodationSetting({
         ...rest,
         hotel_code,
-        has_child_rates,
       });
 
       // insert in child age policies
-      if (has_child_rates && child_age_policies) {
+      if (child_age_policies) {
         const payload = child_age_policies.map((item) => {
           return {
             hotel_code,
             age_from: item.age_from,
             age_to: item.age_to,
+            charge_value: item.charge_value,
             charge_type: item.charge_type,
             acs_id: res[0].id,
           };
@@ -59,7 +59,7 @@ export class SettingRootService extends AbstractServices {
       return {
         success: true,
         code: this.StatusCode.HTTP_OK,
-        message: this.StatusCode.HTTP_OK,
+        message: this.ResMsg.HTTP_OK,
       };
     });
   }
@@ -83,12 +83,8 @@ export class SettingRootService extends AbstractServices {
   public async updateAccomodation(req: Request) {
     return await this.db.transaction(async (trx) => {
       const { hotel_code } = req.hotel_admin;
-      const {
-        add_child_age_policies,
-        has_child_rates,
-        remove_child_age_policies,
-        ...rest
-      } = req.body as IAccomodationUpdateReqBodyPayload;
+      const { add_child_age_policies, remove_child_age_policies, ...rest } =
+        req.body as IAccomodationUpdateReqBodyPayload;
 
       const model = this.Model.settingModel(trx);
 
@@ -103,19 +99,21 @@ export class SettingRootService extends AbstractServices {
         };
       }
 
-      await model.updateAccomodationSetting(hotel_code, {
-        ...rest,
-        has_child_rates,
-      });
+      if (rest.check_in_time || rest.check_out_time) {
+        await model.updateAccomodationSetting(hotel_code, {
+          ...rest,
+        });
+      }
 
       // insert in child age policies
-      if (has_child_rates && add_child_age_policies) {
+      if (add_child_age_policies) {
         const payload = add_child_age_policies.map((item) => {
           return {
             hotel_code,
             age_from: item.age_from,
             age_to: item.age_to,
             charge_type: item.charge_type,
+            charge_value: item.charge_value,
             acs_id: getAccomodation[0].id,
           };
         });

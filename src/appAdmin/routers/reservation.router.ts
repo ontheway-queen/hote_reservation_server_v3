@@ -13,16 +13,11 @@ export class ReservationRouter {
 
   private callRouter() {
     this.router
-      .route("/availability/search")
-      .post(this.controller.getAllAvailableRooms);
-
-    // booking
+      .route("/room-type/availability/search")
+      .get(this.controller.getAllAvailableRoomsTypeWithAvailableRoomCount);
 
     this.router
-      .route("/booking")
-      .post(
-        this.authChecker.hotelAdminAuthChecker,
-        this.controller.createBooking
-      );
+      .route("/available-room/by/room-type/:id")
+      .get(this.controller.getAllAvailableRoomsByRoomType);
   }
 }

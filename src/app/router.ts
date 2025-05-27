@@ -1,7 +1,6 @@
 import { Router } from "express";
 import { ReservationRootRouter } from "../appAdmin/routers/reservationRoot.router";
 import ManagementRouter from "../appM360/routers/managementRoot.router";
-import ReservationClientRouter from "../appReservationClient/routers/reservation-client.router";
 import RestaurantRouter from "../appRestaurant/routers/restaurant.app.router";
 import AuthRouter from "../auth/auth.router";
 import CommonRouter from "../common/router/common.router";
@@ -25,12 +24,6 @@ class RootRouter {
 
     // ================== restaurant ===================== //
     this.v1Router.use("/restaurant", new RestaurantRouter().restaurantRouter);
-
-    // ==================  reservation client ===================== //
-    this.v1Router.use(
-      "/reservation-client",
-      new ReservationClientRouter().hUserRouter
-    );
 
     // ================== management admin panel ===================//
     this.v1Router.use("/management", new ManagementRouter().managementRouter);

@@ -3,11 +3,6 @@ export interface ICreateRoomTypePayload {
   name: string;
   description: string;
   categories_type_id: number;
-  base_occupancy: number;
-  max_occupancy: number;
-  max_adults: number;
-  max_children: number;
-  bed_count: number;
   area: number;
   room_info: string;
 }
@@ -132,20 +127,21 @@ export interface IUpdatePayrollMonths {
 export interface IAccomodationReqBodyPayload {
   check_in_time: string;
   check_out_time: string;
-  has_child_rates: boolean;
+
   child_age_policies?: {
     age_from: number;
     age_to: number;
     charge_type: "free" | "fixed" | "percentage" | "same_as_adult";
+    charge_value: number;
   }[];
 }
 export interface IAccomodationUpdateReqBodyPayload {
   check_in_time: string;
   check_out_time: string;
-  has_child_rates: boolean;
   add_child_age_policies?: {
     age_from: number;
     age_to: number;
+    charge_value: number;
     charge_type: "free" | "fixed" | "percentage" | "same_as_adult";
   }[];
   remove_child_age_policies: number[];

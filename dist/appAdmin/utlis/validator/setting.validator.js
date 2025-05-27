@@ -11,11 +11,6 @@ class SettingValidator {
             name: joi_1.default.string().required(),
             description: joi_1.default.string().required(),
             categories_type_id: joi_1.default.number().required(),
-            base_occupancy: joi_1.default.number().required(),
-            max_occupancy: joi_1.default.number().required(),
-            max_adults: joi_1.default.number().required(),
-            max_children: joi_1.default.number().required(),
-            bed_count: joi_1.default.number().required(),
             area: joi_1.default.number().required(),
             room_info: joi_1.default.string().required(),
             rt_amenities: joi_1.default.string().required(),
@@ -266,11 +261,11 @@ class SettingValidator {
         this.insertAccomodationValidator = joi_1.default.object({
             check_in_time: joi_1.default.string().required(),
             check_out_time: joi_1.default.string().required(),
-            has_child_rates: joi_1.default.boolean().required(),
             child_age_policies: joi_1.default.array()
                 .items(joi_1.default.object({
                 age_from: joi_1.default.number().required(),
                 age_to: joi_1.default.number().required(),
+                charge_value: joi_1.default.number().required(),
                 charge_type: joi_1.default.string()
                     .allow("free", "fixed", "percentage", "same_as_adult")
                     .required(),
@@ -285,6 +280,7 @@ class SettingValidator {
                 .items(joi_1.default.object({
                 age_from: joi_1.default.number().required(),
                 age_to: joi_1.default.number().required(),
+                charge_value: joi_1.default.number().required(),
                 charge_type: joi_1.default.string()
                     .allow("free", "fixed", "percentage", "same_as_adult")
                     .required(),

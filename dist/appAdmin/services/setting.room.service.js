@@ -35,7 +35,6 @@ class RoomSettingService extends abstract_service_1.default {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
                 const { hotel_code } = req.hotel_admin;
                 const _a = req.body, { beds, rt_amenities, categories_type_id } = _a, rest = __rest(_a, ["beds", "rt_amenities", "categories_type_id"]);
-                const configModel = this.Model.mConfigurationModel(trx);
                 const settingModel = this.Model.settingModel(trx);
                 // check room type by name
                 const { data: roomTypeData } = yield settingModel.getAllRoomType({
@@ -64,13 +63,8 @@ class RoomSettingService extends abstract_service_1.default {
                 }
                 // insert in room type
                 const roomTypeRes = yield settingModel.createRoomType({
-                    base_occupancy: rest.base_occupancy,
-                    bed_count: rest.bed_count,
                     description: rest.description,
                     hotel_code,
-                    max_adults: rest.max_adults,
-                    max_children: rest.max_children,
-                    max_occupancy: rest.max_occupancy,
                     categories_type_id,
                     name: rest.name,
                     room_info: rest.room_info,
