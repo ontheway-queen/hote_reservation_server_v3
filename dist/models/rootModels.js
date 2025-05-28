@@ -24,12 +24,6 @@ const ReportModel_1 = __importDefault(require("./reservationPanel/ReportModel/Re
 const Room_Model_1 = __importDefault(require("./reservationPanel/Room.Model"));
 const roomBookingModel_1 = __importDefault(require("./reservationPanel/roomBookingModel"));
 const Setting_Model_1 = __importDefault(require("./reservationPanel/Setting.Model"));
-const res_admin_role_model_1 = __importDefault(require("./restaurantModel/res.admin.role.model"));
-const res_common_model_1 = __importDefault(require("./restaurantModel/res.common.model"));
-const res_food_model_1 = __importDefault(require("./restaurantModel/res.food.model"));
-const res_order_model_1 = __importDefault(require("./restaurantModel/res.order.model"));
-const res_report_model_1 = __importDefault(require("./restaurantModel/res.report.model"));
-const restaurant_Model_1 = __importDefault(require("./restaurantModel/restaurant.Model"));
 const reservation_model_1 = require("./reservationPanel/reservation.model");
 class Models {
     constructor(db) {
@@ -93,31 +87,6 @@ class Models {
     // stock
     stockInventoryModel(trx) {
         return new stock_inventory_model_1.default(trx || this.db);
-    }
-    //=============== Restaurant model start ================ //
-    // hotel Restaurant
-    restaurantModel(trx) {
-        return new restaurant_Model_1.default(trx || this.db);
-    }
-    // admin role permission
-    resAdminRoleModel(trx) {
-        return new res_admin_role_model_1.default(trx || this.db);
-    }
-    // Restaurant, account, expense, invoice, supplier
-    resCommonModel(trx) {
-        return new res_common_model_1.default(trx || this.db);
-    }
-    // category, ingredient, purchase, inventory, food
-    resFoodModel(trx) {
-        return new res_food_model_1.default(trx || this.db);
-    }
-    // table, order, kitchen
-    resOrderModel(trx) {
-        return new res_order_model_1.default(trx || this.db);
-    }
-    // Restaurant Reports
-    resReportModel(trx) {
-        return new res_report_model_1.default(trx || this.db);
     }
     //=============== client panel model start ================ //
     // hotel hall booking

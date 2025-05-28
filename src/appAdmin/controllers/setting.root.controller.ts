@@ -82,22 +82,6 @@ export class SettingRootController extends AbstractController {
     }
   );
 
-  public getAllMealItems = this.asyncWrapper.wrap(
-    null,
-    async (req: Request, res: Response) => {
-      const { code, ...data } = await this.service.getAllMealItems(req);
-      res.status(code).json(data);
-    }
-  );
-
-  public insertMealOptions = this.asyncWrapper.wrap(
-    { bodySchema: this.validator.roomBookingMealOption },
-    async (req: Request, res: Response) => {
-      const { code, ...data } = await this.service.insertMealOptions(req);
-      res.status(code).json(data);
-    }
-  );
-
   public getAllSources = this.asyncWrapper.wrap(
     null,
     async (req: Request, res: Response) => {

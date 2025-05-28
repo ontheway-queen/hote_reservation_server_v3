@@ -37,6 +37,11 @@ class Lib {
         return Math.ceil((new Date(check_out).getTime() - new Date(check_in).getTime()) /
             (1000 * 60 * 60 * 24));
     }
+    static generateBookingReferenceWithId(hotelPrefix, lastBookingId) {
+        const datePart = new Date().toISOString().slice(2, 10).replace(/-/g, "");
+        const idPart = String(lastBookingId + 1).padStart(6, "0");
+        return `${hotelPrefix}-${datePart}-${idPart}`;
+    }
     // create token
     static createToken(creds, secret, maxAge) {
         return jsonwebtoken_1.default.sign(creds, secret, { expiresIn: maxAge });

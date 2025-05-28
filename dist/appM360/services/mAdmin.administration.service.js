@@ -379,51 +379,6 @@ class MAdministrationService extends abstract_service_1.default {
             };
         });
     }
-    //  ========================= restaurant ======================= //
-    // create restaurant permission group
-    createRestaurantPermissionGroup(req) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const { id } = req.admin;
-            const model = this.Model.restaurantModel();
-            const { name } = req.body;
-            const data = yield model.getPermissionGroup({ name });
-            if (data.length) {
-                return {
-                    success: false,
-                    code: this.StatusCode.HTTP_CONFLICT,
-                    message: this.ResMsg.HTTP_CONFLICT,
-                };
-            }
-            const res = yield model.rolePermissionGroup({
-                name,
-                created_by: id,
-            });
-            if (res.length) {
-                return {
-                    success: true,
-                    code: this.StatusCode.HTTP_SUCCESSFUL,
-                    message: this.ResMsg.HTTP_SUCCESSFUL,
-                };
-            }
-            return {
-                success: false,
-                code: this.StatusCode.HTTP_BAD_REQUEST,
-                message: this.ResMsg.HTTP_BAD_REQUEST,
-            };
-        });
-    }
-    // get permission group
-    getRestaurantPermissionGroup(req) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const model = this.Model.restaurantModel();
-            const data = yield model.getPermissionGroup();
-            return {
-                success: true,
-                code: this.StatusCode.HTTP_SUCCESSFUL,
-                data,
-            };
-        });
-    }
 }
 exports.default = MAdministrationService;
 //# sourceMappingURL=mAdmin.administration.service.js.map

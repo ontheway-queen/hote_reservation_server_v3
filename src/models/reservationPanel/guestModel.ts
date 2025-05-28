@@ -15,16 +15,9 @@ class GuestModel extends Schema {
 
   // Create Guest
   public async createGuest(payload: IguestInterface) {
-    return await this.db("user")
+    return await this.db("guests")
       .withSchema(this.RESERVATION_SCHEMA)
-      .insert(payload);
-  }
-
-  // Create user_type
-  public async createUserType(payload: IuserTypeInterface) {
-    return await this.db("user_type")
-      .withSchema(this.RESERVATION_SCHEMA)
-      .insert(payload);
+      .insert(payload, "id");
   }
 
   // get Guest user_type
@@ -111,13 +104,13 @@ class GuestModel extends Schema {
     limit?: string;
     skip?: string;
     key?: string;
-    user_type?: string;
-    email: string;
+    phone?: string;
+    email?: string;
     hotel_code: number;
   }) {
-    const { key, hotel_code, limit, skip, user_type } = payload;
+    const { key, hotel_code, limit, skip, phone } = payload;
 
-    const dtbs = this.db("user_view");
+    const dtbs = this.db("guests");
 
     if (limit && skip) {
       dtbs.limit(parseInt(limit as string));
@@ -127,50 +120,34 @@ class GuestModel extends Schema {
     const data = await dtbs
       .select(
         "id",
-        "name",
+        "first_name",
+        "last_name",
         "email",
         "phone",
-        "country",
-        "city",
-        "status",
-        "last_balance",
-        "created_at",
-        "user_type"
+        "nationality",
+        "is_active",
+        "created_at"
       )
       .withSchema(this.RESERVATION_SCHEMA)
       .where({ hotel_code })
       .andWhere(function () {
         if (key) {
-          this.andWhere("name", "like", `%${key}%`)
+          this.andWhere("first_name", "like", `%${key}%`)
             .orWhere("email", "like", `%${key}%`)
-            .orWhere("country", "like", `%${key}%`)
-            .orWhere("city", "like", `%${key}%`);
-        }
-
-        if (user_type) {
-          this.andWhereRaw(
-            `JSON_CONTAINS(user_type, '[{"user_type": "${user_type}"}]')`
-          );
+            .orWhere("country", "like", `%${key}%`);
         }
       })
       .orderBy("id", "desc");
 
-    const total = await this.db("user_view")
+    const total = await this.db("guests")
       .withSchema(this.RESERVATION_SCHEMA)
       .count("id as total")
       .where({ hotel_code })
       .andWhere(function () {
         if (key) {
-          this.andWhere("name", "like", `%${key}%`)
+          this.andWhere("first_name", "like", `%${key}%`)
             .orWhere("email", "like", `%${key}%`)
-            .orWhere("country", "like", `%${key}%`)
-            .orWhere("city", "like", `%${key}%`);
-        }
-
-        if (user_type) {
-          this.andWhereRaw(
-            `JSON_CONTAINS(user_type, '[{"user_type": "${user_type}"}]')`
-          );
+            .orWhere("country", "like", `%${key}%`);
         }
       });
 

@@ -341,7 +341,8 @@ class SettingModel extends schema_1.default {
               'id', cap.id,
               'age_from', cap.age_from,
               'age_to', cap.age_to,
-              'charge_type', cap.charge_type
+              'charge_type', cap.charge_type,
+              'charge_value',cap.charge_value
             )
                ) FILTER (WHERE cap.id IS NOT NULL),
           '[]'
@@ -480,24 +481,6 @@ class SettingModel extends schema_1.default {
             });
         });
     }
-    getAllMealItems({ ids, hotel_code, }) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("meal_plan_items as mpi")
-                .withSchema(this.RESERVATION_SCHEMA)
-                .select("mpi.id", "mp.id as meal_plan_id", "mp.name", "mpi.price", "mpi.vat")
-                .leftJoin("meal_plans as mp", "mpi.meal_plan_id", "mp.id")
-                .orderBy("mp.name", "asc")
-                .where(function () {
-                this.andWhere("mpi.is_deleted", false);
-                if (ids === null || ids === void 0 ? void 0 : ids.length) {
-                    this.whereIn("mpi.id", ids);
-                }
-                if (hotel_code) {
-                    this.andWhere("mpi.hotel_code", hotel_code);
-                }
-            });
-        });
-    }
     getAllMealPlan({ ids }) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("meal_plans")
@@ -568,8 +551,7 @@ class SettingModel extends schema_1.default {
             '[]'
           ) AS sources`))
                 .leftJoin("rate_plan_meal_mappings as rpm", "rp.id", "rpm.rate_plan_id")
-                .leftJoin("meal_plan_items as mpi", "rpm.meal_plan_item_id", "mpi.id")
-                .leftJoin("meal_plans as mp", "mpi.meal_plan_id", "mp.id")
+                .leftJoin("meal_plans as mp", "rpm.meal_plan_id", "mp.id")
                 .leftJoin("rate_plan_source_mappings as rps", "rp.id", "rps.rate_plan_id")
                 .leftJoin("sources as src", "rps.source_id", "src.id")
                 .where("rp.hotel_code", hotel_code)
@@ -593,20 +575,16 @@ class SettingModel extends schema_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("rate_plans as rp")
                 .withSchema(this.RESERVATION_SCHEMA)
-                .select("rp.id", "rp.name", "rp.status", "cp.id as cancellation_policy_id", "cp.policy_name as cancellation_policy_name", 
-            // Meal plans
-            this.db.raw(`
+                .select("rp.id", "rp.name", "rp.status", "cp.id as cancellation_policy_id", "cp.policy_name as cancellation_policy_name", this.db.raw(`
           COALESCE(
             json_agg(DISTINCT jsonb_build_object(
               'meal_mapping_id', rpm.id,
-              'meal_plan_item_id', mpi.id,
+              'meal_plan_id', mp.id,
               'plan_name', mp.name
             )) FILTER (WHERE rpm.id IS NOT NULL),
             '[]'
           ) AS meals
-        `), 
-            // Sources
-            this.db.raw(`
+        `), this.db.raw(`
           COALESCE(
             json_agg(DISTINCT jsonb_build_object(
               'src_mapping_id', rps.id,
@@ -615,67 +593,25 @@ class SettingModel extends schema_1.default {
             )) FILTER (WHERE rps.id IS NOT NULL),
             '[]'
           ) AS sources
-        `), 
-            // Rate Plan Details with Room Type Info
-            this.db.raw(`
+        `), this.db.raw(`
           COALESCE(
             json_agg(DISTINCT jsonb_build_object(
               'id', rpd.id,
               'room_type_id', rpd.room_type_id,
               'room_type_name', rt.name,
-              'base_rate', rpd.base_rate,
-              'extra_adult_rate', rpd.extra_adult_rate,
-              'extra_child_rate', rpd.extra_child_rate,
-              'start_date', rpd.start_date,
-              'end_date', rpd.end_date
+              'base_rate', rpd.base_rate
+
             )) FILTER (WHERE rpd.id IS NOT NULL),
             '[]'
           ) AS rate_plan_details
-        `), 
-            // Daily Rates with Room Type Name
-            this.db.raw(`
-          COALESCE(
-            json_agg(DISTINCT jsonb_build_object(
-              'date', dr.date,
-              'rate', dr.rate,
-              'room_type_id', dr.room_type_id,
-              'room_type_name', drt.name,
-              'stop_sell', dr.stop_sell,
-              'extra_adult_rate', dr.extra_adult_rate,
-              'extra_child_rate', dr.extra_child_rate
-            )) FILTER (WHERE dr.id IS NOT NULL),
-            '[]'
-          ) AS daily_rates
-        `), 
-            // Child Rate Groups
-            this.db.raw(`
-  COALESCE(
-    json_agg(DISTINCT jsonb_build_object(
-      'room_type_id', crg.room_type_id,
-      'age_from', crg.age_from,
-      'age_to', crg.age_to,
-      'rate_type', crg.rate_type,
-      'rate_value', crg.rate_value
-    )) FILTER (WHERE crg.id IS NOT NULL),
-    '[]'
-  ) AS child_rate_groups
-`))
-                // Joins
+        `))
                 .leftJoin("cancellation_policies as cp", "rp.cancellation_policy_id", "cp.id")
                 .leftJoin("rate_plan_meal_mappings as rpm", "rp.id", "rpm.rate_plan_id")
-                .leftJoin("meal_plan_items as mpi", "rpm.meal_plan_item_id", "mpi.id")
-                .leftJoin("meal_plans as mp", "mpi.meal_plan_id", "mp.id")
+                .leftJoin("meal_plans as mp", "rpm.meal_plan_id", "mp.id")
                 .leftJoin("rate_plan_source_mappings as rps", "rp.id", "rps.rate_plan_id")
                 .leftJoin("sources as src", "rps.source_id", "src.id")
-                // Rate Plan Details
                 .leftJoin("rate_plan_details as rpd", "rp.id", "rpd.rate_plan_id")
                 .leftJoin("room_types as rt", "rpd.room_type_id", "rt.id")
-                // Daily Rates
-                .leftJoin("daily_rates as dr", "rp.id", "dr.rate_plan_id")
-                .leftJoin("room_types as drt", "dr.room_type_id", "drt.id")
-                .leftJoin("child_rate_groups as crg", function () {
-                this.on("rp.id", "=", "crg.rate_plan_id").andOn("rpd.room_type_id", "=", "crg.room_type_id");
-            })
                 .where("rp.hotel_code", hotel_code)
                 .andWhere("rp.id", id)
                 .groupBy("rp.id", "cp.id")

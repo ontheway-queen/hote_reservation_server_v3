@@ -174,34 +174,15 @@ export interface IUpdatecancellationPolicyReqBodyPayload {
 export interface IRoomRateReqBodyPayload {
   name: string;
   cancellation_policy_id: number;
-  start_date: string; // Format: YYYY-MM-DD
-  end_date: string; // Format: YYYY-MM-DD
-  currency?: string; // Optional, but recommended (e.g., "USD")
-  sources: number[]; // Source/channel IDs (e.g., OTAs)
-  meal_plan_items: number[]; // IDs from meal_plan_items (not meal_plans)
+  currency?: string;
+  sources: number[];
+  meal_plan_items: number[];
   room_type_prices: RoomTypePrice[];
 }
 
 interface RoomTypePrice {
   room_type_id: number;
   base_rate: number;
-  extra_adult_rate?: number;
-  extra_child_rate?: number;
-  child_rate_groups: {
-    age_from: number;
-    age_to: number;
-    rate_type: "free" | "fixed" | "percentage" | "same_as_adult";
-    rate_value: number;
-  }[];
-  specific_dates?: SpecificDateRate[];
-}
-
-interface SpecificDateRate {
-  date: string[];
-  type: "for_all_specific_day" | "specific_day";
-  rate: number;
-  extra_adult_rate?: number;
-  extra_child_rate?: number;
 }
 
 interface IMealItem {

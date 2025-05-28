@@ -74,13 +74,13 @@ export interface ISearchAvailableRoom {
   }[];
 }
 
-export interface IBookingRequest {
-  booking_type: "single" | "group";
-  check_in: string;
-  check_out: string;
-  booking_source: string;
-  special_requests?: string;
+//---------------------booking -------------------//
 
+export interface BookingRequestBody {
+  reservation_type: "hold" | "confirm";
+  check_in: string;
+  is_checked_in: boolean;
+  check_out: string;
   guest: {
     first_name: string;
     last_name: string;
@@ -88,65 +88,66 @@ export interface IBookingRequest {
     phone: string;
     nationality: string;
   };
-
-  rooms: IBookingRoom[];
+  pickup: boolean;
+  pickup_from?: string;
+  pickup_time?: string;
+  drop: boolean;
+  drop_to?: string;
+  drop_time?: string;
+  discount_amount: number;
+  service_charge: number;
+  vat: number;
+  rooms: RoomRequest[];
+  special_requests?: string;
+  payment: {
+    method: "cash" | "card" | "online";
+    acc_id: number;
+    amount: number;
+  };
+  source_id: number;
 }
 
-export interface IBookingRoom {
+export interface RoomRequest {
   room_type_id: number;
   rate_plan_id: number;
-  number_of_rooms: number;
-
-  guests: {
-    adults: number;
-    children: number;
-  }[];
-
-  cancellation_policy: {
-    cancellation_policy_id: number;
-    cancellation_policy_name: string;
-    cancellation_policy_details: CancellationPolicyRule[];
+  rate: {
+    base_price: number;
+    changed_price: number;
   };
-
-  meal_plans?: {
-    meal_plan_item_id: number;
-    meal_plan_name: string;
-    included: boolean;
-    price: number;
-    vat: number;
-  }[];
-
-  rate_breakdown: {
-    base_rate: number;
-    extra_adult_charge: number;
-    extra_child_charge: number;
-    total_rate: number;
-  }[];
-
-  total_price: number;
+  number_of_rooms: number;
+  guests: RoomGuest[];
+  meal_plans_ids?: number[];
 }
 
-export interface CancellationPolicyRule {
-  fee_type: "fixed" | "percentage";
-  fee_value: number;
-  rule_type: "free" | "charge" | "no_show";
-  days_before: number;
-  cancellation_policy_id: number;
+export interface RoomGuest {
+  room_id: number;
+  adults: number;
+  children: number;
+  infant: number;
 }
-
-//---------------------booking -------------------//
 
 export interface IRoomBooking {
   hotel_code: number;
   booking_reference: string;
   guest_id: number;
-  created_by?: number;
+  created_by: number;
   booking_date: string;
   check_in: string;
   check_out: string;
+  status: string;
+  sub_total: number;
   total_amount: number;
-  number_of_nights: number;
-  total_room?: number;
+  vat: number;
+  service_charge: number;
+  discount_amount: number;
+  pickup: boolean;
+  pickup_from?: string;
+  pickup_time?: string;
+  drop: boolean;
+  drop_to?: string;
+  drop_time?: string;
+  comments?: string;
+  source_id: number;
 }
 export interface IRoomBookingBody {
   name: string;
@@ -175,17 +176,15 @@ interface IbookingRoomItem {
   quantity: number;
 }
 
-export interface IBookingRooms {
+export interface IbookingRooms {
   booking_id: number;
   room_id: number;
-}
-
-export interface IbookingRooms {
-  id: number;
-  room_id: number;
-  bed_type: string;
-  room_type: string;
-  room_number: string;
+  room_type_id: number;
+  adults: number;
+  children: number;
+  infant: number;
+  changed_rate: number;
+  base_rate: number;
 }
 
 export interface IsingleRoomBooking {

@@ -153,30 +153,6 @@ class MAdministrationController extends AbstractController {
       res.status(code).json(data);
     }
   );
-
-  // ======================== restaurant =================== //
-
-  // create permission Group
-  public createRestaurantPermissionGroup = this.asyncWrapper.wrap(
-    null,
-    async (req: Request, res: Response) => {
-      const { code, ...data } =
-        await this.administrationService.createRestaurantPermissionGroup(req);
-
-      res.status(code).json(data);
-    }
-  );
-
-  // get permission group
-  public getRestaurantPermissionGroup = this.asyncWrapper.wrap(
-    null,
-    async (req: Request, res: Response) => {
-      const { code, ...data } =
-        await this.administrationService.getRestaurantPermissionGroup(req);
-
-      res.status(code).json(data);
-    }
-  );
 }
 
 export default MAdministrationController;

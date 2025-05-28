@@ -29,13 +29,6 @@ class SettingRootRouter extends AbstractRouter {
 
     this.router.route("/meal-plan").get(this.controller.getAllMealPlan);
 
-    this.router.route("/meal").get(this.controller.getAllMealItems);
-
-    this.router
-      .route("/meal-items")
-      .get(this.controller.getAllMealItems)
-      .post(this.controller.insertMealOptions);
-
     this.router.route("/sources").get(this.controller.getAllSources);
 
     this.router

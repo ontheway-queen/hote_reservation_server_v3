@@ -331,48 +331,6 @@ class SettingValidator {
                 .items(joi_1.default.object({
                 room_type_id: joi_1.default.number().integer().required(),
                 base_rate: joi_1.default.number().precision(2).min(0).required(),
-                extra_adult_rate: joi_1.default.number()
-                    .default(0)
-                    .precision(2)
-                    .min(0)
-                    .optional(),
-                extra_child_rate: joi_1.default.number()
-                    .default(0)
-                    .precision(2)
-                    .min(0)
-                    .optional(),
-                child_rate_groups: joi_1.default.array()
-                    .items(joi_1.default.object({
-                    age_from: joi_1.default.number().integer().min(0).required(),
-                    age_to: joi_1.default.number()
-                        .integer()
-                        .min(joi_1.default.ref("age_from"))
-                        .required(),
-                    rate_type: joi_1.default.string()
-                        .valid("fixed", "percentage", "free")
-                        .required(),
-                    rate_value: joi_1.default.number().precision(2).min(0).required(),
-                }))
-                    .optional(),
-                specific_dates: joi_1.default.array()
-                    .items(joi_1.default.object({
-                    date: joi_1.default.array().items(joi_1.default.string()).required(),
-                    type: joi_1.default.string()
-                        .valid("for_all_specific_day", "specific_day")
-                        .required(),
-                    rate: joi_1.default.number().precision(2).min(0).required(),
-                    extra_adult_rate: joi_1.default.number()
-                        .precision(2)
-                        .min(0)
-                        .optional()
-                        .default(0),
-                    extra_child_rate: joi_1.default.number()
-                        .precision(2)
-                        .min(0)
-                        .optional()
-                        .default(0),
-                }))
-                    .optional(),
             }))
                 .required(),
         });
@@ -387,32 +345,6 @@ class SettingValidator {
                 .items(joi_1.default.object({
                 room_type_id: joi_1.default.number().integer().required(),
                 base_rate: joi_1.default.number().precision(2).min(0).required(),
-                extra_adult_rate: joi_1.default.number().precision(2).min(0).required(),
-                extra_child_rate: joi_1.default.number().precision(2).min(0).required(),
-                child_rate_groups: joi_1.default.array()
-                    .items(joi_1.default.object({
-                    age_from: joi_1.default.number().integer().min(0).required(),
-                    age_to: joi_1.default.number()
-                        .integer()
-                        .min(joi_1.default.ref("age_from"))
-                        .required(),
-                    rate_type: joi_1.default.string()
-                        .valid("fixed", "percentage", "free")
-                        .required(),
-                    rate_value: joi_1.default.number().precision(2).min(0).required(),
-                }))
-                    .optional(),
-                specific_dates: joi_1.default.array()
-                    .items(joi_1.default.object({
-                    date: joi_1.default.array().items(joi_1.default.string()).required(),
-                    type: joi_1.default.string()
-                        .valid("for_all_specific_day", "specific_day")
-                        .required(),
-                    rate: joi_1.default.number().precision(2).min(0).required(),
-                    extra_adult_rate: joi_1.default.number().precision(2).min(0).optional(),
-                    extra_child_rate: joi_1.default.number().precision(2).min(0).optional(),
-                }))
-                    .optional(),
             }))
                 .required(),
         });

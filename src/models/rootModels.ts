@@ -21,12 +21,6 @@ import ReportModel from "./reservationPanel/ReportModel/ReportModel";
 import RoomModel from "./reservationPanel/Room.Model";
 import RoomBookingModel from "./reservationPanel/roomBookingModel";
 import SettingModel from "./reservationPanel/Setting.Model";
-import ResAdminRoleModel from "./restaurantModel/res.admin.role.model";
-import ResCommonModel from "./restaurantModel/res.common.model";
-import ResFoodModel from "./restaurantModel/res.food.model";
-import ResOrderModel from "./restaurantModel/res.order.model";
-import ResReportModel from "./restaurantModel/res.report.model";
-import RestaurantModel from "./restaurantModel/restaurant.Model";
 import { ReservationModel } from "./reservationPanel/reservation.model";
 
 class Models {
@@ -112,38 +106,6 @@ class Models {
   // stock
   public stockInventoryModel(trx?: Knex.Transaction) {
     return new StockInventoryModel(trx || this.db);
-  }
-
-  //=============== Restaurant model start ================ //
-
-  // hotel Restaurant
-  public restaurantModel(trx?: Knex.Transaction) {
-    return new RestaurantModel(trx || this.db);
-  }
-
-  // admin role permission
-  public resAdminRoleModel(trx?: Knex.Transaction) {
-    return new ResAdminRoleModel(trx || this.db);
-  }
-
-  // Restaurant, account, expense, invoice, supplier
-  public resCommonModel(trx?: Knex.Transaction) {
-    return new ResCommonModel(trx || this.db);
-  }
-
-  // category, ingredient, purchase, inventory, food
-  public resFoodModel(trx?: Knex.Transaction) {
-    return new ResFoodModel(trx || this.db);
-  }
-
-  // table, order, kitchen
-  public resOrderModel(trx?: Knex.Transaction) {
-    return new ResOrderModel(trx || this.db);
-  }
-
-  // Restaurant Reports
-  public resReportModel(trx?: Knex.Transaction) {
-    return new ResReportModel(trx || this.db);
   }
 
   //=============== client panel model start ================ //

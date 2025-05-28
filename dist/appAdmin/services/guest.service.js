@@ -41,7 +41,8 @@ class GuestService extends abstract_service_1.default {
                 let userRes;
                 // Create user
                 userRes = yield model.createGuest({
-                    name,
+                    first_name: name,
+                    last_name: name,
                     email,
                     city,
                     country,
@@ -51,12 +52,6 @@ class GuestService extends abstract_service_1.default {
                 // Check user's user_type
                 if (!checkUser.length || checkUser[0].user_type !== "guest") {
                     const existingUserType = yield model.getExistsUserType(userID, "guest");
-                    if (!existingUserType) {
-                        yield model.createUserType({
-                            user_id: userID,
-                            user_type: "guest",
-                        });
-                    }
                 }
                 return {
                     success: true,
@@ -75,11 +70,6 @@ class GuestService extends abstract_service_1.default {
                 email: email,
                 user_type: user_type,
             });
-            if (!checkGuest) {
-                yield this.Model.guestModel().createUserType({
-                    user_type: user_type,
-                });
-            }
             return {
                 success: true,
                 code: this.StatusCode.HTTP_OK,
@@ -96,7 +86,6 @@ class GuestService extends abstract_service_1.default {
             const { data, total } = yield model.getAllGuest({
                 key: key,
                 email: email,
-                user_type: user_type,
                 limit: limit,
                 skip: skip,
                 hotel_code,

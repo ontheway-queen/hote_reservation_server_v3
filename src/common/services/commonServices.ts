@@ -52,19 +52,6 @@ class CommonService extends AbstractServices {
           }
           break;
 
-        case OTP_TYPE_FORGET_RES_ADMIN:
-          const Model = this.Model.restaurantModel(trx);
-          const checkResAdmin = await Model.getResAdminByEmail(email);
-
-          if (!checkResAdmin.length) {
-            return {
-              success: false,
-              code: this.StatusCode.HTTP_NOT_FOUND,
-              message: this.ResMsg.NOT_FOUND_USER_WITH_EMAIL,
-            };
-          }
-          break;
-
         default:
           break;
       }

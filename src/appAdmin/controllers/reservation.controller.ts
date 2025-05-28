@@ -10,6 +10,16 @@ export class ReservationController extends AbstractController {
     super();
   }
 
+  public calendar = this.asyncWrapper.wrap(
+    {
+      querySchema: this.validator.getAvailableRoomsQueryValidator,
+    },
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.calendar(req);
+      res.status(code).json(data);
+    }
+  );
+
   public getAllAvailableRoomsTypeWithAvailableRoomCount =
     this.asyncWrapper.wrap(
       {
@@ -18,6 +28,20 @@ export class ReservationController extends AbstractController {
       async (req: Request, res: Response) => {
         const { code, ...data } =
           await this.service.getAllAvailableRoomsTypeWithAvailableRoomCount(
+            req
+          );
+        res.status(code).json(data);
+      }
+    );
+
+  public getAllAvailableRoomsTypeForEachDateAvailableRoom =
+    this.asyncWrapper.wrap(
+      {
+        querySchema: this.validator.getAvailableRoomsQueryValidator,
+      },
+      async (req: Request, res: Response) => {
+        const { code, ...data } =
+          await this.service.getAllAvailableRoomsTypeForEachDateAvailableRoom(
             req
           );
         res.status(code).json(data);
@@ -42,6 +66,14 @@ export class ReservationController extends AbstractController {
     },
     async (req: Request, res: Response) => {
       const { code, ...data } = await this.service.createBooking(req);
+      res.status(code).json(data);
+    }
+  );
+
+  public getAllBooking = this.asyncWrapper.wrap(
+    {},
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.getAllBooking(req);
       res.status(code).json(data);
     }
   );

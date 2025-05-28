@@ -1,6 +1,7 @@
 export interface IguestInterface {
   hotel_code: number;
-  name: string;
+  first_name: string;
+  last_name: string;
   email?: string;
   phone?: string;
   city?: string;

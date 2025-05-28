@@ -33,7 +33,8 @@ export class GuestService extends AbstractServices {
 
       // Create user
       userRes = await model.createGuest({
-        name,
+        first_name: name,
+        last_name: name,
         email,
         city,
         country,
@@ -45,13 +46,6 @@ export class GuestService extends AbstractServices {
       // Check user's user_type
       if (!checkUser.length || checkUser[0].user_type !== "guest") {
         const existingUserType = await model.getExistsUserType(userID, "guest");
-
-        if (!existingUserType) {
-          await model.createUserType({
-            user_id: userID,
-            user_type: "guest",
-          });
-        }
       }
 
       return {
@@ -72,12 +66,6 @@ export class GuestService extends AbstractServices {
       user_type: user_type as string,
     });
 
-    if (!checkGuest) {
-      await this.Model.guestModel().createUserType({
-        user_type: user_type as "guest" | "user" | "room-guest" | "hall-guest",
-      });
-    }
-
     return {
       success: true,
       code: this.StatusCode.HTTP_OK,
@@ -95,7 +83,6 @@ export class GuestService extends AbstractServices {
     const { data, total } = await model.getAllGuest({
       key: key as string,
       email: email as string,
-      user_type: user_type as string,
       limit: limit as string,
       skip: skip as string,
       hotel_code,

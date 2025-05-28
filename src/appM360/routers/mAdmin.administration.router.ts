@@ -55,13 +55,6 @@ class MAdministrationRouter extends AbstractRouter {
     this.router
       .route("/admin-role-permission")
       .get(this.administratonController.getAdminRole);
-
-    // ======================= restaurant ======================//
-    // create module
-    this.router
-      .route("/restaurant/permission-group")
-      .post(this.administratonController.createRestaurantPermissionGroup)
-      .get(this.administratonController.getRestaurantPermissionGroup);
   }
 }
 

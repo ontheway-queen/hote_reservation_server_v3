@@ -12,70 +12,72 @@ class ReservationValidator {
             check_out: joi_1.default.date().required(),
         });
         this.createBookingValidator = joi_1.default.object({
-            hotel_code: joi_1.default.string().required(),
+            reservation_type: joi_1.default.string().valid("hold", "confirm").required(),
+            is_checked_in: joi_1.default.bool().required(),
             check_in: joi_1.default.date().iso().required(),
             check_out: joi_1.default.date().iso().required(),
-            booking_source: joi_1.default.string().required(),
-            special_requests: joi_1.default.string().allow("").optional(),
             guest: joi_1.default.object({
                 first_name: joi_1.default.string().required(),
                 last_name: joi_1.default.string().required(),
                 email: joi_1.default.string().email().required(),
+                address: joi_1.default.string().allow("").optional(),
                 phone: joi_1.default.string().required(),
                 nationality: joi_1.default.string().required(),
             }).required(),
+            pickup: joi_1.default.boolean().required(),
+            pickup_from: joi_1.default.when("pickup", {
+                is: true,
+                then: joi_1.default.string().required(),
+                otherwise: joi_1.default.forbidden(),
+            }),
+            pickup_time: joi_1.default.when("pickup", {
+                is: true,
+                then: joi_1.default.string().isoDate().required(),
+                otherwise: joi_1.default.forbidden(),
+            }),
+            drop: joi_1.default.boolean().required(),
+            drop_to: joi_1.default.when("drop", {
+                is: true,
+                then: joi_1.default.string().required(),
+                otherwise: joi_1.default.forbidden(),
+            }),
+            drop_time: joi_1.default.when("drop", {
+                is: true,
+                then: joi_1.default.string().isoDate().required(),
+                otherwise: joi_1.default.forbidden(),
+            }),
+            discount_amount: joi_1.default.number().min(0).required(),
+            service_charge: joi_1.default.number().min(0).required(),
+            vat: joi_1.default.number().min(0).required(),
             rooms: joi_1.default.array()
                 .items(joi_1.default.object({
                 room_type_id: joi_1.default.number().required(),
                 rate_plan_id: joi_1.default.number().required(),
+                rate: joi_1.default.object({
+                    base_price: joi_1.default.number().required(),
+                    changed_price: joi_1.default.number().required(),
+                }).required(),
                 number_of_rooms: joi_1.default.number().min(1).required(),
                 guests: joi_1.default.array()
                     .items(joi_1.default.object({
+                    room_id: joi_1.default.number().required(),
                     adults: joi_1.default.number().min(1).required(),
                     children: joi_1.default.number().min(0).required(),
+                    infant: joi_1.default.number().min(0).required(),
                 }))
                     .min(1)
                     .required(),
-                cancellation_policy: joi_1.default.object({
-                    cancellation_policy_id: joi_1.default.number().required(),
-                    cancellation_policy_name: joi_1.default.string().required(),
-                    cancellation_policy_details: joi_1.default.array()
-                        .items(joi_1.default.object({
-                        fee_type: joi_1.default.string()
-                            .valid("fixed", "percentage")
-                            .required(),
-                        fee_value: joi_1.default.number().required(),
-                        rule_type: joi_1.default.string()
-                            .valid("free", "charge", "no_show")
-                            .required(),
-                        days_before: joi_1.default.number().min(0).required(),
-                        cancellation_policy_id: joi_1.default.number().required(),
-                    }))
-                        .min(1)
-                        .required(),
-                }).required(),
-                meal_plans: joi_1.default.array()
-                    .items(joi_1.default.object({
-                    meal_plan_item_id: joi_1.default.number().required(),
-                    meal_plan_name: joi_1.default.string().required(),
-                    included: joi_1.default.boolean().required(),
-                    price: joi_1.default.number().required(),
-                    vat: joi_1.default.number().min(0).required(),
-                }))
-                    .optional(),
-                rate_breakdown: joi_1.default.array()
-                    .items(joi_1.default.object({
-                    base_rate: joi_1.default.number().required(),
-                    extra_adult_charge: joi_1.default.number().required(),
-                    extra_child_charge: joi_1.default.number().required(),
-                    total_rate: joi_1.default.number().required(),
-                }))
-                    .min(1)
-                    .required(),
-                total_price: joi_1.default.number().required(),
+                meal_plans_ids: joi_1.default.array().items(joi_1.default.number()).optional(),
             }))
                 .min(1)
                 .required(),
+            special_requests: joi_1.default.string().allow("").optional(),
+            payment: joi_1.default.object({
+                method: joi_1.default.string().valid("cash", "card", "online").required(),
+                acc_id: joi_1.default.number().required(),
+                amount: joi_1.default.number().required(),
+            }).required(),
+            source_id: joi_1.default.number().required(),
         });
     }
 }

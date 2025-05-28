@@ -26,6 +26,15 @@ class Lib {
     );
   }
 
+  public static generateBookingReferenceWithId(
+    hotelPrefix: string,
+    lastBookingId: number
+  ): string {
+    const datePart = new Date().toISOString().slice(2, 10).replace(/-/g, "");
+    const idPart = String(lastBookingId + 1).padStart(6, "0");
+    return `${hotelPrefix}-${datePart}-${idPart}`;
+  }
+
   // create token
   public static createToken(
     creds: object,

@@ -10,7 +10,7 @@ import MoneyRecieptRouter from "./money-reciept.router";
 import PayRollRouter from "./payRoll.router";
 import ReportRouter from "./reports.router";
 import { ReservationRouter } from "./reservation.router";
-import hotelRestaurantRouter from "./restaurant.hotel.router";
+
 import RoomGuestRouter from "./room.guest.router";
 import RoomRouter from "./room.router";
 import SettingRouter from "./setting.router";
@@ -88,12 +88,6 @@ export class ReservationRootRouter {
       "/payroll",
       this.authChecker.hotelAdminAuthChecker,
       new PayRollRouter().router
-    );
-
-    this.router.use(
-      "/restaurant",
-      this.authChecker.hotelAdminAuthChecker,
-      new hotelRestaurantRouter().router
     );
 
     this.router.use(

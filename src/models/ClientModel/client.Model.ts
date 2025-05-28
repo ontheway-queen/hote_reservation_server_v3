@@ -2,7 +2,7 @@
 
 import { IuserPayload } from "../../appAdmin/utlis/interfaces/guest.interface";
 import {
-  IBookingRooms,
+  IbookingRooms,
   IRoomBooking,
 } from "../../appAdmin/utlis/interfaces/reservation.interface";
 
@@ -296,7 +296,7 @@ class ClientModel extends Schema {
   }
 
   // insert booking rooms
-  public async insertBookingRoom(payload: IBookingRooms[]) {
+  public async insertBookingRoom(payload: IbookingRooms[]) {
     return await this.db("booking_rooms")
       .withSchema(this.RESERVATION_SCHEMA)
       .insert(payload);

@@ -6,86 +6,85 @@ export class ReservationValidator {
   });
 
   public createBookingValidator = Joi.object({
-    hotel_code: Joi.string().required(),
+    reservation_type: Joi.string().valid("hold", "confirm").required(),
+    is_checked_in: Joi.bool().required(),
     check_in: Joi.date().iso().required(),
     check_out: Joi.date().iso().required(),
-    booking_source: Joi.string().required(),
-    special_requests: Joi.string().allow("").optional(),
 
     guest: Joi.object({
       first_name: Joi.string().required(),
       last_name: Joi.string().required(),
       email: Joi.string().email().required(),
+      address: Joi.string().allow("").optional(),
       phone: Joi.string().required(),
       nationality: Joi.string().required(),
     }).required(),
+
+    pickup: Joi.boolean().required(),
+    pickup_from: Joi.when("pickup", {
+      is: true,
+      then: Joi.string().required(),
+      otherwise: Joi.forbidden(),
+    }),
+    pickup_time: Joi.when("pickup", {
+      is: true,
+      then: Joi.string().isoDate().required(), // assuming ISO datetime string
+      otherwise: Joi.forbidden(),
+    }),
+
+    drop: Joi.boolean().required(),
+    drop_to: Joi.when("drop", {
+      is: true,
+      then: Joi.string().required(),
+      otherwise: Joi.forbidden(),
+    }),
+    drop_time: Joi.when("drop", {
+      is: true,
+      then: Joi.string().isoDate().required(),
+      otherwise: Joi.forbidden(),
+    }),
+
+    discount_amount: Joi.number().min(0).required(),
+    service_charge: Joi.number().min(0).required(),
+    vat: Joi.number().min(0).required(),
 
     rooms: Joi.array()
       .items(
         Joi.object({
           room_type_id: Joi.number().required(),
           rate_plan_id: Joi.number().required(),
+          rate: Joi.object({
+            base_price: Joi.number().required(),
+            changed_price: Joi.number().required(),
+          }).required(),
           number_of_rooms: Joi.number().min(1).required(),
 
           guests: Joi.array()
             .items(
               Joi.object({
+                room_id: Joi.number().required(),
                 adults: Joi.number().min(1).required(),
                 children: Joi.number().min(0).required(),
+                infant: Joi.number().min(0).required(),
               })
             )
             .min(1)
             .required(),
 
-          cancellation_policy: Joi.object({
-            cancellation_policy_id: Joi.number().required(),
-            cancellation_policy_name: Joi.string().required(),
-            cancellation_policy_details: Joi.array()
-              .items(
-                Joi.object({
-                  fee_type: Joi.string()
-                    .valid("fixed", "percentage")
-                    .required(),
-                  fee_value: Joi.number().required(),
-                  rule_type: Joi.string()
-                    .valid("free", "charge", "no_show")
-                    .required(),
-                  days_before: Joi.number().min(0).required(),
-                  cancellation_policy_id: Joi.number().required(),
-                })
-              )
-              .min(1)
-              .required(),
-          }).required(),
-
-          meal_plans: Joi.array()
-            .items(
-              Joi.object({
-                meal_plan_item_id: Joi.number().required(),
-                meal_plan_name: Joi.string().required(),
-                included: Joi.boolean().required(),
-                price: Joi.number().required(),
-                vat: Joi.number().min(0).required(),
-              })
-            )
-            .optional(),
-
-          rate_breakdown: Joi.array()
-            .items(
-              Joi.object({
-                base_rate: Joi.number().required(),
-                extra_adult_charge: Joi.number().required(),
-                extra_child_charge: Joi.number().required(),
-                total_rate: Joi.number().required(),
-              })
-            )
-            .min(1)
-            .required(),
-
-          total_price: Joi.number().required(),
+          meal_plans_ids: Joi.array().items(Joi.number()).optional(),
         })
       )
       .min(1)
       .required(),
+
+    special_requests: Joi.string().allow("").optional(),
+
+    payment: Joi.object({
+      method: Joi.string().valid("cash", "card", "online").required(),
+      acc_id: Joi.number().required(),
+      amount: Joi.number().required(),
+    }).required(),
+
+    source_id: Joi.number().required(),
   });
 }

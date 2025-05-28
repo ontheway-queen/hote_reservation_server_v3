@@ -1,5 +1,5 @@
 import {
-  IBookingRooms,
+  IbookingRooms,
   IrefundRoomBooking,
   IRoomBooking,
   IupdateRoomBooking,
@@ -22,7 +22,7 @@ class RoomBookingModel extends Schema {
   }
 
   // insert booking rooms
-  public async insertBookingRoom(payload: IBookingRooms[]) {
+  public async insertBookingRoom(payload: IbookingRooms[]) {
     return await this.db("booking_rooms")
       .withSchema(this.RESERVATION_SCHEMA)
       .insert(payload);

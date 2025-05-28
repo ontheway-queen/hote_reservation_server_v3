@@ -56,4 +56,15 @@ export class HelperFunction {
 
     return calendarOutput;
   }
+
+  public static getDatesBetween(startDate: string, endDate: string): string[] {
+    const dates = [];
+    const current = new Date(startDate);
+    const stop = new Date(endDate);
+    while (current <= stop) {
+      dates.push(current.toISOString().slice(0, 10)); // YYYY-MM-DD format
+      current.setDate(current.getDate() + 1);
+    }
+    return dates;
+  }
 }

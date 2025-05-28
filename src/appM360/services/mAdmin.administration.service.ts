@@ -424,57 +424,6 @@ class MAdministrationService extends AbstractServices {
       data: { id, name, role_id, role_name, permissionList: data },
     };
   }
-
-  //  ========================= restaurant ======================= //
-
-  // create restaurant permission group
-  public async createRestaurantPermissionGroup(req: Request) {
-    const { id } = req.admin;
-    const model = this.Model.restaurantModel();
-
-    const { name } = req.body;
-
-    const data = await model.getPermissionGroup({ name });
-
-    if (data.length) {
-      return {
-        success: false,
-        code: this.StatusCode.HTTP_CONFLICT,
-        message: this.ResMsg.HTTP_CONFLICT,
-      };
-    }
-
-    const res = await model.rolePermissionGroup({
-      name,
-      created_by: id,
-    });
-
-    if (res.length) {
-      return {
-        success: true,
-        code: this.StatusCode.HTTP_SUCCESSFUL,
-        message: this.ResMsg.HTTP_SUCCESSFUL,
-      };
-    }
-
-    return {
-      success: false,
-      code: this.StatusCode.HTTP_BAD_REQUEST,
-      message: this.ResMsg.HTTP_BAD_REQUEST,
-    };
-  }
-
-  // get permission group
-  public async getRestaurantPermissionGroup(req: Request) {
-    const model = this.Model.restaurantModel();
-    const data = await model.getPermissionGroup();
-
-    return {
-      success: true,
-      code: this.StatusCode.HTTP_SUCCESSFUL,
-      data,
-    };
-  }
 }
 
 export default MAdministrationService;

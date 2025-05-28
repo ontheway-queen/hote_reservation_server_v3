@@ -64,20 +64,12 @@ class SettingRootController extends abstract_controller_1.default {
             const _h = yield this.service.getAllMealPlan(req), { code } = _h, data = __rest(_h, ["code"]);
             res.status(code).json(data);
         }));
-        this.getAllMealItems = this.asyncWrapper.wrap(null, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _j = yield this.service.getAllMealItems(req), { code } = _j, data = __rest(_j, ["code"]);
-            res.status(code).json(data);
-        }));
-        this.insertMealOptions = this.asyncWrapper.wrap({ bodySchema: this.validator.roomBookingMealOption }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _k = yield this.service.insertMealOptions(req), { code } = _k, data = __rest(_k, ["code"]);
-            res.status(code).json(data);
-        }));
         this.getAllSources = this.asyncWrapper.wrap(null, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _l = yield this.service.getAllSources(req), { code } = _l, data = __rest(_l, ["code"]);
+            const _j = yield this.service.getAllSources(req), { code } = _j, data = __rest(_j, ["code"]);
             res.status(code).json(data);
         }));
         this.getChildAgePolicies = this.asyncWrapper.wrap(null, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _m = yield this.service.getChildAgePolicies(req), { code } = _m, data = __rest(_m, ["code"]);
+            const _k = yield this.service.getChildAgePolicies(req), { code } = _k, data = __rest(_k, ["code"]);
             res.status(code).json(data);
         }));
     }

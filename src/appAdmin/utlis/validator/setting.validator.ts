@@ -401,52 +401,6 @@ class SettingValidator {
         Joi.object({
           room_type_id: Joi.number().integer().required(),
           base_rate: Joi.number().precision(2).min(0).required(),
-          extra_adult_rate: Joi.number()
-            .default(0)
-            .precision(2)
-            .min(0)
-            .optional(),
-          extra_child_rate: Joi.number()
-            .default(0)
-            .precision(2)
-            .min(0)
-            .optional(),
-          child_rate_groups: Joi.array()
-            .items(
-              Joi.object({
-                age_from: Joi.number().integer().min(0).required(),
-                age_to: Joi.number()
-                  .integer()
-                  .min(Joi.ref("age_from"))
-                  .required(),
-                rate_type: Joi.string()
-                  .valid("fixed", "percentage", "free")
-                  .required(),
-                rate_value: Joi.number().precision(2).min(0).required(),
-              })
-            )
-            .optional(),
-          specific_dates: Joi.array()
-            .items(
-              Joi.object({
-                date: Joi.array().items(Joi.string()).required(),
-                type: Joi.string()
-                  .valid("for_all_specific_day", "specific_day")
-                  .required(),
-                rate: Joi.number().precision(2).min(0).required(),
-                extra_adult_rate: Joi.number()
-                  .precision(2)
-                  .min(0)
-                  .optional()
-                  .default(0),
-                extra_child_rate: Joi.number()
-                  .precision(2)
-                  .min(0)
-                  .optional()
-                  .default(0),
-              })
-            )
-            .optional(),
         })
       )
       .required(),
@@ -459,43 +413,11 @@ class SettingValidator {
     meal_plan_items: Joi.array()
       .items(Joi.number().integer().required())
       .optional(),
-
     room_type_prices: Joi.array()
       .items(
         Joi.object({
           room_type_id: Joi.number().integer().required(),
           base_rate: Joi.number().precision(2).min(0).required(),
-          extra_adult_rate: Joi.number().precision(2).min(0).required(),
-          extra_child_rate: Joi.number().precision(2).min(0).required(),
-          child_rate_groups: Joi.array()
-            .items(
-              Joi.object({
-                age_from: Joi.number().integer().min(0).required(),
-                age_to: Joi.number()
-                  .integer()
-                  .min(Joi.ref("age_from"))
-                  .required(),
-                rate_type: Joi.string()
-                  .valid("fixed", "percentage", "free")
-                  .required(),
-                rate_value: Joi.number().precision(2).min(0).required(),
-              })
-            )
-            .optional(),
-
-          specific_dates: Joi.array()
-            .items(
-              Joi.object({
-                date: Joi.array().items(Joi.string()).required(),
-                type: Joi.string()
-                  .valid("for_all_specific_day", "specific_day")
-                  .required(),
-                rate: Joi.number().precision(2).min(0).required(),
-                extra_adult_rate: Joi.number().precision(2).min(0).optional(),
-                extra_child_rate: Joi.number().precision(2).min(0).optional(),
-              })
-            )
-            .optional(),
         })
       )
       .required(),

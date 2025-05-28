@@ -53,6 +53,16 @@ class HelperFunction {
         }
         return calendarOutput;
     }
+    static getDatesBetween(startDate, endDate) {
+        const dates = [];
+        const current = new Date(startDate);
+        const stop = new Date(endDate);
+        while (current <= stop) {
+            dates.push(current.toISOString().slice(0, 10)); // YYYY-MM-DD format
+            current.setDate(current.getDate() + 1);
+        }
+        return dates;
+    }
 }
 exports.HelperFunction = HelperFunction;
 //# sourceMappingURL=helperFunction.js.map
