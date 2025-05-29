@@ -44,26 +44,6 @@ class RoomBookingController extends AbstractController {
     }
   );
 
-  // insert check in room booking
-  public insertBookingCheckIn = this.asyncWrapper.wrap(
-    { bodySchema: this.roomBookingValidator.insertBookingCheckIn },
-    async (req: Request, res: Response) => {
-      const { code, ...data } =
-        await this.roomBookingService.insertBookingCheckIn(req);
-      res.status(code).json(data);
-    }
-  );
-
-  // get all check in room booking
-  public getAllRoomBookingCheckIn = this.asyncWrapper.wrap(
-    null,
-    async (req: Request, res: Response) => {
-      const { code, ...data } =
-        await this.roomBookingService.getAllRoomBookingCheckIn(req);
-      res.status(code).json(data);
-    }
-  );
-
   // refund
   public refundRoomBooking = this.asyncWrapper.wrap(
     { bodySchema: this.roomBookingValidator.refundRoomBookingValidator },

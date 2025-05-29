@@ -210,6 +210,7 @@ class RAdministrationModel extends Schema {
         "ua.id",
         "ua.email",
         "ua.hotel_code",
+        "h.name as hotel_name",
         "ua.phone",
         "ua.password",
         "ua.photo",
@@ -217,6 +218,7 @@ class RAdministrationModel extends Schema {
         "ua.status",
         "r.id As role_id",
         "r.name As role_name",
+
         "ua.created_at"
       )
       .withSchema(this.RESERVATION_SCHEMA)

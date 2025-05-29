@@ -197,17 +197,13 @@ class AccountService extends abstract_service_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             const { hotel_code } = req.hotel_admin;
             const { ac_type, key, status, limit, skip, admin_id } = req.query;
-            // model
-            const model = this.Model.accountModel();
-            // fetch all accounts for the given hotel_code
-            const { data, total } = yield model.getAllAccounts({
+            const { data, total } = yield this.Model.accountModel().getAllAccounts({
                 hotel_code,
                 status: status,
                 ac_type: ac_type,
                 key: key,
                 limit: limit,
                 skip: skip,
-                admin_id: parseInt(admin_id),
             });
             return {
                 success: true,

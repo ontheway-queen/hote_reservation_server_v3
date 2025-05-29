@@ -15,7 +15,7 @@ export interface IAccHeadDb {
   created_by: number;
 }
 
-export type paymentType =
+export type voucherType =
   | "REFUND"
   | "INVOICE"
   | "EMD"
@@ -29,22 +29,16 @@ export type paymentType =
   | "PAYROLL"
   | "LOAN"
   | "LOAN_PAYMENT"
-  | "LOAN_RECEIVE";
+  | "LOAN_RECEIVE"
+  | "JOURNAL";
 
 export interface IVoucher {
-  org_id: number;
   acc_head_id: number;
   voucher_no: string;
   voucher_date: string;
-  serial_no: number;
   debit: number;
   credit: number;
-  payment_method?: number;
-  payment_type: paymentType;
-  is_cheque?: 0 | 1;
-  cheque_no?: string;
-  cheque_date?: string;
-  bank_name?: string;
+  voucher_type: voucherType;
   description: string;
   created_by: number;
 }

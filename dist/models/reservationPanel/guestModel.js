@@ -75,7 +75,7 @@ class GuestModel extends schema_1.default {
     // insert into guest ledger
     insertGuestLedger(payload) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("user_ledger")
+            return yield this.db("guest_ledger")
                 .withSchema(this.RESERVATION_SCHEMA)
                 .insert(payload);
         });
@@ -160,53 +160,6 @@ class GuestModel extends schema_1.default {
                 .update(payload)
                 .where({ hotel_code })
                 .andWhere({ id });
-        });
-    }
-    //  update guest
-    updateGuest(id, hotel_code, payload) {
-        return __awaiter(this, void 0, void 0, function* () {
-            yield this.db("user")
-                .withSchema(this.RESERVATION_SCHEMA)
-                .where({ id, hotel_code })
-                .update(payload);
-        });
-    }
-    // Get Hall Guest
-    getHallGuest(payload) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const { hotel_code } = payload;
-            const dtbs = this.db("user as u");
-            const data = yield dtbs
-                .select("u.id", "u.name", "u.email", "u.last_balance")
-                .withSchema(this.RESERVATION_SCHEMA)
-                .distinct("u.id", "u.name", "u.email")
-                .rightJoin("hall_booking as hb", "u.id", "hb.user_id")
-                .where("u.hotel_code", hotel_code)
-                .orderBy("u.id", "desc");
-            const total = yield this.db("user as u")
-                .withSchema(this.RESERVATION_SCHEMA)
-                .rightJoin("hall_booking as hb", "u.id", "hb.user_id")
-                .countDistinct("u.id as total")
-                .where("u.hotel_code", hotel_code);
-            return { data, total: total[0].total };
-        });
-    }
-    // Get Room Guest
-    getRoomGuest(payload) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const { hotel_code } = payload;
-            const data = yield this.db("user as u")
-                .distinct("u.id", "u.name", "u.email", "u.last_balance")
-                .withSchema(this.RESERVATION_SCHEMA)
-                .rightJoin("room_booking as rb", "u.id", "rb.user_id")
-                .where("u.hotel_code", hotel_code)
-                .orderBy("u.id", "desc");
-            const total = yield this.db("user as u")
-                .withSchema(this.RESERVATION_SCHEMA)
-                .countDistinct("u.id as total")
-                .rightJoin("room_booking as rb", "u.id", "rb.user_id")
-                .where("u.hotel_code", hotel_code);
-            return { data, total: total[0].total };
         });
     }
 }

@@ -220,18 +220,13 @@ export class AccountService extends AbstractServices {
 
     const { ac_type, key, status, limit, skip, admin_id } = req.query;
 
-    // model
-    const model = this.Model.accountModel();
-
-    // fetch all accounts for the given hotel_code
-    const { data, total } = await model.getAllAccounts({
+    const { data, total } = await this.Model.accountModel().getAllAccounts({
       hotel_code,
       status: status as string,
       ac_type: ac_type as string,
       key: key as string,
       limit: limit as string,
       skip: skip as string,
-      admin_id: parseInt(admin_id as string),
     });
 
     return {

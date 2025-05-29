@@ -76,18 +76,19 @@ export interface ISearchAvailableRoom {
 
 //---------------------booking -------------------//
 
+export interface IguestReqBody {
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string;
+  nationality: string;
+}
 export interface BookingRequestBody {
   reservation_type: "hold" | "confirm";
   check_in: string;
   is_checked_in: boolean;
   check_out: string;
-  guest: {
-    first_name: string;
-    last_name: string;
-    email: string;
-    phone: string;
-    nationality: string;
-  };
+  guest: IguestReqBody;
   pickup: boolean;
   pickup_from?: string;
   pickup_time?: string;
@@ -99,12 +100,14 @@ export interface BookingRequestBody {
   vat: number;
   rooms: RoomRequest[];
   special_requests?: string;
-  payment: {
-    method: "cash" | "card" | "online";
-    acc_id: number;
-    amount: number;
-  };
+  payment: IbookingReqPayment;
   source_id: number;
+}
+
+export interface IbookingReqPayment {
+  method: "cash" | "card" | "online";
+  acc_id: number;
+  amount: number;
 }
 
 export interface RoomRequest {

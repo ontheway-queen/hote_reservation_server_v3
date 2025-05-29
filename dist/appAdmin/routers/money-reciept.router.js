@@ -11,26 +11,7 @@ class MoneyRecieptRouter extends abstract_router_1.default {
         this.moneyRecieptController = new money_reciept_controller_1.default();
         this.callRouter();
     }
-    callRouter() {
-        // create and get all money reciept
-        this.router
-            .route("/")
-            .post(this.moneyRecieptController.createMoneyReciept)
-            .get(this.moneyRecieptController.getAllMoneyReciept);
-        // advance money return
-        this.router
-            .route("/advance-return")
-            .post(this.moneyRecieptController.advanceReturnMoneyReciept)
-            .get(this.moneyRecieptController.getAllAdvanceReturnMoneyReciept);
-        // single advance return
-        this.router
-            .route("/advance-return/:id")
-            .get(this.moneyRecieptController.getSingleAdvanceReturnMoneyReciept);
-        // single money reciept
-        this.router
-            .route("/:id")
-            .get(this.moneyRecieptController.getSingleMoneyReciept);
-    }
+    callRouter() { }
 }
 exports.default = MoneyRecieptRouter;
 //# sourceMappingURL=money-reciept.router.js.map

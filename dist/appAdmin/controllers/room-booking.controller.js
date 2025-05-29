@@ -45,16 +45,6 @@ class RoomBookingController extends abstract_controller_1.default {
             const _c = yield this.roomBookingService.getSingleRoomBooking(req), { code } = _c, data = __rest(_c, ["code"]);
             res.status(code).json(data);
         }));
-        // insert check in room booking
-        this.insertBookingCheckIn = this.asyncWrapper.wrap({ bodySchema: this.roomBookingValidator.insertBookingCheckIn }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _d = yield this.roomBookingService.insertBookingCheckIn(req), { code } = _d, data = __rest(_d, ["code"]);
-            res.status(code).json(data);
-        }));
-        // get all check in room booking
-        this.getAllRoomBookingCheckIn = this.asyncWrapper.wrap(null, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _e = yield this.roomBookingService.getAllRoomBookingCheckIn(req), { code } = _e, data = __rest(_e, ["code"]);
-            res.status(code).json(data);
-        }));
         // refund
         this.refundRoomBooking = this.asyncWrapper.wrap({ bodySchema: this.roomBookingValidator.refundRoomBookingValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
             // const { code, ...data } =

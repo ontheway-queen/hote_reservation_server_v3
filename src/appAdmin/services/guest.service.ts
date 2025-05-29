@@ -120,42 +120,5 @@ export class GuestService extends AbstractServices {
       data: singleInvoiceData[0],
     };
   }
-
-  // get All hall guest
-  public async getHallGuest(req: Request) {
-    const { hotel_code } = req.hotel_admin;
-    // model
-    const model = this.Model.guestModel();
-
-    const { data, total } = await model.getHallGuest({
-      hotel_code,
-    });
-
-    return {
-      success: true,
-      code: this.StatusCode.HTTP_OK,
-      total,
-      data,
-    };
-  }
-
-  // get All room guest
-  public async getRoomGuest(req: Request) {
-    const { hotel_code } = req.hotel_admin;
-
-    // model
-    const model = this.Model.guestModel();
-
-    const { data, total } = await model.getRoomGuest({
-      hotel_code,
-    });
-
-    return {
-      success: true,
-      code: this.StatusCode.HTTP_OK,
-      total,
-      data,
-    };
-  }
 }
 export default GuestService;

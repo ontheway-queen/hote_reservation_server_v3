@@ -108,13 +108,6 @@ class Models {
     return new StockInventoryModel(trx || this.db);
   }
 
-  //=============== client panel model start ================ //
-
-  // hotel hall booking
-  public clientModel(trx?: Knex.Transaction) {
-    return new ClientModel(trx || this.db);
-  }
-
   //=============== m360ict panel model start ================ //
 
   // hotel user model

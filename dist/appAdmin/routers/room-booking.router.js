@@ -17,11 +17,6 @@ class RoomBookingRouter extends abstract_router_1.default {
             .route("/")
             .post(this.roomBookingController.createRoomBooking)
             .get(this.roomBookingController.getAllRoomBooking);
-        // check in router
-        this.router
-            .route("/check-in")
-            .post(this.roomBookingController.insertBookingCheckIn)
-            .get(this.roomBookingController.getAllRoomBookingCheckIn);
         // checkout router
         // this.router
         //   .route("/check-out/:id")

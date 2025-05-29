@@ -1,4 +1,8 @@
-export class HelperFunction {
+import moment from "moment";
+import Schema from "../../../utils/miscellaneous/schema";
+import AbstractServices from "../../../abstarcts/abstract.service";
+
+export class HelperFunction extends AbstractServices {
   public static generateRateCalendar(rawData: any) {
     const calendarOutput = [];
 
@@ -66,5 +70,30 @@ export class HelperFunction {
       current.setDate(current.getDate() + 1);
     }
     return dates;
+  }
+
+  public static generateFolioNumber(lastFolioId: number): string {
+    const now = moment();
+    const prefix = `FOLIO-${now.format("YYYYMM")}`;
+
+    const nextId = (lastFolioId || 0) + 1;
+    const padded = nextId.toString().padStart(4, "0");
+
+    return `${prefix}-${padded}`;
+  }
+
+  public async generateVoucherNo(): Promise<string> {
+    const now = moment();
+    const prefix = `VCH-${now.format("YYYYMM")}`;
+
+    const model = await this.Model.accountModel();
+
+    const getLasVoucherId = await model.getVoucherCount();
+
+    const next = (parseInt(getLasVoucherId as string) || 0) + 1;
+
+    const padded = next.toString().padStart(4, "0");
+
+    return `${prefix}-${padded}`;
   }
 }

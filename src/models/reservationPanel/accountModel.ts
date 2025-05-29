@@ -197,12 +197,18 @@ class AccountModel extends Schema {
     // .where('org_id', this.org_agency);
   }
 
-  public async insertAccVoucher(payload: IVoucher) {
-    const [id] = await this.db("acc_voucher")
+  public async getVoucherCount() {
+    const total = await this.db("acc_vouchers")
       .withSchema(this.RESERVATION_SCHEMA)
-      .insert(payload);
+      .count("id as total");
 
-    return id;
+    return total.length ? total[0].total : 0;
+  }
+
+  public async insertAccVoucher(payload: IVoucher) {
+    return await this.db("acc_vouchers")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .insert(payload, "id");
   }
 
   public async updateAccVoucher(payload: IVoucher, id: idType) {
@@ -332,23 +338,11 @@ class AccountModel extends Schema {
     key?: string;
     limit?: string;
     skip?: string;
-    admin_id?: number;
-    res_id?: number;
     acc_ids?: number[];
   }) {
-    const {
-      status,
-      hotel_code,
-      ac_type,
-      key,
-      limit,
-      skip,
-      admin_id,
-      acc_ids,
-      res_id,
-    } = payload;
+    const { status, hotel_code, ac_type, key, limit, skip, acc_ids } = payload;
 
-    const dtbs = this.db("account as a");
+    const dtbs = this.db("accounts");
 
     if (limit && skip) {
       dtbs.limit(parseInt(limit as string));
@@ -357,72 +351,66 @@ class AccountModel extends Schema {
 
     const data = await dtbs
       .select(
-        "a.id",
-        "a.hotel_code",
-        "a.name",
-        "a.ac_type",
-        "a.bank",
-        "a.branch",
-        "a.account_number",
-        "a.details",
-        "a.status",
-        "a.last_balance as available_balance",
-        "a.created_at"
+        "id",
+        "hotel_code",
+        "name",
+        "ac_type",
+        "branch",
+        "acc_number",
+        "details",
+        "is_active"
       )
       .withSchema(this.RESERVATION_SCHEMA)
-      .where("a.hotel_code", hotel_code)
-      .andWhere(function () {
-        if (status) {
-          this.where({ status });
-        }
-        if (res_id) {
-          this.where({ res_id });
-        }
-        if (ac_type) {
-          this.andWhere({ ac_type });
-        }
-        if (admin_id) {
-          this.andWhere({ created_by: admin_id });
-        }
-        if (acc_ids) {
-          this.whereIn("id", acc_ids);
-        }
-      })
-      .andWhere(function () {
-        if (key) {
-          this.andWhere("a.name", "like", `%${key}%`)
-            .orWhere("a.account_number", "like", `%${key}%`)
-            .orWhere("a.bank", "like", `%${key}%`);
-        }
-      })
-      .orderBy("a.id", "desc");
+      .where("hotel_code", hotel_code)
 
-    const total = await this.db("account as a")
-      .withSchema(this.RESERVATION_SCHEMA)
-      .count("a.id as total")
-      .where("a.hotel_code", hotel_code)
       .andWhere(function () {
         if (status) {
-          this.where({ status });
+          this.where("is_active", status);
         }
-        if (res_id) {
-          this.where({ res_id });
-        }
+
         if (ac_type) {
-          this.andWhere({ ac_type });
+          this.andWhere("ac_type", ac_type.toUpperCase());
         }
-        if (admin_id) {
-          this.andWhere({ created_by: admin_id });
-        }
+
         if (acc_ids) {
           this.whereIn("id", acc_ids);
         }
       })
       .andWhere(function () {
         if (key) {
-          this.andWhere("a.name", "like", `%${key}%`)
-            .orWhere("a.account_number", "like", `%${key}%`)
-            .orWhere("a.bank", "like", `%${key}%`);
+          this.andWhere("name", "like", `%${key}%`).orWhere(
+            "acc_number",
+            "like",
+            `%${key}%`
+          );
+        }
+      })
+      .orderBy("id", "desc");
+
+    const total = await this.db("accounts")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .count("id as total")
+      .where("hotel_code", hotel_code)
+      .andWhere(function () {
+        if (status) {
+          this.where("is_active", status);
+        }
+
+        if (ac_type) {
+          this.andWhere("ac_type", ac_type.toUpperCase());
+        }
+
+        if (acc_ids) {
+          this.whereIn("id", acc_ids);
+        }
+      })
+      .andWhere(function () {
+        if (key) {
+          this.andWhere("name", "like", `%${key}%`).orWhere(
+            "acc_number",
+            "like",
+            `%${key}%`
+          );
         }
       });
 
@@ -434,22 +422,28 @@ class AccountModel extends Schema {
     hotel_code: number;
     id: number;
     type?: string;
-    res_id?: number;
   }) {
-    const { id, type, hotel_code, res_id } = payload;
-    return await this.db("account_view")
+    const { id, type, hotel_code } = payload;
+    return await this.db("accounts")
       .withSchema(this.RESERVATION_SCHEMA)
-      .select("*")
+      .select(
+        "id",
+        "acc_head_id",
+        "ac_type",
+        "name",
+        "branch",
+        "acc_number",
+        "is_active",
+        "acc_routing_no",
+        "details"
+      )
       .where("hotel_code", hotel_code)
       .andWhere(function () {
         if (id) {
           this.andWhere({ id });
         }
-        if (res_id) {
-          this.andWhere({ res_id });
-        }
         if (type) {
-          this.andWhere("ac_type", "like", `%${type}%`);
+          this.andWhere("ac_type", type);
         }
       });
   }

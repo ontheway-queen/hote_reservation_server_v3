@@ -26,13 +26,11 @@ class AccountValidator {
         });
         // get all account query validator
         this.getAllAccountQueryValidator = joi_1.default.object({
-            status: joi_1.default.string().valid("0", "1"),
+            is_active: joi_1.default.bool().optional(),
             ac_type: joi_1.default.string()
-                .lowercase()
-                .valid("bank", "cash", "cheque", "mobile-banking")
+                .valid("BANK", "CASH", "CHEQUE", "MOBILE_BANKING")
                 .optional(),
             key: joi_1.default.string().allow("").optional(),
-            admin_id: joi_1.default.number().allow("").optional(),
             limit: joi_1.default.string().allow("").optional(),
             skip: joi_1.default.string().allow("").optional(),
         });

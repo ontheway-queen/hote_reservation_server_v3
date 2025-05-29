@@ -1,0 +1,261 @@
+import { Knex } from "knex";
+import {
+  IbookingReqPayment,
+  IbookingRooms,
+  IguestReqBody,
+  RoomRequest,
+} from "../utlis/interfaces/reservation.interface";
+
+import AbstractServices from "../../abstarcts/abstract.service";
+import Lib from "../../utils/lib/lib";
+import { HelperFunction } from "../utlis/library/helperFunction";
+import { Request } from "express";
+
+export class SubReservationService extends AbstractServices {
+  constructor(private trx: Knex.Transaction) {
+    super();
+  }
+
+  public calculateNights(checkIn: string, checkOut: string): number {
+    const from = new Date(checkIn);
+    const to = new Date(checkOut);
+    const diffTime = Math.abs(to.getTime() - from.getTime());
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  }
+
+  public async findOrCreateGuest(
+    guest: IguestReqBody,
+    hotel_code: number
+  ): Promise<number> {
+    const guestModel = this.Model.guestModel(this.trx);
+    const { data: existingGuests } = await guestModel.getAllGuest({
+      email: guest.email,
+      hotel_code,
+    });
+
+    if (existingGuests.length) return existingGuests[0].id;
+
+    const [insertedGuest] = await guestModel.createGuest({
+      hotel_code,
+      first_name: guest.first_name,
+      last_name: guest.last_name,
+      nationality: guest.nationality,
+      email: guest.email,
+      phone: guest.phone,
+    });
+
+    return insertedGuest.id;
+  }
+
+  public calculateTotals(
+    rooms: RoomRequest[],
+    nights: number,
+    fees: { vat: number; service_charge: number; discount: number }
+  ) {
+    let total_changed_price = 0;
+
+    rooms.forEach((room) => {
+      total_changed_price += room.rate.changed_price * room.number_of_rooms;
+    });
+
+    const total = total_changed_price * nights;
+    const total_amount = total + fees.vat + fees.service_charge - fees.discount;
+    const sub_total = total + fees.vat + fees.service_charge;
+
+    return { total_amount, sub_total };
+  }
+
+  async createMainBooking({
+    payload,
+    hotel_code,
+    guest_id,
+    sub_total,
+    total_amount,
+    is_checked_in,
+  }: {
+    payload: {
+      check_in: string;
+      check_out: string;
+      special_requests?: string;
+      vat: number;
+      service_charge: number;
+      discount_amount: number;
+      source_id: number;
+      created_by: number;
+      drop: boolean;
+      drop_time?: string;
+      drop_to?: string;
+      pickup: boolean;
+      pickup_from?: string;
+      pickup_time?: string;
+    };
+    hotel_code: number;
+    guest_id: number;
+    sub_total: number;
+    total_amount: number;
+    is_checked_in: boolean;
+  }): Promise<{ id: number }> {
+    const reservation_model = this.Model.reservationModel(this.trx);
+    const last = await reservation_model.getLastBooking();
+    const lastId = last?.[0]?.id ?? 1;
+
+    const ref = Lib.generateBookingReferenceWithId(`BK`, lastId);
+
+    const [booking] = await reservation_model.insertRoomBooking({
+      booking_date: new Date().toLocaleDateString(),
+      booking_reference: ref,
+      check_in: payload.check_in,
+      check_out: payload.check_out,
+      guest_id,
+      hotel_code,
+      sub_total,
+      total_amount,
+      vat: payload.vat,
+      service_charge: payload.service_charge,
+      discount_amount: payload.discount_amount,
+      source_id: payload.source_id,
+      created_by: payload.created_by,
+      comments: payload.special_requests,
+      status: is_checked_in ? "checked_in" : "confirmed",
+      drop: payload.drop,
+      drop_time: payload.drop_time,
+      drop_to: payload.drop_to,
+      pickup: payload.pickup,
+      pickup_from: payload.pickup_from,
+      pickup_time: payload.pickup_time,
+    });
+
+    return booking;
+  }
+
+  async insertBookingRooms(
+    rooms: RoomRequest[],
+    booking_id: number,
+    nights: number
+  ) {
+    const payload: IbookingRooms[] = [];
+
+    rooms.forEach((room) => {
+      const base_rate = room.rate.base_price * nights;
+      const changed_rate = room.rate.changed_price * nights;
+
+      room.guests.forEach((guest) => {
+        payload.push({
+          booking_id,
+          room_id: guest.room_id,
+          room_type_id: room.room_type_id,
+          adults: guest.adults,
+          children: guest.children,
+          infant: guest.infant,
+          base_rate,
+          changed_rate,
+        });
+      });
+    });
+
+    await this.Model.reservationModel(this.trx).insertBookingRoom(payload);
+  }
+
+  async updateAvailability(
+    rooms: RoomRequest[],
+    checkIn: string,
+    checkOut: string,
+    hotel_code: number
+  ) {
+    const reservation_model = this.Model.reservationModel(this.trx);
+    const dates = HelperFunction.getDatesBetween(checkIn, checkOut);
+
+    const reservedRoom = rooms.map((item) => ({
+      room_type_id: item.room_type_id,
+      total_room: item.guests.length,
+    }));
+
+    for (const { room_type_id, total_room } of reservedRoom) {
+      for (const date of dates) {
+        await reservation_model.updateRoomAvailability({
+          hotel_code,
+          room_type_id,
+          date,
+          rooms_to_book: total_room,
+        });
+      }
+    }
+  }
+
+  public async handlePaymentAndFolio(
+    payment: IbookingReqPayment,
+    guest_id: number,
+    req: Request,
+    total_amount: number,
+    booking_id: number
+  ) {
+    const accountModel = this.Model.accountModel(this.trx);
+
+    const [account] = await accountModel.getSingleAccount({
+      hotel_code: req.hotel_admin.hotel_code,
+      id: payment.acc_id,
+    });
+
+    if (!account) throw new Error("Invalid Account");
+
+    const voucher_no = await new HelperFunction().generateVoucherNo();
+
+    const [voucher] = await accountModel.insertAccVoucher({
+      acc_head_id: account.acc_head_id,
+      created_by: req.hotel_admin.id,
+      debit: payment.amount,
+      credit: 0,
+      description: "For room booking payment",
+      voucher_type: "PAYMENT",
+      voucher_date: new Date().toISOString(),
+      voucher_no,
+    });
+
+    const hotelInvModel = this.Model.hotelInvoiceModel(this.trx);
+    const [lastFolio] = await hotelInvModel.getLasFolioId();
+    const folio_number = HelperFunction.generateFolioNumber(lastFolio?.id);
+    const [folio] = await hotelInvModel.insertInFolio({
+      booking_id,
+      folio_number,
+      guest_id,
+      hotel_code: req.hotel_admin.hotel_code,
+      name: "Room Booking",
+      status: "open",
+      type: "Primary",
+    });
+
+    await hotelInvModel.insertInFolioEntries({
+      acc_voucher_id: voucher.id,
+      debit: total_amount,
+      credit: 0,
+      folio_id: folio.id,
+      posting_type: "Charge",
+    });
+
+    await hotelInvModel.insertInFolioEntries({
+      acc_voucher_id: voucher.id,
+      debit: 0,
+      credit: payment.amount,
+      folio_id: folio.id,
+      posting_type: "Charge",
+    });
+
+    const guestModel = this.Model.guestModel(this.trx);
+
+    await guestModel.insertGuestLedger({
+      hotel_code: req.hotel_admin.hotel_code,
+      guest_id,
+      credit: 0,
+      remarks: "Owes for booking",
+      debit: total_amount,
+    });
+
+    await guestModel.insertGuestLedger({
+      hotel_code: req.hotel_admin.hotel_code,
+      guest_id,
+      credit: payment.amount,
+      remarks: "Paid amount for booking",
+      debit: 0,
+    });
+  }
+}

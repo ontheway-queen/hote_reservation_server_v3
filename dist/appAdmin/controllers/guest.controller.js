@@ -46,16 +46,6 @@ class GuestController extends abstract_controller_1.default {
             const _c = yield this.guestService.getSingleGuest(req), { code } = _c, data = __rest(_c, ["code"]);
             res.status(code).json(data);
         }));
-        // get Hall Booking Guest controller with filter
-        this.getHallGuest = this.asyncWrapper.wrap(null, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _d = yield this.guestService.getHallGuest(req), { code } = _d, data = __rest(_d, ["code"]);
-            res.status(code).json(data);
-        }));
-        // get Room Booking controller with filter
-        this.getRoomGuest = this.asyncWrapper.wrap(null, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _e = yield this.guestService.getRoomGuest(req), { code } = _e, data = __rest(_e, ["code"]);
-            res.status(code).json(data);
-        }));
     }
 }
 exports.default = GuestController;

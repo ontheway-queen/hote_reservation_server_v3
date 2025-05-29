@@ -21,13 +21,11 @@ class AccountValidator {
 
   // get all account query validator
   getAllAccountQueryValidator = Joi.object({
-    status: Joi.string().valid("0", "1"),
+    is_active: Joi.bool().optional(),
     ac_type: Joi.string()
-      .lowercase()
-      .valid("bank", "cash", "cheque", "mobile-banking")
+      .valid("BANK", "CASH", "CHEQUE", "MOBILE_BANKING")
       .optional(),
     key: Joi.string().allow("").optional(),
-    admin_id: Joi.number().allow("").optional(),
     limit: Joi.string().allow("").optional(),
     skip: Joi.string().allow("").optional(),
   });

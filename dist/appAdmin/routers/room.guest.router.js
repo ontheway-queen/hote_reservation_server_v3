@@ -11,11 +11,7 @@ class RoomGuestRouter extends abstract_router_1.default {
         this.guestController = new guest_controller_1.default();
         this.callRouter();
     }
-    callRouter() {
-        // guest
-        this.router.route("/")
-            .get(this.guestController.getRoomGuest);
-    }
+    callRouter() { }
 }
 exports.default = RoomGuestRouter;
 //# sourceMappingURL=room.guest.router.js.map

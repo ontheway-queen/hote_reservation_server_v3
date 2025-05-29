@@ -122,40 +122,6 @@ class GuestService extends abstract_service_1.default {
             };
         });
     }
-    // get All hall guest
-    getHallGuest(req) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const { hotel_code } = req.hotel_admin;
-            // model
-            const model = this.Model.guestModel();
-            const { data, total } = yield model.getHallGuest({
-                hotel_code,
-            });
-            return {
-                success: true,
-                code: this.StatusCode.HTTP_OK,
-                total,
-                data,
-            };
-        });
-    }
-    // get All room guest
-    getRoomGuest(req) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const { hotel_code } = req.hotel_admin;
-            // model
-            const model = this.Model.guestModel();
-            const { data, total } = yield model.getRoomGuest({
-                hotel_code,
-            });
-            return {
-                success: true,
-                code: this.StatusCode.HTTP_OK,
-                total,
-                data,
-            };
-        });
-    }
 }
 exports.GuestService = GuestService;
 exports.default = GuestService;

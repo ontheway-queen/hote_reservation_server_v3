@@ -1,7 +1,21 @@
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.HelperFunction = void 0;
-class HelperFunction {
+const moment_1 = __importDefault(require("moment"));
+const abstract_service_1 = __importDefault(require("../../../abstarcts/abstract.service"));
+class HelperFunction extends abstract_service_1.default {
     static generateRateCalendar(rawData) {
         const calendarOutput = [];
         for (const detail of rawData.rate_plan_details) {
@@ -62,6 +76,24 @@ class HelperFunction {
             current.setDate(current.getDate() + 1);
         }
         return dates;
+    }
+    static generateFolioNumber(lastFolioId) {
+        const now = (0, moment_1.default)();
+        const prefix = `FOLIO-${now.format("YYYYMM")}`;
+        const nextId = (lastFolioId || 0) + 1;
+        const padded = nextId.toString().padStart(4, "0");
+        return `${prefix}-${padded}`;
+    }
+    generateVoucherNo() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const now = (0, moment_1.default)();
+            const prefix = `VCH-${now.format("YYYYMM")}`;
+            const model = yield this.Model.accountModel();
+            const getLasVoucherId = yield model.getVoucherCount();
+            const next = (parseInt(getLasVoucherId) || 0) + 1;
+            const padded = next.toString().padStart(4, "0");
+            return `${prefix}-${padded}`;
+        });
     }
 }
 exports.HelperFunction = HelperFunction;

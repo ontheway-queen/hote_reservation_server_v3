@@ -5,7 +5,12 @@ import { SyncCryptoService } from "../../../utils/lib/crypto";
 import Lib from "../../../utils/lib/lib";
 import ResMsg from "../../../utils/miscellaneous/responseMessage";
 import StatusCode from "../../../utils/miscellaneous/statusCode";
-import { IAdmin, IhotelUser, IrestUser } from "../../types/commontypes";
+import {
+  IAdmin,
+  IhAdmin,
+  IhotelUser,
+  IrestUser,
+} from "../../types/commontypes";
 
 class AuthChecker extends AbstractServices {
   constructor() {
@@ -95,7 +100,7 @@ class AuthChecker extends AbstractServices {
           message: ResMsg.HTTP_UNAUTHORIZED,
         });
       } else {
-        req.hotel_admin = verify as IAdmin;
+        req.hotel_admin = verify as IhAdmin;
         next();
       }
     }

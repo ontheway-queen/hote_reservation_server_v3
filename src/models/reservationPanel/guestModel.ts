@@ -72,15 +72,13 @@ class GuestModel extends Schema {
 
   // insert into guest ledger
   public async insertGuestLedger(payload: {
-    name: string;
-    acc_ledger_id?: number;
-    user_id: number;
+    guest_id: number;
     hotel_code: number;
-    pay_type: "debit" | "credit";
-    amount: number;
-    ac_tr_ac_id?: number;
+    debit: number;
+    credit: number;
+    remarks?: string;
   }) {
-    return await this.db("user_ledger")
+    return await this.db("guest_ledger")
       .withSchema(this.RESERVATION_SCHEMA)
       .insert(payload);
   }
@@ -204,61 +202,6 @@ class GuestModel extends Schema {
       .update(payload)
       .where({ hotel_code })
       .andWhere({ id });
-  }
-
-  //  update guest
-  public async updateGuest(
-    id: number,
-    hotel_code: number,
-    payload: IUpdateUser
-  ) {
-    await this.db("user")
-      .withSchema(this.RESERVATION_SCHEMA)
-      .where({ id, hotel_code })
-      .update(payload);
-  }
-
-  // Get Hall Guest
-  public async getHallGuest(payload: { hotel_code: number }) {
-    const { hotel_code } = payload;
-
-    const dtbs = this.db("user as u");
-
-    const data = await dtbs
-      .select("u.id", "u.name", "u.email", "u.last_balance")
-      .withSchema(this.RESERVATION_SCHEMA)
-      .distinct("u.id", "u.name", "u.email")
-      .rightJoin("hall_booking as hb", "u.id", "hb.user_id")
-      .where("u.hotel_code", hotel_code)
-      .orderBy("u.id", "desc");
-
-    const total = await this.db("user as u")
-      .withSchema(this.RESERVATION_SCHEMA)
-      .rightJoin("hall_booking as hb", "u.id", "hb.user_id")
-      .countDistinct("u.id as total")
-      .where("u.hotel_code", hotel_code);
-
-    return { data, total: total[0].total };
-  }
-
-  // Get Room Guest
-  public async getRoomGuest(payload: { hotel_code: number }) {
-    const { hotel_code } = payload;
-
-    const data = await this.db("user as u")
-      .distinct("u.id", "u.name", "u.email", "u.last_balance")
-      .withSchema(this.RESERVATION_SCHEMA)
-      .rightJoin("room_booking as rb", "u.id", "rb.user_id")
-      .where("u.hotel_code", hotel_code)
-      .orderBy("u.id", "desc");
-
-    const total = await this.db("user as u")
-      .withSchema(this.RESERVATION_SCHEMA)
-      .countDistinct("u.id as total")
-      .rightJoin("room_booking as rb", "u.id", "rb.user_id")
-      .where("u.hotel_code", hotel_code);
-
-    return { data, total: total[0].total };
   }
 }
 export default GuestModel;

@@ -23,6 +23,7 @@ class ReservationModel extends schema_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             const { hotel_code, check_in, check_out } = payload;
             const db = this.db;
+            console.log({ check_in, check_out });
             return yield db("room_types as rt")
                 .withSchema(this.RESERVATION_SCHEMA)
                 .select("rt.id", "rt.name", "rt.hotel_code", db.raw(`
@@ -72,27 +73,130 @@ class ReservationModel extends schema_1.default {
     getAllAvailableRoomsTypeWithAvailableRoomCount(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             const { hotel_code, check_in, check_out } = payload;
+            // return await this.db("room_types as rt")
+            //   .withSchema(this.RESERVATION_SCHEMA)
+            //   .select(
+            //     "rt.id",
+            //     "rt.name",
+            //     "rt.description",
+            //     "rt.base_price",
+            //     "rt.hotel_code",
+            //     this.db.raw(`COALESCE(MIN(ra.available_rooms), 0) AS available_rooms`),
+            //     this.db.raw(`
+            //     COALESCE(
+            //       json_agg(
+            //         DISTINCT jsonb_build_object(
+            //           'rate_plan_id', rpd.id,
+            //           'name', rp.name,
+            //           'base_rate', rpd.base_rate
+            //         )
+            //       ) FILTER (WHERE rpd.id IS NOT NULL),
+            //       '[]'
+            //     ) AS rate_plans
+            //   `)
+            //   )
+            //   .leftJoin("room_availability as ra", "rt.id", "ra.room_type_id")
+            //   .leftJoin("rate_plan_details as rpd", "rt.id", "rpd.room_type_id")
+            //   .leftJoin("rate_plans as rp", "rpd.rate_plan_id", "rp.id")
+            //   .where("rt.hotel_code", hotel_code)
+            //   .andWhere("ra.date", ">=", check_in)
+            //   .andWhere("ra.date", "<", check_out)
+            //   .groupBy("rt.id");
             return yield this.db("room_types as rt")
                 .withSchema(this.RESERVATION_SCHEMA)
-                .select("rt.id", "rt.name", "rt.description", "rt.base_price", "rt.hotel_code", this.db.raw(`COALESCE(MIN(ra.available_rooms), 0) AS available_rooms`), this.db.raw(`
-        COALESCE(
-          json_agg(
-            DISTINCT jsonb_build_object(
-              'rate_plan_id', rpd.id,
-              'name', rp.name,
-              'base_rate', rpd.base_rate
-            )
-          ) FILTER (WHERE rpd.id IS NOT NULL),
-          '[]'
-        ) AS rate_plans
-      `))
+                .select("rt.id", "rt.name", "rt.description", "rt.base_price", "rt.hotel_code", this.db.raw(`MIN(ra.available_rooms) AS available_rooms`), this.db.raw(`
+      COALESCE(
+        json_agg(
+          DISTINCT jsonb_build_object(
+            'rate_plan_id', rpd.id,
+            'name', rp.name,
+            'base_rate', rpd.base_rate
+          )
+        ) FILTER (WHERE rpd.id IS NOT NULL),
+        '[]'
+      ) AS rate_plans
+    `))
                 .leftJoin("room_availability as ra", "rt.id", "ra.room_type_id")
                 .leftJoin("rate_plan_details as rpd", "rt.id", "rpd.room_type_id")
                 .leftJoin("rate_plans as rp", "rpd.rate_plan_id", "rp.id")
                 .where("rt.hotel_code", hotel_code)
                 .andWhere("ra.date", ">=", check_in)
                 .andWhere("ra.date", "<", check_out)
-                .groupBy("rt.id");
+                .groupBy("rt.id")
+                .having(this.db.raw("MIN(ra.available_rooms) > 0"));
+        });
+    }
+    // public async getAllAvailableRoomsByRoomType(payload: {
+    //   check_in: string;
+    //   check_out: string;
+    //   hotel_code: number;
+    //   room_type_id: number;
+    // }) {
+    //   const { hotel_code, check_in, check_out, room_type_id } = payload;
+    //   console.log({ payload });
+    //   const schema = this.RESERVATION_SCHEMA;
+    //   return await this.db("rooms as r")
+    //     .withSchema(schema)
+    //     .select(
+    //       "r.hotel_code",
+    //       "r.id as room_id",
+    //       "r.room_name",
+    //       "r.room_type_id",
+    //       "rt.name as room_type_name"
+    //     )
+    //     .leftJoin("room_types as rt", "r.room_type_id", "rt.id")
+    //     .where("r.hotel_code", hotel_code)
+    //     .andWhere("r.room_type_id", room_type_id)
+    //     .whereNotExists(function () {
+    //       this.select("*")
+    //         .from("bookings as b")
+    //         .withSchema(schema)
+    //         .join("booking_rooms as br", "br.booking_id", "b.id")
+    //         .whereRaw("br.room_id = r.id")
+    //         .andWhere("b.status", "confirmed")
+    //         .andWhere("b.check_in", "<", check_out)
+    //         .andWhere("b.check_out", ">", check_in);
+    //     });
+    // }
+    getAllAvailableRoomsByRoomType(payload) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { hotel_code, check_in, check_out, room_type_id } = payload;
+            const schema = this.RESERVATION_SCHEMA;
+            const availableRoomTypes = () => this.db(`${schema}.room_availability as ra`)
+                .joinRaw(`
+          JOIN (
+            SELECT gs1.date AS gen_date
+            FROM generate_series(?::date, (?::date - INTERVAL '1 day'), INTERVAL '1 day') AS gs1(date)
+          ) d ON d.gen_date = ra.date
+        `, [check_in, check_out])
+                .where("ra.hotel_code", hotel_code)
+                .andWhere("ra.room_type_id", room_type_id)
+                .andWhere("ra.available_rooms", ">", 0)
+                .groupBy("ra.room_type_id")
+                .havingRaw(`
+          COUNT(*) = (
+            SELECT COUNT(*) FROM (
+              SELECT gs2.date AS gen_date
+              FROM generate_series(?::date, (?::date - INTERVAL '1 day'), INTERVAL '1 day') AS gs2(date)
+            ) AS dd
+          )
+        `, [check_in, check_out])
+                .select("ra.room_type_id");
+            return yield this.db(`${schema}.rooms as r`)
+                .select("r.hotel_code", "r.id as room_id", "r.room_name", "r.room_type_id", "rt.name as room_type_name")
+                .leftJoin(`${schema}.room_types as rt`, "r.room_type_id", "rt.id")
+                .where("r.hotel_code", hotel_code)
+                .andWhere("r.room_type_id", room_type_id)
+                .whereExists(availableRoomTypes())
+                .whereNotExists(function () {
+                this.select("*")
+                    .from(`${schema}.bookings as b`)
+                    .join(`${schema}.booking_rooms as br`, "br.booking_id", "b.id")
+                    .whereRaw("br.room_id = r.id")
+                    .andWhere("b.status", "confirmed")
+                    .andWhere("b.check_in", "<", check_out)
+                    .andWhere("b.check_out", ">", check_in);
+            });
         });
     }
     getAllAvailableRoomsTypeForEachAvailableRoom(payload) {
@@ -107,29 +211,6 @@ class ReservationModel extends schema_1.default {
                 .andWhere("ra.date", ">=", "2025-06-01")
                 .andWhere("ra.date", "<=", "2025-06-04")
                 .orderBy("ra.date", "asc");
-        });
-    }
-    getAllAvailableRoomsByRoomType(payload) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const { hotel_code, check_in, check_out, room_type_id } = payload;
-            console.log({ payload });
-            const schema = this.RESERVATION_SCHEMA;
-            return yield this.db("rooms as r")
-                .withSchema(schema)
-                .select("r.hotel_code", "r.id as room_id", "r.room_name", "r.room_type_id", "rt.name as room_type_name")
-                .leftJoin("room_types as rt", "r.room_type_id", "rt.id")
-                .where("r.hotel_code", hotel_code)
-                .andWhere("r.room_type_id", room_type_id)
-                .whereNotExists(function () {
-                this.select("*")
-                    .from("bookings as b")
-                    .withSchema(schema)
-                    .join("booking_rooms as br", "br.booking_id", "b.id")
-                    .whereRaw("br.room_id = r.id")
-                    .andWhere("b.status", "confirmed")
-                    .andWhere("b.check_in", "<", check_out)
-                    .andWhere("b.check_out", ">", check_in);
-            });
         });
     }
     insertRoomBooking(payload) {
@@ -151,7 +232,8 @@ class ReservationModel extends schema_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("bookings as b")
                 .withSchema(this.RESERVATION_SCHEMA)
-                .select("b.id", "b.booking_reference", "b.booking_date", "b.check_in", "b.check_out", "b.status", "b.total_amount", "b.vat", "b.discount_amount", "b.service_charge")
+                .select("b.id", "b.booking_reference", "b.booking_date", "b.check_in", "b.check_out", "b.status", "src.name as source_name", "b.total_amount", "b.vat", "b.discount_amount", "b.service_charge")
+                .leftJoin("sources as src", "b.source_id", "src.id")
                 .leftJoin("guests as g", "b.guest_id", "g.id")
                 .where("b.hotel_code", hotel_code)
                 .orderBy("b.id", "desc");

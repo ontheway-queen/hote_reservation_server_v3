@@ -5,7 +5,19 @@ export type TDB = Knex | Knex.Transaction;
 
 // user admin types
 export interface IAdmin {
+  id: number;
+  name: string;
+  email: string;
+  phone: string | null;
+  avatar: string | null;
+  status: 0 | 1;
+  type: string;
+}
+
+// hotel admin types
+export interface IhAdmin {
   hotel_code: number;
+  hotel_name: string;
   id: number;
   name: string;
   email: string;

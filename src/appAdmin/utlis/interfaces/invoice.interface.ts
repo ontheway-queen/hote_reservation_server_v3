@@ -1,3 +1,29 @@
+export interface IinsertFolioPayload {
+  hotel_code: number;
+  guest_id: number;
+  name: string;
+  booking_id: number;
+  folio_number: string;
+  type: "Primary" | "Split" | "Company";
+  status: "open" | "closed";
+}
+
+export interface IinsertFolioEntriesPayload {
+  folio_id: number;
+  acc_voucher_id: number;
+  debit: number;
+  credit: number;
+  description?: string;
+  posting_type:
+    | "Charge"
+    | "Payment"
+    | "Adjustment"
+    | "Refund"
+    | "Discount"
+    | "Tax"
+    | "Deposit";
+}
+
 export interface IinsertinvoicePayload {
   invoice_no: string;
   hotel_code: number;

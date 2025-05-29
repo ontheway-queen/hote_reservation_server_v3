@@ -3,7 +3,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const client_Model_1 = __importDefault(require("./ClientModel/client.Model"));
 const commonModel_1 = __importDefault(require("./commonModel/commonModel"));
 const mAdministration_model_1 = __importDefault(require("./managementsModel/mAdministrationModel/mAdministration.model"));
 const mConfigurationModel_1 = __importDefault(require("./managementsModel/mConfigurationModel/mConfigurationModel"));
@@ -87,11 +86,6 @@ class Models {
     // stock
     stockInventoryModel(trx) {
         return new stock_inventory_model_1.default(trx || this.db);
-    }
-    //=============== client panel model start ================ //
-    // hotel hall booking
-    clientModel(trx) {
-        return new client_Model_1.default(trx || this.db);
     }
     //=============== m360ict panel model start ================ //
     // hotel user model

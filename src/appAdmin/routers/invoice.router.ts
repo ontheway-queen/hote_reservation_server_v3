@@ -9,22 +9,6 @@ class InvoiceRouter extends AbstractRouter {
     this.callRouter();
   }
 
-  private callRouter() {
-    // get all invoice router
-    this.router
-      .route("/")
-      .get(this.invoiceController.getAllInvoice)
-      .post(this.invoiceController.createInvoice);
-
-    // get all invoice router
-    this.router
-      .route("/for/money-receipt")
-      .get(this.invoiceController.getAllInvoiceForMoneyReceipt);
-
-    // get single invoice router
-    this.router
-      .route("/:invoice_id")
-      .get(this.invoiceController.getSingleInvoice);
-  }
+  private callRouter() {}
 }
 export default InvoiceRouter;
