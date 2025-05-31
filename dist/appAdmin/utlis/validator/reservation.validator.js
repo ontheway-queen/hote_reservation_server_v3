@@ -72,12 +72,27 @@ class ReservationValidator {
                 .min(1)
                 .required(),
             special_requests: joi_1.default.string().allow("").optional(),
+            is_payment_given: joi_1.default.bool().required(),
             payment: joi_1.default.object({
-                method: joi_1.default.string().valid("cash", "card", "online").required(),
+                method: joi_1.default.string().valid("cash", "bank", "online").required(),
                 acc_id: joi_1.default.number().required(),
                 amount: joi_1.default.number().required(),
-            }).required(),
+            }).optional(),
             source_id: joi_1.default.number().required(),
+        });
+        this.addPayment = joi_1.default.object({
+            folio_id: joi_1.default.number().required(),
+            amount: joi_1.default.number().required(),
+            acc_id: joi_1.default.number().required(),
+            payment_date: joi_1.default.string().required(),
+            remarks: joi_1.default.string().allow("").optional(),
+        });
+        this.refundPayment = joi_1.default.object({
+            folio_id: joi_1.default.number().required(),
+            amount: joi_1.default.number().required(),
+            acc_id: joi_1.default.number().required(),
+            payment_date: joi_1.default.string().required(),
+            remarks: joi_1.default.string().allow("").optional(),
         });
     }
 }

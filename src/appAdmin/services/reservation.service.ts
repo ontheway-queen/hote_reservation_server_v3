@@ -1,6 +1,7 @@
 import { Request } from "express";
 import AbstractServices from "../../abstarcts/abstract.service";
 import {
+  addPaymentReqBody,
   BookingRequestBody,
   IbookingRooms,
   IgetChildRateGroups,
@@ -373,6 +374,7 @@ export class ReservationService extends AbstractServices {
           created_by: req.hotel_admin.id,
           discount_amount: body.discount_amount,
           drop: body.drop,
+          booking_type: body.reservation_type == "confirm" ? "B" : "H",
           drop_time: body.drop_time,
           pickup_from: body.pickup_from,
           pickup: body.pickup,
@@ -395,6 +397,7 @@ export class ReservationService extends AbstractServices {
 
       // Availability
       await sub.updateAvailability(
+        body.reservation_type,
         body.rooms,
         body.check_in,
         body.check_out,
@@ -402,7 +405,8 @@ export class ReservationService extends AbstractServices {
       );
 
       // Payment
-      await sub.handlePaymentAndFolio(
+      await sub.handlePaymentAndFolioForBooking(
+        body.is_payment_given,
         body.payment,
         guest_id,
         req,
@@ -428,6 +432,169 @@ export class ReservationService extends AbstractServices {
       code: this.StatusCode.HTTP_OK,
       data,
     };
+  }
+
+  public async getSingleBooking(req: Request) {
+    const data = await this.Model.reservationModel().getSingleBooking(
+      req.hotel_admin.hotel_code,
+      parseInt(req.params.id)
+    );
+
+    return {
+      success: true,
+      code: this.StatusCode.HTTP_OK,
+      data,
+    };
+  }
+
+  public async checkIn(req: Request) {
+    const hotel_code = req.hotel_admin.hotel_code;
+    const booking_id = parseInt(req.params.id);
+    const data = await this.Model.reservationModel().getSingleBooking(
+      hotel_code,
+      booking_id
+    );
+
+    if (!data) {
+      return {
+        success: false,
+        code: this.StatusCode.HTTP_NOT_FOUND,
+        message: this.ResMsg.HTTP_NOT_FOUND,
+      };
+    }
+
+    const { status } = data;
+
+    if (status != "confirmed") {
+      return {
+        success: false,
+        code: this.StatusCode.HTTP_BAD_REQUEST,
+        message: "This booking has other status. So, you cannot checkin",
+      };
+    }
+
+    // update
+    await this.Model.reservationModel().updateRoomBooking(
+      {
+        status: "checked_in",
+      },
+      hotel_code,
+      booking_id
+    );
+
+    return {
+      success: true,
+      code: this.StatusCode.HTTP_OK,
+      message: "Successfully Cheked in",
+    };
+  }
+
+  public async getFoliosbySingleBooking(req: Request) {
+    const data = await this.Model.reservationModel().getFoliosbySingleBooking(
+      req.hotel_admin.hotel_code,
+      parseInt(req.params.id)
+    );
+
+    return {
+      success: true,
+      code: this.StatusCode.HTTP_OK,
+      data,
+    };
+  }
+
+  public async getFolioEntriesbyFolioID(req: Request) {
+    const data = await this.Model.reservationModel().getFolioEntriesbyFolioID(
+      req.hotel_admin.hotel_code,
+      parseInt(req.params.id)
+    );
+
+    return {
+      success: true,
+      code: this.StatusCode.HTTP_OK,
+      data,
+    };
+  }
+
+  public async addPaymentByFolioID(req: Request) {
+    return await this.db.transaction(async (trx) => {
+      const { acc_id, amount, folio_id, payment_date, remarks } =
+        req.body as addPaymentReqBody;
+      const sub = new SubReservationService(trx);
+
+      const reservationModel = this.Model.reservationModel(trx);
+      const checkSingleFolio =
+        await reservationModel.getSingleFoliobyHotelCodeAndID(
+          req.hotel_admin.hotel_code,
+          folio_id
+        );
+
+      if (!checkSingleFolio) {
+        return {
+          success: false,
+          code: this.StatusCode.HTTP_NOT_FOUND,
+          message: this.ResMsg.HTTP_NOT_FOUND,
+        };
+      }
+
+      // insert entries
+      await sub.handlePaymentAndFolioForAddPayment({
+        acc_id,
+        amount,
+        folio_id,
+        guest_id: checkSingleFolio.guest_id,
+        payment_for: "ADD MONEY.",
+        remarks,
+        req,
+        payment_date,
+      });
+
+      return {
+        success: true,
+        code: this.StatusCode.HTTP_OK,
+        message: "Payment has been added",
+      };
+    });
+  }
+
+  public async refundPaymentByFolioID(req: Request) {
+    return await this.db.transaction(async (trx) => {
+      const { acc_id, amount, folio_id, payment_date, payment_type, remarks } =
+        req.body as addPaymentReqBody;
+      const sub = new SubReservationService(trx);
+
+      const reservationModel = this.Model.reservationModel(trx);
+      const checkSingleFolio =
+        await reservationModel.getSingleFoliobyHotelCodeAndID(
+          req.hotel_admin.hotel_code,
+          folio_id
+        );
+
+      if (!checkSingleFolio) {
+        return {
+          success: false,
+          code: this.StatusCode.HTTP_NOT_FOUND,
+          message: this.ResMsg.HTTP_NOT_FOUND,
+        };
+      }
+
+      // insert entries
+      await sub.handlePaymentAndFolioForRefundPayment({
+        acc_id,
+        amount,
+        folio_id,
+        guest_id: checkSingleFolio.guest_id,
+        payment_for: "REFUND",
+        remarks,
+        req,
+        payment_date,
+      });
+
+      return {
+        success: true,
+        code: this.StatusCode.HTTP_OK,
+        message: "Payment has been refunded",
+      };
+    });
   }
 }
 export default ReservationService;

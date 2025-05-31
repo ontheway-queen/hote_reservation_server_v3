@@ -34,5 +34,23 @@ export class ReservationRouter {
       .route("/booking")
       .post(this.controller.createBooking)
       .get(this.controller.getAllBooking);
+
+    this.router.route("/booking/:id").get(this.controller.getSingleBooking);
+
+    this.router
+      .route("/folios-by/booking_id/:id")
+      .get(this.controller.getFoliosbySingleBooking);
+
+    this.router
+      .route("/folio-entries/by/folio-id/:id")
+      .get(this.controller.getFolioEntriesbyFolioID);
+
+    this.router.route("/add-payment").post(this.controller.addPaymentByFolioID);
+
+    this.router
+      .route("/refund-payment")
+      .post(this.controller.refundPaymentByFolioID);
+
+    this.router.route("/checkin/by/booking/:id").patch(this.controller.checkIn);
   }
 }

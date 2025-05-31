@@ -19,7 +19,7 @@ import PayRollModel from "./reservationPanel/payRollModel";
 import RAdministrationModel from "./reservationPanel/rAdministration.model";
 import ReportModel from "./reservationPanel/ReportModel/ReportModel";
 import RoomModel from "./reservationPanel/Room.Model";
-import RoomBookingModel from "./reservationPanel/roomBookingModel";
+
 import SettingModel from "./reservationPanel/Setting.Model";
 import { ReservationModel } from "./reservationPanel/reservation.model";
 
@@ -40,10 +40,6 @@ class Models {
 
   public reservationModel(trx?: Knex.Transaction) {
     return new ReservationModel(trx || this.db);
-  }
-
-  public roomBookingModel(trx?: Knex.Transaction) {
-    return new RoomBookingModel(trx || this.db);
   }
 
   public rAdministrationModel(trx?: Knex.Transaction) {

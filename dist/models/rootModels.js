@@ -21,7 +21,6 @@ const payRollModel_1 = __importDefault(require("./reservationPanel/payRollModel"
 const rAdministration_model_1 = __importDefault(require("./reservationPanel/rAdministration.model"));
 const ReportModel_1 = __importDefault(require("./reservationPanel/ReportModel/ReportModel"));
 const Room_Model_1 = __importDefault(require("./reservationPanel/Room.Model"));
-const roomBookingModel_1 = __importDefault(require("./reservationPanel/roomBookingModel"));
 const Setting_Model_1 = __importDefault(require("./reservationPanel/Setting.Model"));
 const reservation_model_1 = require("./reservationPanel/reservation.model");
 class Models {
@@ -36,9 +35,6 @@ class Models {
     }
     reservationModel(trx) {
         return new reservation_model_1.ReservationModel(trx || this.db);
-    }
-    roomBookingModel(trx) {
-        return new roomBookingModel_1.default(trx || this.db);
     }
     rAdministrationModel(trx) {
         return new rAdministration_model_1.default(trx || this.db);

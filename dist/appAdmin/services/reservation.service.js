@@ -314,6 +314,7 @@ class ReservationService extends abstract_service_1.default {
                         created_by: req.hotel_admin.id,
                         discount_amount: body.discount_amount,
                         drop: body.drop,
+                        booking_type: body.reservation_type == "confirm" ? "B" : "H",
                         drop_time: body.drop_time,
                         pickup_from: body.pickup_from,
                         pickup: body.pickup,
@@ -333,9 +334,9 @@ class ReservationService extends abstract_service_1.default {
                 // Rooms
                 yield sub.insertBookingRooms(body.rooms, booking.id, total_nights);
                 // Availability
-                yield sub.updateAvailability(body.rooms, body.check_in, body.check_out, hotel_code);
+                yield sub.updateAvailability(body.reservation_type, body.rooms, body.check_in, body.check_out, hotel_code);
                 // Payment
-                yield sub.handlePaymentAndFolio(body.payment, guest_id, req, total_amount, booking.id);
+                yield sub.handlePaymentAndFolioForBooking(body.is_payment_given, body.payment, guest_id, req, total_amount, booking.id);
                 return {
                     success: true,
                     code: this.StatusCode.HTTP_SUCCESSFUL,
@@ -354,6 +355,133 @@ class ReservationService extends abstract_service_1.default {
                 code: this.StatusCode.HTTP_OK,
                 data,
             };
+        });
+    }
+    getSingleBooking(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const data = yield this.Model.reservationModel().getSingleBooking(req.hotel_admin.hotel_code, parseInt(req.params.id));
+            return {
+                success: true,
+                code: this.StatusCode.HTTP_OK,
+                data,
+            };
+        });
+    }
+    checkIn(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const hotel_code = req.hotel_admin.hotel_code;
+            const booking_id = parseInt(req.params.id);
+            const data = yield this.Model.reservationModel().getSingleBooking(hotel_code, booking_id);
+            if (!data) {
+                return {
+                    success: false,
+                    code: this.StatusCode.HTTP_NOT_FOUND,
+                    message: this.ResMsg.HTTP_NOT_FOUND,
+                };
+            }
+            const { status } = data;
+            if (status != "confirmed") {
+                return {
+                    success: false,
+                    code: this.StatusCode.HTTP_BAD_REQUEST,
+                    message: "This booking has other status. So, you cannot checkin",
+                };
+            }
+            // update
+            yield this.Model.reservationModel().updateRoomBooking({
+                status: "checked_in",
+            }, hotel_code, booking_id);
+            return {
+                success: true,
+                code: this.StatusCode.HTTP_OK,
+                message: "Successfully Cheked in",
+            };
+        });
+    }
+    getFoliosbySingleBooking(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const data = yield this.Model.reservationModel().getFoliosbySingleBooking(req.hotel_admin.hotel_code, parseInt(req.params.id));
+            return {
+                success: true,
+                code: this.StatusCode.HTTP_OK,
+                data,
+            };
+        });
+    }
+    getFolioEntriesbyFolioID(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const data = yield this.Model.reservationModel().getFolioEntriesbyFolioID(req.hotel_admin.hotel_code, parseInt(req.params.id));
+            return {
+                success: true,
+                code: this.StatusCode.HTTP_OK,
+                data,
+            };
+        });
+    }
+    addPaymentByFolioID(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
+                const { acc_id, amount, folio_id, payment_date, remarks } = req.body;
+                const sub = new subreservation_service_1.SubReservationService(trx);
+                const reservationModel = this.Model.reservationModel(trx);
+                const checkSingleFolio = yield reservationModel.getSingleFoliobyHotelCodeAndID(req.hotel_admin.hotel_code, folio_id);
+                if (!checkSingleFolio) {
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_NOT_FOUND,
+                        message: this.ResMsg.HTTP_NOT_FOUND,
+                    };
+                }
+                // insert entries
+                yield sub.handlePaymentAndFolioForAddPayment({
+                    acc_id,
+                    amount,
+                    folio_id,
+                    guest_id: checkSingleFolio.guest_id,
+                    payment_for: "ADD MONEY.",
+                    remarks,
+                    req,
+                    payment_date,
+                });
+                return {
+                    success: true,
+                    code: this.StatusCode.HTTP_OK,
+                    message: "Payment has been added",
+                };
+            }));
+        });
+    }
+    refundPaymentByFolioID(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
+                const { acc_id, amount, folio_id, payment_date, payment_type, remarks } = req.body;
+                const sub = new subreservation_service_1.SubReservationService(trx);
+                const reservationModel = this.Model.reservationModel(trx);
+                const checkSingleFolio = yield reservationModel.getSingleFoliobyHotelCodeAndID(req.hotel_admin.hotel_code, folio_id);
+                if (!checkSingleFolio) {
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_NOT_FOUND,
+                        message: this.ResMsg.HTTP_NOT_FOUND,
+                    };
+                }
+                // insert entries
+                yield sub.handlePaymentAndFolioForRefundPayment({
+                    acc_id,
+                    amount,
+                    folio_id,
+                    guest_id: checkSingleFolio.guest_id,
+                    payment_for: "REFUND",
+                    remarks,
+                    req,
+                    payment_date,
+                });
+                return {
+                    success: true,
+                    code: this.StatusCode.HTTP_OK,
+                    message: "Payment has been refunded",
+                };
+            }));
         });
     }
 }

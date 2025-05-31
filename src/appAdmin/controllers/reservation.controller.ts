@@ -77,4 +77,60 @@ export class ReservationController extends AbstractController {
       res.status(code).json(data);
     }
   );
+
+  public getSingleBooking = this.asyncWrapper.wrap(
+    { paramSchema: this.commonValidator.singleParamValidator() },
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.getSingleBooking(req);
+      res.status(code).json(data);
+    }
+  );
+
+  public checkIn = this.asyncWrapper.wrap(
+    { paramSchema: this.commonValidator.singleParamValidator() },
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.checkIn(req);
+      res.status(code).json(data);
+    }
+  );
+
+  public getFoliosbySingleBooking = this.asyncWrapper.wrap(
+    { paramSchema: this.commonValidator.singleParamValidator() },
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.getFoliosbySingleBooking(
+        req
+      );
+      res.status(code).json(data);
+    }
+  );
+
+  public addPaymentByFolioID = this.asyncWrapper.wrap(
+    {
+      bodySchema: this.validator.addPayment,
+    },
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.addPaymentByFolioID(req);
+      res.status(code).json(data);
+    }
+  );
+
+  public refundPaymentByFolioID = this.asyncWrapper.wrap(
+    {
+      bodySchema: this.validator.addPayment,
+    },
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.refundPaymentByFolioID(req);
+      res.status(code).json(data);
+    }
+  );
+
+  public getFolioEntriesbyFolioID = this.asyncWrapper.wrap(
+    { paramSchema: this.commonValidator.singleParamValidator() },
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.getFolioEntriesbyFolioID(
+        req
+      );
+      res.status(code).json(data);
+    }
+  );
 }

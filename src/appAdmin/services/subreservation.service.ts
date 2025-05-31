@@ -76,6 +76,7 @@ export class SubReservationService extends AbstractServices {
     payload: {
       check_in: string;
       check_out: string;
+      booking_type: string;
       special_requests?: string;
       vat: number;
       service_charge: number;
@@ -101,7 +102,7 @@ export class SubReservationService extends AbstractServices {
 
     const ref = Lib.generateBookingReferenceWithId(`BK`, lastId);
 
-    const [booking] = await reservation_model.insertRoomBooking({
+    const [booking] = await reservation_model.insertBooking({
       booking_date: new Date().toLocaleDateString(),
       booking_reference: ref,
       check_in: payload.check_in,
@@ -116,6 +117,7 @@ export class SubReservationService extends AbstractServices {
       source_id: payload.source_id,
       created_by: payload.created_by,
       comments: payload.special_requests,
+      booking_type: payload.booking_type,
       status: is_checked_in ? "checked_in" : "confirmed",
       drop: payload.drop,
       drop_time: payload.drop_time,
@@ -157,6 +159,7 @@ export class SubReservationService extends AbstractServices {
   }
 
   async updateAvailability(
+    reservation_type: string,
     rooms: RoomRequest[],
     checkIn: string,
     checkOut: string,
@@ -172,17 +175,27 @@ export class SubReservationService extends AbstractServices {
 
     for (const { room_type_id, total_room } of reservedRoom) {
       for (const date of dates) {
-        await reservation_model.updateRoomAvailability({
-          hotel_code,
-          room_type_id,
-          date,
-          rooms_to_book: total_room,
-        });
+        if (reservation_type === "confirm") {
+          await reservation_model.updateRoomAvailability({
+            hotel_code,
+            room_type_id,
+            date,
+            rooms_to_book: total_room,
+          });
+        } else {
+          await reservation_model.updateRoomAvailabilityHold({
+            hotel_code,
+            room_type_id,
+            date,
+            rooms_to_book: total_room,
+          });
+        }
       }
     }
   }
 
-  public async handlePaymentAndFolio(
+  public async handlePaymentAndFolioForBooking(
+    is_payment_given: boolean,
     payment: IbookingReqPayment,
     guest_id: number,
     req: Request,
@@ -191,25 +204,30 @@ export class SubReservationService extends AbstractServices {
   ) {
     const accountModel = this.Model.accountModel(this.trx);
 
-    const [account] = await accountModel.getSingleAccount({
-      hotel_code: req.hotel_admin.hotel_code,
-      id: payment.acc_id,
-    });
+    let voucherData: any;
+    if (is_payment_given) {
+      const [account] = await accountModel.getSingleAccount({
+        hotel_code: req.hotel_admin.hotel_code,
+        id: payment.acc_id,
+      });
 
-    if (!account) throw new Error("Invalid Account");
+      if (!account) throw new Error("Invalid Account");
 
-    const voucher_no = await new HelperFunction().generateVoucherNo();
+      const voucher_no = await new HelperFunction().generateVoucherNo();
 
-    const [voucher] = await accountModel.insertAccVoucher({
-      acc_head_id: account.acc_head_id,
-      created_by: req.hotel_admin.id,
-      debit: payment.amount,
-      credit: 0,
-      description: "For room booking payment",
-      voucher_type: "PAYMENT",
-      voucher_date: new Date().toISOString(),
-      voucher_no,
-    });
+      const [voucher] = await accountModel.insertAccVoucher({
+        acc_head_id: account.acc_head_id,
+        created_by: req.hotel_admin.id,
+        debit: payment.amount,
+        credit: 0,
+        description: "For room booking payment",
+        voucher_type: "PAYMENT",
+        voucher_date: new Date().toISOString(),
+        voucher_no,
+      });
+
+      voucherData = voucher;
+    }
 
     const hotelInvModel = this.Model.hotelInvoiceModel(this.trx);
     const [lastFolio] = await hotelInvModel.getLasFolioId();
@@ -225,20 +243,21 @@ export class SubReservationService extends AbstractServices {
     });
 
     await hotelInvModel.insertInFolioEntries({
-      acc_voucher_id: voucher.id,
+      acc_voucher_id: voucherData?.id,
       debit: total_amount,
       credit: 0,
       folio_id: folio.id,
       posting_type: "Charge",
     });
 
-    await hotelInvModel.insertInFolioEntries({
-      acc_voucher_id: voucher.id,
-      debit: 0,
-      credit: payment.amount,
-      folio_id: folio.id,
-      posting_type: "Charge",
-    });
+    if (is_payment_given)
+      await hotelInvModel.insertInFolioEntries({
+        acc_voucher_id: voucherData.id,
+        debit: 0,
+        credit: payment.amount,
+        folio_id: folio.id,
+        posting_type: "Payment",
+      });
 
     const guestModel = this.Model.guestModel(this.trx);
 
@@ -250,12 +269,139 @@ export class SubReservationService extends AbstractServices {
       debit: total_amount,
     });
 
+    if (is_payment_given)
+      await guestModel.insertGuestLedger({
+        hotel_code: req.hotel_admin.hotel_code,
+        guest_id,
+        credit: payment.amount,
+        remarks: "Paid amount for booking",
+        debit: 0,
+      });
+  }
+
+  public async handlePaymentAndFolioForAddPayment({
+    acc_id,
+    amount,
+    folio_id,
+    guest_id,
+    remarks,
+    req,
+    payment_for,
+    payment_date,
+  }: {
+    acc_id: number;
+    guest_id: number;
+    req: Request;
+    amount: number;
+    remarks: string;
+    folio_id: number;
+    payment_for: string;
+    payment_date: string;
+  }) {
+    const accountModel = this.Model.accountModel(this.trx);
+
+    const [account] = await accountModel.getSingleAccount({
+      hotel_code: req.hotel_admin.hotel_code,
+      id: acc_id,
+    });
+
+    if (!account) throw new Error("Invalid Account");
+
+    const voucher_no = await new HelperFunction().generateVoucherNo();
+
+    const [voucher] = await accountModel.insertAccVoucher({
+      acc_head_id: account.acc_head_id,
+      created_by: req.hotel_admin.id,
+      debit: amount,
+      credit: 0,
+      description: "For Add Money." + " " + remarks,
+      voucher_type: "PAYMENT",
+      voucher_date: payment_date,
+      voucher_no,
+    });
+
+    const hotelInvModel = this.Model.hotelInvoiceModel(this.trx);
+
+    await hotelInvModel.insertInFolioEntries({
+      acc_voucher_id: voucher.id,
+      debit: 0,
+      credit: amount,
+      folio_id: folio_id,
+      posting_type: "Payment",
+      description: payment_for + " " + remarks,
+    });
+
+    const guestModel = this.Model.guestModel(this.trx);
+
     await guestModel.insertGuestLedger({
       hotel_code: req.hotel_admin.hotel_code,
       guest_id,
-      credit: payment.amount,
-      remarks: "Paid amount for booking",
+      credit: amount,
+      remarks: payment_for,
       debit: 0,
+    });
+  }
+
+  public async handlePaymentAndFolioForRefundPayment({
+    acc_id,
+    amount,
+    folio_id,
+    guest_id,
+    remarks,
+    req,
+    payment_for,
+    payment_date,
+  }: {
+    acc_id: number;
+    guest_id: number;
+    req: Request;
+    amount: number;
+    remarks: string;
+    folio_id: number;
+    payment_for: string;
+    payment_date: string;
+  }) {
+    const accountModel = this.Model.accountModel(this.trx);
+
+    const [account] = await accountModel.getSingleAccount({
+      hotel_code: req.hotel_admin.hotel_code,
+      id: acc_id,
+    });
+
+    if (!account) throw new Error("Invalid Account");
+
+    const voucher_no = await new HelperFunction().generateVoucherNo();
+
+    const [voucher] = await accountModel.insertAccVoucher({
+      acc_head_id: account.acc_head_id,
+      created_by: req.hotel_admin.id,
+      debit: 0,
+      credit: amount,
+      description: remarks,
+      voucher_type: "REFUND",
+      voucher_date: payment_date,
+      voucher_no,
+    });
+
+    const hotelInvModel = this.Model.hotelInvoiceModel(this.trx);
+
+    await hotelInvModel.insertInFolioEntries({
+      acc_voucher_id: voucher.id,
+      debit: amount,
+      credit: 0,
+      folio_id: folio_id,
+      posting_type: "Refund",
+      description: payment_for + " " + remarks,
+    });
+
+    const guestModel = this.Model.guestModel(this.trx);
+
+    await guestModel.insertGuestLedger({
+      hotel_code: req.hotel_admin.hotel_code,
+      guest_id,
+      credit: 0,
+      remarks: payment_for,
+      debit: amount,
     });
   }
 }

@@ -98,6 +98,7 @@ export interface BookingRequestBody {
   discount_amount: number;
   service_charge: number;
   vat: number;
+  is_payment_given: boolean;
   rooms: RoomRequest[];
   special_requests?: string;
   payment: IbookingReqPayment;
@@ -105,7 +106,7 @@ export interface BookingRequestBody {
 }
 
 export interface IbookingReqPayment {
-  method: "cash" | "card" | "online";
+  method: "MOBILE_BANKING" | "BANK" | "CASH";
   acc_id: number;
   amount: number;
 }
@@ -137,6 +138,7 @@ export interface IRoomBooking {
   booking_date: string;
   check_in: string;
   check_out: string;
+  booking_type: string;
   status: string;
   sub_total: number;
   total_amount: number;
@@ -190,82 +192,62 @@ export interface IbookingRooms {
   base_rate: number;
 }
 
-export interface IsingleRoomBooking {
+// ------------------------ single booking ----------------------//
+
+interface BookingRoom {
   id: number;
-  hotel_code: number;
-  user_id: number;
-  name: string;
-  photo: string;
-  email: string;
-  nid_no: string;
-  passport_no: string;
-  booking_no: string;
-  check_in_time: string;
-  check_out_time: string;
-  number_of_nights: number;
-  total_occupancy: number;
-  grand_total: string;
-  status: string;
-  created_at: string;
-  updated_at: string;
-  booking_rooms: IbookingRooms[];
-  extra_charge: number;
+  room_type_id: number;
+  room_type_name: string;
+  room_id: number;
+  room_name: string;
+  adults: number;
+  children: number;
+  infant: number;
+  base_rate: number;
+  changed_rate: number;
 }
 
-export interface IgetAllRoomBooking {
+interface BookingGuest {
+  guest_id: number;
+  first_name: string;
+  last_name: string;
+  guest_email: string;
+  phone: string;
+  address: string;
+  country: string;
+  passport_number: string;
+  nationality: string;
+}
+
+export interface IBookingDetails extends BookingGuest {
   id: number;
-  hotel_code: number;
-  user_id: number;
-  name: string;
-  photo: string;
-  email: string;
-  nid_no: string;
-  passport_no: string;
-  booking_no: string;
-  pay_status: number;
-  reserved_room: number;
-  number_of_nights: number;
-  total_occupancy: number;
-  grand_total: string;
-  status?: string;
-  created_at: string;
-  updated_at: string;
-  booking_rooms: IbookingRooms[];
-  extra_charge: number;
-}
-
-export interface IupdateManyRoomBooking {
-  id?: number;
-  hotel_code: number;
-  user_id?: number;
-  pay_status?: number;
-  reserved_room?: number;
-  booking_rooms?: IbookingRooms[];
-}
-
-export interface IrefundRoomBooking {
-  hotel_code: number;
-  pay_status: number;
-  reserved_room: number;
+  booking_reference: string;
+  booking_date: string; // or Date if parsed
+  check_in: string;
+  check_out: string;
+  booking_type: string;
   status: string;
+  source_name: string | null;
+  total_amount: number;
+  vat: number;
+  discount_amount: number;
+  service_charge: number;
+  payment_status: string;
+  comments: string | null;
+  pickup: boolean;
+  pickup_from: string | null;
+  pickup_time: string | null;
+  drop: boolean;
+  drop_time: string | null;
+  drop_to: string | null;
+  booking_rooms: BookingRoom[] | null;
 }
 
-export interface IupdateRoomBooking {
-  email?: string;
-  check_in_time?: string;
-  check_out_time?: string;
-  number_of_nights?: number;
-  total_occupancy?: number;
-  extend_status: number;
-  total_extended_nights: number;
-  grand_total?: number;
-  created_by: number;
-  rooms?: IbookingRooms;
-  booking_rooms?: IbookingRoomItem[];
-}
-
-export interface IupdateRoomPayStatus {
-  hotel_code: number;
-  pay_status: number;
-  reserved_room: number;
+export interface addPaymentReqBody {
+  folio_id: number;
+  amount: number;
+  payment_type: "MOBILE_BANKING" | "BANK" | "CASH";
+  acc_id: number;
+  payment_date: string;
+  remarks: string;
 }

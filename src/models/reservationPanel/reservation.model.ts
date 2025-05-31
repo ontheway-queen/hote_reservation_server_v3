@@ -1,4 +1,5 @@
 import {
+  IBookingDetails,
   IbookingRooms,
   IgetAccommodationSettings,
   IgetChildRateGroups,
@@ -268,13 +269,13 @@ export class ReservationModel extends Schema {
       .andWhere("ra.date", "<=", "2025-06-04")
       .orderBy("ra.date", "asc");
   }
-  public async insertRoomBooking(payload: IRoomBooking) {
+
+  public async insertBooking(payload: IRoomBooking) {
     return await this.db("bookings")
       .withSchema(this.RESERVATION_SCHEMA)
       .insert(payload, "id");
   }
 
-  // insert booking rooms
   public async insertBookingRoom(payload: IbookingRooms[]) {
     return await this.db("booking_rooms")
       .withSchema(this.RESERVATION_SCHEMA)
@@ -287,20 +288,110 @@ export class ReservationModel extends Schema {
       .select(
         "b.id",
         "b.booking_reference",
-        "b.booking_date",
-        "b.check_in",
-        "b.check_out",
+        this.db.raw(`TO_CHAR(b.check_in, 'YYYY-MM-DD') as check_in`),
+        this.db.raw(`TO_CHAR(b.check_out, 'YYYY-MM-DD') as check_out`),
+        this.db.raw(`TO_CHAR(b.booking_date, 'YYYY-MM-DD') as booking_date`),
+        "b.booking_type",
         "b.status",
         "src.name as source_name",
         "b.total_amount",
         "b.vat",
         "b.discount_amount",
-        "b.service_charge"
+        "b.service_charge",
+        "g.id as guest_id",
+        "g.first_name",
+        "g.last_name",
+        "g.email as guest_email"
       )
       .leftJoin("sources as src", "b.source_id", "src.id")
       .leftJoin("guests as g", "b.guest_id", "g.id")
       .where("b.hotel_code", hotel_code)
       .orderBy("b.id", "desc");
+  }
+
+  public async getSingleBooking(
+    hotel_code: number,
+    booking_id: number
+  ): Promise<IBookingDetails | undefined> {
+    return await this.db("bookings as b")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .select(
+        "b.id",
+        "b.booking_reference",
+        this.db.raw(`TO_CHAR(b.check_in, 'YYYY-MM-DD') as check_in`),
+        this.db.raw(`TO_CHAR(b.check_out, 'YYYY-MM-DD') as check_out`),
+        this.db.raw(`TO_CHAR(b.booking_date, 'YYYY-MM-DD') as booking_date`),
+        "b.booking_type",
+        "b.status",
+        "src.name as source_name",
+        "b.total_amount",
+        "b.vat",
+        "b.discount_amount",
+        "b.service_charge",
+        "b.payment_status",
+        "b.comments",
+        "b.pickup",
+        "b.pickup_from",
+        "b.pickup_time",
+        "b.drop",
+        "b.drop_time",
+        "b.drop_to",
+        "g.id as guest_id",
+        "g.first_name",
+        "g.last_name",
+        "g.email as guest_email",
+        "g.phone",
+        "g.address",
+        "g.country",
+        "g.passport_number",
+        "g.nationality",
+        this.db.raw(
+          `(
+          SELECT json_agg(
+            json_build_object(
+              'id', br.id,
+              'room_type_id', br.room_type_id,
+              'room_type_name', rt.name,
+              'room_id', br.room_id,
+              'room_name', r.room_name,
+              'adults', br.adults,
+              'children', br.children,
+              'infant', br.infant,
+              'base_rate', br.base_rate,
+              'changed_rate', br.changed_rate
+            )
+          )
+          FROM ?? AS br
+          LEFT JOIN ?? AS rt ON br.room_type_id = rt.id
+          LEFT JOIN ?? AS r ON br.room_id = r.id
+          WHERE br.booking_id = b.id
+        ) AS booking_rooms`,
+          [
+            `${this.RESERVATION_SCHEMA}.booking_rooms`,
+            `${this.RESERVATION_SCHEMA}.room_types`,
+            `${this.RESERVATION_SCHEMA}.rooms`,
+          ]
+        )
+      )
+      .leftJoin("sources as src", "b.source_id", "src.id")
+      .leftJoin("guests as g", "b.guest_id", "g.id")
+      .where("b.hotel_code", hotel_code)
+      .andWhere("b.id", booking_id)
+      .first();
+  }
+
+  public async updateRoomBooking(
+    payload: {
+      status: "checked_in" | "checked_out";
+    },
+    hotel_code: number,
+    booking_id: number
+  ) {
+    return await this.db("bookings")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .update(payload)
+      .where({ hotel_code })
+      .andWhere({ id: booking_id });
   }
 
   public async getLastBooking() {
@@ -309,6 +400,27 @@ export class ReservationModel extends Schema {
       .select("id")
       .limit(1)
       .orderBy("id", "desc");
+  }
+
+  public async updateRoomAvailabilityHold({
+    hotel_code,
+    room_type_id,
+    date,
+    rooms_to_book,
+  }: {
+    hotel_code: number;
+    room_type_id: number;
+    date: string;
+    rooms_to_book: number;
+  }) {
+    return await this.db("room_availability")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .where({ hotel_code, room_type_id, date })
+      .update({
+        available_rooms: this.db.raw("available_rooms - ?", [rooms_to_book]),
+        hold_rooms: this.db.raw("hold_rooms + ?", [rooms_to_book]),
+        updated_at: this.db.fn.now(),
+      });
   }
 
   public async updateRoomAvailability({
@@ -330,5 +442,51 @@ export class ReservationModel extends Schema {
         booked_rooms: this.db.raw("booked_rooms + ?", [rooms_to_book]),
         updated_at: this.db.fn.now(),
       });
+  }
+
+  public async getFoliosbySingleBooking(
+    hotel_code: number,
+    booking_id: number
+  ): Promise<{ id: number; name: string }[]> {
+    return await this.db("folios")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .select("id", "name")
+      .where("booking_id", booking_id)
+      .andWhere("hotel_code", hotel_code);
+  }
+
+  public async getSingleFoliobyHotelCodeAndID(
+    hotel_code: number,
+    folio_id: number
+  ): Promise<
+    | {
+        id: number;
+        name: string;
+        guest_id: number;
+        booking_id: string;
+      }
+    | undefined
+  > {
+    return await this.db("folios")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .select("id", "name", "guest_id", "booking_id")
+      .where("id", folio_id)
+      .andWhere("hotel_code", hotel_code)
+      .first();
+  }
+
+  public async getFolioEntriesbyFolioID(hotel_code: number, folio_id: number) {
+    return await this.db("folio_entries as fe")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .select(
+        "fe.id",
+        "fe.description",
+        "fe.posting_type",
+        "fe.debit",
+        "fe.credit"
+      )
+      .join("folios as f", "fe.folio_id", "f.id")
+      .where("fe.folio_id", folio_id)
+      .andWhere("f.hotel_code", hotel_code);
   }
 }

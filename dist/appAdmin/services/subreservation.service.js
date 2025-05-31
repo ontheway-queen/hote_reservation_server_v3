@@ -64,7 +64,7 @@ class SubReservationService extends abstract_service_1.default {
             const last = yield reservation_model.getLastBooking();
             const lastId = (_b = (_a = last === null || last === void 0 ? void 0 : last[0]) === null || _a === void 0 ? void 0 : _a.id) !== null && _b !== void 0 ? _b : 1;
             const ref = lib_1.default.generateBookingReferenceWithId(`BK`, lastId);
-            const [booking] = yield reservation_model.insertRoomBooking({
+            const [booking] = yield reservation_model.insertBooking({
                 booking_date: new Date().toLocaleDateString(),
                 booking_reference: ref,
                 check_in: payload.check_in,
@@ -79,6 +79,7 @@ class SubReservationService extends abstract_service_1.default {
                 source_id: payload.source_id,
                 created_by: payload.created_by,
                 comments: payload.special_requests,
+                booking_type: payload.booking_type,
                 status: is_checked_in ? "checked_in" : "confirmed",
                 drop: payload.drop,
                 drop_time: payload.drop_time,
@@ -112,7 +113,7 @@ class SubReservationService extends abstract_service_1.default {
             yield this.Model.reservationModel(this.trx).insertBookingRoom(payload);
         });
     }
-    updateAvailability(rooms, checkIn, checkOut, hotel_code) {
+    updateAvailability(reservation_type, rooms, checkIn, checkOut, hotel_code) {
         return __awaiter(this, void 0, void 0, function* () {
             const reservation_model = this.Model.reservationModel(this.trx);
             const dates = helperFunction_1.HelperFunction.getDatesBetween(checkIn, checkOut);
@@ -122,36 +123,50 @@ class SubReservationService extends abstract_service_1.default {
             }));
             for (const { room_type_id, total_room } of reservedRoom) {
                 for (const date of dates) {
-                    yield reservation_model.updateRoomAvailability({
-                        hotel_code,
-                        room_type_id,
-                        date,
-                        rooms_to_book: total_room,
-                    });
+                    if (reservation_type === "confirm") {
+                        yield reservation_model.updateRoomAvailability({
+                            hotel_code,
+                            room_type_id,
+                            date,
+                            rooms_to_book: total_room,
+                        });
+                    }
+                    else {
+                        yield reservation_model.updateRoomAvailabilityHold({
+                            hotel_code,
+                            room_type_id,
+                            date,
+                            rooms_to_book: total_room,
+                        });
+                    }
                 }
             }
         });
     }
-    handlePaymentAndFolio(payment, guest_id, req, total_amount, booking_id) {
+    handlePaymentAndFolioForBooking(is_payment_given, payment, guest_id, req, total_amount, booking_id) {
         return __awaiter(this, void 0, void 0, function* () {
             const accountModel = this.Model.accountModel(this.trx);
-            const [account] = yield accountModel.getSingleAccount({
-                hotel_code: req.hotel_admin.hotel_code,
-                id: payment.acc_id,
-            });
-            if (!account)
-                throw new Error("Invalid Account");
-            const voucher_no = yield new helperFunction_1.HelperFunction().generateVoucherNo();
-            const [voucher] = yield accountModel.insertAccVoucher({
-                acc_head_id: account.acc_head_id,
-                created_by: req.hotel_admin.id,
-                debit: payment.amount,
-                credit: 0,
-                description: "For room booking payment",
-                voucher_type: "PAYMENT",
-                voucher_date: new Date().toISOString(),
-                voucher_no,
-            });
+            let voucherData;
+            if (is_payment_given) {
+                const [account] = yield accountModel.getSingleAccount({
+                    hotel_code: req.hotel_admin.hotel_code,
+                    id: payment.acc_id,
+                });
+                if (!account)
+                    throw new Error("Invalid Account");
+                const voucher_no = yield new helperFunction_1.HelperFunction().generateVoucherNo();
+                const [voucher] = yield accountModel.insertAccVoucher({
+                    acc_head_id: account.acc_head_id,
+                    created_by: req.hotel_admin.id,
+                    debit: payment.amount,
+                    credit: 0,
+                    description: "For room booking payment",
+                    voucher_type: "PAYMENT",
+                    voucher_date: new Date().toISOString(),
+                    voucher_no,
+                });
+                voucherData = voucher;
+            }
             const hotelInvModel = this.Model.hotelInvoiceModel(this.trx);
             const [lastFolio] = yield hotelInvModel.getLasFolioId();
             const folio_number = helperFunction_1.HelperFunction.generateFolioNumber(lastFolio === null || lastFolio === void 0 ? void 0 : lastFolio.id);
@@ -165,19 +180,20 @@ class SubReservationService extends abstract_service_1.default {
                 type: "Primary",
             });
             yield hotelInvModel.insertInFolioEntries({
-                acc_voucher_id: voucher.id,
+                acc_voucher_id: voucherData === null || voucherData === void 0 ? void 0 : voucherData.id,
                 debit: total_amount,
                 credit: 0,
                 folio_id: folio.id,
                 posting_type: "Charge",
             });
-            yield hotelInvModel.insertInFolioEntries({
-                acc_voucher_id: voucher.id,
-                debit: 0,
-                credit: payment.amount,
-                folio_id: folio.id,
-                posting_type: "Charge",
-            });
+            if (is_payment_given)
+                yield hotelInvModel.insertInFolioEntries({
+                    acc_voucher_id: voucherData.id,
+                    debit: 0,
+                    credit: payment.amount,
+                    folio_id: folio.id,
+                    posting_type: "Payment",
+                });
             const guestModel = this.Model.guestModel(this.trx);
             yield guestModel.insertGuestLedger({
                 hotel_code: req.hotel_admin.hotel_code,
@@ -186,12 +202,91 @@ class SubReservationService extends abstract_service_1.default {
                 remarks: "Owes for booking",
                 debit: total_amount,
             });
+            if (is_payment_given)
+                yield guestModel.insertGuestLedger({
+                    hotel_code: req.hotel_admin.hotel_code,
+                    guest_id,
+                    credit: payment.amount,
+                    remarks: "Paid amount for booking",
+                    debit: 0,
+                });
+        });
+    }
+    handlePaymentAndFolioForAddPayment({ acc_id, amount, folio_id, guest_id, remarks, req, payment_for, payment_date, }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const accountModel = this.Model.accountModel(this.trx);
+            const [account] = yield accountModel.getSingleAccount({
+                hotel_code: req.hotel_admin.hotel_code,
+                id: acc_id,
+            });
+            if (!account)
+                throw new Error("Invalid Account");
+            const voucher_no = yield new helperFunction_1.HelperFunction().generateVoucherNo();
+            const [voucher] = yield accountModel.insertAccVoucher({
+                acc_head_id: account.acc_head_id,
+                created_by: req.hotel_admin.id,
+                debit: amount,
+                credit: 0,
+                description: "For Add Money." + " " + remarks,
+                voucher_type: "PAYMENT",
+                voucher_date: payment_date,
+                voucher_no,
+            });
+            const hotelInvModel = this.Model.hotelInvoiceModel(this.trx);
+            yield hotelInvModel.insertInFolioEntries({
+                acc_voucher_id: voucher.id,
+                debit: 0,
+                credit: amount,
+                folio_id: folio_id,
+                posting_type: "Payment",
+                description: payment_for + " " + remarks,
+            });
+            const guestModel = this.Model.guestModel(this.trx);
             yield guestModel.insertGuestLedger({
                 hotel_code: req.hotel_admin.hotel_code,
                 guest_id,
-                credit: payment.amount,
-                remarks: "Paid amount for booking",
+                credit: amount,
+                remarks: payment_for,
                 debit: 0,
+            });
+        });
+    }
+    handlePaymentAndFolioForRefundPayment({ acc_id, amount, folio_id, guest_id, remarks, req, payment_for, payment_date, }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const accountModel = this.Model.accountModel(this.trx);
+            const [account] = yield accountModel.getSingleAccount({
+                hotel_code: req.hotel_admin.hotel_code,
+                id: acc_id,
+            });
+            if (!account)
+                throw new Error("Invalid Account");
+            const voucher_no = yield new helperFunction_1.HelperFunction().generateVoucherNo();
+            const [voucher] = yield accountModel.insertAccVoucher({
+                acc_head_id: account.acc_head_id,
+                created_by: req.hotel_admin.id,
+                debit: 0,
+                credit: amount,
+                description: remarks,
+                voucher_type: "REFUND",
+                voucher_date: payment_date,
+                voucher_no,
+            });
+            const hotelInvModel = this.Model.hotelInvoiceModel(this.trx);
+            yield hotelInvModel.insertInFolioEntries({
+                acc_voucher_id: voucher.id,
+                debit: amount,
+                credit: 0,
+                folio_id: folio_id,
+                posting_type: "Refund",
+                description: payment_for + " " + remarks,
+            });
+            const guestModel = this.Model.guestModel(this.trx);
+            yield guestModel.insertGuestLedger({
+                hotel_code: req.hotel_admin.hotel_code,
+                guest_id,
+                credit: 0,
+                remarks: payment_for,
+                debit: amount,
             });
         });
     }
