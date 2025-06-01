@@ -2,13 +2,13 @@ import {
   ASSET_GROUP,
   DIVIDEND_GROUP,
   EXPENSE_GROUP,
-} from '../../../utils/miscellaneous/constants';
+} from "../../../utils/miscellaneous/constants";
 import {
   AccountJournalTransactions,
   AccountTrialBalance,
   IStructuredJournal,
   TrialBalanceTransactions,
-} from '../interfaces/report.interface';
+} from "../interfaces/report.interface";
 
 export default class ReportUtils {
   public static formatJournal = (

@@ -1,6 +1,6 @@
-import { Request } from 'express';
-import AbstractServices from '../../abstarcts/abstract.service';
-import ReportUtils from '../utlis/library/account.utils';
+import { Request } from "express";
+import AbstractServices from "../../abstarcts/abstract.service";
+import ReportUtils from "../utlis/library/account.utils";
 import {
   ASSET_GROUP,
   CAPITAL_GROUP,
@@ -8,8 +8,8 @@ import {
   EXPENSE_GROUP,
   INCOME_GROUP,
   LIABILITY_GROUP,
-} from '../../utils/miscellaneous/constants';
-import { AccTransactionParams } from '../utlis/interfaces/report.interface';
+} from "../../utils/miscellaneous/constants";
+import { AccTransactionParams } from "../utlis/interfaces/report.interface";
 
 export class AccountReportService extends AbstractServices {
   constructor() {
@@ -77,7 +77,7 @@ export class AccountReportService extends AbstractServices {
       return {
         success: false,
         code: this.StatusCode.HTTP_NOT_FOUND,
-        message: 'No Account Found',
+        message: "No Account Found",
       };
     }
 

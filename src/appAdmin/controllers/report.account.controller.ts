@@ -1,7 +1,7 @@
-import { Request, Response } from 'express';
-import AbstractController from '../../abstarcts/abstract.controller';
-import AccountReportService from '../services/report.account.service';
-import ReportValidator from '../utlis/validator/reports.validator';
+import { Request, Response } from "express";
+import AbstractController from "../../abstarcts/abstract.controller";
+import AccountReportService from "../services/report.account.service";
+import ReportValidator from "../utlis/validator/reports.validator";
 
 class AccountReportController extends AbstractController {
   private accountReportService = new AccountReportService();

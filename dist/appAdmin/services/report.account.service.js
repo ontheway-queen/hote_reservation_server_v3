@@ -42,7 +42,7 @@ class AccountReportService extends abstract_service_1.default {
                 return {
                     success: false,
                     code: this.StatusCode.HTTP_NOT_FOUND,
-                    message: 'No Account Found',
+                    message: "No Account Found",
                 };
             }
             headIds.push(+head_id);
