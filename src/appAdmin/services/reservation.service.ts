@@ -396,7 +396,7 @@ export class ReservationService extends AbstractServices {
       await sub.insertBookingRooms(body.rooms, booking.id, total_nights);
 
       // Availability
-      await sub.updateAvailability(
+      await sub.updateAvailabilityWhenRoomBooking(
         body.reservation_type,
         body.rooms,
         body.check_in,
@@ -487,6 +487,159 @@ export class ReservationService extends AbstractServices {
       code: this.StatusCode.HTTP_OK,
       message: "Successfully Cheked in",
     };
+  }
+
+  public async checkOut(req: Request) {
+    return await this.db.transaction(async (trx) => {
+      const hotel_code = req.hotel_admin.hotel_code;
+      const booking_id = parseInt(req.params.id);
+
+      const reservationModel = this.Model.reservationModel(trx);
+      const sub = new SubReservationService(trx);
+
+      const data = await reservationModel.getSingleBooking(
+        hotel_code,
+        booking_id
+      );
+
+      if (!data) {
+        return {
+          success: false,
+          code: this.StatusCode.HTTP_NOT_FOUND,
+          message: this.ResMsg.HTTP_NOT_FOUND,
+        };
+      }
+
+      const { status, booking_type, booking_rooms, check_in, check_out } = data;
+
+      if (booking_type != "B" && status != "checked_in") {
+        return {
+          success: false,
+          code: this.StatusCode.HTTP_BAD_REQUEST,
+          message: "This booking has other status. So, you cannot checkout",
+        };
+      }
+
+      // check  due balance exist or not
+      const hotelInvoiceModel = this.Model.hotelInvoiceModel(trx);
+
+      const checkDueAmount = await hotelInvoiceModel.getDueAmountByBookingID({
+        booking_id,
+        hotel_code,
+      });
+
+      console.log({ checkDueAmount });
+
+      if (checkDueAmount > 0) {
+        return {
+          success: false,
+          code: this.StatusCode.HTTP_UNPROCESSABLE_ENTITY,
+          message: `This guest hast ${checkDueAmount} due. So you cannot checkin`,
+        };
+      }
+
+      // room avaibility decrease
+      await sub.updateRoomAvailabilityService(
+        "booked_room_decrease",
+        booking_rooms,
+        check_in,
+        check_out,
+        hotel_code
+      );
+
+      // update
+      await reservationModel.updateRoomBooking(
+        {
+          status: "checked_out",
+        },
+        hotel_code,
+        booking_id
+      );
+
+      return {
+        success: true,
+        code: this.StatusCode.HTTP_OK,
+        message: "Successfully Cheked out",
+      };
+    });
+  }
+
+  public async updateReservationHoldStatus(req: Request) {
+    return await this.db.transaction(async (trx) => {
+      const hotel_code = req.hotel_admin.hotel_code;
+      const booking_id = parseInt(req.params.id);
+
+      const { status: reservation_type_status } = req.body;
+
+      const sub = new SubReservationService(trx);
+
+      const data = await this.Model.reservationModel().getSingleBooking(
+        hotel_code,
+        booking_id
+      );
+
+      if (!data) {
+        return {
+          success: false,
+          code: this.StatusCode.HTTP_NOT_FOUND,
+          message: this.ResMsg.HTTP_NOT_FOUND,
+        };
+      }
+
+      const { booking_type, status, booking_rooms, check_in, check_out } = data;
+
+      if (booking_type != "H" && status !== "confirmed") {
+        return {
+          success: false,
+          code: this.StatusCode.HTTP_BAD_REQUEST,
+          message: "This booking has other status. So, you cannot changed",
+        };
+      }
+
+      if (reservation_type_status == "confirmed") {
+        // update
+        await this.Model.reservationModel().updateRoomBooking(
+          {
+            booking_type: "B",
+          },
+          hotel_code,
+          booking_id
+        );
+        // Availability
+        await sub.updateRoomAvailabilityForHoldService(
+          "hold_decrease",
+          booking_rooms,
+          check_in,
+          check_out,
+          hotel_code
+        );
+
+        await sub.updateRoomAvailabilityService(
+          "booked_room_increase",
+          booking_rooms,
+          check_in,
+          check_out,
+          hotel_code
+        );
+
+        // update room availability
+      } else if (reservation_type_status == "canceled") {
+        // Availability
+        await sub.updateRoomAvailabilityForHoldService(
+          "hold_decrease",
+          booking_rooms,
+          check_in,
+          check_out,
+          hotel_code
+        );
+      }
+
+      return {
+        success: true,
+        code: this.StatusCode.HTTP_OK,
+        message: "Successfully updated",
+      };
+    });
   }
 
   public async getFoliosbySingleBooking(req: Request) {

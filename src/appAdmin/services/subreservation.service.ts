@@ -1,5 +1,6 @@
 import { Knex } from "knex";
 import {
+  BookingRoom,
   IbookingReqPayment,
   IbookingRooms,
   IguestReqBody,
@@ -158,7 +159,7 @@ export class SubReservationService extends AbstractServices {
     await this.Model.reservationModel(this.trx).insertBookingRoom(payload);
   }
 
-  async updateAvailability(
+  async updateAvailabilityWhenRoomBooking(
     reservation_type: string,
     rooms: RoomRequest[],
     checkIn: string,
@@ -177,6 +178,7 @@ export class SubReservationService extends AbstractServices {
       for (const date of dates) {
         if (reservation_type === "confirm") {
           await reservation_model.updateRoomAvailability({
+            type: "booked_room_increase",
             hotel_code,
             room_type_id,
             date,
@@ -188,24 +190,105 @@ export class SubReservationService extends AbstractServices {
             room_type_id,
             date,
             rooms_to_book: total_room,
+            type: "hold_increase",
           });
         }
       }
     }
   }
 
+  async updateRoomAvailabilityService(
+    type: "booked_room_increase" | "booked_room_decrease",
+    rooms: BookingRoom[],
+    checkIn: string,
+    checkOut: string,
+    hotel_code: number
+  ) {
+    const reservation_model = this.Model.reservationModel(this.trx);
+    const dates = HelperFunction.getDatesBetween(checkIn, checkOut);
+
+    const uniqueRooms = Object.values(
+      rooms.reduce((acc, curr) => {
+        if (!acc[curr.room_type_id]) {
+          acc[curr.room_type_id] = {
+            room_type_id: curr.room_type_id,
+            total_room: 1,
+          };
+        } else {
+          acc[curr.room_type_id].total_room += 1;
+        }
+        return acc;
+      }, {} as Record<number, { room_type_id: number; total_room: number }>)
+    );
+
+    for (const { room_type_id, total_room } of uniqueRooms) {
+      for (const date of dates) {
+        await reservation_model.updateRoomAvailability({
+          type,
+          hotel_code,
+          room_type_id,
+          date,
+          rooms_to_book: total_room,
+        });
+      }
+    }
+  }
+
+  async updateRoomAvailabilityForHoldService(
+    hold_type: "hold_increase" | "hold_decrease",
+    rooms: BookingRoom[],
+    checkIn: string,
+    checkOut: string,
+    hotel_code: number
+  ) {
+    const reservation_model = this.Model.reservationModel(this.trx);
+    const dates = HelperFunction.getDatesBetween(checkIn, checkOut);
+
+    const uniqueRooms = Object.values(
+      rooms.reduce((acc, curr) => {
+        if (!acc[curr.room_type_id]) {
+          acc[curr.room_type_id] = {
+            room_type_id: curr.room_type_id,
+            total_room: 1,
+          };
+        } else {
+          acc[curr.room_type_id].total_room += 1;
+        }
+        return acc;
+      }, {} as Record<number, { room_type_id: number; total_room: number }>)
+    );
+    console.log({ dates, uniqueRooms });
+
+    for (const { room_type_id, total_room } of uniqueRooms) {
+      for (const date of dates) {
+        await reservation_model.updateRoomAvailabilityHold({
+          hotel_code,
+          room_type_id,
+          date,
+          rooms_to_book: total_room,
+          type: hold_type,
+        });
+      }
+    }
+  }
+
   public async handlePaymentAndFolioForBooking(
     is_payment_given: boolean,
-    payment: IbookingReqPayment,
+    payment: IbookingReqPayment | undefined,
     guest_id: number,
     req: Request,
     total_amount: number,
     booking_id: number
   ) {
+    console.log({ is_payment_given, payment });
     const accountModel = this.Model.accountModel(this.trx);
 
     let voucherData: any;
     if (is_payment_given) {
+      if (!payment)
+        throw new Error(
+          "Payment data is required when is_payment_given is true"
+        );
       const [account] = await accountModel.getSingleAccount({
         hotel_code: req.hotel_admin.hotel_code,
         id: payment.acc_id,
@@ -250,7 +333,12 @@ export class SubReservationService extends AbstractServices {
       posting_type: "Charge",
     });
 
-    if (is_payment_given)
+    if (is_payment_given) {
+      if (!payment)
+        throw new Error(
+          "Payment data is required when is_payment_given is true"
+        );
+
       await hotelInvModel.insertInFolioEntries({
         acc_voucher_id: voucherData.id,
         debit: 0,
@@ -258,6 +346,7 @@ export class SubReservationService extends AbstractServices {
         folio_id: folio.id,
         posting_type: "Payment",
       });
+    }
 
     const guestModel = this.Model.guestModel(this.trx);
 
@@ -269,7 +358,12 @@ export class SubReservationService extends AbstractServices {
       debit: total_amount,
     });
 
-    if (is_payment_given)
+    if (is_payment_given) {
+      if (!payment)
+        throw new Error(
+          "Payment data is required when is_payment_given is true"
+        );
+
       await guestModel.insertGuestLedger({
         hotel_code: req.hotel_admin.hotel_code,
         guest_id,
@@ -277,6 +371,7 @@ export class SubReservationService extends AbstractServices {
         remarks: "Paid amount for booking",
         debit: 0,
       });
+    }
   }
 
   public async handlePaymentAndFolioForAddPayment({

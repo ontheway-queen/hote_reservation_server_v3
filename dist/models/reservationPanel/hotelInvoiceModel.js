@@ -49,6 +49,22 @@ class HotelInvoiceModel extends schema_1.default {
                 .insert(payload);
         });
     }
+    getDueAmountByBookingID({ booking_id, hotel_code, }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const dueBalance = yield this.db("folios as f")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .leftJoin("folio_entries as fe", "f.id", "fe.folio_id")
+                .where("f.booking_id", booking_id)
+                .andWhere("f.hotel_code", hotel_code)
+                .select(this.db.raw(`
+        SUM(CASE WHEN fe.posting_type = 'Charge' THEN COALESCE(fe.debit, 0)
+                 WHEN fe.posting_type = 'Payment' THEN - COALESCE(fe.credit, 0)
+                 ELSE 0
+            END) AS due_balance
+      `));
+            return dueBalance[0].due_balance;
+        });
+    }
 }
 exports.default = HotelInvoiceModel;
 //# sourceMappingURL=hotelInvoiceModel.js.map

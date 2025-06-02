@@ -80,7 +80,7 @@ export class ReservationValidator {
     special_requests: Joi.string().allow("").optional(),
     is_payment_given: Joi.bool().required(),
     payment: Joi.object({
-      method: Joi.string().valid("cash", "bank", "online").required(),
+      method: Joi.string().valid("MOBILE_BANKING", "BANK", "CASH").required(),
       acc_id: Joi.number().required(),
       amount: Joi.number().required(),
     }).optional(),
@@ -102,5 +102,8 @@ export class ReservationValidator {
     acc_id: Joi.number().required(),
     payment_date: Joi.string().required(),
     remarks: Joi.string().allow("").optional(),
+  });
+  public updateReservationHoldStatusValidator = Joi.object({
+    status: Joi.string().allow("confirmed", "canceled").required(),
   });
 }

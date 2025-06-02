@@ -334,7 +334,7 @@ class ReservationService extends abstract_service_1.default {
                 // Rooms
                 yield sub.insertBookingRooms(body.rooms, booking.id, total_nights);
                 // Availability
-                yield sub.updateAvailability(body.reservation_type, body.rooms, body.check_in, body.check_out, hotel_code);
+                yield sub.updateAvailabilityWhenRoomBooking(body.reservation_type, body.rooms, body.check_in, body.check_out, hotel_code);
                 // Payment
                 yield sub.handlePaymentAndFolioForBooking(body.is_payment_given, body.payment, guest_id, req, total_amount, booking.id);
                 return {
@@ -396,6 +396,102 @@ class ReservationService extends abstract_service_1.default {
                 code: this.StatusCode.HTTP_OK,
                 message: "Successfully Cheked in",
             };
+        });
+    }
+    checkOut(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
+                const hotel_code = req.hotel_admin.hotel_code;
+                const booking_id = parseInt(req.params.id);
+                const reservationModel = this.Model.reservationModel(trx);
+                const sub = new subreservation_service_1.SubReservationService(trx);
+                const data = yield reservationModel.getSingleBooking(hotel_code, booking_id);
+                if (!data) {
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_NOT_FOUND,
+                        message: this.ResMsg.HTTP_NOT_FOUND,
+                    };
+                }
+                const { status, booking_type, booking_rooms, check_in, check_out } = data;
+                if (booking_type != "B" && status != "checked_in") {
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_BAD_REQUEST,
+                        message: "This booking has other status. So, you cannot checkout",
+                    };
+                }
+                // check  due balance exist or not
+                const hotelInvoiceModel = this.Model.hotelInvoiceModel(trx);
+                const checkDueAmount = yield hotelInvoiceModel.getDueAmountByBookingID({
+                    booking_id,
+                    hotel_code,
+                });
+                console.log({ checkDueAmount });
+                if (checkDueAmount > 0) {
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_UNPROCESSABLE_ENTITY,
+                        message: `This guest hast ${checkDueAmount} due. So you cannot checkin`,
+                    };
+                }
+                // room avaibility decrease
+                yield sub.updateRoomAvailabilityService("booked_room_decrease", booking_rooms, check_in, check_out, hotel_code);
+                // update
+                yield reservationModel.updateRoomBooking({
+                    status: "checked_out",
+                }, hotel_code, booking_id);
+                return {
+                    success: true,
+                    code: this.StatusCode.HTTP_OK,
+                    message: "Successfully Cheked out",
+                };
+            }));
+        });
+    }
+    updateReservationHoldStatus(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
+                const hotel_code = req.hotel_admin.hotel_code;
+                const booking_id = parseInt(req.params.id);
+                const { status: reservation_type_status } = req.body;
+                const sub = new subreservation_service_1.SubReservationService(trx);
+                const data = yield this.Model.reservationModel().getSingleBooking(hotel_code, booking_id);
+                if (!data) {
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_NOT_FOUND,
+                        message: this.ResMsg.HTTP_NOT_FOUND,
+                    };
+                }
+                const { booking_type, status, booking_rooms, check_in, check_out } = data;
+                if (booking_type != "H" && status !== "confirmed") {
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_BAD_REQUEST,
+                        message: "This booking has other status. So, you cannot changed",
+                    };
+                }
+                if (reservation_type_status == "confirmed") {
+                    // update
+                    yield this.Model.reservationModel().updateRoomBooking({
+                        booking_type: "B",
+                    }, hotel_code, booking_id);
+                    // Availability
+                    yield sub.updateRoomAvailabilityForHoldService("hold_decrease", booking_rooms, check_in, check_out, hotel_code);
+                    yield sub.updateRoomAvailabilityService("booked_room_increase", booking_rooms, check_in, check_out, hotel_code);
+                    // update room availability
+                }
+                else if (reservation_type_status == "canceled") {
+                    // Availability
+                    yield sub.updateRoomAvailabilityForHoldService("hold_decrease", booking_rooms, check_in, check_out, hotel_code);
+                }
+                return {
+                    success: true,
+                    code: this.StatusCode.HTTP_OK,
+                    message: "Successfully updated",
+                };
+            }));
         });
     }
     getFoliosbySingleBooking(req) {

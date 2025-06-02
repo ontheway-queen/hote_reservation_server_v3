@@ -94,6 +94,27 @@ export class ReservationController extends AbstractController {
     }
   );
 
+  public checkOut = this.asyncWrapper.wrap(
+    { paramSchema: this.commonValidator.singleParamValidator() },
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.checkOut(req);
+      res.status(code).json(data);
+    }
+  );
+
+  public updateReservationHoldStatus = this.asyncWrapper.wrap(
+    {
+      paramSchema: this.commonValidator.singleParamValidator(),
+      bodySchema: this.validator.updateReservationHoldStatusValidator,
+    },
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.updateReservationHoldStatus(
+        req
+      );
+      res.status(code).json(data);
+    }
+  );
+
   public getFoliosbySingleBooking = this.asyncWrapper.wrap(
     { paramSchema: this.commonValidator.singleParamValidator() },
     async (req: Request, res: Response) => {

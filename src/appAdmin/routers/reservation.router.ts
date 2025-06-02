@@ -23,10 +23,6 @@ export class ReservationRouter {
       .get(this.controller.getAllAvailableRoomsTypeForEachDateAvailableRoom);
 
     this.router
-      .route("/room-type/availability/search")
-      .get(this.controller.getAllAvailableRoomsTypeWithAvailableRoomCount);
-
-    this.router
       .route("/available-room/by/room-type/:id")
       .get(this.controller.getAllAvailableRoomsByRoomType);
 
@@ -52,5 +48,13 @@ export class ReservationRouter {
       .post(this.controller.refundPaymentByFolioID);
 
     this.router.route("/checkin/by/booking/:id").patch(this.controller.checkIn);
+
+    this.router
+      .route("/checkout/by/booking/:id")
+      .patch(this.controller.checkOut);
+
+    this.router
+      .route("/reservation-type/by/booking/:id")
+      .patch(this.controller.updateReservationHoldStatus);
   }
 }

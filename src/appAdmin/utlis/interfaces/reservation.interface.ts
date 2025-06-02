@@ -194,7 +194,7 @@ export interface IbookingRooms {
 
 // ------------------------ single booking ----------------------//
 
-interface BookingRoom {
+export interface BookingRoom {
   id: number;
   room_type_id: number;
   room_type_name: string;
@@ -240,7 +240,7 @@ export interface IBookingDetails extends BookingGuest {
   drop: boolean;
   drop_time: string | null;
   drop_to: string | null;
-  booking_rooms: BookingRoom[] | null;
+  booking_rooms: BookingRoom[];
 }
 
 export interface addPaymentReqBody {

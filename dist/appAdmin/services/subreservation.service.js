@@ -113,7 +113,7 @@ class SubReservationService extends abstract_service_1.default {
             yield this.Model.reservationModel(this.trx).insertBookingRoom(payload);
         });
     }
-    updateAvailability(reservation_type, rooms, checkIn, checkOut, hotel_code) {
+    updateAvailabilityWhenRoomBooking(reservation_type, rooms, checkIn, checkOut, hotel_code) {
         return __awaiter(this, void 0, void 0, function* () {
             const reservation_model = this.Model.reservationModel(this.trx);
             const dates = helperFunction_1.HelperFunction.getDatesBetween(checkIn, checkOut);
@@ -125,6 +125,7 @@ class SubReservationService extends abstract_service_1.default {
                 for (const date of dates) {
                     if (reservation_type === "confirm") {
                         yield reservation_model.updateRoomAvailability({
+                            type: "booked_room_increase",
                             hotel_code,
                             room_type_id,
                             date,
@@ -137,17 +138,80 @@ class SubReservationService extends abstract_service_1.default {
                             room_type_id,
                             date,
                             rooms_to_book: total_room,
+                            type: "hold_increase",
                         });
                     }
                 }
             }
         });
     }
+    updateRoomAvailabilityService(type, rooms, checkIn, checkOut, hotel_code) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const reservation_model = this.Model.reservationModel(this.trx);
+            const dates = helperFunction_1.HelperFunction.getDatesBetween(checkIn, checkOut);
+            const uniqueRooms = Object.values(rooms.reduce((acc, curr) => {
+                if (!acc[curr.room_type_id]) {
+                    acc[curr.room_type_id] = {
+                        room_type_id: curr.room_type_id,
+                        total_room: 1,
+                    };
+                }
+                else {
+                    acc[curr.room_type_id].total_room += 1;
+                }
+                return acc;
+            }, {}));
+            for (const { room_type_id, total_room } of uniqueRooms) {
+                for (const date of dates) {
+                    yield reservation_model.updateRoomAvailability({
+                        type,
+                        hotel_code,
+                        room_type_id,
+                        date,
+                        rooms_to_book: total_room,
+                    });
+                }
+            }
+        });
+    }
+    updateRoomAvailabilityForHoldService(hold_type, rooms, checkIn, checkOut, hotel_code) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const reservation_model = this.Model.reservationModel(this.trx);
+            const dates = helperFunction_1.HelperFunction.getDatesBetween(checkIn, checkOut);
+            const uniqueRooms = Object.values(rooms.reduce((acc, curr) => {
+                if (!acc[curr.room_type_id]) {
+                    acc[curr.room_type_id] = {
+                        room_type_id: curr.room_type_id,
+                        total_room: 1,
+                    };
+                }
+                else {
+                    acc[curr.room_type_id].total_room += 1;
+                }
+                return acc;
+            }, {}));
+            console.log({ dates, uniqueRooms });
+            for (const { room_type_id, total_room } of uniqueRooms) {
+                for (const date of dates) {
+                    yield reservation_model.updateRoomAvailabilityHold({
+                        hotel_code,
+                        room_type_id,
+                        date,
+                        rooms_to_book: total_room,
+                        type: hold_type,
+                    });
+                }
+            }
+        });
+    }
     handlePaymentAndFolioForBooking(is_payment_given, payment, guest_id, req, total_amount, booking_id) {
         return __awaiter(this, void 0, void 0, function* () {
+            console.log({ is_payment_given, payment });
             const accountModel = this.Model.accountModel(this.trx);
             let voucherData;
             if (is_payment_given) {
+                if (!payment)
+                    throw new Error("Payment data is required when is_payment_given is true");
                 const [account] = yield accountModel.getSingleAccount({
                     hotel_code: req.hotel_admin.hotel_code,
                     id: payment.acc_id,
@@ -186,7 +250,9 @@ class SubReservationService extends abstract_service_1.default {
                 folio_id: folio.id,
                 posting_type: "Charge",
             });
-            if (is_payment_given)
+            if (is_payment_given) {
+                if (!payment)
+                    throw new Error("Payment data is required when is_payment_given is true");
                 yield hotelInvModel.insertInFolioEntries({
                     acc_voucher_id: voucherData.id,
                     debit: 0,
@@ -194,6 +260,7 @@ class SubReservationService extends abstract_service_1.default {
                     folio_id: folio.id,
                     posting_type: "Payment",
                 });
+            }
             const guestModel = this.Model.guestModel(this.trx);
             yield guestModel.insertGuestLedger({
                 hotel_code: req.hotel_admin.hotel_code,
@@ -202,7 +269,9 @@ class SubReservationService extends abstract_service_1.default {
                 remarks: "Owes for booking",
                 debit: total_amount,
             });
-            if (is_payment_given)
+            if (is_payment_given) {
+                if (!payment)
+                    throw new Error("Payment data is required when is_payment_given is true");
                 yield guestModel.insertGuestLedger({
                     hotel_code: req.hotel_admin.hotel_code,
                     guest_id,
@@ -210,6 +279,7 @@ class SubReservationService extends abstract_service_1.default {
                     remarks: "Paid amount for booking",
                     debit: 0,
                 });
+            }
         });
     }
     handlePaymentAndFolioForAddPayment({ acc_id, amount, folio_id, guest_id, remarks, req, payment_for, payment_date, }) {

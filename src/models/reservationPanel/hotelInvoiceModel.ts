@@ -38,6 +38,30 @@ class HotelInvoiceModel extends Schema {
       .withSchema(this.RESERVATION_SCHEMA)
       .insert(payload);
   }
+
+  public async getDueAmountByBookingID({
+    booking_id,
+    hotel_code,
+  }: {
+    booking_id: number;
+    hotel_code: number;
+  }): Promise<number> {
+    const dueBalance = await this.db("folios as f")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .leftJoin("folio_entries as fe", "f.id", "fe.folio_id")
+      .where("f.booking_id", booking_id)
+      .andWhere("f.hotel_code", hotel_code)
+      .select(
+        this.db.raw(`
+        SUM(CASE WHEN fe.posting_type = 'Charge' THEN COALESCE(fe.debit, 0)
+                 WHEN fe.posting_type = 'Payment' THEN - COALESCE(fe.credit, 0)
+                 ELSE 0
+            END) AS due_balance
+      `)
+      );
+
+    return dueBalance[0].due_balance;
+  }
 }
 
 export default HotelInvoiceModel;

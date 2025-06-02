@@ -88,43 +88,12 @@ export class ReservationModel extends Schema {
   }) {
     const { hotel_code, check_in, check_out } = payload;
 
-    // return await this.db("room_types as rt")
-    //   .withSchema(this.RESERVATION_SCHEMA)
-    //   .select(
-    //     "rt.id",
-    //     "rt.name",
-    //     "rt.description",
-    //     "rt.base_price",
-    //     "rt.hotel_code",
-    //     this.db.raw(`COALESCE(MIN(ra.available_rooms), 0) AS available_rooms`),
-    //     this.db.raw(`
-    //     COALESCE(
-    //       json_agg(
-    //         DISTINCT jsonb_build_object(
-    //           'rate_plan_id', rpd.id,
-    //           'name', rp.name,
-    //           'base_rate', rpd.base_rate
-    //         )
-    //       ) FILTER (WHERE rpd.id IS NOT NULL),
-    //       '[]'
-    //     ) AS rate_plans
-    //   `)
-    //   )
-    //   .leftJoin("room_availability as ra", "rt.id", "ra.room_type_id")
-    //   .leftJoin("rate_plan_details as rpd", "rt.id", "rpd.room_type_id")
-    //   .leftJoin("rate_plans as rp", "rpd.rate_plan_id", "rp.id")
-    //   .where("rt.hotel_code", hotel_code)
-    //   .andWhere("ra.date", ">=", check_in)
-    //   .andWhere("ra.date", "<", check_out)
-    //   .groupBy("rt.id");
-
     return await this.db("room_types as rt")
       .withSchema(this.RESERVATION_SCHEMA)
       .select(
         "rt.id",
         "rt.name",
         "rt.description",
-        "rt.base_price",
         "rt.hotel_code",
         this.db.raw(`MIN(ra.available_rooms) AS available_rooms`),
         this.db.raw(`
@@ -382,7 +351,8 @@ export class ReservationModel extends Schema {
 
   public async updateRoomBooking(
     payload: {
-      status: "checked_in" | "checked_out";
+      status?: "checked_in" | "checked_out";
+      booking_type?: "B" | "C";
     },
     hotel_code: number,
     booking_id: number
@@ -407,41 +377,67 @@ export class ReservationModel extends Schema {
     room_type_id,
     date,
     rooms_to_book,
+    type,
   }: {
     hotel_code: number;
     room_type_id: number;
     date: string;
     rooms_to_book: number;
+    type: "hold_increase" | "hold_decrease";
   }) {
-    return await this.db("room_availability")
-      .withSchema(this.RESERVATION_SCHEMA)
-      .where({ hotel_code, room_type_id, date })
-      .update({
-        available_rooms: this.db.raw("available_rooms - ?", [rooms_to_book]),
-        hold_rooms: this.db.raw("hold_rooms + ?", [rooms_to_book]),
-        updated_at: this.db.fn.now(),
-      });
+    if (type == "hold_increase") {
+      return await this.db("room_availability")
+        .withSchema(this.RESERVATION_SCHEMA)
+        .where({ hotel_code, room_type_id, date })
+        .update({
+          available_rooms: this.db.raw("available_rooms - ?", [rooms_to_book]),
+          hold_rooms: this.db.raw("hold_rooms + ?", [rooms_to_book]),
+          updated_at: this.db.fn.now(),
+        });
+    } else {
+      return await this.db("room_availability")
+        .withSchema(this.RESERVATION_SCHEMA)
+        .where({ hotel_code, room_type_id, date })
+        .update({
+          available_rooms: this.db.raw("available_rooms + ?", [rooms_to_book]),
+          hold_rooms: this.db.raw("hold_rooms - ?", [rooms_to_book]),
+          updated_at: this.db.fn.now(),
+        });
+    }
   }
 
   public async updateRoomAvailability({
+    type,
     hotel_code,
     room_type_id,
     date,
     rooms_to_book,
   }: {
+    type: "booked_room_increase" | "booked_room_decrease";
     hotel_code: number;
     room_type_id: number;
     date: string;
     rooms_to_book: number;
   }) {
-    return await this.db("room_availability")
-      .withSchema(this.RESERVATION_SCHEMA)
-      .where({ hotel_code, room_type_id, date })
-      .update({
-        available_rooms: this.db.raw("available_rooms - ?", [rooms_to_book]),
-        booked_rooms: this.db.raw("booked_rooms + ?", [rooms_to_book]),
-        updated_at: this.db.fn.now(),
-      });
+    if (type === "booked_room_increase") {
+      return await this.db("room_availability")
+        .withSchema(this.RESERVATION_SCHEMA)
+        .where({ hotel_code, room_type_id, date })
+        .update({
+          available_rooms: this.db.raw("available_rooms - ?", [rooms_to_book]),
+          booked_rooms: this.db.raw("booked_rooms + ?", [rooms_to_book]),
+          updated_at: this.db.fn.now(),
+        });
+    } else {
+      return await this.db("room_availability")
+        .withSchema(this.RESERVATION_SCHEMA)
+        .where({ hotel_code, room_type_id, date })
+        .update({
+          available_rooms: this.db.raw("available_rooms + ?", [rooms_to_book]),
+          booked_rooms: this.db.raw("booked_rooms - ?", [rooms_to_book]),
+          updated_at: this.db.fn.now(),
+        });
+    }
   }
 
   public async getFoliosbySingleBooking(
