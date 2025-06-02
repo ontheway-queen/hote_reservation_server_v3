@@ -37,10 +37,6 @@ class ReportRouter extends abstract_router_1.default {
         this.router
             .route("/dashboard")
             .get(this.reportController.getDashboardReport);
-        //  Amount dashboard data
-        this.router
-            .route("/amount-dashboard")
-            .get(this.reportController.getAmountReport);
         // Account dashboard data
         this.router
             .route("/account-dashboard")

@@ -5,5 +5,6 @@ class Schema {
   public readonly M_SCHEMA = "management";
   public readonly RESTAURANT_SCHEMA = "hotel_restaurant";
   public readonly FLEET_SCHEMA = "fleet_management";
+  public readonly ACC_SCHEMA = "acc";
 }
 export default Schema;

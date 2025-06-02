@@ -20,16 +20,6 @@ class ReportController extends AbstractController {
     }
   );
 
-  // get Amount Report
-  public getAmountReport = this.asyncWrapper.wrap(
-    { querySchema: this.dashBoardValidator.getAllAmountQueryValidator },
-    async (req: Request, res: Response) => {
-      const { code, ...data } = await this.reportService.getAmountReport(req);
-
-      res.status(code).json(data);
-    }
-  );
-
   // get account Report
   public getAccountReport = this.asyncWrapper.wrap(
     { querySchema: this.dashBoardValidator.getAllAccountQueryValidator },

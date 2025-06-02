@@ -31,31 +31,26 @@ class AccountReportController extends abstract_controller_1.default {
         super();
         this.accountReportService = new report_account_service_1.default();
         this.reportValidator = new reports_validator_1.default();
-        // get account Report
-        this.getAccountReport = this.asyncWrapper.wrap({ querySchema: this.reportValidator.getAllAccountQueryValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _a = yield this.accountReportService.getAccountReport(req), { code } = _a, data = __rest(_a, ["code"]);
-            res.status(code).json(data);
-        }));
         //<sabbir.m360ict@gmail.com> ---- Sabbir Hosen;
         // Account Reports
         this.getJournalReport = this.asyncWrapper.wrap({ querySchema: this.reportValidator.accountJournalReportQueryValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _b = yield this.accountReportService.getJournalReport(req), { code } = _b, data = __rest(_b, ["code"]);
+            const _a = yield this.accountReportService.getJournalReport(req), { code } = _a, data = __rest(_a, ["code"]);
             res.status(code).json(data);
         }));
         this.getAccLedger = this.asyncWrapper.wrap({ querySchema: this.reportValidator.accountLedgerReportQueryValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _c = yield this.accountReportService.getAccLedger(req), { code } = _c, data = __rest(_c, ["code"]);
+            const _b = yield this.accountReportService.getAccLedger(req), { code } = _b, data = __rest(_b, ["code"]);
             res.status(code).json(data);
         }));
         this.getTrialBalanceReport = this.asyncWrapper.wrap({ querySchema: this.reportValidator.accountJournalReportQueryValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _d = yield this.accountReportService.getTrialBalanceReport(req), { code } = _d, data = __rest(_d, ["code"]);
+            const _c = yield this.accountReportService.getTrialBalanceReport(req), { code } = _c, data = __rest(_c, ["code"]);
             res.status(code).json(data);
         }));
         this.getIncomeStatement = this.asyncWrapper.wrap({ querySchema: this.reportValidator.accountJournalReportQueryValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _e = yield this.accountReportService.getIncomeStatement(req), { code } = _e, data = __rest(_e, ["code"]);
+            const _d = yield this.accountReportService.getIncomeStatement(req), { code } = _d, data = __rest(_d, ["code"]);
             res.status(code).json(data);
         }));
         this.getBalanceSheet = this.asyncWrapper.wrap(null, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _f = yield this.accountReportService.getBalanceSheet(req), { code } = _f, data = __rest(_f, ["code"]);
+            const _e = yield this.accountReportService.getBalanceSheet(req), { code } = _e, data = __rest(_e, ["code"]);
             res.status(code).json(data);
         }));
     }

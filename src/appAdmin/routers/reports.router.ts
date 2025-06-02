@@ -42,11 +42,6 @@ class ReportRouter extends AbstractRouter {
       .route("/dashboard")
       .get(this.reportController.getDashboardReport);
 
-    //  Amount dashboard data
-    this.router
-      .route("/amount-dashboard")
-      .get(this.reportController.getAmountReport);
-
     // Account dashboard data
     this.router
       .route("/account-dashboard")

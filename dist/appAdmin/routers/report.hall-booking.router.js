@@ -11,11 +11,7 @@ class HallBookingReportRouter extends abstract_router_1.default {
         this.hallBookingReportController = new report_hall_booking_controller_1.default();
         this.callRouter();
     }
-    callRouter() {
-        // get hall Booking report router
-        this.router.route("/")
-            .get(this.hallBookingReportController.getHallBookingReport);
-    }
+    callRouter() { }
 }
 exports.default = HallBookingReportRouter;
 //# sourceMappingURL=report.hall-booking.router.js.map

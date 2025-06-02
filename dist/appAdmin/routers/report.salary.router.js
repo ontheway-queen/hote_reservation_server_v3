@@ -11,10 +11,7 @@ class SalaryExpenseRouter extends abstract_router_1.default {
         this.salaryExpenseController = new report_salary_controller_1.default();
         this.callRouter();
     }
-    callRouter() {
-        // get salary report
-        this.router.route("/").get(this.salaryExpenseController.getSalaryReport);
-    }
+    callRouter() { }
 }
 exports.default = SalaryExpenseRouter;
 //# sourceMappingURL=report.salary.router.js.map

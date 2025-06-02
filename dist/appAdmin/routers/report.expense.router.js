@@ -11,12 +11,7 @@ class ExpenseReportRouter extends abstract_router_1.default {
         this.expenseReportController = new report_expense_controller_1.default();
         this.callRouter();
     }
-    callRouter() {
-        // expense report router
-        this.router
-            .route("/")
-            .get(this.expenseReportController.getExpenseReport);
-    }
+    callRouter() { }
 }
 exports.default = ExpenseReportRouter;
 //# sourceMappingURL=report.expense.router.js.map

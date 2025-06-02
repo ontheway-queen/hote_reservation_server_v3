@@ -168,31 +168,6 @@ class AccountReportService extends abstract_service_1.default {
             };
         });
     }
-    // get account report
-    getAccountReport(req) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const { from_date, to_date, name, limit, skip } = req.query;
-            const { hotel_code } = req.hotel_admin;
-            // model
-            const model = this.Model.reportModel();
-            const { data, total, totalDebitAmount, totalCreditAmount } = yield model.getAccountReport({
-                from_date: from_date,
-                to_date: to_date,
-                hotel_code,
-                name: name,
-                limit: limit,
-                skip: skip,
-            });
-            return {
-                success: true,
-                code: this.StatusCode.HTTP_OK,
-                total,
-                totalDebitAmount,
-                totalCreditAmount,
-                data,
-            };
-        });
-    }
 }
 exports.AccountReportService = AccountReportService;
 exports.default = AccountReportService;

@@ -11,10 +11,7 @@ class RoomReportRouter extends abstract_router_1.default {
         this.roomReportController = new report_room_controller_1.default();
         this.callRouter();
     }
-    callRouter() {
-        // get room report router
-        this.router.route("/").get(this.roomReportController.getRoomReport);
-    }
+    callRouter() { }
 }
 exports.default = RoomReportRouter;
 //# sourceMappingURL=report.room.router.js.map
