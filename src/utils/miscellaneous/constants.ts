@@ -85,6 +85,14 @@ export const allStrings = [
   "z",
 ];
 
+// Account Groups id
+export const ASSET_GROUP = "1000";
+export const LIABILITY_GROUP = "2000";
+export const CAPITAL_GROUP = "3000";
+export const INCOME_GROUP = "4000";
+export const EXPENSE_GROUP = "5000";
+export const DIVIDEND_GROUP = "6000";
+
 // OTP types constants
 
 export const OTP_TYPE_FORGET_M_ADMIN = "forget_m_admin";

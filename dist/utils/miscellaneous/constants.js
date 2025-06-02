@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ERROR_LEVEL_CRITICAL = exports.ERROR_LEVEL_ERROR = exports.ERROR_LEVEL_WARNING = exports.ERROR_LEVEL_INFO = exports.ERROR_LEVEL_DEBUG = exports.OTP_FOR_CREDENTIALS = exports.OTP_FOR = exports.OTP_EMAIL_SUBJECT = exports.OTP_TYPE_FORGET_RES_ADMIN = exports.OTP_TYPE_FORGET_HOTEL_ADMIN = exports.OTP_TYPE_FORGET_M_ADMIN = exports.allStrings = exports.origin = void 0;
+exports.ERROR_LEVEL_CRITICAL = exports.ERROR_LEVEL_ERROR = exports.ERROR_LEVEL_WARNING = exports.ERROR_LEVEL_INFO = exports.ERROR_LEVEL_DEBUG = exports.OTP_FOR_CREDENTIALS = exports.OTP_FOR = exports.OTP_EMAIL_SUBJECT = exports.OTP_TYPE_FORGET_RES_ADMIN = exports.OTP_TYPE_FORGET_HOTEL_ADMIN = exports.OTP_TYPE_FORGET_M_ADMIN = exports.DIVIDEND_GROUP = exports.EXPENSE_GROUP = exports.INCOME_GROUP = exports.CAPITAL_GROUP = exports.LIABILITY_GROUP = exports.ASSET_GROUP = exports.allStrings = exports.origin = void 0;
 exports.origin = [
     "http://localhost:3000",
     "http://localhost:3001",
@@ -86,6 +86,13 @@ exports.allStrings = [
     "y",
     "z",
 ];
+// Account Groups id
+exports.ASSET_GROUP = "1000";
+exports.LIABILITY_GROUP = "2000";
+exports.CAPITAL_GROUP = "3000";
+exports.INCOME_GROUP = "4000";
+exports.EXPENSE_GROUP = "5000";
+exports.DIVIDEND_GROUP = "6000";
 // OTP types constants
 exports.OTP_TYPE_FORGET_M_ADMIN = "forget_m_admin";
 exports.OTP_TYPE_FORGET_HOTEL_ADMIN = "forget_h_admin";

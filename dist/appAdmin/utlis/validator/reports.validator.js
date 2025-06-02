@@ -67,6 +67,17 @@ class ReportValidator {
             pay_type: joi_1.default.string().allow("").optional(),
             user_id: joi_1.default.string().allow("").optional(),
         });
+        // Journal Report Validator
+        this.accountJournalReportQueryValidator = joi_1.default.object({
+            from_date: joi_1.default.string().optional(),
+            to_date: joi_1.default.string().optional(),
+        });
+        // Account Ledger Report Validator
+        this.accountLedgerReportQueryValidator = joi_1.default.object({
+            from_date: joi_1.default.string().required(),
+            to_date: joi_1.default.string().required(),
+            head_id: joi_1.default.number().integer().required(),
+        });
     }
 }
 exports.default = ReportValidator;
