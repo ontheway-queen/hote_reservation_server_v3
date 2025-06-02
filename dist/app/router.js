@@ -14,13 +14,9 @@ class RootRouter {
         this.callV1Router();
     }
     callV1Router() {
-        // auth router
         this.v1Router.use("/common", new common_router_1.default().router);
-        // common router for all
         this.v1Router.use("/auth", new auth_router_1.default().AuthRouter);
-        // ================== reservation ===================== //
         this.v1Router.use("/reservation", new reservationRoot_router_1.ReservationRootRouter().router);
-        // ================== management admin panel ===================//
         this.v1Router.use("/management", new managementRoot_router_1.default().managementRouter);
     }
 }

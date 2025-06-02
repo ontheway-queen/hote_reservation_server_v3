@@ -80,7 +80,6 @@ export class ReservationModel extends Schema {
       .groupBy("rt.id");
   }
 
-  // get all available rooms with types by checkn and check out dates
   public async getAllAvailableRoomsTypeWithAvailableRoomCount(payload: {
     check_in: string;
     check_out: string;
@@ -118,42 +117,6 @@ export class ReservationModel extends Schema {
       .groupBy("rt.id")
       .having(this.db.raw("MIN(ra.available_rooms) > 0"));
   }
-
-  // public async getAllAvailableRoomsByRoomType(payload: {
-  //   check_in: string;
-  //   check_out: string;
-  //   hotel_code: number;
-  //   room_type_id: number;
-  // }) {
-  //   const { hotel_code, check_in, check_out, room_type_id } = payload;
-
-  //   console.log({ payload });
-
-  //   const schema = this.RESERVATION_SCHEMA;
-
-  //   return await this.db("rooms as r")
-  //     .withSchema(schema)
-  //     .select(
-  //       "r.hotel_code",
-  //       "r.id as room_id",
-  //       "r.room_name",
-  //       "r.room_type_id",
-  //       "rt.name as room_type_name"
-  //     )
-  //     .leftJoin("room_types as rt", "r.room_type_id", "rt.id")
-  //     .where("r.hotel_code", hotel_code)
-  //     .andWhere("r.room_type_id", room_type_id)
-  //     .whereNotExists(function () {
-  //       this.select("*")
-  //         .from("bookings as b")
-  //         .withSchema(schema)
-  //         .join("booking_rooms as br", "br.booking_id", "b.id")
-  //         .whereRaw("br.room_id = r.id")
-  //         .andWhere("b.status", "confirmed")
-  //         .andWhere("b.check_in", "<", check_out)
-  //         .andWhere("b.check_out", ">", check_in);
-  //     });
-  // }
 
   public async getAllAvailableRoomsByRoomType(payload: {
     check_in: string;
