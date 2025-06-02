@@ -29,7 +29,10 @@ class ReservationRouter {
             .route("/booking")
             .post(this.controller.createBooking)
             .get(this.controller.getAllBooking);
-        this.router.route("/booking/:id").get(this.controller.getSingleBooking);
+        this.router
+            .route("/booking/:id")
+            .get(this.controller.getSingleBooking)
+            .patch(this.controller.updateSingleBooking);
         this.router
             .route("/folios-by/booking_id/:id")
             .get(this.controller.getFoliosbySingleBooking);

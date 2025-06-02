@@ -447,6 +447,27 @@ export class ReservationService extends AbstractServices {
     };
   }
 
+  public async updateSingleBooking(req: Request) {
+    const checkSingleBooking =
+      await this.Model.reservationModel().getSingleBooking(
+        req.hotel_admin.hotel_code,
+        parseInt(req.params.id)
+      );
+
+    if (!checkSingleBooking) {
+      return {
+        success: false,
+        code: this.StatusCode.HTTP_NOT_FOUND,
+        message: this.ResMsg.HTTP_NOT_FOUND,
+      };
+    }
+    return {
+      success: true,
+      code: this.StatusCode.HTTP_OK,
+      // data,
+    };
+  }
+
   public async checkIn(req: Request) {
     const hotel_code = req.hotel_admin.hotel_code;
     const booking_id = parseInt(req.params.id);
@@ -534,7 +555,7 @@ export class ReservationService extends AbstractServices {
         return {
           success: false,
           code: this.StatusCode.HTTP_UNPROCESSABLE_ENTITY,
-          message: `This guest hast ${checkDueAmount} due. So you cannot checkin`,
+          message: `This guest has ${checkDueAmount} due. So you cannot checkout`,
         };
       }
 

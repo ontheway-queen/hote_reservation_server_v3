@@ -3,13 +3,16 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.ERROR_LEVEL_CRITICAL = exports.ERROR_LEVEL_ERROR = exports.ERROR_LEVEL_WARNING = exports.ERROR_LEVEL_INFO = exports.ERROR_LEVEL_DEBUG = exports.OTP_FOR_CREDENTIALS = exports.OTP_FOR = exports.OTP_EMAIL_SUBJECT = exports.OTP_TYPE_FORGET_RES_ADMIN = exports.OTP_TYPE_FORGET_HOTEL_ADMIN = exports.OTP_TYPE_FORGET_M_ADMIN = exports.DIVIDEND_GROUP = exports.EXPENSE_GROUP = exports.INCOME_GROUP = exports.CAPITAL_GROUP = exports.LIABILITY_GROUP = exports.ASSET_GROUP = exports.allStrings = exports.origin = void 0;
 exports.origin = [
     "http://localhost:3000",
+    "http://localhost:3030",
     "http://localhost:3001",
     "http://127.0.0.1:3000",
     "http://10.10.220.48:3000",
     "http://10.10.220.48:3001",
     "http://10.10.220.48:3002",
     "http://10.10.220.49:3000",
-    "http://10.10.220.49:3001",
+    "http://10.10.220.47:3030",
+    "http://10.10.220.48:3030",
+    "http://10.10.220.49:3030",
     "http://10.10.220.49:3002",
     "http://localhost:5173",
     "http://10.10.220.48:4173",

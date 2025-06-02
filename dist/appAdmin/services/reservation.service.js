@@ -367,6 +367,23 @@ class ReservationService extends abstract_service_1.default {
             };
         });
     }
+    updateSingleBooking(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const checkSingleBooking = yield this.Model.reservationModel().getSingleBooking(req.hotel_admin.hotel_code, parseInt(req.params.id));
+            if (!checkSingleBooking) {
+                return {
+                    success: false,
+                    code: this.StatusCode.HTTP_NOT_FOUND,
+                    message: this.ResMsg.HTTP_NOT_FOUND,
+                };
+            }
+            return {
+                success: true,
+                code: this.StatusCode.HTTP_OK,
+                // data,
+            };
+        });
+    }
     checkIn(req) {
         return __awaiter(this, void 0, void 0, function* () {
             const hotel_code = req.hotel_admin.hotel_code;
@@ -432,7 +449,7 @@ class ReservationService extends abstract_service_1.default {
                     return {
                         success: false,
                         code: this.StatusCode.HTTP_UNPROCESSABLE_ENTITY,
-                        message: `This guest hast ${checkDueAmount} due. So you cannot checkin`,
+                        message: `This guest has ${checkDueAmount} due. So you cannot checkout`,
                     };
                 }
                 // room avaibility decrease

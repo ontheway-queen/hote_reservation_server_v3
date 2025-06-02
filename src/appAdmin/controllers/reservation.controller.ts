@@ -86,6 +86,14 @@ export class ReservationController extends AbstractController {
     }
   );
 
+  public updateSingleBooking = this.asyncWrapper.wrap(
+    { paramSchema: this.commonValidator.singleParamValidator() },
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.getSingleBooking(req);
+      res.status(code).json(data);
+    }
+  );
+
   public checkIn = this.asyncWrapper.wrap(
     { paramSchema: this.commonValidator.singleParamValidator() },
     async (req: Request, res: Response) => {
