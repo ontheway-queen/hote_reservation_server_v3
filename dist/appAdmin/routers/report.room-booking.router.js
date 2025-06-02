@@ -11,11 +11,7 @@ class RoomBookingReportRouter extends abstract_router_1.default {
         this.roomBookingReportController = new report_room_booking_controller_1.default();
         this.callRouter();
     }
-    callRouter() {
-        // get room Booking report router
-        this.router.route("/")
-            .get(this.roomBookingReportController.getRoomBookingReport);
-    }
+    callRouter() { }
 }
 exports.default = RoomBookingReportRouter;
 //# sourceMappingURL=report.room-booking.router.js.map

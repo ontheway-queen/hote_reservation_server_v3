@@ -36,19 +36,14 @@ class ReportController extends abstract_controller_1.default {
             const _a = yield this.reportService.getDashboardData(req), { code } = _a, data = __rest(_a, ["code"]);
             res.status(code).json(data);
         }));
-        // get Amount Report
-        this.getAmountReport = this.asyncWrapper.wrap({ querySchema: this.dashBoardValidator.getAllAmountQueryValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _b = yield this.reportService.getAmountReport(req), { code } = _b, data = __rest(_b, ["code"]);
-            res.status(code).json(data);
-        }));
         // get account Report
         this.getAccountReport = this.asyncWrapper.wrap({ querySchema: this.dashBoardValidator.getAllAccountQueryValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _c = yield this.reportService.getAccountReport(req), { code } = _c, data = __rest(_c, ["code"]);
+            const _b = yield this.reportService.getAccountReport(req), { code } = _b, data = __rest(_b, ["code"]);
             res.status(code).json(data);
         }));
         // get Room Report
         this.getRoomReport = this.asyncWrapper.wrap({ querySchema: this.dashBoardValidator.getAllRoomsQueryValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _d = yield this.reportService.getRoomReport(req), { code } = _d, data = __rest(_d, ["code"]);
+            const _c = yield this.reportService.getRoomReport(req), { code } = _c, data = __rest(_c, ["code"]);
             res.status(code).json(data);
         }));
     }

@@ -11,11 +11,7 @@ class ClientLegderReportRouter extends abstract_router_1.default {
         this.clientLedgerReportController = new report_client_ledger_controller_1.default();
         this.callRouter();
     }
-    callRouter() {
-        // get hall Booking report router
-        this.router.route("/")
-            .get(this.clientLedgerReportController.getClientLedgerReport);
-    }
+    callRouter() { }
 }
 exports.default = ClientLegderReportRouter;
 //# sourceMappingURL=report.client-ledger.router.js.map

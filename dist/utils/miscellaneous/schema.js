@@ -8,6 +8,7 @@ class Schema {
         this.M_SCHEMA = "management";
         this.RESTAURANT_SCHEMA = "hotel_restaurant";
         this.FLEET_SCHEMA = "fleet_management";
+        this.ACC_SCHEMA = "acc";
     }
 }
 exports.default = Schema;

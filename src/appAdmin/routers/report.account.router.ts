@@ -9,9 +9,6 @@ class AccountReportRouter extends AbstractRouter {
     this.callRouter();
   }
   private callRouter() {
-    // get all account report
-    this.router.route("/").get(this.reportController.getAccountReport);
-
     //<sabbir.m360ict@gmail.com> ---- Sabbir Hosen;
     // Account Reports
     this.router.get("/journal", this.reportController.getJournalReport);

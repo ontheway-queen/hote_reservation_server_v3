@@ -10,17 +10,6 @@ class AccountReportController extends AbstractController {
     super();
   }
 
-  // get account Report
-  public getAccountReport = this.asyncWrapper.wrap(
-    { querySchema: this.reportValidator.getAllAccountQueryValidator },
-    async (req: Request, res: Response) => {
-      const { code, ...data } =
-        await this.accountReportService.getAccountReport(req);
-
-      res.status(code).json(data);
-    }
-  );
-
   //<sabbir.m360ict@gmail.com> ---- Sabbir Hosen;
   // Account Reports
 
