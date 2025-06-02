@@ -676,6 +676,20 @@ export class ReservationService extends AbstractServices {
     };
   }
 
+  public async getFoliosWithEntriesbySingleBooking(req: Request) {
+    const data =
+      await this.Model.reservationModel().getFoliosWithEntriesbySingleBooking(
+        req.hotel_admin.hotel_code,
+        parseInt(req.params.id)
+      );
+
+    return {
+      success: true,
+      code: this.StatusCode.HTTP_OK,
+      data,
+    };
+  }
+
   public async getFolioEntriesbyFolioID(req: Request) {
     const data = await this.Model.reservationModel().getFolioEntriesbyFolioID(
       req.hotel_admin.hotel_code,

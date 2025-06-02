@@ -11,7 +11,9 @@ class InvoiceRouter extends abstract_router_1.default {
         this.invoiceController = new invoice_controller_1.default();
         this.callRouter();
     }
-    callRouter() { }
+    callRouter() {
+        // this.router.route("/folio-invoice").post();
+    }
 }
 exports.default = InvoiceRouter;
 //# sourceMappingURL=invoice.router.js.map

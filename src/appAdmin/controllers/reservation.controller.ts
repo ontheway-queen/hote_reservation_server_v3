@@ -133,6 +133,15 @@ export class ReservationController extends AbstractController {
     }
   );
 
+  public getFoliosWithEntriesbySingleBooking = this.asyncWrapper.wrap(
+    { paramSchema: this.commonValidator.singleParamValidator() },
+    async (req: Request, res: Response) => {
+      const { code, ...data } =
+        await this.service.getFoliosWithEntriesbySingleBooking(req);
+      res.status(code).json(data);
+    }
+  );
+
   public addPaymentByFolioID = this.asyncWrapper.wrap(
     {
       bodySchema: this.validator.addPayment,

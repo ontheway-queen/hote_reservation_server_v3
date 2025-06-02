@@ -521,6 +521,16 @@ class ReservationService extends abstract_service_1.default {
             };
         });
     }
+    getFoliosWithEntriesbySingleBooking(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const data = yield this.Model.reservationModel().getFoliosWithEntriesbySingleBooking(req.hotel_admin.hotel_code, parseInt(req.params.id));
+            return {
+                success: true,
+                code: this.StatusCode.HTTP_OK,
+                data,
+            };
+        });
+    }
     getFolioEntriesbyFolioID(req) {
         return __awaiter(this, void 0, void 0, function* () {
             const data = yield this.Model.reservationModel().getFolioEntriesbyFolioID(req.hotel_admin.hotel_code, parseInt(req.params.id));

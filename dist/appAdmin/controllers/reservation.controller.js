@@ -94,20 +94,24 @@ class ReservationController extends abstract_controller_1.default {
             const _m = yield this.service.getFoliosbySingleBooking(req), { code } = _m, data = __rest(_m, ["code"]);
             res.status(code).json(data);
         }));
+        this.getFoliosWithEntriesbySingleBooking = this.asyncWrapper.wrap({ paramSchema: this.commonValidator.singleParamValidator() }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _o = yield this.service.getFoliosWithEntriesbySingleBooking(req), { code } = _o, data = __rest(_o, ["code"]);
+            res.status(code).json(data);
+        }));
         this.addPaymentByFolioID = this.asyncWrapper.wrap({
             bodySchema: this.validator.addPayment,
         }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _o = yield this.service.addPaymentByFolioID(req), { code } = _o, data = __rest(_o, ["code"]);
+            const _p = yield this.service.addPaymentByFolioID(req), { code } = _p, data = __rest(_p, ["code"]);
             res.status(code).json(data);
         }));
         this.refundPaymentByFolioID = this.asyncWrapper.wrap({
             bodySchema: this.validator.addPayment,
         }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _p = yield this.service.refundPaymentByFolioID(req), { code } = _p, data = __rest(_p, ["code"]);
+            const _q = yield this.service.refundPaymentByFolioID(req), { code } = _q, data = __rest(_q, ["code"]);
             res.status(code).json(data);
         }));
         this.getFolioEntriesbyFolioID = this.asyncWrapper.wrap({ paramSchema: this.commonValidator.singleParamValidator() }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _q = yield this.service.getFolioEntriesbyFolioID(req), { code } = _q, data = __rest(_q, ["code"]);
+            const _r = yield this.service.getFolioEntriesbyFolioID(req), { code } = _r, data = __rest(_r, ["code"]);
             res.status(code).json(data);
         }));
     }

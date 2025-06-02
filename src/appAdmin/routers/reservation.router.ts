@@ -41,6 +41,10 @@ export class ReservationRouter {
       .get(this.controller.getFoliosbySingleBooking);
 
     this.router
+      .route("/folios-with-entries-by/booking_id/:id")
+      .get(this.controller.getFoliosWithEntriesbySingleBooking);
+
+    this.router
       .route("/folio-entries/by/folio-id/:id")
       .get(this.controller.getFolioEntriesbyFolioID);
 

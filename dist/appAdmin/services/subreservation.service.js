@@ -233,7 +233,9 @@ class SubReservationService extends abstract_service_1.default {
             }
             const hotelInvModel = this.Model.hotelInvoiceModel(this.trx);
             const [lastFolio] = yield hotelInvModel.getLasFolioId();
+            console.log({ lastFolio });
             const folio_number = helperFunction_1.HelperFunction.generateFolioNumber(lastFolio === null || lastFolio === void 0 ? void 0 : lastFolio.id);
+            console.log({ folio_number });
             const [folio] = yield hotelInvModel.insertInFolio({
                 booking_id,
                 folio_number,
@@ -243,6 +245,7 @@ class SubReservationService extends abstract_service_1.default {
                 status: "open",
                 type: "Primary",
             });
+            console.log({ folio });
             yield hotelInvModel.insertInFolioEntries({
                 acc_voucher_id: voucherData === null || voucherData === void 0 ? void 0 : voucherData.id,
                 debit: total_amount,

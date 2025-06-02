@@ -37,10 +37,18 @@ class ReservationModel extends schema_1.default {
                   (
                     SELECT json_agg(
                       jsonb_build_object(
+                      'booking_id',b.id,
                         'check_in', b.check_in,
                         'check_out', b.check_out,
                         'booking_status', b.status,
-                        'guest_name', CONCAT(g.first_name, ' ', g.last_name)
+                        'guest_id',b.guest_id,
+  
+                        'guest_name', CONCAT(g.first_name, ' ', g.last_name),
+                        'vat',b.vat,
+                        'service_charge',b.service_charge,
+                        'sub_total',b.sub_total,
+                        'discount_amount',b.discount_amount,
+                        'total_amount',b.total_amount
                       )
                     )
                     FROM ?? AS br2
@@ -284,6 +292,17 @@ class ReservationModel extends schema_1.default {
                 .select("id", "name")
                 .where("booking_id", booking_id)
                 .andWhere("hotel_code", hotel_code);
+        });
+    }
+    getFoliosWithEntriesbySingleBooking(hotel_code, booking_id) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("folios as f")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .select("f.id", "f.name", this.db.raw(`(SELECT JSON_AGG(JSON_BUILD_OBJECT('entries_id',fe.id,'description',fe.description,'posting_type',fe.posting_type,'debit',fe.debit,'credit',fe.credit,'created_at',fe.created_at,'is_void',fe.is_void,'invoiced',fe.invoiced)) as folio_entries)`))
+                .leftJoin("folio_entries as fe", "f.id", "fe.folio_id")
+                .where("booking_id", booking_id)
+                .andWhere("hotel_code", hotel_code)
+                .groupBy("f.id", "f.name");
         });
     }
     getSingleFoliobyHotelCodeAndID(hotel_code, folio_id) {

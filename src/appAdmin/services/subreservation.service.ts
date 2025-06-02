@@ -314,7 +314,9 @@ export class SubReservationService extends AbstractServices {
 
     const hotelInvModel = this.Model.hotelInvoiceModel(this.trx);
     const [lastFolio] = await hotelInvModel.getLasFolioId();
+    console.log({ lastFolio });
     const folio_number = HelperFunction.generateFolioNumber(lastFolio?.id);
+    console.log({ folio_number });
     const [folio] = await hotelInvModel.insertInFolio({
       booking_id,
       folio_number,
@@ -324,6 +326,8 @@ export class SubReservationService extends AbstractServices {
       status: "open",
       type: "Primary",
     });
+
+    console.log({ folio });
 
     await hotelInvModel.insertInFolioEntries({
       acc_voucher_id: voucherData?.id,
