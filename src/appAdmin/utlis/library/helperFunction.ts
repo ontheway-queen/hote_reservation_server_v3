@@ -86,7 +86,7 @@ export class HelperFunction extends AbstractServices {
     const now = moment();
     const prefix = `VCH-${now.format("YYYYMM")}`;
 
-    const model = await this.Model.accountModel();
+    const model = this.Model.accountModel();
 
     const getLasVoucherId = await model.getVoucherCount();
 
@@ -95,5 +95,12 @@ export class HelperFunction extends AbstractServices {
     const padded = next.toString().padStart(4, "0");
 
     return `${prefix}-${padded}`;
+  }
+
+  public async generateInvoiceNumber() {
+    const lastId = await this.Model.hotelInvoiceModel().getLastInvoiceId();
+    const nextId = lastId + 1;
+    const padded = String(nextId).padStart(6, "0"); // e.g., "000004"
+    return `INV-${padded}`;
   }
 }

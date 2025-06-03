@@ -32,7 +32,7 @@ class InvoiceController extends abstract_controller_1.default {
         this.service = new invoice_service_1.default();
         this.validator = new invoice_validator_1.default();
         this.createFolioInvoice = this.asyncWrapper.wrap({
-            bodySchema: this.validator.createInvoiceValidator,
+            bodySchema: this.validator.createFolioInvoiceValidator,
         }, (req, res) => __awaiter(this, void 0, void 0, function* () {
             const _a = yield this.service.createFolioInvoice(req), { code } = _a, data = __rest(_a, ["code"]);
             res.status(code).json(data);

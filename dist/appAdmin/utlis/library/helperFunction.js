@@ -88,11 +88,19 @@ class HelperFunction extends abstract_service_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             const now = (0, moment_1.default)();
             const prefix = `VCH-${now.format("YYYYMM")}`;
-            const model = yield this.Model.accountModel();
+            const model = this.Model.accountModel();
             const getLasVoucherId = yield model.getVoucherCount();
             const next = (parseInt(getLasVoucherId) || 0) + 1;
             const padded = next.toString().padStart(4, "0");
             return `${prefix}-${padded}`;
+        });
+    }
+    generateInvoiceNumber() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const lastId = yield this.Model.hotelInvoiceModel().getLastInvoiceId();
+            const nextId = lastId + 1;
+            const padded = String(nextId).padStart(6, "0"); // e.g., "000004"
+            return `INV-${padded}`;
         });
     }
 }

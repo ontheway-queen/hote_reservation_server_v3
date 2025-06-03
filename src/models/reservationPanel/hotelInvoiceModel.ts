@@ -63,7 +63,7 @@ class HotelInvoiceModel extends Schema {
     return dueBalance[0].due_balance;
   }
 
-  public async insertInFolioInvoice(payload: {
+  public async insertInInvoice(payload: {
     hotel_code: number;
     invoice_number: string;
     invoice_date: string;
@@ -75,20 +75,46 @@ class HotelInvoiceModel extends Schema {
       .insert(payload, "id");
   }
 
-  public async insertInFolioInvoiceItems(payload: {
-    invoice_id: number;
-    folio_entry_id: number;
-    description: string;
-    type: string;
-    amount: number;
-    folio_id: number;
+  public async insertInFolioInvoice(payload: {
+    hotel_code: number;
+    invoice_number: string;
+    invoice_date: string;
+    total_amount: number;
+    notes?: string;
   }) {
-    return await this.db("invoice_items")
+    return await this.db("invoice_folios")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .insert(payload, "id");
+  }
+
+  public async insertFolioInvoice(
+    payload: {
+      invoice_id: number;
+      folio_id: number;
+      booking_id: number;
+    }[]
+  ) {
+    return await this.db("invoice_folios")
       .withSchema(this.RESERVATION_SCHEMA)
       .insert(payload);
   }
 
-  public async getAllFolioInvoice({
+  public async insertInFolioInvoiceItems(
+    payload: {
+      invoice_id: number;
+      folio_entry_id: number;
+      description: string;
+      type: string;
+      amount: number;
+      folio_id: number;
+    }[]
+  ) {
+    return await this.db("folio_invoice_items")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .insert(payload);
+  }
+
+  public async getAllInvoice({
     hotel_code,
     status,
   }: {
@@ -103,6 +129,15 @@ class HotelInvoiceModel extends Schema {
           this.andWhere("hotel_code", hotel_code);
         }
       });
+  }
+
+  public async getLastInvoiceId() {
+    const result = await this.db("invoices")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .max("id as maxId")
+      .first();
+
+    return result?.maxId || 0;
   }
 }
 

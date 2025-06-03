@@ -12,7 +12,7 @@ class InvoiceController extends AbstractController {
 
   public createFolioInvoice = this.asyncWrapper.wrap(
     {
-      bodySchema: this.validator.createInvoiceValidator,
+      bodySchema: this.validator.createFolioInvoiceValidator,
     },
     async (req: Request, res: Response) => {
       const { code, ...data } = await this.service.createFolioInvoice(req);

@@ -65,21 +65,35 @@ class HotelInvoiceModel extends schema_1.default {
             return dueBalance[0].due_balance;
         });
     }
-    insertInFolioInvoice(payload) {
+    insertInInvoice(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("invoices")
                 .withSchema(this.RESERVATION_SCHEMA)
                 .insert(payload, "id");
         });
     }
-    insertInFolioInvoiceItems(payload) {
+    insertInFolioInvoice(payload) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("invoice_items")
+            return yield this.db("invoice_folios")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .insert(payload, "id");
+        });
+    }
+    insertFolioInvoice(payload) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("invoice_folios")
                 .withSchema(this.RESERVATION_SCHEMA)
                 .insert(payload);
         });
     }
-    getAllFolioInvoice({ hotel_code, status, }) {
+    insertInFolioInvoiceItems(payload) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("folio_invoice_items")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .insert(payload);
+        });
+    }
+    getAllInvoice({ hotel_code, status, }) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("invoices")
                 .withSchema(this.RESERVATION_SCHEMA)
@@ -89,6 +103,15 @@ class HotelInvoiceModel extends schema_1.default {
                     this.andWhere("hotel_code", hotel_code);
                 }
             });
+        });
+    }
+    getLastInvoiceId() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const result = yield this.db("invoices")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .max("id as maxId")
+                .first();
+            return (result === null || result === void 0 ? void 0 : result.maxId) || 0;
         });
     }
 }

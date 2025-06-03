@@ -334,7 +334,7 @@ class ReservationModel extends schema_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("folios as f")
                 .withSchema(this.RESERVATION_SCHEMA)
-                .select("f.id", "f.name", "fe.id as entries_id", "fe.description", "fe.posting_type", "fe.debit", "fe.credi", "fe.is_void", "fe.invoiced")
+                .select("f.id", "f.name", "fe.id as entries_id", "fe.description", "fe.posting_type", "fe.debit", "fe.credit", "fe.is_void", "fe.invoiced")
                 .leftJoin("folio_entries as fe", "f.id", "fe.folio_id")
                 .where("booking_id", booking_id)
                 .andWhere("hotel_code", hotel_code)
@@ -345,16 +345,25 @@ class ReservationModel extends schema_1.default {
             });
         });
     }
+    updateFolioEntries(payload, entryIDs) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("folio_entries")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .update(payload)
+                .whereIn("id", entryIDs);
+        });
+    }
     getFolioEntriesCalculation(folioEntryIds) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("folio_entries")
+                .withSchema(this.RESERVATION_SCHEMA)
                 .whereIn("id", folioEntryIds)
+                .andWhere("is_void", false)
                 .select(this.db.raw(`
-      SUM(CASE WHEN type = 'debit' THEN amount ELSE 0 END) AS total_amount,
-      SUM(CASE WHEN type = 'credit' THEN amount ELSE 0 END) AS paid_amount,
-      SUM(CASE WHEN type = 'debit' THEN amount ELSE 0 END) -
-      SUM(CASE WHEN type = 'credit' THEN amount ELSE 0 END) AS due_amount
-    `))
+          COALESCE(SUM(debit), 0) AS total_amount,
+          COALESCE(SUM(credit), 0) AS paid_amount,
+          COALESCE(SUM(debit), 0) - COALESCE(SUM(credit), 0) AS due_amount
+        `))
                 .first();
         });
     }

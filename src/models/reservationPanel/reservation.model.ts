@@ -494,7 +494,19 @@ export class ReservationModel extends Schema {
     hotel_code: number;
     booking_id: number;
     entry_ids?: number[];
-  }): Promise<{ id: number; name: string }[]> {
+  }): Promise<
+    {
+      id: number;
+      name: string;
+      entries_id: number;
+      description: string;
+      posting_type: string;
+      debit: number;
+      credit: number;
+      is_void: boolean;
+      invoiced: boolean;
+    }[]
+  > {
     return await this.db("folios as f")
       .withSchema(this.RESERVATION_SCHEMA)
       .select(
@@ -504,7 +516,7 @@ export class ReservationModel extends Schema {
         "fe.description",
         "fe.posting_type",
         "fe.debit",
-        "fe.credi",
+        "fe.credit",
         "fe.is_void",
         "fe.invoiced"
       )
@@ -518,20 +530,31 @@ export class ReservationModel extends Schema {
       });
   }
 
+  public async updateFolioEntries(
+    payload: { is_void?: boolean; invoiced?: boolean },
+    entryIDs: number[]
+  ) {
+    return await this.db("folio_entries")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .update(payload)
+      .whereIn("id", entryIDs);
+  }
+
   public async getFolioEntriesCalculation(folioEntryIds: number[]): Promise<{
     total_amount: number;
     paid_amount: number;
     due_amount: number;
   }> {
     return await this.db("folio_entries")
+      .withSchema(this.RESERVATION_SCHEMA)
       .whereIn("id", folioEntryIds)
+      .andWhere("is_void", false)
       .select(
         this.db.raw(`
-      SUM(CASE WHEN type = 'debit' THEN amount ELSE 0 END) AS total_amount,
-      SUM(CASE WHEN type = 'credit' THEN amount ELSE 0 END) AS paid_amount,
-      SUM(CASE WHEN type = 'debit' THEN amount ELSE 0 END) -
-      SUM(CASE WHEN type = 'credit' THEN amount ELSE 0 END) AS due_amount
-    `)
+          COALESCE(SUM(debit), 0) AS total_amount,
+          COALESCE(SUM(credit), 0) AS paid_amount,
+          COALESCE(SUM(debit), 0) - COALESCE(SUM(credit), 0) AS due_amount
+        `)
       )
       .first();
   }
