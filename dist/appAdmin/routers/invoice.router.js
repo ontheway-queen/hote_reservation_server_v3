@@ -12,7 +12,9 @@ class InvoiceRouter extends abstract_router_1.default {
         this.callRouter();
     }
     callRouter() {
-        // this.router.route("/folio-invoice").post();
+        this.router
+            .route("/folio-invoice")
+            .post(this.invoiceController.createFolioInvoice);
     }
 }
 exports.default = InvoiceRouter;

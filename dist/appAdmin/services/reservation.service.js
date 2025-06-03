@@ -523,7 +523,10 @@ class ReservationService extends abstract_service_1.default {
     }
     getFoliosWithEntriesbySingleBooking(req) {
         return __awaiter(this, void 0, void 0, function* () {
-            const data = yield this.Model.reservationModel().getFoliosWithEntriesbySingleBooking(req.hotel_admin.hotel_code, parseInt(req.params.id));
+            const data = yield this.Model.reservationModel().getFoliosWithEntriesbySingleBooking({
+                hotel_code: req.hotel_admin.hotel_code,
+                booking_id: parseInt(req.params.id),
+            });
             return {
                 success: true,
                 code: this.StatusCode.HTTP_OK,

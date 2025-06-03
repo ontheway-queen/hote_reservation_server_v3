@@ -422,10 +422,15 @@ export class ReservationModel extends Schema {
       .andWhere("hotel_code", hotel_code);
   }
 
-  public async getFoliosWithEntriesbySingleBooking(
-    hotel_code: number,
-    booking_id: number
-  ): Promise<{ id: number; name: string }[]> {
+  public async getFoliosWithEntriesbySingleBooking({
+    hotel_code,
+    booking_id,
+    entry_ids,
+  }: {
+    hotel_code: number;
+    booking_id: number;
+    entry_ids?: number[];
+  }): Promise<{ id: number; name: string }[]> {
     return await this.db("folios as f")
       .withSchema(this.RESERVATION_SCHEMA)
       .select(
@@ -438,6 +443,11 @@ export class ReservationModel extends Schema {
       .leftJoin("folio_entries as fe", "f.id", "fe.folio_id")
       .where("booking_id", booking_id)
       .andWhere("hotel_code", hotel_code)
+      .andWhere(function () {
+        if (entry_ids?.length) {
+          this.whereIn("fe.id", entry_ids);
+        }
+      })
       .groupBy("f.id", "f.name");
   }
 
@@ -474,5 +484,55 @@ export class ReservationModel extends Schema {
       .join("folios as f", "fe.folio_id", "f.id")
       .where("fe.folio_id", folio_id)
       .andWhere("f.hotel_code", hotel_code);
+  }
+
+  public async getFoliosEntriesbySingleBooking({
+    hotel_code,
+    booking_id,
+    entry_ids,
+  }: {
+    hotel_code: number;
+    booking_id: number;
+    entry_ids?: number[];
+  }): Promise<{ id: number; name: string }[]> {
+    return await this.db("folios as f")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .select(
+        "f.id",
+        "f.name",
+        "fe.id as entries_id",
+        "fe.description",
+        "fe.posting_type",
+        "fe.debit",
+        "fe.credi",
+        "fe.is_void",
+        "fe.invoiced"
+      )
+      .leftJoin("folio_entries as fe", "f.id", "fe.folio_id")
+      .where("booking_id", booking_id)
+      .andWhere("hotel_code", hotel_code)
+      .andWhere(function () {
+        if (entry_ids?.length) {
+          this.whereIn("fe.id", entry_ids);
+        }
+      });
+  }
+
+  public async getFolioEntriesCalculation(folioEntryIds: number[]): Promise<{
+    total_amount: number;
+    paid_amount: number;
+    due_amount: number;
+  }> {
+    return await this.db("folio_entries")
+      .whereIn("id", folioEntryIds)
+      .select(
+        this.db.raw(`
+      SUM(CASE WHEN type = 'debit' THEN amount ELSE 0 END) AS total_amount,
+      SUM(CASE WHEN type = 'credit' THEN amount ELSE 0 END) AS paid_amount,
+      SUM(CASE WHEN type = 'debit' THEN amount ELSE 0 END) -
+      SUM(CASE WHEN type = 'credit' THEN amount ELSE 0 END) AS due_amount
+    `)
+      )
+      .first();
   }
 }

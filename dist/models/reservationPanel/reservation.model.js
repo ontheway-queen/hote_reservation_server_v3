@@ -294,7 +294,7 @@ class ReservationModel extends schema_1.default {
                 .andWhere("hotel_code", hotel_code);
         });
     }
-    getFoliosWithEntriesbySingleBooking(hotel_code, booking_id) {
+    getFoliosWithEntriesbySingleBooking({ hotel_code, booking_id, entry_ids, }) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("folios as f")
                 .withSchema(this.RESERVATION_SCHEMA)
@@ -302,6 +302,11 @@ class ReservationModel extends schema_1.default {
                 .leftJoin("folio_entries as fe", "f.id", "fe.folio_id")
                 .where("booking_id", booking_id)
                 .andWhere("hotel_code", hotel_code)
+                .andWhere(function () {
+                if (entry_ids === null || entry_ids === void 0 ? void 0 : entry_ids.length) {
+                    this.whereIn("fe.id", entry_ids);
+                }
+            })
                 .groupBy("f.id", "f.name");
         });
     }
@@ -323,6 +328,34 @@ class ReservationModel extends schema_1.default {
                 .join("folios as f", "fe.folio_id", "f.id")
                 .where("fe.folio_id", folio_id)
                 .andWhere("f.hotel_code", hotel_code);
+        });
+    }
+    getFoliosEntriesbySingleBooking({ hotel_code, booking_id, entry_ids, }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("folios as f")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .select("f.id", "f.name", "fe.id as entries_id", "fe.description", "fe.posting_type", "fe.debit", "fe.credi", "fe.is_void", "fe.invoiced")
+                .leftJoin("folio_entries as fe", "f.id", "fe.folio_id")
+                .where("booking_id", booking_id)
+                .andWhere("hotel_code", hotel_code)
+                .andWhere(function () {
+                if (entry_ids === null || entry_ids === void 0 ? void 0 : entry_ids.length) {
+                    this.whereIn("fe.id", entry_ids);
+                }
+            });
+        });
+    }
+    getFolioEntriesCalculation(folioEntryIds) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("folio_entries")
+                .whereIn("id", folioEntryIds)
+                .select(this.db.raw(`
+      SUM(CASE WHEN type = 'debit' THEN amount ELSE 0 END) AS total_amount,
+      SUM(CASE WHEN type = 'credit' THEN amount ELSE 0 END) AS paid_amount,
+      SUM(CASE WHEN type = 'debit' THEN amount ELSE 0 END) -
+      SUM(CASE WHEN type = 'credit' THEN amount ELSE 0 END) AS due_amount
+    `))
+                .first();
         });
     }
 }

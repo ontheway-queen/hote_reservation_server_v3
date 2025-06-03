@@ -62,6 +62,48 @@ class HotelInvoiceModel extends Schema {
 
     return dueBalance[0].due_balance;
   }
+
+  public async insertInFolioInvoice(payload: {
+    hotel_code: number;
+    invoice_number: string;
+    invoice_date: string;
+    total_amount: number;
+    notes?: string;
+  }) {
+    return await this.db("invoices")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .insert(payload, "id");
+  }
+
+  public async insertInFolioInvoiceItems(payload: {
+    invoice_id: number;
+    folio_entry_id: number;
+    description: string;
+    type: string;
+    amount: number;
+    folio_id: number;
+  }) {
+    return await this.db("invoice_items")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .insert(payload);
+  }
+
+  public async getAllFolioInvoice({
+    hotel_code,
+    status,
+  }: {
+    hotel_code: number;
+    status: string;
+  }) {
+    return await this.db("invoices")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .select("*")
+      .where(function () {
+        if (hotel_code) {
+          this.andWhere("hotel_code", hotel_code);
+        }
+      });
+  }
 }
 
 export default HotelInvoiceModel;

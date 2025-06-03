@@ -96,7 +96,7 @@ class GuestModel extends schema_1.default {
     // Get All Guest Model
     getAllGuest(payload) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { key, hotel_code, limit, skip, phone } = payload;
+            const { key, hotel_code, limit, skip, phone, email } = payload;
             const dtbs = this.db("guests");
             if (limit && skip) {
                 dtbs.limit(parseInt(limit));
@@ -112,6 +112,9 @@ class GuestModel extends schema_1.default {
                         .orWhere("email", "like", `%${key}%`)
                         .orWhere("country", "like", `%${key}%`);
                 }
+                if (email) {
+                    this.andWhere("email", email);
+                }
             })
                 .orderBy("id", "desc");
             const total = yield this.db("guests")
@@ -123,6 +126,9 @@ class GuestModel extends schema_1.default {
                     this.andWhere("first_name", "like", `%${key}%`)
                         .orWhere("email", "like", `%${key}%`)
                         .orWhere("country", "like", `%${key}%`);
+                }
+                if (email) {
+                    this.andWhere("email", email);
                 }
             });
             return { data, total: total[0].total };

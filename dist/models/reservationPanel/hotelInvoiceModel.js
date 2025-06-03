@@ -65,6 +65,32 @@ class HotelInvoiceModel extends schema_1.default {
             return dueBalance[0].due_balance;
         });
     }
+    insertInFolioInvoice(payload) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("invoices")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .insert(payload, "id");
+        });
+    }
+    insertInFolioInvoiceItems(payload) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("invoice_items")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .insert(payload);
+        });
+    }
+    getAllFolioInvoice({ hotel_code, status, }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("invoices")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .select("*")
+                .where(function () {
+                if (hotel_code) {
+                    this.andWhere("hotel_code", hotel_code);
+                }
+            });
+        });
+    }
 }
 exports.default = HotelInvoiceModel;
 //# sourceMappingURL=hotelInvoiceModel.js.map

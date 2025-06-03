@@ -106,7 +106,7 @@ class GuestModel extends Schema {
     email?: string;
     hotel_code: number;
   }) {
-    const { key, hotel_code, limit, skip, phone } = payload;
+    const { key, hotel_code, limit, skip, phone, email } = payload;
 
     const dtbs = this.db("guests");
 
@@ -134,6 +134,10 @@ class GuestModel extends Schema {
             .orWhere("email", "like", `%${key}%`)
             .orWhere("country", "like", `%${key}%`);
         }
+
+        if (email) {
+          this.andWhere("email", email);
+        }
       })
       .orderBy("id", "desc");
 
@@ -146,6 +150,9 @@ class GuestModel extends Schema {
           this.andWhere("first_name", "like", `%${key}%`)
             .orWhere("email", "like", `%${key}%`)
             .orWhere("country", "like", `%${key}%`);
+        }
+        if (email) {
+          this.andWhere("email", email);
         }
       });
 

@@ -26,5 +26,20 @@ class InvoiceValidator {
       )
       .required(),
   });
+
+  // create folio invoice validator
+  public createFolioInvoiceValidator = Joi.object({
+    guest_id: Joi.number().required(),
+    booking_id: Joi.number().required(),
+    notes: Joi.string().optional(),
+    folio_entry_ids: Joi.array()
+      .items(
+        Joi.object({
+          folio_id: Joi.number().required(),
+          entry_ids: Joi.array().items(Joi.number().required()).required(),
+        })
+      )
+      .required(),
+  });
 }
 export default InvoiceValidator;

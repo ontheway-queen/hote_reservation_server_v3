@@ -24,6 +24,18 @@ export interface IinsertFolioEntriesPayload {
     | "Deposit";
 }
 
+export interface IinsertFolioInvoiceReqPayload {
+  guest_id: number;
+  booking_id: number;
+  discount_amount: number;
+  notes: string;
+  folio_entry_ids: [
+    {
+      folio_id: number;
+      entry_ids: number[];
+    }
+  ];
+}
 export interface IinsertinvoicePayload {
   invoice_no: string;
   hotel_code: number;

@@ -29,6 +29,18 @@ class InvoiceValidator {
             }))
                 .required(),
         });
+        // create folio invoice validator
+        this.createFolioInvoiceValidator = joi_1.default.object({
+            guest_id: joi_1.default.number().required(),
+            booking_id: joi_1.default.number().required(),
+            notes: joi_1.default.string().optional(),
+            folio_entry_ids: joi_1.default.array()
+                .items(joi_1.default.object({
+                folio_id: joi_1.default.number().required(),
+                entry_ids: joi_1.default.array().items(joi_1.default.number().required()).required(),
+            }))
+                .required(),
+        });
     }
 }
 exports.default = InvoiceValidator;

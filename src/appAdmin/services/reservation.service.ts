@@ -678,10 +678,10 @@ export class ReservationService extends AbstractServices {
 
   public async getFoliosWithEntriesbySingleBooking(req: Request) {
     const data =
-      await this.Model.reservationModel().getFoliosWithEntriesbySingleBooking(
-        req.hotel_admin.hotel_code,
-        parseInt(req.params.id)
-      );
+      await this.Model.reservationModel().getFoliosWithEntriesbySingleBooking({
+        hotel_code: req.hotel_admin.hotel_code,
+        booking_id: parseInt(req.params.id),
+      });
 
     return {
       success: true,

@@ -4,10 +4,20 @@ import InvoiceService from "../services/invoice.service";
 import InvoiceValidator from "../utlis/validator/invoice.validator";
 
 class InvoiceController extends AbstractController {
-  private invoiceService = new InvoiceService();
-  private invoicevalidator = new InvoiceValidator();
+  private service = new InvoiceService();
+  private validator = new InvoiceValidator();
   constructor() {
     super();
   }
+
+  public createFolioInvoice = this.asyncWrapper.wrap(
+    {
+      bodySchema: this.validator.createInvoiceValidator,
+    },
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.createFolioInvoice(req);
+      res.status(code).json(data);
+    }
+  );
 }
 export default InvoiceController;
