@@ -26,21 +26,23 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AccountService = void 0;
 const abstract_service_1 = __importDefault(require("../../abstarcts/abstract.service"));
 const doubleEntry_utils_1 = require("../utlis/interfaces/doubleEntry.utils");
+const constants_1 = require("../../utils/miscellaneous/constants");
+const helperLib_1 = __importDefault(require("../utlis/library/helperLib"));
 const accHeads = {
     CASH: {
         id: 94,
-        code: "1001.001",
-        group_code: "1000",
+        code: '1001.001',
+        group_code: '1000',
     },
     BANK: {
         id: 112,
-        code: "1001.002",
-        group_code: "1000",
+        code: '1001.002',
+        group_code: '1000',
     },
     MOBILE_BANKING: {
         id: 71,
-        code: "1000.001.004",
-        group_code: "1000",
+        code: '1000.001.004',
+        group_code: '1000',
     },
 };
 class AccountService extends abstract_service_1.default {
@@ -68,66 +70,79 @@ class AccountService extends abstract_service_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
                 const { group_code, name, parent_id } = req.body;
-                const { hotel_code } = req.hotel_admin;
+                const { hotel_code, id } = req.hotel_admin;
                 const model = this.Model.accountModel(trx);
-                const payload = [];
-                if (parent_id) {
-                    const parentHead = yield model.getHeadCodeByHeadId(parent_id);
-                    const parentCode = parentHead.code;
-                    const isRoot = parentHead.parent_id === null;
-                    console.log({ isRoot });
-                    const lastChild = yield model.getLastHeadCodeByHeadCode(parent_id, hotel_code, parentHead.group_code);
-                    let lastCode = "";
-                    if (!lastChild) {
-                        lastCode = isRoot ? parentCode : `${parentCode}.000`;
-                    }
-                    else {
-                        lastCode = lastChild.code;
-                    }
-                    for (const [index, item] of name.entries()) {
-                        let nextCode = "";
-                        if (isRoot) {
-                            // প্রথম লেভেলের child → 1001, 1002 ...
-                            nextCode = (parseInt(lastCode, 10) + index + 1).toString();
+                for (const head of name) {
+                    let newHeadCode = '';
+                    if (parent_id) {
+                        const parentHead = yield model.getAccountHead({
+                            hotel_code,
+                            group_code,
+                            id: parent_id,
+                        });
+                        if (!parentHead.length) {
+                            return {
+                                success: false,
+                                code: this.StatusCode.HTTP_NOT_FOUND,
+                                message: 'Parent head not found!',
+                            };
+                        }
+                        const { code: parent_head_code } = parentHead[0];
+                        const heads = yield model.getAccountHead({
+                            hotel_code,
+                            group_code,
+                            parent_id,
+                            order_by: 'ah.code',
+                            order_to: 'desc',
+                        });
+                        if (heads.length) {
+                            const { code: child_code } = heads[0];
+                            const lastHeadCodeNum = child_code.split('.');
+                            const newNum = Number(lastHeadCodeNum[lastHeadCodeNum.length - 1]) + 1;
+                            newHeadCode = lastHeadCodeNum.pop();
+                            newHeadCode = lastHeadCodeNum.join('.');
+                            if (newNum < 10) {
+                                newHeadCode += '.00' + newNum;
+                            }
+                            else if (newNum < 100) {
+                                newHeadCode += '.0' + newNum;
+                            }
+                            else {
+                                newHeadCode += '.' + newNum;
+                            }
                         }
                         else {
-                            // nested → 1001.001, 1001.002 ...
-                            nextCode = model.generateNextGroupCode(lastCode, index);
+                            newHeadCode = parent_head_code + '.001';
                         }
-                        payload.push({
+                    }
+                    else {
+                        const checkHead = yield model.getAccountHead({
                             hotel_code,
-                            code: nextCode,
-                            created_by: req.hotel_admin.id,
-                            group_code: parentHead.group_code,
-                            name: item,
-                            parent_id,
+                            group_code,
+                            parent_id: null,
+                            order_by: 'ah.id',
+                            order_to: 'desc',
                         });
+                        if (checkHead.length) {
+                            newHeadCode = Number(checkHead[0].code) + 1 + '';
+                        }
+                        else {
+                            newHeadCode = Number(group_code) + 1 + '';
+                        }
                     }
-                }
-                else {
-                    // Root head insertion
-                    const existingRoot = yield model.getLastRootHeadByGroup(group_code);
-                    if (existingRoot) {
-                        return {
-                            success: false,
-                            code: this.StatusCode.HTTP_BAD_REQUEST,
-                            message: `Root head already exists for group ${group_code}.`,
-                        };
-                    }
-                    payload.push({
-                        hotel_code,
-                        code: group_code,
-                        created_by: req.hotel_admin.id,
+                    yield model.insertAccHead({
+                        code: newHeadCode,
+                        created_by: id,
                         group_code,
-                        name: name[0],
-                        parent_id: undefined,
+                        hotel_code,
+                        name: head,
+                        parent_id,
                     });
                 }
-                yield model.insertAccHead(payload);
                 return {
                     success: true,
                     code: this.StatusCode.HTTP_SUCCESSFUL,
-                    message: "Account head created successfully.",
+                    message: 'Account head created successfully.',
                 };
             }));
         });
@@ -162,32 +177,69 @@ class AccountService extends abstract_service_1.default {
     }
     createAccount(req) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
-                const { hotel_code } = req.hotel_admin;
-                const acc_model = this.Model.accountModel(trx);
-                const _a = req.body, { opening_balance, acc_opening_balance_type } = _a, body = __rest(_a, ["opening_balance", "acc_opening_balance_type"]);
-                const { group_code, id } = accHeads[body.ac_type];
-                const payload = {
-                    name: body.name,
-                    parent_id: id,
-                    code: "",
-                    hotel_code: req.hotel_admin.hotel_code,
-                    created_by: req.hotel_admin.id,
-                    group_code,
-                };
-                const parentHead = yield acc_model.getHeadCodeByHeadId(id);
-                const parentCode = parentHead.code;
-                const lastChild = yield acc_model.getLastHeadCodeByHeadCode(id, hotel_code, parentHead.group_code);
-                let lastCode = (lastChild === null || lastChild === void 0 ? void 0 : lastChild.code) || `${parentCode}.000`;
-                payload.code = acc_model.generateNextGroupCode(lastCode, 0);
-                const insertAccHeadRes = yield acc_model.insertAccHead(payload);
-                body.acc_head_id = insertAccHeadRes[0].id;
-                // insert account
-                yield acc_model.createAccount(Object.assign(Object.assign({}, body), { hotel_code }));
+            return this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
+                const _a = req.body, { name, ac_type, opening_balance } = _a, rest = __rest(_a, ["name", "ac_type", "opening_balance"]);
+                const { id, hotel_code } = req.hotel_admin;
+                const accModel = this.Model.accountModel(trx);
+                const hotelModel = this.Model.HotelModel(trx);
+                const subService = new helperLib_1.default(trx);
+                const checkName = yield accModel.checkAccName({ name, hotel_code });
+                if (checkName.length) {
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_CONFLICT,
+                        message: 'Account name already exist!',
+                    };
+                }
+                // Get parent head===========================================
+                let parent_head = 0;
+                if (ac_type === 'CASH') {
+                    const configData = yield hotelModel.getHotelAccConfig(hotel_code, [
+                        constants_1.ACC_HEAD_CONFIG.CASH_HEAD_ID,
+                    ]);
+                    parent_head = configData[0].head_id;
+                }
+                else if (ac_type === 'BANK') {
+                    const configData = yield hotelModel.getHotelAccConfig(hotel_code, [
+                        constants_1.ACC_HEAD_CONFIG.BANK_HEAD_ID,
+                    ]);
+                    parent_head = configData[0].head_id;
+                }
+                else if (ac_type === 'MOBILE_BANKING') {
+                    const configData = yield hotelModel.getHotelAccConfig(hotel_code, [
+                        constants_1.ACC_HEAD_CONFIG.MFS_HEAD_ID,
+                    ]);
+                    parent_head = configData[0].head_id;
+                }
+                // Create new account head for this account ==================
+                const newHeadCode = yield subService.createAccHeadCode({
+                    hotel_code,
+                    group_code: constants_1.ASSET_GROUP,
+                    parent_id: parent_head,
+                });
+                if (!newHeadCode) {
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_BAD_REQUEST,
+                        message: this.ResMsg.HTTP_BAD_REQUEST,
+                    };
+                }
+                const newHead = yield accModel.insertAccHead({
+                    hotel_code,
+                    group_code: constants_1.ASSET_GROUP,
+                    name,
+                    created_by: id,
+                    parent_id: parent_head,
+                    code: newHeadCode,
+                });
+                const createAccount = yield accModel.createAccount(Object.assign({ name,
+                    opening_balance, acc_head_id: newHead[0].id, ac_type,
+                    hotel_code }, rest));
                 return {
                     success: true,
+                    id: createAccount[0].id,
                     code: this.StatusCode.HTTP_SUCCESSFUL,
-                    message: "Account created successfully!",
+                    message: this.ResMsg.HTTP_SUCCESSFUL,
                 };
             }));
         });
@@ -225,7 +277,7 @@ class AccountService extends abstract_service_1.default {
             return {
                 success: true,
                 code: this.StatusCode.HTTP_SUCCESSFUL,
-                message: "Account updated successfully.",
+                message: 'Account updated successfully.',
             };
         });
     }
@@ -246,7 +298,7 @@ class AccountService extends abstract_service_1.default {
                 return {
                     success: false,
                     code: this.StatusCode.HTTP_NOT_FOUND,
-                    message: "From account not found",
+                    message: 'From account not found',
                 };
             }
             // check to account
@@ -258,7 +310,7 @@ class AccountService extends abstract_service_1.default {
                 return {
                     success: false,
                     code: this.StatusCode.HTTP_NOT_FOUND,
-                    message: "To account not found",
+                    message: 'To account not found',
                 };
             }
             const { last_balance: from_acc_last_balance } = checkFromAcc[0];
@@ -267,7 +319,7 @@ class AccountService extends abstract_service_1.default {
                 return {
                     success: false,
                     code: this.StatusCode.HTTP_BAD_REQUEST,
-                    message: "Pay amount is more than accounts balance",
+                    message: 'Pay amount is more than accounts balance',
                 };
             }
             //=========== from account step ==========//
@@ -295,7 +347,7 @@ class AccountService extends abstract_service_1.default {
             return {
                 success: true,
                 code: this.StatusCode.HTTP_SUCCESSFUL,
-                message: "Balance transfered",
+                message: 'Balance transfered',
             };
         });
     }

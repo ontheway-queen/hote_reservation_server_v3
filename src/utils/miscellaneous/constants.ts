@@ -118,3 +118,11 @@ export const ERROR_LEVEL_INFO = "INFO";
 export const ERROR_LEVEL_WARNING = "WARNING";
 export const ERROR_LEVEL_ERROR = "ERROR";
 export const ERROR_LEVEL_CRITICAL = "CRITICAL";
+
+// Account head config type
+export const ACC_HEAD_CONFIG = {
+  CASH_HEAD_ID: "CASH_HEAD_ID",
+  RECEIVABLE_HEAD_ID: "RECEIVABLE_HEAD_ID",
+  BANK_HEAD_ID: "BANK_HEAD_ID",
+  MFS_HEAD_ID: "MFS_HEAD_ID",
+};
