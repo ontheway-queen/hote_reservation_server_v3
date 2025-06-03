@@ -9,28 +9,28 @@ export interface IinsertAccHeadReqBody {
 export interface IAccHeadDb {
   group_code: idType;
   name: string;
-  parent_id: number | undefined;
+  parent_id?: number;
   code: idType;
   hotel_code: number;
   created_by: number;
 }
 
 export type voucherType =
-  | "REFUND"
-  | "INVOICE"
-  | "EMD"
-  | "AIR_TICKET_VOID"
-  | "RECEIPT"
-  | "OPENING_BALANCE"
-  | "INVESTMENT"
-  | "ADVANCE"
-  | "EXPENSE"
-  | "PAYMENT"
-  | "PAYROLL"
-  | "LOAN"
-  | "LOAN_PAYMENT"
-  | "LOAN_RECEIVE"
-  | "JOURNAL";
+  | 'REFUND'
+  | 'INVOICE'
+  | 'EMD'
+  | 'AIR_TICKET_VOID'
+  | 'RECEIPT'
+  | 'OPENING_BALANCE'
+  | 'INVESTMENT'
+  | 'ADVANCE'
+  | 'EXPENSE'
+  | 'PAYMENT'
+  | 'PAYROLL'
+  | 'LOAN'
+  | 'LOAN_PAYMENT'
+  | 'LOAN_RECEIVE'
+  | 'JOURNAL';
 
 export interface IVoucher {
   acc_head_id: number;

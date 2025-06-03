@@ -1,27 +1,35 @@
-import { Request } from "express";
-import AbstractServices from "../../abstarcts/abstract.service";
+import { Request } from 'express';
+import AbstractServices from '../../abstarcts/abstract.service';
 import {
   IAccHeadDb,
   IinsertAccHeadReqBody,
-} from "../utlis/interfaces/doubleEntry.interface";
-import { journalFormatter } from "../utlis/interfaces/doubleEntry.utils";
-import { IAccountReqBody } from "../utlis/interfaces/account.interface";
+} from '../utlis/interfaces/doubleEntry.interface';
+import { journalFormatter } from '../utlis/interfaces/doubleEntry.utils';
+import {
+  IAccountCreateBody,
+  IAccountReqBody,
+} from '../utlis/interfaces/account.interface';
+import {
+  ACC_HEAD_CONFIG,
+  ASSET_GROUP,
+} from '../../utils/miscellaneous/constants';
+import HelperLib from '../utlis/library/helperLib';
 
 const accHeads = {
   CASH: {
     id: 94,
-    code: "1001.001",
-    group_code: "1000",
+    code: '1001.001',
+    group_code: '1000',
   },
   BANK: {
     id: 112,
-    code: "1001.002",
-    group_code: "1000",
+    code: '1001.002',
+    group_code: '1000',
   },
   MOBILE_BANKING: {
     id: 71,
-    code: "1000.001.004",
-    group_code: "1000",
+    code: '1000.001.004',
+    group_code: '1000',
   },
 };
 
@@ -57,81 +65,86 @@ export class AccountService extends AbstractServices {
   public async insertAccHead(req: Request) {
     return await this.db.transaction(async (trx) => {
       const { group_code, name, parent_id } = req.body as IinsertAccHeadReqBody;
-      const { hotel_code } = req.hotel_admin;
+      const { hotel_code, id } = req.hotel_admin;
       const model = this.Model.accountModel(trx);
 
-      const payload: IAccHeadDb[] = [];
+      for (const head of name) {
+        let newHeadCode = '';
+        if (parent_id) {
+          const parentHead = await model.getAccountHead({
+            hotel_code,
+            group_code,
+            id: parent_id,
+          });
 
-      if (parent_id) {
-        const parentHead = await model.getHeadCodeByHeadId(parent_id);
-        const parentCode = parentHead.code;
-
-        const isRoot = parentHead.parent_id === null;
-
-        console.log({ isRoot });
-
-        const lastChild = await model.getLastHeadCodeByHeadCode(
-          parent_id,
-          hotel_code,
-          parentHead.group_code
-        );
-
-        let lastCode = "";
-
-        if (!lastChild) {
-          lastCode = isRoot ? parentCode : `${parentCode}.000`;
-        } else {
-          lastCode = lastChild.code;
-        }
-
-        for (const [index, item] of name.entries()) {
-          let nextCode = "";
-
-          if (isRoot) {
-            // প্রথম লেভেলের child → 1001, 1002 ...
-            nextCode = (parseInt(lastCode, 10) + index + 1).toString();
-          } else {
-            // nested → 1001.001, 1001.002 ...
-            nextCode = model.generateNextGroupCode(lastCode, index);
+          if (!parentHead.length) {
+            return {
+              success: false,
+              code: this.StatusCode.HTTP_NOT_FOUND,
+              message: 'Parent head not found!',
+            };
           }
 
-          payload.push({
+          const { code: parent_head_code } = parentHead[0];
+
+          const heads = await model.getAccountHead({
             hotel_code,
-            code: nextCode,
-            created_by: req.hotel_admin.id,
-            group_code: parentHead.group_code,
-            name: item,
+            group_code,
             parent_id,
+            order_by: 'ah.code',
+            order_to: 'desc',
           });
-        }
-      } else {
-        // Root head insertion
-        const existingRoot = await model.getLastRootHeadByGroup(group_code);
 
-        if (existingRoot) {
-          return {
-            success: false,
-            code: this.StatusCode.HTTP_BAD_REQUEST,
-            message: `Root head already exists for group ${group_code}.`,
-          };
+          if (heads.length) {
+            const { code: child_code } = heads[0];
+
+            const lastHeadCodeNum = child_code.split('.');
+            const newNum =
+              Number(lastHeadCodeNum[lastHeadCodeNum.length - 1]) + 1;
+
+            newHeadCode = lastHeadCodeNum.pop();
+            newHeadCode = lastHeadCodeNum.join('.');
+
+            if (newNum < 10) {
+              newHeadCode += '.00' + newNum;
+            } else if (newNum < 100) {
+              newHeadCode += '.0' + newNum;
+            } else {
+              newHeadCode += '.' + newNum;
+            }
+          } else {
+            newHeadCode = parent_head_code + '.001';
+          }
+        } else {
+          const checkHead = await model.getAccountHead({
+            hotel_code,
+            group_code,
+            parent_id: null,
+            order_by: 'ah.id',
+            order_to: 'desc',
+          });
+
+          if (checkHead.length) {
+            newHeadCode = Number(checkHead[0].code) + 1 + '';
+          } else {
+            newHeadCode = Number(group_code) + 1 + '';
+          }
         }
 
-        payload.push({
-          hotel_code,
-          code: group_code,
-          created_by: req.hotel_admin.id,
+        await model.insertAccHead({
+          code: newHeadCode,
+          created_by: id,
           group_code,
-          name: name[0],
-          parent_id: undefined,
+          hotel_code,
+          name: head,
+          parent_id,
         });
       }
-
-      await model.insertAccHead(payload);
 
       return {
         success: true,
         code: this.StatusCode.HTTP_SUCCESSFUL,
-        message: "Account head created successfully.",
+        message: 'Account head created successfully.',
       };
     });
   }
@@ -168,48 +181,85 @@ export class AccountService extends AbstractServices {
   }
 
   public async createAccount(req: Request) {
-    return await this.db.transaction(async (trx) => {
-      const { hotel_code } = req.hotel_admin;
-      const acc_model = this.Model.accountModel(trx);
-      const { opening_balance, acc_opening_balance_type, ...body } =
-        req.body as IAccountReqBody;
+    return this.db.transaction(async (trx) => {
+      const { name, ac_type, opening_balance, ...rest } = req.body;
+      const { id, hotel_code } = req.hotel_admin;
+      const accModel = this.Model.accountModel(trx);
+      const hotelModel = this.Model.HotelModel(trx);
+      const subService = new HelperLib(trx);
 
-      const { group_code, id } = accHeads[body.ac_type];
+      const checkName = await accModel.checkAccName({ name, hotel_code });
 
-      const payload: IAccHeadDb = {
-        name: body.name,
-        parent_id: id,
-        code: "",
-        hotel_code: req.hotel_admin.hotel_code,
-        created_by: req.hotel_admin.id,
-        group_code,
-      };
+      if (checkName.length) {
+        return {
+          success: false,
+          code: this.StatusCode.HTTP_CONFLICT,
+          message: 'Account name already exist!',
+        };
+      }
 
-      const parentHead = await acc_model.getHeadCodeByHeadId(id);
+      // Get parent head===========================================
+      let parent_head = 0;
 
-      const parentCode = parentHead.code;
+      if (ac_type === 'CASH') {
+        const configData = await hotelModel.getHotelAccConfig(hotel_code, [
+          ACC_HEAD_CONFIG.CASH_HEAD_ID,
+        ]);
 
-      const lastChild = await acc_model.getLastHeadCodeByHeadCode(
-        id,
+        parent_head = configData[0].head_id;
+      } else if (ac_type === 'BANK') {
+        const configData = await hotelModel.getHotelAccConfig(hotel_code, [
+          ACC_HEAD_CONFIG.BANK_HEAD_ID,
+        ]);
+
+        parent_head = configData[0].head_id;
+      } else if (ac_type === 'MOBILE_BANKING') {
+        const configData = await hotelModel.getHotelAccConfig(hotel_code, [
+          ACC_HEAD_CONFIG.MFS_HEAD_ID,
+        ]);
+
+        parent_head = configData[0].head_id;
+      }
+
+      // Create new account head for this account ==================
+
+      const newHeadCode = await subService.createAccHeadCode({
         hotel_code,
-        parentHead.group_code
-      );
+        group_code: ASSET_GROUP,
+        parent_id: parent_head,
+      });
 
-      let lastCode = lastChild?.code || `${parentCode}.000`;
+      if (!newHeadCode) {
+        return {
+          success: false,
+          code: this.StatusCode.HTTP_BAD_REQUEST,
+          message: this.ResMsg.HTTP_BAD_REQUEST,
+        };
+      }
 
-      payload.code = acc_model.generateNextGroupCode(lastCode, 0);
+      const newHead = await accModel.insertAccHead({
+        hotel_code,
+        group_code: ASSET_GROUP,
+        name,
+        created_by: id,
+        parent_id: parent_head,
+        code: newHeadCode,
+      });
 
-      const insertAccHeadRes = await acc_model.insertAccHead(payload);
-
-      body.acc_head_id = insertAccHeadRes[0].id;
-
-      // insert account
-      await acc_model.createAccount({ ...body, hotel_code });
+      const createAccount = await accModel.createAccount({
+        name,
+        opening_balance,
+        acc_head_id: newHead[0].id,
+        ac_type,
+        hotel_code,
+        ...rest,
+      });
 
       return {
         success: true,
+        id: createAccount[0].id,
         code: this.StatusCode.HTTP_SUCCESSFUL,
-        message: "Account created successfully!",
+        message: this.ResMsg.HTTP_SUCCESSFUL,
       };
     });
   }
@@ -257,7 +307,7 @@ export class AccountService extends AbstractServices {
     return {
       success: true,
       code: this.StatusCode.HTTP_SUCCESSFUL,
-      message: "Account updated successfully.",
+      message: 'Account updated successfully.',
     };
   }
 
@@ -282,7 +332,7 @@ export class AccountService extends AbstractServices {
       return {
         success: false,
         code: this.StatusCode.HTTP_NOT_FOUND,
-        message: "From account not found",
+        message: 'From account not found',
       };
     }
 
@@ -296,7 +346,7 @@ export class AccountService extends AbstractServices {
       return {
         success: false,
         code: this.StatusCode.HTTP_NOT_FOUND,
-        message: "To account not found",
+        message: 'To account not found',
       };
     }
 
@@ -307,7 +357,7 @@ export class AccountService extends AbstractServices {
       return {
         success: false,
         code: this.StatusCode.HTTP_BAD_REQUEST,
-        message: "Pay amount is more than accounts balance",
+        message: 'Pay amount is more than accounts balance',
       };
     }
 
@@ -343,7 +393,7 @@ export class AccountService extends AbstractServices {
     return {
       success: true,
       code: this.StatusCode.HTTP_SUCCESSFUL,
-      message: "Balance transfered",
+      message: 'Balance transfered',
     };
   }
 }

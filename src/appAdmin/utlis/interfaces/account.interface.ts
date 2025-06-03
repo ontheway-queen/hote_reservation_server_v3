@@ -1,4 +1,4 @@
-export type accType = "CASH" | "BANK" | "MOBILE_BANKING";
+export type accType = 'CASH' | 'BANK' | 'MOBILE_BANKING';
 
 export interface IAccountReqBody {
   ac_type: accType;
@@ -14,14 +14,13 @@ export interface IAccountReqBody {
 export interface IAccountCreateBody {
   ac_type: accType;
   hotel_code: number;
+  acc_head_id?: number;
   name: string;
   account_number?: string;
-  acc_opening_balance_type?: string;
   bank_name?: string;
   branch_name?: string;
   opening_balance?: number;
-  acc_routing_no: string;
-  acc_head_id?: number;
+  acc_routing_no?: string;
 }
 
 export interface IUpdateAccountBalance {
@@ -29,7 +28,7 @@ export interface IUpdateAccountBalance {
   trxn_amount: number;
   trxn_type_id: number;
   trxn_data: string;
-  trxn_type: "DEBIT" | "CREDIT";
+  trxn_type: 'DEBIT' | 'CREDIT';
   user_id: number;
 }
 export interface ICreateBillAdjustment {
@@ -38,12 +37,12 @@ export interface ICreateBillAdjustment {
   note: string | undefined;
   org_agency: number;
   vendor_id: number | undefined;
-  adjust_type: "DECREASE" | "INCREASE";
+  adjust_type: 'DECREASE' | 'INCREASE';
   bill_amount: number;
   bill_created_date: string;
   bill_created_by: number;
   bill_note: string;
-  adjustment_user_type: "client" | "vendor";
+  adjustment_user_type: 'client' | 'vendor';
 }
 
 export interface IAccounts {
@@ -58,7 +57,7 @@ export interface IAccounts {
 }
 
 export interface IAccountsTransaction {
-  actransaction_type: "DEBIT" | "CREDIT";
+  actransaction_type: 'DEBIT' | 'CREDIT';
   actransaction_accounts_id: number;
   actransaction_transaction_type_id: number | undefined;
   actransaction_amount: number;
