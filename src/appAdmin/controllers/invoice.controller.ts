@@ -19,5 +19,25 @@ class InvoiceController extends AbstractController {
       res.status(code).json(data);
     }
   );
+
+  public getAllFolioInvoice = this.asyncWrapper.wrap(
+    {
+      querySchema: this.validator.getAllFolioValidator,
+    },
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.getAllFolioInvoice(req);
+      res.status(code).json(data);
+    }
+  );
+
+  public getSingleFolioInvoice = this.asyncWrapper.wrap(
+    {
+      paramSchema: this.commonValidator.singleParamValidator(),
+    },
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.getSingleFolioInvoice(req);
+      res.status(code).json(data);
+    }
+  );
 }
 export default InvoiceController;

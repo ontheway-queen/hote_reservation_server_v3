@@ -280,7 +280,6 @@ export class SubReservationService extends AbstractServices {
     total_amount: number,
     booking_id: number
   ) {
-    console.log({ is_payment_given, payment });
     const accountModel = this.Model.accountModel(this.trx);
 
     let voucherData: any;
@@ -314,9 +313,9 @@ export class SubReservationService extends AbstractServices {
 
     const hotelInvModel = this.Model.hotelInvoiceModel(this.trx);
     const [lastFolio] = await hotelInvModel.getLasFolioId();
-    console.log({ lastFolio });
+
     const folio_number = HelperFunction.generateFolioNumber(lastFolio?.id);
-    console.log({ folio_number });
+
     const [folio] = await hotelInvModel.insertInFolio({
       booking_id,
       folio_number,

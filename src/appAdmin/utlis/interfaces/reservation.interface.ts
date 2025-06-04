@@ -74,6 +74,49 @@ export interface ISearchAvailableRoom {
   }[];
 }
 
+type AvailableRatePlan = {
+  rate_plan_id: number;
+  name: string;
+  base_rate: number;
+};
+
+export interface IAvailableRoomType {
+  id: number;
+  name: string;
+  description: string | null;
+  hotel_code: number;
+  available_rooms: number;
+  rate_plans: AvailableRatePlan[];
+}
+
+type CalendarBooking = {
+  booking_id: number;
+  check_in: string;
+  check_out: string;
+  booking_status: string;
+  guest_id: number;
+  guest_name: string;
+  vat: number;
+  service_charge: number;
+  sub_total: number;
+  discount_amount: number;
+  total_amount: number;
+};
+
+type CalendarRoom = {
+  room_id: number;
+  room_name: string;
+  room_status: string;
+  bookings: CalendarBooking[];
+};
+
+export type CalendarRoomType = {
+  id: number;
+  name: string;
+  hotel_code: number;
+  rooms: CalendarRoom[];
+};
+
 //---------------------booking -------------------//
 
 export interface IguestReqBody {

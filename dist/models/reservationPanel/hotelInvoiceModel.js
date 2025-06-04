@@ -72,23 +72,58 @@ class HotelInvoiceModel extends schema_1.default {
                 .insert(payload, "id");
         });
     }
-    insertInFolioInvoice(payload) {
+    insertFolioInvoice(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("invoice_folios")
                 .withSchema(this.RESERVATION_SCHEMA)
                 .insert(payload, "id");
         });
     }
-    insertFolioInvoice(payload) {
+    getAllFolioInvoice({ booking_id, hotel_code, }) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("invoice_folios")
+            return yield this.db("invoices as inv")
                 .withSchema(this.RESERVATION_SCHEMA)
-                .insert(payload);
+                .select("inv.id", "inv.invoice_number", "inv.invoice_date", "inv.status", "inv.notes")
+                .leftJoin("invoice_folios as if", "inv.id", "if.invoice_id")
+                .where("inv.hotel_code", hotel_code)
+                .andWhere("if.booking_id", booking_id)
+                .groupBy("inv.id");
+        });
+    }
+    getSingleFolioInvoice({ inv_id, hotel_code, }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("invoices as inv")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .select("inv.id", "inv.invoice_number", "inv.invoice_date", "inv.status", "inv.notes", this.db.raw(`
+        (
+          SELECT JSON_AGG(
+            JSON_BUILD_OBJECT(
+              'id', fi.id,
+              'description', fi.description,
+              'type', fi.type,
+              'debit', fi.debit,
+              'credit', fi.credit
+            )
+          )
+          FROM ?? fi
+          WHERE fi.inv_folio_id IN (
+            SELECT f.id
+            FROM ?? f
+            WHERE f.invoice_id = inv.id
+          )
+        ) AS inv_items
+        `, [
+                "hotel_reservation.invoice_folio_items",
+                "hotel_reservation.invoice_folios",
+            ]))
+                .where("inv.hotel_code", hotel_code)
+                .andWhere("inv.id", inv_id)
+                .first();
         });
     }
     insertInFolioInvoiceItems(payload) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("folio_invoice_items")
+            return yield this.db("invoice_folio_items")
                 .withSchema(this.RESERVATION_SCHEMA)
                 .insert(payload);
         });

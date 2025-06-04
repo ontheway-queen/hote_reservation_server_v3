@@ -23,7 +23,6 @@ class ReservationModel extends schema_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             const { hotel_code, check_in, check_out } = payload;
             const db = this.db;
-            console.log({ check_in, check_out });
             return yield db("room_types as rt")
                 .withSchema(this.RESERVATION_SCHEMA)
                 .select("rt.id", "rt.name", "rt.hotel_code", db.raw(`
@@ -79,7 +78,7 @@ class ReservationModel extends schema_1.default {
     }
     getAllAvailableRoomsTypeWithAvailableRoomCount(payload) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { hotel_code, check_in, check_out } = payload;
+            const { hotel_code, check_in, check_out, room_type_id } = payload;
             return yield this.db("room_types as rt")
                 .withSchema(this.RESERVATION_SCHEMA)
                 .select("rt.id", "rt.name", "rt.description", "rt.hotel_code", this.db.raw(`MIN(ra.available_rooms) AS available_rooms`), this.db.raw(`
@@ -100,6 +99,11 @@ class ReservationModel extends schema_1.default {
                 .where("rt.hotel_code", hotel_code)
                 .andWhere("ra.date", ">=", check_in)
                 .andWhere("ra.date", "<", check_out)
+                .andWhere(function () {
+                if (room_type_id) {
+                    this.andWhere("rt.id", room_type_id);
+                }
+            })
                 .groupBy("rt.id")
                 .having(this.db.raw("MIN(ra.available_rooms) > 0"));
         });
@@ -154,8 +158,8 @@ class ReservationModel extends schema_1.default {
                 .withSchema(this.RESERVATION_SCHEMA)
                 .select("ra.room_type_id", "ra.hotel_code", "ra.available_rooms", db.raw("ra.date::text as date"))
                 .where("ra.hotel_code", hotel_code)
-                .andWhere("ra.date", ">=", "2025-06-01")
-                .andWhere("ra.date", "<=", "2025-06-04")
+                .andWhere("ra.date", ">=", check_in)
+                .andWhere("ra.date", "<=", check_out)
                 .orderBy("ra.date", "asc");
         });
     }

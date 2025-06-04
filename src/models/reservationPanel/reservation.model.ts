@@ -1,4 +1,6 @@
 import {
+  CalendarRoomType,
+  IAvailableRoomType,
   IBookingDetails,
   IbookingRooms,
   IgetAccommodationSettings,
@@ -21,11 +23,9 @@ export class ReservationModel extends Schema {
     check_in: string;
     check_out: string;
     hotel_code: number;
-  }) {
+  }): Promise<CalendarRoomType[]> {
     const { hotel_code, check_in, check_out } = payload;
     const db = this.db;
-
-    console.log({ check_in, check_out });
 
     return await db("room_types as rt")
       .withSchema(this.RESERVATION_SCHEMA)
@@ -92,8 +92,9 @@ export class ReservationModel extends Schema {
     check_in: string;
     check_out: string;
     hotel_code: number;
-  }) {
-    const { hotel_code, check_in, check_out } = payload;
+    room_type_id?: number;
+  }): Promise<IAvailableRoomType[]> {
+    const { hotel_code, check_in, check_out, room_type_id } = payload;
 
     return await this.db("room_types as rt")
       .withSchema(this.RESERVATION_SCHEMA)
@@ -122,6 +123,11 @@ export class ReservationModel extends Schema {
       .where("rt.hotel_code", hotel_code)
       .andWhere("ra.date", ">=", check_in)
       .andWhere("ra.date", "<", check_out)
+      .andWhere(function () {
+        if (room_type_id) {
+          this.andWhere("rt.id", room_type_id);
+        }
+      })
       .groupBy("rt.id")
       .having(this.db.raw("MIN(ra.available_rooms) > 0"));
   }
@@ -205,8 +211,8 @@ export class ReservationModel extends Schema {
         db.raw("ra.date::text as date")
       )
       .where("ra.hotel_code", hotel_code)
-      .andWhere("ra.date", ">=", "2025-06-01")
-      .andWhere("ra.date", "<=", "2025-06-04")
+      .andWhere("ra.date", ">=", check_in)
+      .andWhere("ra.date", "<=", check_out)
       .orderBy("ra.date", "asc");
   }
 

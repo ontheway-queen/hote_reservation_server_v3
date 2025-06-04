@@ -41,5 +41,9 @@ class InvoiceValidator {
       )
       .required(),
   });
+
+  public getAllFolioValidator = Joi.object({
+    booking_id: Joi.number().required(),
+  });
 }
 export default InvoiceValidator;

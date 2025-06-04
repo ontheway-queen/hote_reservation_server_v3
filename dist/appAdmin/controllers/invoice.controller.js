@@ -37,6 +37,18 @@ class InvoiceController extends abstract_controller_1.default {
             const _a = yield this.service.createFolioInvoice(req), { code } = _a, data = __rest(_a, ["code"]);
             res.status(code).json(data);
         }));
+        this.getAllFolioInvoice = this.asyncWrapper.wrap({
+            querySchema: this.validator.getAllFolioValidator,
+        }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _b = yield this.service.getAllFolioInvoice(req), { code } = _b, data = __rest(_b, ["code"]);
+            res.status(code).json(data);
+        }));
+        this.getSingleFolioInvoice = this.asyncWrapper.wrap({
+            paramSchema: this.commonValidator.singleParamValidator(),
+        }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _c = yield this.service.getSingleFolioInvoice(req), { code } = _c, data = __rest(_c, ["code"]);
+            res.status(code).json(data);
+        }));
     }
 }
 exports.default = InvoiceController;

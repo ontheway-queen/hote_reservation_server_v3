@@ -352,6 +352,29 @@ export class ReservationService extends AbstractServices {
 
       const total_nights = sub.calculateNights(body.check_in, body.check_out);
 
+      // check room type available or not
+      body.rooms.forEach(async (room) => {
+        const getAllAvailableRoomsWithType =
+          await this.Model.reservationModel().getAllAvailableRoomsTypeWithAvailableRoomCount(
+            {
+              hotel_code,
+              check_in: body.check_in,
+              check_out: body.check_out,
+              room_type_id: room.room_type_id,
+            }
+          );
+
+        if (
+          room.guests.length > getAllAvailableRoomsWithType[0].available_rooms
+        ) {
+          return {
+            success: false,
+            code: this.StatusCode.HTTP_NOT_FOUND,
+            message: "Room Assigned is more than available rooms",
+          };
+        }
+      });
+
       // Guest
       const guest_id = await sub.findOrCreateGuest(body.guest, hotel_code);
 

@@ -28,7 +28,8 @@ class AccountValidator {
         this.getAllAccountQueryValidator = joi_1.default.object({
             is_active: joi_1.default.bool().optional(),
             ac_type: joi_1.default.string()
-                .valid("BANK", "CASH", "CHEQUE", "MOBILE_BANKING")
+                .lowercase()
+                .valid("bank", "cash", "cheque", "mobile_banking")
                 .optional(),
             key: joi_1.default.string().allow("").optional(),
             limit: joi_1.default.string().allow("").optional(),

@@ -75,41 +75,95 @@ class HotelInvoiceModel extends Schema {
       .insert(payload, "id");
   }
 
-  public async insertInFolioInvoice(payload: {
-    hotel_code: number;
-    invoice_number: string;
-    invoice_date: string;
-    total_amount: number;
-    notes?: string;
+  public async insertFolioInvoice(payload: {
+    invoice_id: number;
+    folio_id: number;
+    booking_id: number;
   }) {
     return await this.db("invoice_folios")
       .withSchema(this.RESERVATION_SCHEMA)
       .insert(payload, "id");
   }
 
-  public async insertFolioInvoice(
-    payload: {
-      invoice_id: number;
-      folio_id: number;
-      booking_id: number;
-    }[]
-  ) {
-    return await this.db("invoice_folios")
+  public async getAllFolioInvoice({
+    booking_id,
+    hotel_code,
+  }: {
+    hotel_code: number;
+    booking_id: number;
+  }) {
+    return await this.db("invoices as inv")
       .withSchema(this.RESERVATION_SCHEMA)
-      .insert(payload);
+      .select(
+        "inv.id",
+        "inv.invoice_number",
+        "inv.invoice_date",
+        "inv.status",
+        "inv.notes"
+      )
+      .leftJoin("invoice_folios as if", "inv.id", "if.invoice_id")
+      .where("inv.hotel_code", hotel_code)
+      .andWhere("if.booking_id", booking_id)
+      .groupBy("inv.id");
+  }
+
+  public async getSingleFolioInvoice({
+    inv_id,
+    hotel_code,
+  }: {
+    hotel_code: number;
+    inv_id: number;
+  }) {
+    return await this.db("invoices as inv")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .select(
+        "inv.id",
+        "inv.invoice_number",
+        "inv.invoice_date",
+        "inv.status",
+        "inv.notes",
+        this.db.raw(
+          `
+        (
+          SELECT JSON_AGG(
+            JSON_BUILD_OBJECT(
+              'id', fi.id,
+              'description', fi.description,
+              'type', fi.type,
+              'debit', fi.debit,
+              'credit', fi.credit
+            )
+          )
+          FROM ?? fi
+          WHERE fi.inv_folio_id IN (
+            SELECT f.id
+            FROM ?? f
+            WHERE f.invoice_id = inv.id
+          )
+        ) AS inv_items
+        `,
+          [
+            "hotel_reservation.invoice_folio_items",
+            "hotel_reservation.invoice_folios",
+          ]
+        )
+      )
+      .where("inv.hotel_code", hotel_code)
+      .andWhere("inv.id", inv_id)
+      .first();
   }
 
   public async insertInFolioInvoiceItems(
     payload: {
-      invoice_id: number;
+      inv_folio_id: number;
       folio_entry_id: number;
       description: string;
       type: string;
-      amount: number;
-      folio_id: number;
+      debit: number;
+      credit: number;
     }[]
   ) {
-    return await this.db("folio_invoice_items")
+    return await this.db("invoice_folio_items")
       .withSchema(this.RESERVATION_SCHEMA)
       .insert(payload);
   }

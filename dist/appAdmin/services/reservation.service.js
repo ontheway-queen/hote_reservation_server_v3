@@ -298,6 +298,22 @@ class ReservationService extends abstract_service_1.default {
                 const body = req.body;
                 const sub = new subreservation_service_1.SubReservationService(trx);
                 const total_nights = sub.calculateNights(body.check_in, body.check_out);
+                // check room type available or not
+                body.rooms.forEach((room) => __awaiter(this, void 0, void 0, function* () {
+                    const getAllAvailableRoomsWithType = yield this.Model.reservationModel().getAllAvailableRoomsTypeWithAvailableRoomCount({
+                        hotel_code,
+                        check_in: body.check_in,
+                        check_out: body.check_out,
+                        room_type_id: room.room_type_id,
+                    });
+                    if (room.guests.length > getAllAvailableRoomsWithType[0].available_rooms) {
+                        return {
+                            success: false,
+                            code: this.StatusCode.HTTP_NOT_FOUND,
+                            message: "Room Assigned is more than available rooms",
+                        };
+                    }
+                }));
                 // Guest
                 const guest_id = yield sub.findOrCreateGuest(body.guest, hotel_code);
                 // Totals

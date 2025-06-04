@@ -73,31 +73,39 @@ export class InvoiceService extends AbstractServices {
         };
       });
 
-      await invoiceModel.insertFolioInvoice(folioInvoicePaylod);
+      await Promise.all(
+        folioInvoicePaylod.map(async (in_pld_item) => {
+          const invFolioRes = await invoiceModel.insertFolioInvoice(
+            in_pld_item
+          );
 
-      // insert in invoice items
-      const invoiceItemPayload: {
-        invoice_id: number;
-        folio_entry_id: number;
-        description: string;
-        type: string;
-        amount: number;
-        folio_id: number;
-      }[] = [];
+          // insert in invoice items
+          const invoiceItemPayload: {
+            inv_folio_id: number;
+            folio_entry_id: number;
+            description: string;
+            type: string;
+            debit: number;
+            credit: number;
+            folio_id: number;
+          }[] = [];
 
-      checkFolioEntries.forEach((item) => {
-        invoiceItemPayload.push({
-          invoice_id: invRes[0].id,
-          amount: item.debit ? item.debit : item.credit,
-          type: item.posting_type,
-          folio_id: item.id,
-          description: item.description,
-          folio_entry_id: item.entries_id,
-        });
-      });
+          checkFolioEntries.forEach((item) => {
+            if (in_pld_item.folio_id === item.id)
+              invoiceItemPayload.push({
+                inv_folio_id: invFolioRes[0].id,
+                debit: item.debit,
+                credit: item.credit,
+                type: item.posting_type,
+                folio_id: item.id,
+                description: item.description,
+                folio_entry_id: item.entries_id,
+              });
+          });
 
-      await invoiceModel.insertInFolioInvoiceItems(invoiceItemPayload);
-
+          await invoiceModel.insertInFolioInvoiceItems(invoiceItemPayload);
+        })
+      );
       // updated entries with invoice
       await reservationModel.updateFolioEntries({ invoiced: true }, entryIDs);
 
@@ -107,6 +115,32 @@ export class InvoiceService extends AbstractServices {
         message: "Invoice has been created",
       };
     });
+  }
+
+  public async getAllFolioInvoice(req: Request) {
+    const data = await this.Model.hotelInvoiceModel().getAllFolioInvoice({
+      booking_id: parseInt(req.query.booking_id as string),
+      hotel_code: req.hotel_admin.hotel_code,
+    });
+
+    return {
+      success: true,
+      code: this.StatusCode.HTTP_OK,
+      data,
+    };
+  }
+
+  public async getSingleFolioInvoice(req: Request) {
+    const data = await this.Model.hotelInvoiceModel().getSingleFolioInvoice({
+      inv_id: parseInt(req.params.id),
+      hotel_code: req.hotel_admin.hotel_code,
+    });
+
+    return {
+      success: true,
+      code: this.StatusCode.HTTP_OK,
+      data,
+    };
   }
 }
 export default InvoiceService;
