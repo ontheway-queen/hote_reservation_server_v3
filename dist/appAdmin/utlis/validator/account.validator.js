@@ -15,12 +15,8 @@ class AccountValidator {
         this.createAccountValidator = joi_1.default.object({
             name: joi_1.default.string().required(),
             ac_type: joi_1.default.string().valid("MOBILE_BANKING", "BANK", "CASH").required(),
-            acc_opening_balance_type: joi_1.default.string()
-                .valid("SALES", "LOAN", "INVESTMENT")
-                .optional(),
             branch: joi_1.default.string().allow("").optional(),
             acc_number: joi_1.default.string().allow("").required(),
-            opening_balance: joi_1.default.number().optional(),
             acc_routing_no: joi_1.default.string().allow("").optional(),
             details: joi_1.default.string().allow("").optional(),
         });

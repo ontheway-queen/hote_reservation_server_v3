@@ -9,12 +9,8 @@ class AccountValidator {
   createAccountValidator = Joi.object({
     name: Joi.string().required(),
     ac_type: Joi.string().valid("MOBILE_BANKING", "BANK", "CASH").required(),
-    acc_opening_balance_type: Joi.string()
-      .valid("SALES", "LOAN", "INVESTMENT")
-      .optional(),
     branch: Joi.string().allow("").optional(),
     acc_number: Joi.string().allow("").required(),
-    opening_balance: Joi.number().optional(),
     acc_routing_no: Joi.string().allow("").optional(),
     details: Joi.string().allow("").optional(),
   });

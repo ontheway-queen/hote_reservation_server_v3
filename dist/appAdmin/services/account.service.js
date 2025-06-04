@@ -31,18 +31,18 @@ const helperLib_1 = __importDefault(require("../utlis/library/helperLib"));
 const accHeads = {
     CASH: {
         id: 94,
-        code: '1001.001',
-        group_code: '1000',
+        code: "1001.001",
+        group_code: "1000",
     },
     BANK: {
         id: 112,
-        code: '1001.002',
-        group_code: '1000',
+        code: "1001.002",
+        group_code: "1000",
     },
     MOBILE_BANKING: {
         id: 71,
-        code: '1000.001.004',
-        group_code: '1000',
+        code: "1000.001.004",
+        group_code: "1000",
     },
 };
 class AccountService extends abstract_service_1.default {
@@ -73,7 +73,7 @@ class AccountService extends abstract_service_1.default {
                 const { hotel_code, id } = req.hotel_admin;
                 const model = this.Model.accountModel(trx);
                 for (const head of name) {
-                    let newHeadCode = '';
+                    let newHeadCode = "";
                     if (parent_id) {
                         const parentHead = yield model.getAccountHead({
                             hotel_code,
@@ -84,7 +84,7 @@ class AccountService extends abstract_service_1.default {
                             return {
                                 success: false,
                                 code: this.StatusCode.HTTP_NOT_FOUND,
-                                message: 'Parent head not found!',
+                                message: "Parent head not found!",
                             };
                         }
                         const { code: parent_head_code } = parentHead[0];
@@ -92,27 +92,27 @@ class AccountService extends abstract_service_1.default {
                             hotel_code,
                             group_code,
                             parent_id,
-                            order_by: 'ah.code',
-                            order_to: 'desc',
+                            order_by: "ah.code",
+                            order_to: "desc",
                         });
                         if (heads.length) {
                             const { code: child_code } = heads[0];
-                            const lastHeadCodeNum = child_code.split('.');
+                            const lastHeadCodeNum = child_code.split(".");
                             const newNum = Number(lastHeadCodeNum[lastHeadCodeNum.length - 1]) + 1;
                             newHeadCode = lastHeadCodeNum.pop();
-                            newHeadCode = lastHeadCodeNum.join('.');
+                            newHeadCode = lastHeadCodeNum.join(".");
                             if (newNum < 10) {
-                                newHeadCode += '.00' + newNum;
+                                newHeadCode += ".00" + newNum;
                             }
                             else if (newNum < 100) {
-                                newHeadCode += '.0' + newNum;
+                                newHeadCode += ".0" + newNum;
                             }
                             else {
-                                newHeadCode += '.' + newNum;
+                                newHeadCode += "." + newNum;
                             }
                         }
                         else {
-                            newHeadCode = parent_head_code + '.001';
+                            newHeadCode = parent_head_code + ".001";
                         }
                     }
                     else {
@@ -120,14 +120,14 @@ class AccountService extends abstract_service_1.default {
                             hotel_code,
                             group_code,
                             parent_id: null,
-                            order_by: 'ah.id',
-                            order_to: 'desc',
+                            order_by: "ah.id",
+                            order_to: "desc",
                         });
                         if (checkHead.length) {
-                            newHeadCode = Number(checkHead[0].code) + 1 + '';
+                            newHeadCode = Number(checkHead[0].code) + 1 + "";
                         }
                         else {
-                            newHeadCode = Number(group_code) + 1 + '';
+                            newHeadCode = Number(group_code) + 1 + "";
                         }
                     }
                     yield model.insertAccHead({
@@ -142,7 +142,7 @@ class AccountService extends abstract_service_1.default {
                 return {
                     success: true,
                     code: this.StatusCode.HTTP_SUCCESSFUL,
-                    message: 'Account head created successfully.',
+                    message: "Account head created successfully.",
                 };
             }));
         });
@@ -178,7 +178,7 @@ class AccountService extends abstract_service_1.default {
     createAccount(req) {
         return __awaiter(this, void 0, void 0, function* () {
             return this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
-                const _a = req.body, { name, ac_type, opening_balance } = _a, rest = __rest(_a, ["name", "ac_type", "opening_balance"]);
+                const _a = req.body, { name, ac_type } = _a, rest = __rest(_a, ["name", "ac_type"]);
                 const { id, hotel_code } = req.hotel_admin;
                 const accModel = this.Model.accountModel(trx);
                 const hotelModel = this.Model.HotelModel(trx);
@@ -188,24 +188,24 @@ class AccountService extends abstract_service_1.default {
                     return {
                         success: false,
                         code: this.StatusCode.HTTP_CONFLICT,
-                        message: 'Account name already exist!',
+                        message: "Account name already exist!",
                     };
                 }
                 // Get parent head===========================================
                 let parent_head = 0;
-                if (ac_type === 'CASH') {
+                if (ac_type === "CASH") {
                     const configData = yield hotelModel.getHotelAccConfig(hotel_code, [
                         constants_1.ACC_HEAD_CONFIG.CASH_HEAD_ID,
                     ]);
                     parent_head = configData[0].head_id;
                 }
-                else if (ac_type === 'BANK') {
+                else if (ac_type === "BANK") {
                     const configData = yield hotelModel.getHotelAccConfig(hotel_code, [
                         constants_1.ACC_HEAD_CONFIG.BANK_HEAD_ID,
                     ]);
                     parent_head = configData[0].head_id;
                 }
-                else if (ac_type === 'MOBILE_BANKING') {
+                else if (ac_type === "MOBILE_BANKING") {
                     const configData = yield hotelModel.getHotelAccConfig(hotel_code, [
                         constants_1.ACC_HEAD_CONFIG.MFS_HEAD_ID,
                     ]);
@@ -232,8 +232,7 @@ class AccountService extends abstract_service_1.default {
                     parent_id: parent_head,
                     code: newHeadCode,
                 });
-                const createAccount = yield accModel.createAccount(Object.assign({ name,
-                    opening_balance, acc_head_id: newHead[0].id, ac_type,
+                const createAccount = yield accModel.createAccount(Object.assign({ name, acc_head_id: newHead[0].id, ac_type,
                     hotel_code }, rest));
                 return {
                     success: true,
@@ -277,7 +276,7 @@ class AccountService extends abstract_service_1.default {
             return {
                 success: true,
                 code: this.StatusCode.HTTP_SUCCESSFUL,
-                message: 'Account updated successfully.',
+                message: "Account updated successfully.",
             };
         });
     }
@@ -298,7 +297,7 @@ class AccountService extends abstract_service_1.default {
                 return {
                     success: false,
                     code: this.StatusCode.HTTP_NOT_FOUND,
-                    message: 'From account not found',
+                    message: "From account not found",
                 };
             }
             // check to account
@@ -310,7 +309,7 @@ class AccountService extends abstract_service_1.default {
                 return {
                     success: false,
                     code: this.StatusCode.HTTP_NOT_FOUND,
-                    message: 'To account not found',
+                    message: "To account not found",
                 };
             }
             const { last_balance: from_acc_last_balance } = checkFromAcc[0];
@@ -319,7 +318,7 @@ class AccountService extends abstract_service_1.default {
                 return {
                     success: false,
                     code: this.StatusCode.HTTP_BAD_REQUEST,
-                    message: 'Pay amount is more than accounts balance',
+                    message: "Pay amount is more than accounts balance",
                 };
             }
             //=========== from account step ==========//
@@ -347,7 +346,7 @@ class AccountService extends abstract_service_1.default {
             return {
                 success: true,
                 code: this.StatusCode.HTTP_SUCCESSFUL,
-                message: 'Balance transfered',
+                message: "Balance transfered",
             };
         });
     }
