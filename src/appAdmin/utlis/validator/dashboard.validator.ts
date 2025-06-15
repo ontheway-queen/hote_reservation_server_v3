@@ -1,25 +1,24 @@
 import Joi from "joi";
 
 class DashBoardValidator {
+  public getAllAmountQueryValidator = Joi.object({
+    from_date: Joi.string().allow("").optional(),
+    to_date: Joi.string().allow("").optional(),
+  });
 
-    // Account Report Validator
-    public getAllAmountQueryValidator = Joi.object({
-        from_date: Joi.string().allow("").optional(),
-        to_date: Joi.string().allow("").optional(),
-    });
+  public getAllAccountQueryValidator = Joi.object({
+    from_date: Joi.string().allow("").optional(),
+    to_date: Joi.string().allow("").optional(),
+    ac_type: Joi.string().allow("").required(),
+  });
 
-    // Account Report Validator
-    public getAllAccountQueryValidator = Joi.object({
-        from_date: Joi.string().allow("").optional(),
-        to_date: Joi.string().allow("").optional(),
-        ac_type: Joi.string().allow("").required(),
-    });
+  public getGuestReport = Joi.object({
+    current_date: Joi.string().required(),
+    booking_mode: Joi.string().valid("arrival", "departure", "stay").required(),
+  });
 
-    // Room Report Validator
-    public getAllRoomsQueryValidator = Joi.object({
-        from_date: Joi.string().allow("").optional(),
-        to_date: Joi.string().allow("").optional(),
-    });
-
+  public getAllRoomsQueryValidator = Joi.object({
+    current_date: Joi.string().required(),
+  });
 }
 export default DashBoardValidator;

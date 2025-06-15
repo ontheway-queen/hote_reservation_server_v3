@@ -1,9 +1,6 @@
 import { Request } from "express";
 import AbstractServices from "../../abstarcts/abstract.service";
-import {
-  IcreateInvoicePayload,
-  IinsertFolioInvoiceReqPayload,
-} from "../utlis/interfaces/invoice.interface";
+import { IinsertFolioInvoiceReqPayload } from "../utlis/interfaces/invoice.interface";
 import { HelperFunction } from "../utlis/library/helperFunction";
 
 export class InvoiceService extends AbstractServices {
@@ -33,7 +30,7 @@ export class InvoiceService extends AbstractServices {
 
       // get folio entries
       const checkFolioEntries =
-        await reservationModel.getFoliosEntriesbySingleBooking({
+        await invoiceModel.getFoliosEntriesbySingleBooking({
           hotel_code,
           booking_id,
           entry_ids: entryIDs,
@@ -48,8 +45,9 @@ export class InvoiceService extends AbstractServices {
       }
 
       // get folio entries amount
-      const folioCalculation =
-        await reservationModel.getFolioEntriesCalculation(entryIDs);
+      const folioCalculation = await invoiceModel.getFolioEntriesCalculation(
+        entryIDs
+      );
 
       const { due_amount, paid_amount, total_amount } = folioCalculation;
 
@@ -107,7 +105,7 @@ export class InvoiceService extends AbstractServices {
         })
       );
       // updated entries with invoice
-      await reservationModel.updateFolioEntries({ invoiced: true }, entryIDs);
+      await invoiceModel.updateFolioEntries({ invoiced: true }, entryIDs);
 
       return {
         success: true,
@@ -118,10 +116,11 @@ export class InvoiceService extends AbstractServices {
   }
 
   public async getAllFolioInvoice(req: Request) {
-    const data = await this.Model.hotelInvoiceModel().getAllFolioInvoice({
-      booking_id: parseInt(req.query.booking_id as string),
-      hotel_code: req.hotel_admin.hotel_code,
-    });
+    const data =
+      await this.Model.hotelInvoiceModel().getAllFolioInvoiceByBookingId({
+        booking_id: parseInt(req.query.booking_id as string),
+        hotel_code: req.hotel_admin.hotel_code,
+      });
 
     return {
       success: true,

@@ -10,17 +10,36 @@ class ReportController extends AbstractController {
     super();
   }
 
-  // get dashboard Report
-  public getDashboardReport = this.asyncWrapper.wrap(
+  public getHotelStatistics = this.asyncWrapper.wrap(
     null,
     async (req: Request, res: Response) => {
-      const { code, ...data } = await this.reportService.getDashboardData(req);
+      const { code, ...data } = await this.reportService.getHotelStatistics(
+        req
+      );
 
       res.status(code).json(data);
     }
   );
 
-  // get account Report
+  public getGuestReport = this.asyncWrapper.wrap(
+    { querySchema: this.dashBoardValidator.getGuestReport },
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.reportService.getGuestReport(req);
+
+      res.status(code).json(data);
+    }
+  );
+
+  public getGuestDistributionCountryWise = this.asyncWrapper.wrap(
+    {},
+    async (req: Request, res: Response) => {
+      const { code, ...data } =
+        await this.reportService.getGuestDistributionCountryWise(req);
+
+      res.status(code).json(data);
+    }
+  );
+
   public getAccountReport = this.asyncWrapper.wrap(
     { querySchema: this.dashBoardValidator.getAllAccountQueryValidator },
     async (req: Request, res: Response) => {
@@ -30,7 +49,6 @@ class ReportController extends AbstractController {
     }
   );
 
-  // get Room Report
   public getRoomReport = this.asyncWrapper.wrap(
     { querySchema: this.dashBoardValidator.getAllRoomsQueryValidator },
     async (req: Request, res: Response) => {

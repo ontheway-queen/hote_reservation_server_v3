@@ -31,6 +31,15 @@ class CommonController extends CommonAbstractController {
       res.status(code).json(data);
     }
   );
+
+  public getAllCountry = this.asyncWrapper.wrap(
+    {},
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.commonService.getAllCountry(req);
+
+      res.status(code).json(data);
+    }
+  );
 }
 
 export default CommonController;

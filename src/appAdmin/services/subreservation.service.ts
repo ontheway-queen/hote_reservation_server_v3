@@ -41,6 +41,7 @@ export class SubReservationService extends AbstractServices {
       first_name: guest.first_name,
       last_name: guest.last_name,
       nationality: guest.nationality,
+      country: guest.country,
       email: guest.email,
       phone: guest.phone,
     });
@@ -57,6 +58,24 @@ export class SubReservationService extends AbstractServices {
 
     rooms.forEach((room) => {
       total_changed_price += room.rate.changed_price * room.number_of_rooms;
+    });
+
+    const total = total_changed_price * nights;
+    const total_amount = total + fees.vat + fees.service_charge - fees.discount;
+    const sub_total = total + fees.vat + fees.service_charge;
+
+    return { total_amount, sub_total };
+  }
+
+  public calculateTotalsByBookingRooms(
+    rooms: BookingRoom[],
+    nights: number,
+    fees: { vat: number; service_charge: number; discount: number }
+  ) {
+    let total_changed_price = 0;
+
+    rooms.forEach((room) => {
+      total_changed_price += room.changed_rate;
     });
 
     const total = total_changed_price * nights;
@@ -150,6 +169,34 @@ export class SubReservationService extends AbstractServices {
           adults: guest.adults,
           children: guest.children,
           infant: guest.infant,
+          base_rate,
+          changed_rate,
+        });
+      });
+    });
+
+    await this.Model.reservationModel(this.trx).insertBookingRoom(payload);
+  }
+
+  async insertInBookingRoomsBySingleBookingRooms(
+    rooms: BookingRoom[],
+    booking_id: number,
+    nights: number
+  ) {
+    const payload: IbookingRooms[] = [];
+
+    rooms.forEach((room) => {
+      const base_rate = room.base_rate * nights;
+      const changed_rate = room.changed_rate * nights;
+
+      rooms.forEach((room) => {
+        payload.push({
+          booking_id,
+          room_id: room.room_id,
+          room_type_id: room.room_type_id,
+          adults: room.adults,
+          children: room.children,
+          infant: room.infant,
           base_rate,
           changed_rate,
         });
@@ -453,6 +500,7 @@ export class SubReservationService extends AbstractServices {
     acc_id: number;
     guest_id: number;
     req: Request;
+
     amount: number;
     remarks: string;
     folio_id: number;

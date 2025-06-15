@@ -10,17 +10,17 @@ class CommonRouter extends CommonAbstractRouter {
 
   // call router
   private callRouter() {
-    // send Email otp
     this.router.post(
       "/send-email-otp",
       this.CommonController.sendEmailOtpController
     );
 
-    // match email otp
     this.router.post(
       "/match-email-otp",
       this.CommonController.matchEmailOtpController
     );
+
+    this.router.get("/country", this.CommonController.getAllCountry);
   }
 }
 

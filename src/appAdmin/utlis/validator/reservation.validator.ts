@@ -10,7 +10,6 @@ export class ReservationValidator {
     is_checked_in: Joi.bool().required(),
     check_in: Joi.date().iso().required(),
     check_out: Joi.date().iso().required(),
-
     guest: Joi.object({
       first_name: Joi.string().required(),
       last_name: Joi.string().required(),
@@ -18,6 +17,7 @@ export class ReservationValidator {
       address: Joi.string().allow("").optional(),
       phone: Joi.string().required(),
       nationality: Joi.string().required(),
+      country: Joi.string().required(),
     }).required(),
 
     pickup: Joi.boolean().required(),
@@ -103,6 +103,12 @@ export class ReservationValidator {
     payment_date: Joi.string().required(),
     remarks: Joi.string().allow("").optional(),
   });
+
+  public changeDatesOfBooking = Joi.object({
+    check_in: Joi.string().required(),
+    check_out: Joi.string().required(),
+  });
+
   public updateReservationHoldStatusValidator = Joi.object({
     status: Joi.string().allow("confirmed", "canceled").required(),
   });

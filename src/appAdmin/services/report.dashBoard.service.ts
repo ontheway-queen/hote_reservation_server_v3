@@ -6,18 +6,59 @@ class ReportService extends AbstractServices {
     super();
   }
 
-  public async getDashboardData(req: Request) {
-    const { hotel_code } = req.hotel_admin;
-
-    const data = await this.db.raw(
-      `CALL ${this.schema.RESERVATION_SCHEMA}.dashboard_data(?)`,
-      [hotel_code]
+  public async getHotelStatistics(req: Request) {
+    const { total_room } = await this.Model.dashBoardModel().getHotelStatistics(
+      req.hotel_admin.hotel_code
     );
 
     return {
       success: true,
       code: this.StatusCode.HTTP_OK,
-      data: data[0][0][0],
+      data: {
+        total_room,
+      },
+    };
+  }
+
+  public async getGuestReport(req: Request) {
+    const { data, total } = await this.Model.dashBoardModel().getGuestReport({
+      hotel_code: req.hotel_admin.hotel_code,
+      booking_mode: req.query.booking_mode as any,
+      current_date: req.query.current_date as string,
+    });
+
+    return {
+      success: true,
+      code: this.StatusCode.HTTP_OK,
+      data: {
+        guest_data: data,
+        total,
+      },
+    };
+  }
+  public async getGuestDistributionCountryWise(req: Request) {
+    const data =
+      await this.Model.dashBoardModel().getGuestDistributionCountryWise({
+        hotel_code: req.hotel_admin.hotel_code,
+      });
+
+    return {
+      success: true,
+      code: this.StatusCode.HTTP_OK,
+      data,
+    };
+  }
+
+  public async getRoomReport(req: Request) {
+    const data = await this.Model.dashBoardModel().getRoomReport({
+      hotel_code: req.hotel_admin.hotel_code,
+      current_date: req.query.current_date as string,
+    });
+
+    return {
+      success: true,
+      code: this.StatusCode.HTTP_OK,
+      data,
     };
   }
 
@@ -45,46 +86,6 @@ class ReportService extends AbstractServices {
       totalDebitAmount,
       totalCreditAmount,
       totalRemainingAmount,
-    };
-  }
-
-  // Dashboard room Report
-  public async getRoomReport(req: Request) {
-    const { from_date, to_date, ac_type } = req.query;
-    const { hotel_code } = req.hotel_admin;
-    // model
-    const model = this.Model.dashBoardModel();
-
-    const {
-      total_room,
-      total_super_deluxe_room,
-      total_deluxe_room,
-      total_double_room,
-      total_single_room,
-    } = await model.getRoomReport({
-      from_date: from_date as string,
-      to_date: to_date as string,
-      hotel_code,
-    });
-
-    const others_room =
-      Number(total_room) -
-      (Number(total_super_deluxe_room) +
-        Number(total_deluxe_room) +
-        Number(total_double_room) +
-        Number(total_single_room));
-
-    return {
-      success: true,
-      code: this.StatusCode.HTTP_OK,
-      data: {
-        total_room,
-        total_super_deluxe_room,
-        total_deluxe_room,
-        total_double_room,
-        total_single_room,
-        others_room,
-      },
     };
   }
 }

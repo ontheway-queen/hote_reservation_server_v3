@@ -35,7 +35,7 @@ class InvoiceService extends abstract_service_1.default {
                     });
                 });
                 // get folio entries
-                const checkFolioEntries = yield reservationModel.getFoliosEntriesbySingleBooking({
+                const checkFolioEntries = yield invoiceModel.getFoliosEntriesbySingleBooking({
                     hotel_code,
                     booking_id,
                     entry_ids: entryIDs,
@@ -48,7 +48,7 @@ class InvoiceService extends abstract_service_1.default {
                     };
                 }
                 // get folio entries amount
-                const folioCalculation = yield reservationModel.getFolioEntriesCalculation(entryIDs);
+                const folioCalculation = yield invoiceModel.getFolioEntriesCalculation(entryIDs);
                 const { due_amount, paid_amount, total_amount } = folioCalculation;
                 const invoice_no = yield new helperFunction_1.HelperFunction().generateInvoiceNumber();
                 // create invoice
@@ -86,7 +86,7 @@ class InvoiceService extends abstract_service_1.default {
                     yield invoiceModel.insertInFolioInvoiceItems(invoiceItemPayload);
                 })));
                 // updated entries with invoice
-                yield reservationModel.updateFolioEntries({ invoiced: true }, entryIDs);
+                yield invoiceModel.updateFolioEntries({ invoiced: true }, entryIDs);
                 return {
                     success: true,
                     code: this.StatusCode.HTTP_SUCCESSFUL,
@@ -97,7 +97,7 @@ class InvoiceService extends abstract_service_1.default {
     }
     getAllFolioInvoice(req) {
         return __awaiter(this, void 0, void 0, function* () {
-            const data = yield this.Model.hotelInvoiceModel().getAllFolioInvoice({
+            const data = yield this.Model.hotelInvoiceModel().getAllFolioInvoiceByBookingId({
                 booking_id: parseInt(req.query.booking_id),
                 hotel_code: req.hotel_admin.hotel_code,
             });

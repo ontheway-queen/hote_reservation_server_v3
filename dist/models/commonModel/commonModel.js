@@ -1,8 +1,4 @@
 "use strict";
-/*
-DB Query for common OTP
-@Author Shidul Islam <shidul.m360ict@gmail.com>
-*/
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -22,7 +18,6 @@ class CommonModel extends schema_1.default {
         super();
         this.db = db;
     }
-    // insert OTP
     insertOTP(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("email_otp")
@@ -30,7 +25,6 @@ class CommonModel extends schema_1.default {
                 .insert(payload);
         });
     }
-    // get otp
     getOTP(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             console.log({ payload });
@@ -45,7 +39,6 @@ class CommonModel extends schema_1.default {
             return check;
         });
     }
-    // update otp
     updateOTP(payload, where) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("email_otp")
@@ -54,7 +47,6 @@ class CommonModel extends schema_1.default {
                 .where(where);
         });
     }
-    // user password verify
     getUserPassword({ table, schema, passField, userIdField, userId, }) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db(table)
@@ -63,7 +55,6 @@ class CommonModel extends schema_1.default {
                 .where(userIdField, userId);
         });
     }
-    // update password
     updatePassword({ table, userIdField, userId, passField, schema, hashedPass, }) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db(table)
@@ -72,10 +63,11 @@ class CommonModel extends schema_1.default {
                 .where(userIdField, userId);
         });
     }
+    getAllCountry() {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("country").withSchema(this.PUBLIC_SCHEMA).select("*");
+        });
+    }
 }
 exports.default = CommonModel;
-/*
-DB Query for common OTP Last update
-@Author Mahmudul islam Moon <moon.m360ict@gmail.com>
-*/
 //# sourceMappingURL=commonModel.js.map

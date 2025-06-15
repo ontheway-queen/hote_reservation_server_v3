@@ -39,6 +39,10 @@ class CommonController extends common_abstract_controller_1.default {
             const _b = yield this.commonService.matchEmailOtpService(req), { code } = _b, data = __rest(_b, ["code"]);
             res.status(code).json(data);
         }));
+        this.getAllCountry = this.asyncWrapper.wrap({}, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _c = yield this.commonService.getAllCountry(req), { code } = _c, data = __rest(_c, ["code"]);
+            res.status(code).json(data);
+        }));
     }
 }
 exports.default = CommonController;

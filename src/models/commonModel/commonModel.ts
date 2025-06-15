@@ -1,8 +1,3 @@
-/*
-DB Query for common OTP
-@Author Shidul Islam <shidul.m360ict@gmail.com>
-*/
-
 import {
   IGetOTPPayload,
   IInsertOTPPayload,
@@ -22,14 +17,12 @@ class CommonModel extends Schema {
     this.db = db;
   }
 
-  // insert OTP
   public async insertOTP(payload: IInsertOTPPayload) {
     return await this.db("email_otp")
       .withSchema(this.DBO_SCHEMA)
       .insert(payload);
   }
 
-  // get otp
   public async getOTP(payload: IGetOTPPayload) {
     console.log({ payload });
     const check = await this.db("email_otp")
@@ -43,7 +36,6 @@ class CommonModel extends Schema {
     return check;
   }
 
-  // update otp
   public async updateOTP(
     payload: { tried: number; matched?: number },
     where: { id: number }
@@ -54,7 +46,6 @@ class CommonModel extends Schema {
       .where(where);
   }
 
-  // user password verify
   public async getUserPassword({
     table,
     schema,
@@ -68,7 +59,6 @@ class CommonModel extends Schema {
       .where(userIdField, userId);
   }
 
-  // update password
   public async updatePassword({
     table,
     userIdField,
@@ -83,64 +73,14 @@ class CommonModel extends Schema {
       .where(userIdField, userId);
   }
 
+  public async getAllCountry() {
+    return await this.db("country").withSchema(this.PUBLIC_SCHEMA).select("*");
+  }
   // insert audit trail
   // public async insetAuditTrail(payload: IInsertAuditTrailPayload) {
   //   return await this.db("auditTrail")
   //     .withSchema(this.ADMINISTRATION_SCHEMA)
   //     .insert(payload);
   // }
-
-  // create division
-  // public async createDivision(payload: ICreateDivisionPayload) {
-  //   return await this.db("division")
-  //     .withSchema(this.DBO_SCHEMA)
-  //     .insert(payload);
-  // }
-
-  // get division
-  // public async getDivision() {
-  //   try {
-  //     return await this.db("division").withSchema(this.DBO_SCHEMA).select("*");
-  //   } catch (err) {
-  //     console.log(err);
-  //   }
-  // }
-
-  // get district
-  // public async getDistrict(filter: IGetDistrictParams) {
-  //   return await this.db("district")
-  //     .withSchema(this.DBO_SCHEMA)
-  //     .select("*")
-  //     .where(filter);
-  // }
-
-  // get thana
-  // public async getThana(filter: IGetThanaParams) {
-  //   return await this.db("thana AS t")
-  //     .withSchema(this.DBO_SCHEMA)
-  //     .select("t.id", "t.name")
-  //     .join("district AS d", "t.districtId", "d.id")
-  //     .where((qb) => {
-  //       if (filter.districtId) {
-  //         qb.andWhere("t.districtId", filter.districtId);
-  //       }
-  //       if (filter.divisionId) {
-  //         qb.andWhere("d.divisionId", filter.divisionId);
-  //       }
-  //     });
-  // }
-
-  // get area
-  // public async getArea(filter: IGetAreaParams) {
-  //   return await this.db("addressView")
-  //     .withSchema(this.DBO_SCHEMA)
-  //     .select("areaId AS id", "areaName AS name")
-  //     .where(filter);
-  // }
 }
 export default CommonModel;
-
-/*
-DB Query for common OTP Last update
-@Author Mahmudul islam Moon <moon.m360ict@gmail.com>
-*/

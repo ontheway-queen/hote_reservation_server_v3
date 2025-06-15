@@ -89,7 +89,18 @@ export class ReservationController extends AbstractController {
   public updateSingleBooking = this.asyncWrapper.wrap(
     { paramSchema: this.commonValidator.singleParamValidator() },
     async (req: Request, res: Response) => {
-      const { code, ...data } = await this.service.getSingleBooking(req);
+      const { code, ...data } = await this.service.updateSingleBooking(req);
+      res.status(code).json(data);
+    }
+  );
+
+  public changeDatesOfBooking = this.asyncWrapper.wrap(
+    {
+      paramSchema: this.commonValidator.singleParamValidator(),
+      bodySchema: this.validator.changeDatesOfBooking,
+    },
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.changeDatesOfBooking(req);
       res.status(code).json(data);
     }
   );

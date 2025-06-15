@@ -3,6 +3,7 @@ export const origin: string[] = [
   "http://localhost:3030",
   "http://localhost:3001",
   "http://127.0.0.1:3000",
+  "http://localhost:4173",
   "http://10.10.220.48:3000",
   "http://10.10.220.48:3001",
   "http://10.10.220.48:3002",
@@ -13,14 +14,6 @@ export const origin: string[] = [
   "http://10.10.220.49:3002",
   "http://localhost:5173",
   "http://10.10.220.48:4173",
-  "https://management.hotel360.world",
-  "https://www.management.hotel360.world",
-  "https://hotels.hotel360.world",
-  "https://www.hotels.hotel360.world",
-  "https://www.restaurant.hotel360.world",
-  "https://www.restaurant.hotel360.world",
-  "https://uae.hotel360.world",
-  "https://www.uae.hotel360.world",
 ];
 
 export const allStrings = [

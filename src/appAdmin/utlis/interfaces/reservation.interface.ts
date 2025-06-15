@@ -118,14 +118,15 @@ export type CalendarRoomType = {
 };
 
 //---------------------booking -------------------//
-
 export interface IguestReqBody {
   first_name: string;
   last_name: string;
   email: string;
   phone: string;
   nationality: string;
+  country: string;
 }
+
 export interface BookingRequestBody {
   reservation_type: "hold" | "confirm";
   check_in: string;

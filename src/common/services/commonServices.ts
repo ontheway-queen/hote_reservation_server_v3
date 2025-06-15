@@ -18,7 +18,6 @@ class CommonService extends AbstractServices {
     super();
   }
 
-  // send otp to email
   public async sendOtpToEmailService(req: Request) {
     return await this.db.transaction(async (trx) => {
       const { email, type } = req.body as IGetOTPPayload;
@@ -105,7 +104,6 @@ class CommonService extends AbstractServices {
     });
   }
 
-  // match email otp
   public async matchEmailOtpService(req: Request) {
     return this.db.transaction(async (trx) => {
       const { email, otp, type } = req.body;
@@ -196,7 +194,6 @@ class CommonService extends AbstractServices {
     });
   }
 
-  // common change password
   public async changePassword({
     password,
     table,
@@ -232,7 +229,6 @@ class CommonService extends AbstractServices {
     }
   }
 
-  // user password verify
   public async userPasswordVerify({
     table,
     passField,
@@ -271,6 +267,16 @@ class CommonService extends AbstractServices {
         message: "Password is verified!",
       };
     }
+  }
+
+  public async getAllCountry(req: Request) {
+    const data = await this.Model.commonModel().getAllCountry();
+
+    return {
+      success: true,
+      code: this.StatusCode.HTTP_OK,
+      data,
+    };
   }
 
   // create audit trail

@@ -23,6 +23,7 @@ class ReservationValidator {
                 address: joi_1.default.string().allow("").optional(),
                 phone: joi_1.default.string().required(),
                 nationality: joi_1.default.string().required(),
+                country: joi_1.default.string().required(),
             }).required(),
             pickup: joi_1.default.boolean().required(),
             pickup_from: joi_1.default.when("pickup", {
@@ -93,6 +94,10 @@ class ReservationValidator {
             acc_id: joi_1.default.number().required(),
             payment_date: joi_1.default.string().required(),
             remarks: joi_1.default.string().allow("").optional(),
+        });
+        this.changeDatesOfBooking = joi_1.default.object({
+            check_in: joi_1.default.string().required(),
+            check_out: joi_1.default.string().required(),
         });
         this.updateReservationHoldStatusValidator = joi_1.default.object({
             status: joi_1.default.string().allow("confirmed", "canceled").required(),

@@ -8,7 +8,6 @@ class DashBoardModel extends Schema {
     this.db = db;
   }
 
-  // invoice due amount
   public async getAllInvoice(payload: {
     hotel_code: number;
     from_date?: string;
@@ -60,7 +59,6 @@ class DashBoardModel extends Schema {
     };
   }
 
-  // room booking report
   public async getRoomBookingReport(payload: {
     from_date?: string;
     limit?: string;
@@ -145,7 +143,6 @@ class DashBoardModel extends Schema {
     };
   }
 
-  // get all hall report
   public async getHallBookingReport(payload: {
     limit?: string;
     skip?: string;
@@ -247,7 +244,6 @@ class DashBoardModel extends Schema {
     };
   }
 
-  // account report
   public async getAccountReport(payload: {
     from_date?: string;
     to_date?: string;
@@ -326,85 +322,193 @@ class DashBoardModel extends Schema {
     };
   }
 
-  // room report
-  public async getRoomReport(payload: {
-    from_date?: string;
-    to_date: string;
-    hotel_code: number;
-  }) {
-    const { from_date, to_date, hotel_code } = payload;
-
-    // exact end date
-    const endDatePlusOneDay = new Date(to_date);
-    endDatePlusOneDay.setDate(endDatePlusOneDay.getDate() + 1);
-
-    const dtbs = this.db("room_view as rv");
-
-    const data = await dtbs.withSchema(this.RESERVATION_SCHEMA);
-
-    // total room
-    const total_room = await this.db("room_view as rv")
+  public async getHotelStatistics(hotel_code: number) {
+    const roomCount = await this.db("rooms")
       .withSchema(this.RESERVATION_SCHEMA)
-      .count("rv.room_id as total_room")
+      .count("id as total")
       .where({ hotel_code })
-      .andWhere(function () {
-        if (from_date && to_date) {
-          this.andWhereBetween("rv.created_at", [from_date, endDatePlusOneDay]);
-        }
-      });
-
-    // total super deluxe room
-    const total_super_deluxe_room = await this.db("room_view as rv")
-      .withSchema(this.RESERVATION_SCHEMA)
-      .count("rv.room_id as total_super_deluxe_room")
-      .where({ hotel_code, room_type: "super-deluxe" })
-      .andWhere(function () {
-        if (from_date && to_date) {
-          this.andWhereBetween("rv.created_at", [from_date, endDatePlusOneDay]);
-        }
-      });
-
-    // total deluxe room
-    const total_deluxe_room = await this.db("room_view as rv")
-      .withSchema(this.RESERVATION_SCHEMA)
-      .count("rv.room_id as total_deluxe_room")
-      .where({ hotel_code, room_type: "deluxe" })
-      .andWhere(function () {
-        if (from_date && to_date) {
-          this.andWhereBetween("rv.created_at", [from_date, endDatePlusOneDay]);
-        }
-      });
-
-    // total single room
-    const total_single_room = await this.db("room_view as rv")
-      .withSchema(this.RESERVATION_SCHEMA)
-      .count("rv.room_id as total_single_room")
-      .where({ hotel_code, room_type: "single" })
-      .andWhere(function () {
-        if (from_date && to_date) {
-          this.andWhereBetween("rv.created_at", [from_date, endDatePlusOneDay]);
-        }
-      });
-
-    // total double room
-    const total_double_room = await this.db("room_view as rv")
-      .withSchema(this.RESERVATION_SCHEMA)
-      .count("rv.room_id as total_double_room")
-      .where({ hotel_code, room_type: "double" })
-      .andWhere(function () {
-        if (from_date && to_date) {
-          this.andWhereBetween("rv.created_at", [from_date, endDatePlusOneDay]);
-        }
-      });
+      .first();
 
     return {
-      total_room: total_room[0].total_room,
-      total_super_deluxe_room:
-        total_super_deluxe_room[0].total_super_deluxe_room,
-      total_deluxe_room: total_deluxe_room[0].total_deluxe_room,
-      total_single_room: total_single_room[0].total_single_room,
-      total_double_room: total_double_room[0].total_double_room,
+      total_room: roomCount?.total ? roomCount.total : 0,
     };
+  }
+
+  public async getGuestReport({
+    current_date,
+    hotel_code,
+    booking_mode,
+    limit,
+    skip,
+  }: {
+    hotel_code: number;
+    current_date: string;
+    limit?: string;
+    skip?: string;
+    booking_mode: "arrival" | "departure" | "stay";
+  }) {
+    if (booking_mode == "arrival") {
+      const data = await this.db("bookings as b")
+        .withSchema(this.RESERVATION_SCHEMA)
+        .select(
+          "g.id as guest_id",
+          "g.first_name",
+          "g.last_name",
+          "b.check_in",
+          "b.check_out",
+          "b.status"
+        )
+        .leftJoin("guests as g", "b.guest_id", "g.id")
+        .where("b.hotel_code", hotel_code)
+        .andWhere("b.check_in", current_date)
+        .andWhere("b.status", "confirmed")
+        .limit(limit ? parseInt(limit) : 50)
+        .offset(skip ? parseInt(skip) : 0);
+
+      const total = await this.db("bookings as b")
+        .withSchema(this.RESERVATION_SCHEMA)
+        .select("b.id as total")
+        .leftJoin("guests as g", "b.guest_id", "g.id")
+        .where("b.hotel_code", hotel_code)
+        .andWhere("b.check_in", current_date)
+        .andWhere("b.status", "confirmed")
+        .first();
+
+      return {
+        data,
+        total: total ? total.total : 0,
+      };
+    } else if (booking_mode == "departure") {
+      const data = await this.db("bookings as b")
+        .withSchema(this.RESERVATION_SCHEMA)
+        .select(
+          "g.id as guest_id",
+          "g.first_name",
+          "g.last_name",
+          "b.check_in",
+          "b.check_out",
+          "b.status"
+        )
+        .leftJoin("guests as g", "b.guest_id", "g.id")
+        .where("b.hotel_code", hotel_code)
+        .andWhere("b.check_out", current_date)
+        .andWhere("b.status", "checked_in")
+        .limit(limit ? parseInt(limit) : 50)
+        .offset(skip ? parseInt(skip) : 0);
+
+      const total = await this.db("bookings as b")
+        .withSchema(this.RESERVATION_SCHEMA)
+        .select("b.id as total")
+        .leftJoin("guests as g", "b.guest_id", "g.id")
+        .where("b.hotel_code", hotel_code)
+        .andWhere("b.status", "checked_in")
+        .andWhere("b.check_out", current_date)
+        .first();
+      return {
+        data,
+        total: total ? total.total : 0,
+      };
+    } else {
+      const data = await this.db("bookings as b")
+        .withSchema(this.RESERVATION_SCHEMA)
+        .select(
+          "g.id as guest_id",
+          "g.first_name",
+          "g.last_name",
+          "b.check_in",
+          "b.check_out",
+          "b.status"
+        )
+        .leftJoin("guests as g", "b.guest_id", "g.id")
+        .where("b.hotel_code", hotel_code)
+        .andWhere(function () {
+          this.where("b.check_out", ">", current_date).andWhere(
+            "b.check_in",
+            "<=",
+            current_date
+          );
+        })
+        .andWhere("b.status", "checked_in")
+        .limit(limit ? parseInt(limit) : 50)
+        .offset(skip ? parseInt(skip) : 0);
+
+      const total = await this.db("bookings as b")
+        .withSchema(this.RESERVATION_SCHEMA)
+        .select("b.id as total")
+        .leftJoin("guests as g", "b.guest_id", "g.id")
+        .where("b.hotel_code", hotel_code)
+        .andWhere(function () {
+          this.where("b.check_out", ">", current_date).andWhere(
+            "b.check_in",
+            "<=",
+            current_date
+          );
+        })
+        .andWhere("b.status", "checked_in")
+        .first();
+      return {
+        data,
+        total: total ? total.total : 0,
+      };
+    }
+  }
+
+  public async getRoomReport({
+    current_date,
+    hotel_code,
+    limit,
+    skip,
+  }: {
+    hotel_code: number;
+    current_date: string;
+    limit?: string;
+    skip?: string;
+  }) {
+    console.log({ hotel_code });
+    return await this.db("room_types as rt")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .select(
+        "rt.id as room_type_id",
+        "rt.name",
+        this.db.raw(
+          `
+        COALESCE((
+          SELECT json_build_object(
+            'total_rooms', ra.total_rooms,
+            'booked_rooms', ra.booked_rooms,
+            'hold_rooms', ra.hold_rooms,
+            'available_rooms', ra.available_rooms,
+            'stop_sell', ra.stop_sell
+          )
+          FROM hotel_reservation.room_availability as ra
+          WHERE rt.id = ra.room_type_id AND ra.date = ?
+        ), json_build_object(
+          'total_rooms', 0,
+          'booked_rooms', 0,
+          'hold_rooms', 0,
+          'available_rooms', 0,
+          'stop_sell', false
+        )) as availability
+        `,
+          [current_date]
+        )
+      )
+      .where("rt.hotel_code", hotel_code);
+  }
+  public async getGuestDistributionCountryWise({
+    hotel_code,
+    limit,
+    skip,
+  }: {
+    hotel_code: number;
+    limit?: string;
+    skip?: string;
+  }) {
+    return await this.db("guests")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .select("country", this.db.raw("count(id) as total_guests"))
+      .where("hotel_code", hotel_code)
+      .groupBy("country");
   }
 }
 export default DashBoardModel;

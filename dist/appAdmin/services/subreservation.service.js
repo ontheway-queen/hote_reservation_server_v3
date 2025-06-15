@@ -41,6 +41,7 @@ class SubReservationService extends abstract_service_1.default {
                 first_name: guest.first_name,
                 last_name: guest.last_name,
                 nationality: guest.nationality,
+                country: guest.country,
                 email: guest.email,
                 phone: guest.phone,
             });
@@ -51,6 +52,16 @@ class SubReservationService extends abstract_service_1.default {
         let total_changed_price = 0;
         rooms.forEach((room) => {
             total_changed_price += room.rate.changed_price * room.number_of_rooms;
+        });
+        const total = total_changed_price * nights;
+        const total_amount = total + fees.vat + fees.service_charge - fees.discount;
+        const sub_total = total + fees.vat + fees.service_charge;
+        return { total_amount, sub_total };
+    }
+    calculateTotalsByBookingRooms(rooms, nights, fees) {
+        let total_changed_price = 0;
+        rooms.forEach((room) => {
+            total_changed_price += room.changed_rate;
         });
         const total = total_changed_price * nights;
         const total_amount = total + fees.vat + fees.service_charge - fees.discount;
@@ -105,6 +116,28 @@ class SubReservationService extends abstract_service_1.default {
                         adults: guest.adults,
                         children: guest.children,
                         infant: guest.infant,
+                        base_rate,
+                        changed_rate,
+                    });
+                });
+            });
+            yield this.Model.reservationModel(this.trx).insertBookingRoom(payload);
+        });
+    }
+    insertInBookingRoomsBySingleBookingRooms(rooms, booking_id, nights) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const payload = [];
+            rooms.forEach((room) => {
+                const base_rate = room.base_rate * nights;
+                const changed_rate = room.changed_rate * nights;
+                rooms.forEach((room) => {
+                    payload.push({
+                        booking_id,
+                        room_id: room.room_id,
+                        room_type_id: room.room_type_id,
+                        adults: room.adults,
+                        children: room.children,
+                        infant: room.infant,
                         base_rate,
                         changed_rate,
                     });

@@ -3,12 +3,7 @@ import AbstractServices from "../../abstarcts/abstract.service";
 import {
   addPaymentReqBody,
   BookingRequestBody,
-  IbookingRooms,
-  IgetChildRateGroups,
-  ISearchAvailableRoom,
 } from "../utlis/interfaces/reservation.interface";
-import Lib from "../../utils/lib/lib";
-import { HelperFunction } from "../utlis/library/helperFunction";
 import { SubReservationService } from "./subreservation.service";
 
 export class ReservationService extends AbstractServices {
@@ -491,6 +486,163 @@ export class ReservationService extends AbstractServices {
     };
   }
 
+  public async changeDatesOfBooking(req: Request) {
+    return await this.db.transaction(async (trx) => {
+      const { hotel_code } = req.hotel_admin;
+      const { check_in, check_out } = req.body;
+
+      const booking_id = parseInt(req.params.id);
+
+      const reservationModel = this.Model.reservationModel(trx);
+      const invoiceModel = this.Model.hotelInvoiceModel(trx);
+      const checkSingleBooking = await reservationModel.getSingleBooking(
+        req.hotel_admin.hotel_code,
+        booking_id
+      );
+
+      if (!checkSingleBooking) {
+        return {
+          success: false,
+          code: this.StatusCode.HTTP_NOT_FOUND,
+          message: this.ResMsg.HTTP_NOT_FOUND,
+        };
+      }
+
+      const {
+        booking_rooms,
+        check_in: prev_checkin,
+        check_out: prev_checkout,
+        vat,
+        discount_amount,
+        service_charge,
+        guest_id,
+      } = checkSingleBooking;
+
+      const checkFolioEntries =
+        await invoiceModel.getFoliosEntriesbySingleBooking({
+          booking_id,
+          hotel_code: req.hotel_admin.hotel_code,
+        });
+
+      const isPayment = checkFolioEntries.find(
+        (item) => item.posting_type.toLowerCase() === "payment"
+      );
+
+      // calculate new dates room balance
+
+      if (prev_checkin == check_in && prev_checkout == check_out) {
+        return {
+          success: false,
+          code: this.StatusCode.HTTP_BAD_REQUEST,
+          message: "You have requested previous date",
+        };
+      }
+
+      const sub = new SubReservationService(trx);
+
+      const total_nights = sub.calculateNights(check_in, check_out);
+
+      // check room type available or not
+      booking_rooms.forEach(async (room) => {
+        const getAllAvailableRoomsWithType =
+          await this.Model.reservationModel().getAllAvailableRoomsTypeWithAvailableRoomCount(
+            {
+              hotel_code,
+              check_in: check_in,
+              check_out: check_out,
+              room_type_id: room.room_type_id,
+            }
+          );
+
+        if (
+          booking_rooms.length > getAllAvailableRoomsWithType[0].available_rooms
+        ) {
+          return {
+            success: false,
+            code: this.StatusCode.HTTP_NOT_FOUND,
+            message: "Room Assigned is more than available rooms",
+          };
+        }
+      });
+
+      // Totals
+      const { total_amount, sub_total } = sub.calculateTotalsByBookingRooms(
+        booking_rooms,
+        total_nights,
+        {
+          vat,
+          service_charge: service_charge,
+          discount: discount_amount,
+        }
+      );
+
+      // update room booking
+      await reservationModel.updateRoomBooking(
+        {
+          total_amount,
+          sub_total,
+        },
+        hotel_code,
+        booking_id
+      );
+
+      // delete booking rooms
+      const roomIDs = booking_rooms.map((room) => room.room_id);
+
+      await reservationModel.deleteBookingRooms(hotel_code, roomIDs);
+
+      // insert booking rooms
+      await sub.insertInBookingRoomsBySingleBookingRooms(
+        booking_rooms,
+        booking_id,
+        total_nights
+      );
+
+      // room avaibility decrease
+      await sub.updateRoomAvailabilityService(
+        "booked_room_decrease",
+        booking_rooms,
+        prev_checkin,
+        prev_checkout,
+        hotel_code
+      );
+
+      // room avaibility increase
+      await sub.updateRoomAvailabilityService(
+        "booked_room_increase",
+        booking_rooms,
+        check_in,
+        check_out,
+        hotel_code
+      );
+
+      // Payment
+      await sub.handlePaymentAndFolioForBooking(
+        false,
+        undefined,
+        guest_id,
+        req,
+        total_amount,
+        parseInt(req.params.id)
+      );
+
+      // if (!isPayment) {
+      //   const entryIds = checkFolioEntries.map((entry) => entry.entries_id);
+
+      //   // delete entry IDs
+      //   await invoiceModel.updateFolioEntries({ is_void: true }, entryIds);
+
+      //   // insert new entries
+      // }
+
+      return {
+        success: true,
+        code: this.StatusCode.HTTP_OK,
+        // data,
+      };
+    });
+  }
+
   public async checkIn(req: Request) {
     const hotel_code = req.hotel_admin.hotel_code;
     const booking_id = parseInt(req.params.id);
@@ -687,7 +839,7 @@ export class ReservationService extends AbstractServices {
   }
 
   public async getFoliosbySingleBooking(req: Request) {
-    const data = await this.Model.reservationModel().getFoliosbySingleBooking(
+    const data = await this.Model.hotelInvoiceModel().getFoliosbySingleBooking(
       req.hotel_admin.hotel_code,
       parseInt(req.params.id)
     );
@@ -701,7 +853,7 @@ export class ReservationService extends AbstractServices {
 
   public async getFoliosWithEntriesbySingleBooking(req: Request) {
     const data =
-      await this.Model.reservationModel().getFoliosWithEntriesbySingleBooking({
+      await this.Model.hotelInvoiceModel().getFoliosWithEntriesbySingleBooking({
         hotel_code: req.hotel_admin.hotel_code,
         booking_id: parseInt(req.params.id),
       });
@@ -714,7 +866,7 @@ export class ReservationService extends AbstractServices {
   }
 
   public async getFolioEntriesbyFolioID(req: Request) {
-    const data = await this.Model.reservationModel().getFolioEntriesbyFolioID(
+    const data = await this.Model.hotelInvoiceModel().getFolioEntriesbyFolioID(
       req.hotel_admin.hotel_code,
       parseInt(req.params.id)
     );
@@ -732,9 +884,9 @@ export class ReservationService extends AbstractServices {
         req.body as addPaymentReqBody;
       const sub = new SubReservationService(trx);
 
-      const reservationModel = this.Model.reservationModel(trx);
+      const invModel = this.Model.hotelInvoiceModel(trx);
       const checkSingleFolio =
-        await reservationModel.getSingleFoliobyHotelCodeAndID(
+        await invModel.getSingleFoliobyHotelCodeAndFolioID(
           req.hotel_admin.hotel_code,
           folio_id
         );
@@ -753,7 +905,7 @@ export class ReservationService extends AbstractServices {
         amount,
         folio_id,
         guest_id: checkSingleFolio.guest_id,
-        payment_for: "ADD MONEY.",
+        payment_for: "ADD MONEY",
         remarks,
         req,
         payment_date,
@@ -773,9 +925,9 @@ export class ReservationService extends AbstractServices {
         req.body as addPaymentReqBody;
       const sub = new SubReservationService(trx);
 
-      const reservationModel = this.Model.reservationModel(trx);
+      const invModel = this.Model.hotelInvoiceModel(trx);
       const checkSingleFolio =
-        await reservationModel.getSingleFoliobyHotelCodeAndID(
+        await invModel.getSingleFoliobyHotelCodeAndFolioID(
           req.hotel_admin.hotel_code,
           folio_id
         );

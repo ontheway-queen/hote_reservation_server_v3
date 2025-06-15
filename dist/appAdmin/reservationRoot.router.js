@@ -30,7 +30,7 @@ class ReservationRootRouter {
         this.router.use("/room", this.authChecker.hotelAdminAuthChecker, new room_router_1.default().router);
         this.router.use("/report", this.authChecker.hotelAdminAuthChecker, new reports_router_1.default().router);
         this.router.use("/administration", this.authChecker.hotelAdminAuthChecker, new administration_router_1.default().router);
-        this.router.use("/money-reciept", this.authChecker.hotelAdminAuthChecker, new money_reciept_router_1.default().router);
+        this.router.use("/money-receipt", this.authChecker.hotelAdminAuthChecker, new money_reciept_router_1.default().router);
         this.router.use("/account", this.authChecker.hotelAdminAuthChecker, new account_router_1.default().router);
         this.router.use("/invoice", this.authChecker.hotelAdminAuthChecker, new invoice_router_1.default().router);
         this.router.use("/expense", this.authChecker.hotelAdminAuthChecker, new expense_router_1.default().router);

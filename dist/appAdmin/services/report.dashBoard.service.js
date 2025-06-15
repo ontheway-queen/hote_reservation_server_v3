@@ -17,14 +17,57 @@ class ReportService extends abstract_service_1.default {
     constructor() {
         super();
     }
-    getDashboardData(req) {
+    getHotelStatistics(req) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { hotel_code } = req.hotel_admin;
-            const data = yield this.db.raw(`CALL ${this.schema.RESERVATION_SCHEMA}.dashboard_data(?)`, [hotel_code]);
+            const { total_room } = yield this.Model.dashBoardModel().getHotelStatistics(req.hotel_admin.hotel_code);
             return {
                 success: true,
                 code: this.StatusCode.HTTP_OK,
-                data: data[0][0][0],
+                data: {
+                    total_room,
+                },
+            };
+        });
+    }
+    getGuestReport(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { data, total } = yield this.Model.dashBoardModel().getGuestReport({
+                hotel_code: req.hotel_admin.hotel_code,
+                booking_mode: req.query.booking_mode,
+                current_date: req.query.current_date,
+            });
+            return {
+                success: true,
+                code: this.StatusCode.HTTP_OK,
+                data: {
+                    guest_data: data,
+                    total,
+                },
+            };
+        });
+    }
+    getGuestDistributionCountryWise(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const data = yield this.Model.dashBoardModel().getGuestDistributionCountryWise({
+                hotel_code: req.hotel_admin.hotel_code,
+            });
+            return {
+                success: true,
+                code: this.StatusCode.HTTP_OK,
+                data,
+            };
+        });
+    }
+    getRoomReport(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const data = yield this.Model.dashBoardModel().getRoomReport({
+                hotel_code: req.hotel_admin.hotel_code,
+                current_date: req.query.current_date,
+            });
+            return {
+                success: true,
+                code: this.StatusCode.HTTP_OK,
+                data,
             };
         });
     }
@@ -49,37 +92,6 @@ class ReportService extends abstract_service_1.default {
                 totalDebitAmount,
                 totalCreditAmount,
                 totalRemainingAmount,
-            };
-        });
-    }
-    // Dashboard room Report
-    getRoomReport(req) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const { from_date, to_date, ac_type } = req.query;
-            const { hotel_code } = req.hotel_admin;
-            // model
-            const model = this.Model.dashBoardModel();
-            const { total_room, total_super_deluxe_room, total_deluxe_room, total_double_room, total_single_room, } = yield model.getRoomReport({
-                from_date: from_date,
-                to_date: to_date,
-                hotel_code,
-            });
-            const others_room = Number(total_room) -
-                (Number(total_super_deluxe_room) +
-                    Number(total_deluxe_room) +
-                    Number(total_double_room) +
-                    Number(total_single_room));
-            return {
-                success: true,
-                code: this.StatusCode.HTTP_OK,
-                data: {
-                    total_room,
-                    total_super_deluxe_room,
-                    total_deluxe_room,
-                    total_double_room,
-                    total_single_room,
-                    others_room,
-                },
             };
         });
     }

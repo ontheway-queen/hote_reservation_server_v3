@@ -21,7 +21,6 @@ class CommonService extends abstract_service_1.default {
     constructor() {
         super();
     }
-    // send otp to email
     sendOtpToEmailService(req) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
@@ -94,7 +93,6 @@ class CommonService extends abstract_service_1.default {
             }));
         });
     }
-    // match email otp
     matchEmailOtpService(req) {
         return __awaiter(this, void 0, void 0, function* () {
             return this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
@@ -165,7 +163,6 @@ class CommonService extends abstract_service_1.default {
             }));
         });
     }
-    // common change password
     changePassword({ password, table, userIdField, userId, passField, schema, }) {
         return __awaiter(this, void 0, void 0, function* () {
             const hashedPass = yield lib_1.default.hashPass(password);
@@ -194,7 +191,6 @@ class CommonService extends abstract_service_1.default {
             }
         });
     }
-    // user password verify
     userPasswordVerify({ table, passField, oldPassword, userIdField, userId, schema, }) {
         return __awaiter(this, void 0, void 0, function* () {
             const commonModel = this.Model.commonModel();
@@ -227,6 +223,16 @@ class CommonService extends abstract_service_1.default {
                     message: "Password is verified!",
                 };
             }
+        });
+    }
+    getAllCountry(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const data = yield this.Model.commonModel().getAllCountry();
+            return {
+                success: true,
+                code: this.StatusCode.HTTP_OK,
+                data,
+            };
         });
     }
 }

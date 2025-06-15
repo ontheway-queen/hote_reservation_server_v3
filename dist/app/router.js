@@ -14,10 +14,10 @@ class RootRouter {
         this.callV1Router();
     }
     callV1Router() {
-        this.v1Router.use('/common', new common_router_1.default().router);
-        this.v1Router.use('/auth', new auth_router_1.default().AuthRouter);
-        this.v1Router.use('/reservation', new reservationRoot_router_1.ReservationRootRouter().router);
-        this.v1Router.use('/management', new managementRoot_router_1.default().managementRouter);
+        this.v1Router.use("/common", new common_router_1.default().router);
+        this.v1Router.use("/auth", new auth_router_1.default().AuthRouter);
+        this.v1Router.use("/reservation", new reservationRoot_router_1.ReservationRootRouter().router);
+        this.v1Router.use("/management", new managementRoot_router_1.default().managementRouter);
     }
 }
 exports.default = RootRouter;

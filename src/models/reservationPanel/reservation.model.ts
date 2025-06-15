@@ -330,6 +330,8 @@ export class ReservationModel extends Schema {
     payload: {
       status?: "checked_in" | "checked_out";
       booking_type?: "B" | "C";
+      total_amount?: number;
+      sub_total?: number;
     },
     hotel_code: number,
     booking_id: number
@@ -339,6 +341,14 @@ export class ReservationModel extends Schema {
       .update(payload)
       .where({ hotel_code })
       .andWhere({ id: booking_id });
+  }
+
+  public async deleteBookingRooms(hotel_code: number, room_ids: number[]) {
+    return await this.db("booking_rooms")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .del()
+      .where({ hotel_code })
+      .whereIn("room_id", room_ids);
   }
 
   public async getLastBooking() {
@@ -415,153 +425,5 @@ export class ReservationModel extends Schema {
           updated_at: this.db.fn.now(),
         });
     }
-  }
-
-  public async getFoliosbySingleBooking(
-    hotel_code: number,
-    booking_id: number
-  ): Promise<{ id: number; name: string }[]> {
-    return await this.db("folios")
-      .withSchema(this.RESERVATION_SCHEMA)
-      .select("id", "name")
-      .where("booking_id", booking_id)
-      .andWhere("hotel_code", hotel_code);
-  }
-
-  public async getFoliosWithEntriesbySingleBooking({
-    hotel_code,
-    booking_id,
-    entry_ids,
-  }: {
-    hotel_code: number;
-    booking_id: number;
-    entry_ids?: number[];
-  }): Promise<{ id: number; name: string }[]> {
-    return await this.db("folios as f")
-      .withSchema(this.RESERVATION_SCHEMA)
-      .select(
-        "f.id",
-        "f.name",
-        this.db.raw(
-          `(SELECT JSON_AGG(JSON_BUILD_OBJECT('entries_id',fe.id,'description',fe.description,'posting_type',fe.posting_type,'debit',fe.debit,'credit',fe.credit,'created_at',fe.created_at,'is_void',fe.is_void,'invoiced',fe.invoiced)) as folio_entries)`
-        )
-      )
-      .leftJoin("folio_entries as fe", "f.id", "fe.folio_id")
-      .where("booking_id", booking_id)
-      .andWhere("hotel_code", hotel_code)
-      .andWhere(function () {
-        if (entry_ids?.length) {
-          this.whereIn("fe.id", entry_ids);
-        }
-      })
-      .groupBy("f.id", "f.name");
-  }
-
-  public async getSingleFoliobyHotelCodeAndID(
-    hotel_code: number,
-    folio_id: number
-  ): Promise<
-    | {
-        id: number;
-        name: string;
-        guest_id: number;
-        booking_id: string;
-      }
-    | undefined
-  > {
-    return await this.db("folios")
-      .withSchema(this.RESERVATION_SCHEMA)
-      .select("id", "name", "guest_id", "booking_id")
-      .where("id", folio_id)
-      .andWhere("hotel_code", hotel_code)
-      .first();
-  }
-
-  public async getFolioEntriesbyFolioID(hotel_code: number, folio_id: number) {
-    return await this.db("folio_entries as fe")
-      .withSchema(this.RESERVATION_SCHEMA)
-      .select(
-        "fe.id",
-        "fe.description",
-        "fe.posting_type",
-        "fe.debit",
-        "fe.credit"
-      )
-      .join("folios as f", "fe.folio_id", "f.id")
-      .where("fe.folio_id", folio_id)
-      .andWhere("f.hotel_code", hotel_code);
-  }
-
-  public async getFoliosEntriesbySingleBooking({
-    hotel_code,
-    booking_id,
-    entry_ids,
-  }: {
-    hotel_code: number;
-    booking_id: number;
-    entry_ids?: number[];
-  }): Promise<
-    {
-      id: number;
-      name: string;
-      entries_id: number;
-      description: string;
-      posting_type: string;
-      debit: number;
-      credit: number;
-      is_void: boolean;
-      invoiced: boolean;
-    }[]
-  > {
-    return await this.db("folios as f")
-      .withSchema(this.RESERVATION_SCHEMA)
-      .select(
-        "f.id",
-        "f.name",
-        "fe.id as entries_id",
-        "fe.description",
-        "fe.posting_type",
-        "fe.debit",
-        "fe.credit",
-        "fe.is_void",
-        "fe.invoiced"
-      )
-      .leftJoin("folio_entries as fe", "f.id", "fe.folio_id")
-      .where("booking_id", booking_id)
-      .andWhere("hotel_code", hotel_code)
-      .andWhere(function () {
-        if (entry_ids?.length) {
-          this.whereIn("fe.id", entry_ids);
-        }
-      });
-  }
-
-  public async updateFolioEntries(
-    payload: { is_void?: boolean; invoiced?: boolean },
-    entryIDs: number[]
-  ) {
-    return await this.db("folio_entries")
-      .withSchema(this.RESERVATION_SCHEMA)
-      .update(payload)
-      .whereIn("id", entryIDs);
-  }
-
-  public async getFolioEntriesCalculation(folioEntryIds: number[]): Promise<{
-    total_amount: number;
-    paid_amount: number;
-    due_amount: number;
-  }> {
-    return await this.db("folio_entries")
-      .withSchema(this.RESERVATION_SCHEMA)
-      .whereIn("id", folioEntryIds)
-      .andWhere("is_void", false)
-      .select(
-        this.db.raw(`
-          COALESCE(SUM(debit), 0) AS total_amount,
-          COALESCE(SUM(credit), 0) AS paid_amount,
-          COALESCE(SUM(debit), 0) - COALESCE(SUM(credit), 0) AS due_amount
-        `)
-      )
-      .first();
   }
 }

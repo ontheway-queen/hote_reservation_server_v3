@@ -72,46 +72,53 @@ class ReservationController extends abstract_controller_1.default {
             res.status(code).json(data);
         }));
         this.updateSingleBooking = this.asyncWrapper.wrap({ paramSchema: this.commonValidator.singleParamValidator() }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _h = yield this.service.getSingleBooking(req), { code } = _h, data = __rest(_h, ["code"]);
+            const _h = yield this.service.updateSingleBooking(req), { code } = _h, data = __rest(_h, ["code"]);
+            res.status(code).json(data);
+        }));
+        this.changeDatesOfBooking = this.asyncWrapper.wrap({
+            paramSchema: this.commonValidator.singleParamValidator(),
+            bodySchema: this.validator.changeDatesOfBooking,
+        }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _j = yield this.service.changeDatesOfBooking(req), { code } = _j, data = __rest(_j, ["code"]);
             res.status(code).json(data);
         }));
         this.checkIn = this.asyncWrapper.wrap({ paramSchema: this.commonValidator.singleParamValidator() }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _j = yield this.service.checkIn(req), { code } = _j, data = __rest(_j, ["code"]);
+            const _k = yield this.service.checkIn(req), { code } = _k, data = __rest(_k, ["code"]);
             res.status(code).json(data);
         }));
         this.checkOut = this.asyncWrapper.wrap({ paramSchema: this.commonValidator.singleParamValidator() }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _k = yield this.service.checkOut(req), { code } = _k, data = __rest(_k, ["code"]);
+            const _l = yield this.service.checkOut(req), { code } = _l, data = __rest(_l, ["code"]);
             res.status(code).json(data);
         }));
         this.updateReservationHoldStatus = this.asyncWrapper.wrap({
             paramSchema: this.commonValidator.singleParamValidator(),
             bodySchema: this.validator.updateReservationHoldStatusValidator,
         }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _l = yield this.service.updateReservationHoldStatus(req), { code } = _l, data = __rest(_l, ["code"]);
+            const _m = yield this.service.updateReservationHoldStatus(req), { code } = _m, data = __rest(_m, ["code"]);
             res.status(code).json(data);
         }));
         this.getFoliosbySingleBooking = this.asyncWrapper.wrap({ paramSchema: this.commonValidator.singleParamValidator() }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _m = yield this.service.getFoliosbySingleBooking(req), { code } = _m, data = __rest(_m, ["code"]);
+            const _o = yield this.service.getFoliosbySingleBooking(req), { code } = _o, data = __rest(_o, ["code"]);
             res.status(code).json(data);
         }));
         this.getFoliosWithEntriesbySingleBooking = this.asyncWrapper.wrap({ paramSchema: this.commonValidator.singleParamValidator() }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _o = yield this.service.getFoliosWithEntriesbySingleBooking(req), { code } = _o, data = __rest(_o, ["code"]);
+            const _p = yield this.service.getFoliosWithEntriesbySingleBooking(req), { code } = _p, data = __rest(_p, ["code"]);
             res.status(code).json(data);
         }));
         this.addPaymentByFolioID = this.asyncWrapper.wrap({
             bodySchema: this.validator.addPayment,
         }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _p = yield this.service.addPaymentByFolioID(req), { code } = _p, data = __rest(_p, ["code"]);
+            const _q = yield this.service.addPaymentByFolioID(req), { code } = _q, data = __rest(_q, ["code"]);
             res.status(code).json(data);
         }));
         this.refundPaymentByFolioID = this.asyncWrapper.wrap({
             bodySchema: this.validator.addPayment,
         }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _q = yield this.service.refundPaymentByFolioID(req), { code } = _q, data = __rest(_q, ["code"]);
+            const _r = yield this.service.refundPaymentByFolioID(req), { code } = _r, data = __rest(_r, ["code"]);
             res.status(code).json(data);
         }));
         this.getFolioEntriesbyFolioID = this.asyncWrapper.wrap({ paramSchema: this.commonValidator.singleParamValidator() }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _r = yield this.service.getFolioEntriesbyFolioID(req), { code } = _r, data = __rest(_r, ["code"]);
+            const _s = yield this.service.getFolioEntriesbyFolioID(req), { code } = _s, data = __rest(_s, ["code"]);
             res.status(code).json(data);
         }));
     }
