@@ -25,13 +25,21 @@ class RoomModel extends Schema {
   public async getAllRoom(payload: {
     hotel_code: number;
     search?: string;
+    status?: string;
     room_type_id?: number;
     limit?: string;
     skip?: string;
     exact_name?: string;
   }) {
-    const { limit, skip, hotel_code, room_type_id, search, exact_name } =
-      payload;
+    const {
+      limit,
+      skip,
+      hotel_code,
+      room_type_id,
+      search,
+      exact_name,
+      status,
+    } = payload;
 
     const dtbs = this.db("rooms as r");
 
@@ -54,19 +62,20 @@ class RoomModel extends Schema {
       .join("room_types as rt", "r.room_type_id", "rt.id")
       .where(function () {
         this.andWhere("r.hotel_code", hotel_code);
-
         if (exact_name) {
           this.andWhereRaw("LOWER(r.room_name) = ?", [
             exact_name.toLowerCase(),
           ]);
         }
-
         if (search) {
           this.andWhere("r.room_name", "ilike", `%${search}%`);
         }
 
         if (room_type_id) {
           this.andWhere("r.room_type_id", room_type_id);
+        }
+        if (status) {
+          this.andWhere("r.status", status);
         }
       })
       .orderBy("id", "desc");
@@ -88,9 +97,16 @@ class RoomModel extends Schema {
         if (room_type_id) {
           this.andWhere("r.room_type_id", room_type_id);
         }
+
+        if (status) {
+          this.andWhere("r.status", status);
+        }
       });
 
-    return { data, total: total[0].total };
+    return {
+      data,
+      total: total[0]?.total ? parseInt(total[0]?.total as string) : 0,
+    };
   }
 
   public async getAllAvailableRooms(payload: {

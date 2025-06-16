@@ -36,6 +36,27 @@ class ReportService extends AbstractServices {
       },
     };
   }
+
+  public async getSingleGuestLedger(req: Request) {
+    const { from_date, to_date, limit, skip } = req.query;
+    const { data, total } = await this.Model.guestModel().getSingleGuestLedeger(
+      {
+        hotel_code: req.hotel_admin.hotel_code,
+        from_date: from_date as string,
+        to_date: to_date as string,
+        guest_id: parseInt(req.params.id),
+        limit: parseInt(limit as string),
+        skip: parseInt(skip as string),
+      }
+    );
+
+    return {
+      success: true,
+      code: this.StatusCode.HTTP_OK,
+      total,
+      data,
+    };
+  }
   public async getGuestDistributionCountryWise(req: Request) {
     const data =
       await this.Model.dashBoardModel().getGuestDistributionCountryWise({

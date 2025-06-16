@@ -46,6 +46,25 @@ class ReportService extends abstract_service_1.default {
             };
         });
     }
+    getSingleGuestLedger(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { from_date, to_date, limit, skip } = req.query;
+            const { data, total } = yield this.Model.guestModel().getSingleGuestLedeger({
+                hotel_code: req.hotel_admin.hotel_code,
+                from_date: from_date,
+                to_date: to_date,
+                guest_id: parseInt(req.params.id),
+                limit: parseInt(limit),
+                skip: parseInt(skip),
+            });
+            return {
+                success: true,
+                code: this.StatusCode.HTTP_OK,
+                total,
+                data,
+            };
+        });
+    }
     getGuestDistributionCountryWise(req) {
         return __awaiter(this, void 0, void 0, function* () {
             const data = yield this.Model.dashBoardModel().getGuestDistributionCountryWise({

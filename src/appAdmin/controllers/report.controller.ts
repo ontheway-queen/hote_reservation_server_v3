@@ -25,7 +25,16 @@ class ReportController extends AbstractController {
     { querySchema: this.dashBoardValidator.getGuestReport },
     async (req: Request, res: Response) => {
       const { code, ...data } = await this.reportService.getGuestReport(req);
+      res.status(code).json(data);
+    }
+  );
 
+  public getSingleGuestLedger = this.asyncWrapper.wrap(
+    { paramSchema: this.commonValidator.singleParamValidator() },
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.reportService.getSingleGuestLedger(
+        req
+      );
       res.status(code).json(data);
     }
   );

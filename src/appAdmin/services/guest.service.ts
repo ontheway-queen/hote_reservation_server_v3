@@ -44,9 +44,6 @@ export class GuestService extends AbstractServices {
       const userID = userRes[0].id;
 
       // Check user's user_type
-      if (!checkUser.length || checkUser[0].user_type !== "guest") {
-        const existingUserType = await model.getExistsUserType(userID, "guest");
-      }
 
       return {
         success: true,
@@ -56,31 +53,13 @@ export class GuestService extends AbstractServices {
     });
   }
 
-  // get user Type
-  public async getUserType(req: Request) {
-    const { email, user_type } = req.query;
-
-    // Fetch data
-    const checkGuest = await this.Model.guestModel().getGuest({
-      email: email as string,
-      user_type: user_type as string,
-    });
-
-    return {
-      success: true,
-      code: this.StatusCode.HTTP_OK,
-    };
-  }
-
   // get All guest service
   public async getAllGuest(req: Request) {
-    const { key, email, limit, skip, user_type } = req.query;
+    const { key, email, limit, skip, status } = req.query;
     const { hotel_code } = req.hotel_admin;
 
-    // model
-    const model = this.Model.guestModel();
-
-    const { data, total } = await model.getAllGuest({
+    const { data, total } = await this.Model.guestModel().getAllGuest({
+      status: status as string,
       key: key as string,
       email: email as string,
       limit: limit as string,
@@ -96,18 +75,13 @@ export class GuestService extends AbstractServices {
     };
   }
 
-  // get Guest Single Profile service
-
   public async getSingleGuest(req: Request) {
-    const { user_id } = req.params;
-    // model
-    const model = this.Model.guestModel();
-    const singleInvoiceData = await model.getSingleGuest({
+    const singleGuest = await this.Model.guestModel().getSingleGuest({
       hotel_code: req.hotel_admin.hotel_code,
-      id: parseInt(user_id),
+      id: parseInt(req.params.id),
     });
 
-    if (!singleInvoiceData.length) {
+    if (!singleGuest.length) {
       return {
         success: false,
         code: this.StatusCode.HTTP_NOT_FOUND,
@@ -117,7 +91,7 @@ export class GuestService extends AbstractServices {
     return {
       success: true,
       code: this.StatusCode.HTTP_OK,
-      data: singleInvoiceData[0],
+      data: singleGuest[0],
     };
   }
 }

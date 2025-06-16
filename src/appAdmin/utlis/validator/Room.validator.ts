@@ -9,15 +9,10 @@ class RoomValidator {
 
   // get all hotel room validator
   public getAllHotelRoomQueryValidator = Joi.object({
-    key: Joi.string().allow("").optional(),
-    availability: Joi.string().allow("").optional(),
-    refundable: Joi.string().allow("").optional(),
-    room_type: Joi.string().allow("").optional(),
+    search: Joi.string().allow("").optional(),
+    room_type_id: Joi.number().allow("").optional(),
     occupancy: Joi.string().allow("").optional(),
-    child: Joi.number().allow("").optional(),
-    adult: Joi.number().allow("").optional(),
-    from_date: Joi.string().allow("").optional(),
-    to_date: Joi.string().allow("").optional(),
+    status: Joi.string().allow("").optional(),
     limit: Joi.string().allow("").optional(),
     skip: Joi.string().allow("").optional(),
   });

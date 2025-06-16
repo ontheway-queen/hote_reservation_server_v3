@@ -13,9 +13,6 @@ class ReportModel extends Schema {
     this.db = db;
   }
 
-  //<sabbir.m360ict@gmail.com> ---- Sabbir Hosen;
-  // Account Reports
-
   public async getAccountsTransactions({
     headIds,
     from_date,

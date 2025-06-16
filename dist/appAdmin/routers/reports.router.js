@@ -27,6 +27,9 @@ class ReportRouter extends abstract_router_1.default {
             .route("/guest-report")
             .get(this.reportController.getGuestReport);
         this.router
+            .route("/guest-ledger/by-guest/:id")
+            .get(this.reportController.getSingleGuestLedger);
+        this.router
             .route("/guest-distribution-countrywise")
             .get(this.reportController.getGuestDistributionCountryWise);
         this.router

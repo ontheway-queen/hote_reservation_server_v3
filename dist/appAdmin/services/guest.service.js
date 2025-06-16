@@ -50,9 +50,6 @@ class GuestService extends abstract_service_1.default {
                 });
                 const userID = userRes[0].id;
                 // Check user's user_type
-                if (!checkUser.length || checkUser[0].user_type !== "guest") {
-                    const existingUserType = yield model.getExistsUserType(userID, "guest");
-                }
                 return {
                     success: true,
                     code: this.StatusCode.HTTP_SUCCESSFUL,
@@ -61,29 +58,13 @@ class GuestService extends abstract_service_1.default {
             }));
         });
     }
-    // get user Type
-    getUserType(req) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const { email, user_type } = req.query;
-            // Fetch data
-            const checkGuest = yield this.Model.guestModel().getGuest({
-                email: email,
-                user_type: user_type,
-            });
-            return {
-                success: true,
-                code: this.StatusCode.HTTP_OK,
-            };
-        });
-    }
     // get All guest service
     getAllGuest(req) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { key, email, limit, skip, user_type } = req.query;
+            const { key, email, limit, skip, status } = req.query;
             const { hotel_code } = req.hotel_admin;
-            // model
-            const model = this.Model.guestModel();
-            const { data, total } = yield model.getAllGuest({
+            const { data, total } = yield this.Model.guestModel().getAllGuest({
+                status: status,
                 key: key,
                 email: email,
                 limit: limit,
@@ -98,17 +79,13 @@ class GuestService extends abstract_service_1.default {
             };
         });
     }
-    // get Guest Single Profile service
     getSingleGuest(req) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { user_id } = req.params;
-            // model
-            const model = this.Model.guestModel();
-            const singleInvoiceData = yield model.getSingleGuest({
+            const singleGuest = yield this.Model.guestModel().getSingleGuest({
                 hotel_code: req.hotel_admin.hotel_code,
-                id: parseInt(user_id),
+                id: parseInt(req.params.id),
             });
-            if (!singleInvoiceData.length) {
+            if (!singleGuest.length) {
                 return {
                     success: false,
                     code: this.StatusCode.HTTP_NOT_FOUND,
@@ -118,7 +95,7 @@ class GuestService extends abstract_service_1.default {
             return {
                 success: true,
                 code: this.StatusCode.HTTP_OK,
-                data: singleInvoiceData[0],
+                data: singleGuest[0],
             };
         });
     }

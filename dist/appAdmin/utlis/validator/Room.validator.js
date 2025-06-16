@@ -14,15 +14,10 @@ class RoomValidator {
         });
         // get all hotel room validator
         this.getAllHotelRoomQueryValidator = joi_1.default.object({
-            key: joi_1.default.string().allow("").optional(),
-            availability: joi_1.default.string().allow("").optional(),
-            refundable: joi_1.default.string().allow("").optional(),
-            room_type: joi_1.default.string().allow("").optional(),
+            search: joi_1.default.string().allow("").optional(),
+            room_type_id: joi_1.default.number().allow("").optional(),
             occupancy: joi_1.default.string().allow("").optional(),
-            child: joi_1.default.number().allow("").optional(),
-            adult: joi_1.default.number().allow("").optional(),
-            from_date: joi_1.default.string().allow("").optional(),
-            to_date: joi_1.default.string().allow("").optional(),
+            status: joi_1.default.string().allow("").optional(),
             limit: joi_1.default.string().allow("").optional(),
             skip: joi_1.default.string().allow("").optional(),
         });

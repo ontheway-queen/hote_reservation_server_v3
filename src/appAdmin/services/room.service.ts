@@ -167,13 +167,14 @@ export class RoomService extends AbstractServices {
   }
 
   public async getAllRoom(req: Request) {
-    const { search, limit, skip, room_type_id } = req.query;
+    const { search, limit, skip, room_type_id, status } = req.query;
 
     const { hotel_code } = req.hotel_admin;
 
     const { data, total } = await this.Model.RoomModel().getAllRoom({
       search: search as string,
       limit: limit as string,
+      status: status as string,
       skip: skip as string,
       hotel_code,
       room_type_id: parseInt(room_type_id as string),

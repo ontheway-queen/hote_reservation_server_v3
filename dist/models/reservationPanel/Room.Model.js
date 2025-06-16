@@ -27,8 +27,9 @@ class RoomModel extends schema_1.default {
         });
     }
     getAllRoom(payload) {
+        var _a, _b;
         return __awaiter(this, void 0, void 0, function* () {
-            const { limit, skip, hotel_code, room_type_id, search, exact_name } = payload;
+            const { limit, skip, hotel_code, room_type_id, search, exact_name, status, } = payload;
             const dtbs = this.db("rooms as r");
             if (limit && skip) {
                 dtbs.limit(parseInt(limit));
@@ -51,6 +52,9 @@ class RoomModel extends schema_1.default {
                 if (room_type_id) {
                     this.andWhere("r.room_type_id", room_type_id);
                 }
+                if (status) {
+                    this.andWhere("r.status", status);
+                }
             })
                 .orderBy("id", "desc");
             const total = yield this.db("rooms as r")
@@ -69,8 +73,14 @@ class RoomModel extends schema_1.default {
                 if (room_type_id) {
                     this.andWhere("r.room_type_id", room_type_id);
                 }
+                if (status) {
+                    this.andWhere("r.status", status);
+                }
             });
-            return { data, total: total[0].total };
+            return {
+                data,
+                total: ((_a = total[0]) === null || _a === void 0 ? void 0 : _a.total) ? parseInt((_b = total[0]) === null || _b === void 0 ? void 0 : _b.total) : 0,
+            };
         });
     }
     getAllAvailableRooms(payload) {

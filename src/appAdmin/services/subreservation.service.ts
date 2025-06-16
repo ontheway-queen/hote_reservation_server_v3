@@ -459,7 +459,7 @@ export class SubReservationService extends AbstractServices {
       created_by: req.hotel_admin.id,
       debit: amount,
       credit: 0,
-      description: "For Add Money." + " " + remarks,
+      description: remarks,
       voucher_type: "PAYMENT",
       voucher_date: payment_date,
       voucher_no,
@@ -473,7 +473,7 @@ export class SubReservationService extends AbstractServices {
       credit: amount,
       folio_id: folio_id,
       posting_type: "Payment",
-      description: payment_for + " " + remarks,
+      description: remarks,
     });
 
     const guestModel = this.Model.guestModel(this.trx);
@@ -537,7 +537,7 @@ export class SubReservationService extends AbstractServices {
       credit: 0,
       folio_id: folio_id,
       posting_type: "Refund",
-      description: payment_for + " " + remarks,
+      description: remarks,
     });
 
     const guestModel = this.Model.guestModel(this.trx);

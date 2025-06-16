@@ -42,7 +42,7 @@ class GuestController extends abstract_controller_1.default {
             res.status(code).json(data);
         }));
         // get Single Guest Controller
-        this.getSingleGuest = this.asyncWrapper.wrap({ paramSchema: this.commonValidator.singleParamValidator("user_id") }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+        this.getSingleGuest = this.asyncWrapper.wrap({ paramSchema: this.commonValidator.singleParamValidator() }, (req, res) => __awaiter(this, void 0, void 0, function* () {
             const _c = yield this.guestService.getSingleGuest(req), { code } = _c, data = __rest(_c, ["code"]);
             res.status(code).json(data);
         }));

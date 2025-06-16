@@ -193,16 +193,26 @@ class RAdministrationModel extends schema_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             const { email, id } = where;
             return yield this.db("user_admin AS ua")
-                .select("ua.id", "ua.email", "ua.hotel_code", "h.name as hotel_name", "ua.phone", "ua.password", "ua.photo", "ua.name", "ua.status", "r.id As role_id", "r.name As role_name", "ua.created_at")
                 .withSchema(this.RESERVATION_SCHEMA)
+                .select("ua.id", "ua.email", "ua.hotel_code", "h.name as hotel_name", "ua.phone", "ua.password", "ua.photo", "ua.name", "ua.status", "r.id as role_id", "r.name as role_name", "ua.created_at", this.db.raw(`
+        JSON_BUILD_OBJECT(
+          'phone', hcd.phone,
+          'fax', hcd.fax,
+          'address',h.address,
+          'website_url', hcd.website_url,
+          'email', hcd.email,
+          'logo',hcd.logo
+        ) as hotel_contact_details
+      `))
                 .join("hotels as h", "ua.hotel_code", "h.hotel_code")
-                .join("roles AS r", "ua.role", "r.id")
-                .where(function () {
+                .leftJoin("hotel_contact_details as hcd", "h.hotel_code", "hcd.hotel_code")
+                .leftJoin("roles as r", "ua.role", "r.id")
+                .modify(function (queryBuilder) {
                 if (id) {
-                    this.where("ua.id", id);
+                    queryBuilder.where("ua.id", id);
                 }
                 if (email) {
-                    this.where("ua.email", email);
+                    queryBuilder.whereRaw("LOWER(ua.email) = ? ", [email.toLowerCase()]);
                 }
             });
         });

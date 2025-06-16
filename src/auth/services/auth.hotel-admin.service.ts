@@ -28,6 +28,7 @@ class HotelAdminAuthService extends AbstractServices {
       id,
       status,
       hotel_status,
+      hotel_contact_details,
       ...rest
     } = checkUser[0];
 
@@ -78,6 +79,7 @@ class HotelAdminAuthService extends AbstractServices {
         id,
         ...rest,
         status,
+        hotel_contact_details,
       },
       token,
     };

@@ -18,8 +18,6 @@ class ReportModel extends schema_1.default {
         super();
         this.db = db;
     }
-    //<sabbir.m360ict@gmail.com> ---- Sabbir Hosen;
-    // Account Reports
     getAccountsTransactions({ headIds, from_date, to_date, }) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db(`${this.ACC_SCHEMA}.acc_vouchers AS av`)

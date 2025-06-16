@@ -43,7 +43,7 @@ class HotelAdminAuthService extends abstract_service_1.default {
                     message: this.ResMsg.WRONG_CREDENTIALS,
                 };
             }
-            const _a = checkUser[0], { password: hashPass, id, status, hotel_status } = _a, rest = __rest(_a, ["password", "id", "status", "hotel_status"]);
+            const _a = checkUser[0], { password: hashPass, id, status, hotel_status, hotel_contact_details } = _a, rest = __rest(_a, ["password", "id", "status", "hotel_status", "hotel_contact_details"]);
             if (hotel_status == "disabled") {
                 return {
                     success: false,
@@ -78,7 +78,8 @@ class HotelAdminAuthService extends abstract_service_1.default {
                 success: true,
                 code: this.StatusCode.HTTP_OK,
                 message: this.ResMsg.LOGIN_SUCCESSFUL,
-                data: Object.assign(Object.assign({ id }, rest), { status }),
+                data: Object.assign(Object.assign({ id }, rest), { status,
+                    hotel_contact_details }),
                 token,
             };
         });

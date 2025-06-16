@@ -206,6 +206,7 @@ class RAdministrationModel extends Schema {
   public async getSingleAdmin(where: { email?: string; id?: number }) {
     const { email, id } = where;
     return await this.db("user_admin AS ua")
+      .withSchema(this.RESERVATION_SCHEMA)
       .select(
         "ua.id",
         "ua.email",
@@ -216,20 +217,33 @@ class RAdministrationModel extends Schema {
         "ua.photo",
         "ua.name",
         "ua.status",
-        "r.id As role_id",
-        "r.name As role_name",
-
-        "ua.created_at"
+        "r.id as role_id",
+        "r.name as role_name",
+        "ua.created_at",
+        this.db.raw(`
+        JSON_BUILD_OBJECT(
+          'phone', hcd.phone,
+          'fax', hcd.fax,
+          'address',h.address,
+          'website_url', hcd.website_url,
+          'email', hcd.email,
+          'logo',hcd.logo
+        ) as hotel_contact_details
+      `)
       )
-      .withSchema(this.RESERVATION_SCHEMA)
       .join("hotels as h", "ua.hotel_code", "h.hotel_code")
-      .join("roles AS r", "ua.role", "r.id")
-      .where(function () {
+      .leftJoin(
+        "hotel_contact_details as hcd",
+        "h.hotel_code",
+        "hcd.hotel_code"
+      )
+      .leftJoin("roles as r", "ua.role", "r.id")
+      .modify(function (queryBuilder) {
         if (id) {
-          this.where("ua.id", id);
+          queryBuilder.where("ua.id", id);
         }
         if (email) {
-          this.where("ua.email", email);
+          queryBuilder.whereRaw("LOWER(ua.email) = ? ", [email.toLowerCase()]);
         }
       });
   }

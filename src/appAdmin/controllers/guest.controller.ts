@@ -29,7 +29,7 @@ class GuestController extends AbstractController {
 
   // get Single Guest Controller
   public getSingleGuest = this.asyncWrapper.wrap(
-    { paramSchema: this.commonValidator.singleParamValidator("user_id") },
+    { paramSchema: this.commonValidator.singleParamValidator() },
     async (req: Request, res: Response) => {
       const { code, ...data } = await this.guestService.getSingleGuest(req);
       res.status(code).json(data);

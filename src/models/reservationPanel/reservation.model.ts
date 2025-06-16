@@ -228,8 +228,43 @@ export class ReservationModel extends Schema {
       .insert(payload);
   }
 
-  public async getAllBooking({ hotel_code }: { hotel_code: number }) {
-    return await this.db("bookings as b")
+  public async getAllBooking({
+    hotel_code,
+    checkin_from,
+    checkin_to,
+    checkout_from,
+    checkout_to,
+    booked_from,
+    booked_to,
+    limit,
+    search,
+    skip,
+    booking_type,
+    status,
+  }: {
+    hotel_code: number;
+    limit?: string;
+    skip?: string;
+    checkin_from?: string;
+    checkin_to?: string;
+    checkout_from?: string;
+    checkout_to?: string;
+    booked_from?: string;
+    booked_to?: string;
+    search?: string;
+    status?: string;
+    booking_type?: string;
+  }) {
+    const endCheckInDate = checkin_to ? new Date(checkin_to) : null;
+    if (endCheckInDate) endCheckInDate.setDate(endCheckInDate.getDate() + 1);
+
+    const endCheckOutDate = checkout_to ? new Date(checkout_to) : null;
+    if (endCheckOutDate) endCheckOutDate.setDate(endCheckOutDate.getDate() + 1);
+
+    const endBookedDate = booked_to ? new Date(booked_to) : null;
+    if (endBookedDate) endBookedDate.setDate(endBookedDate.getDate() + 1);
+
+    const data = await this.db("bookings as b")
       .withSchema(this.RESERVATION_SCHEMA)
       .select(
         "b.id",
@@ -252,7 +287,73 @@ export class ReservationModel extends Schema {
       .leftJoin("sources as src", "b.source_id", "src.id")
       .leftJoin("guests as g", "b.guest_id", "g.id")
       .where("b.hotel_code", hotel_code)
-      .orderBy("b.id", "desc");
+      .andWhere(function () {
+        if (checkin_from && checkin_to) {
+          this.andWhereBetween("b.check_in", [checkin_from, endCheckInDate]);
+        }
+        if (checkout_from && checkout_to) {
+          this.andWhereBetween("b.check_out", [checkout_from, endCheckOutDate]);
+        }
+
+        if (booked_from && booked_to) {
+          this.andWhereBetween("b.booking_date", [booked_from, endBookedDate]);
+        }
+
+        if (search) {
+          this.andWhere("b.booking_reference", "ilike", `%${search}%`)
+            .orWhere("g.first_name", "ilike", `%${search}%`)
+            .orWhere("g.email", "ilike", `%${search}%`);
+        }
+
+        if (status) {
+          this.andWhere("b.status", status);
+        }
+
+        if (booking_type) {
+          this.andWhere("b.booking_type", status);
+        }
+      })
+      .orderBy("b.id", "desc")
+      .limit(limit ? Number(limit) : 50)
+      .offset(skip ? Number(skip) : 0);
+
+    const total = await this.db("bookings as b")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .count("b.id as total")
+      .leftJoin("sources as src", "b.source_id", "src.id")
+      .leftJoin("guests as g", "b.guest_id", "g.id")
+      .where("b.hotel_code", hotel_code)
+      .andWhere(function () {
+        if (checkin_from && checkin_to) {
+          this.andWhereBetween("b.check_in", [checkin_from, endCheckInDate]);
+        }
+        if (checkout_from && checkout_to) {
+          this.andWhereBetween("b.check_out", [checkout_from, endCheckOutDate]);
+        }
+
+        if (booked_from && booked_to) {
+          this.andWhereBetween("b.booking_date", [booked_from, endBookedDate]);
+        }
+
+        if (search) {
+          this.andWhere("b.booking_reference", "ilike", `%${search}%`)
+            .orWhere("g.first_name", "ilike", `%${search}%`)
+            .orWhere("g.email", "ilike", `%${search}%`);
+        }
+
+        if (status) {
+          this.andWhere("b.status", status);
+        }
+
+        if (booking_type) {
+          this.andWhere("b.booking_type", status);
+        }
+      });
+
+    return {
+      data,
+      total: total[0]?.total ? parseInt(total[0]?.total as string) : 0,
+    };
   }
 
   public async getSingleBooking(

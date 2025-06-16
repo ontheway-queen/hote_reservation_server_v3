@@ -10,9 +10,9 @@ export interface IinsertFolioPayload {
 
 export interface IinsertFolioEntriesPayload {
   folio_id: number;
-  acc_voucher_id: number;
-  debit: number;
-  credit: number;
+  acc_voucher_id?: number;
+  debit?: number;
+  credit?: number;
   description?: string;
   posting_type:
     | "Charge"

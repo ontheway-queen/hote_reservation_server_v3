@@ -143,11 +143,12 @@ class RoomService extends abstract_service_1.default {
     }
     getAllRoom(req) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { search, limit, skip, room_type_id } = req.query;
+            const { search, limit, skip, room_type_id, status } = req.query;
             const { hotel_code } = req.hotel_admin;
             const { data, total } = yield this.Model.RoomModel().getAllRoom({
                 search: search,
                 limit: limit,
+                status: status,
                 skip: skip,
                 hotel_code,
                 room_type_id: parseInt(room_type_id),

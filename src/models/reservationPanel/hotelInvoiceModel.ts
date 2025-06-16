@@ -33,7 +33,9 @@ class HotelInvoiceModel extends Schema {
       .orderBy("id", "desc");
   }
 
-  public async insertInFolioEntries(payload: IinsertFolioEntriesPayload) {
+  public async insertInFolioEntries(
+    payload: IinsertFolioEntriesPayload | IinsertFolioEntriesPayload[]
+  ) {
     return await this.db("folio_entries")
       .withSchema(this.RESERVATION_SCHEMA)
       .insert(payload);
@@ -274,10 +276,12 @@ class HotelInvoiceModel extends Schema {
     booking_id,
     entry_ids,
     posting_type,
+    type,
   }: {
     hotel_code: number;
     booking_id: number;
     posting_type?: string;
+    type?: string;
     entry_ids?: number[];
   }): Promise<
     {
@@ -312,8 +316,15 @@ class HotelInvoiceModel extends Schema {
         if (entry_ids?.length) {
           this.whereIn("fe.id", entry_ids);
         }
+
         if (posting_type) {
-          this.andWhere("fe.posting_type", posting_type);
+          this.andWhereRaw("LOWER(fe.posting_type) = ?", [
+            posting_type.toLowerCase(),
+          ]);
+        }
+
+        if (type) {
+          this.andWhereRaw("LOWER(f.type) = ?", [type.toLowerCase()]);
         }
       });
   }

@@ -194,7 +194,7 @@ class HotelInvoiceModel extends schema_1.default {
                 .andWhere("f.hotel_code", hotel_code);
         });
     }
-    getFoliosEntriesbySingleBooking({ hotel_code, booking_id, entry_ids, posting_type, }) {
+    getFoliosEntriesbySingleBooking({ hotel_code, booking_id, entry_ids, posting_type, type, }) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("folios as f")
                 .withSchema(this.RESERVATION_SCHEMA)
@@ -207,7 +207,12 @@ class HotelInvoiceModel extends schema_1.default {
                     this.whereIn("fe.id", entry_ids);
                 }
                 if (posting_type) {
-                    this.andWhere("fe.posting_type", posting_type);
+                    this.andWhereRaw("LOWER(fe.posting_type) = ?", [
+                        posting_type.toLowerCase(),
+                    ]);
+                }
+                if (type) {
+                    this.andWhereRaw("LOWER(f.type) = ?", [type.toLowerCase()]);
                 }
             });
         });
