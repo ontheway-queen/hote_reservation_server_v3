@@ -88,6 +88,16 @@ class ReservationValidator {
             payment_date: joi_1.default.string().required(),
             remarks: joi_1.default.string().allow("").optional(),
         });
+        this.adjustBalance = joi_1.default.object({
+            folio_id: joi_1.default.number().required(),
+            amount: joi_1.default.number().required(),
+            remarks: joi_1.default.string().allow("").optional(),
+        });
+        this.addItemByFolioID = joi_1.default.object({
+            folio_id: joi_1.default.number().required(),
+            amount: joi_1.default.number().required(),
+            remarks: joi_1.default.string().allow("").optional(),
+        });
         this.refundPayment = joi_1.default.object({
             folio_id: joi_1.default.number().required(),
             amount: joi_1.default.number().required(),

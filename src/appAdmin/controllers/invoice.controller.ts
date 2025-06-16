@@ -39,5 +39,15 @@ class InvoiceController extends AbstractController {
       res.status(code).json(data);
     }
   );
+
+  public getSingleBookingRoomsInvoice = this.asyncWrapper.wrap(
+    {
+      paramSchema: this.commonValidator.singleParamValidator(),
+    },
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.getSingleFolioInvoice(req);
+      res.status(code).json(data);
+    }
+  );
 }
 export default InvoiceController;

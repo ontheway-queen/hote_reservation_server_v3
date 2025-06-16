@@ -310,7 +310,7 @@ export class ReservationModel extends Schema {
         }
 
         if (booking_type) {
-          this.andWhere("b.booking_type", status);
+          this.andWhere("b.booking_type", booking_type);
         }
       })
       .orderBy("b.id", "desc")
@@ -346,7 +346,7 @@ export class ReservationModel extends Schema {
         }
 
         if (booking_type) {
-          this.andWhere("b.booking_type", status);
+          this.andWhere("b.booking_type", booking_type);
         }
       });
 
@@ -405,7 +405,9 @@ export class ReservationModel extends Schema {
               'children', br.children,
               'infant', br.infant,
               'base_rate', br.base_rate,
-              'changed_rate', br.changed_rate
+              'changed_rate', br.changed_rate,
+              'unit_base_rate', br.unit_base_rate,
+              'unit_changed_rate', br.unit_changed_rate
             )
           )
           FROM ?? AS br
@@ -433,6 +435,7 @@ export class ReservationModel extends Schema {
       booking_type?: "B" | "C";
       total_amount?: number;
       sub_total?: number;
+      total_nights?: number;
     },
     hotel_code: number,
     booking_id: number
@@ -444,11 +447,10 @@ export class ReservationModel extends Schema {
       .andWhere({ id: booking_id });
   }
 
-  public async deleteBookingRooms(hotel_code: number, room_ids: number[]) {
+  public async deleteBookingRooms(room_ids: number[]) {
     return await this.db("booking_rooms")
       .withSchema(this.RESERVATION_SCHEMA)
       .del()
-      .where({ hotel_code })
       .whereIn("room_id", room_ids);
   }
 

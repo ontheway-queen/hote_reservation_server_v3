@@ -18,6 +18,10 @@ class InvoiceRouter extends AbstractRouter {
     this.router
       .route("/folio-invoice/:id")
       .get(this.invoiceController.getSingleFolioInvoice);
+
+    this.router
+      .route("/room-invoice/by-booking/:id")
+      .get(this.invoiceController.getSingleBookingRoomsInvoice);
   }
 }
 export default InvoiceRouter;

@@ -179,6 +179,7 @@ export interface IRoomBooking {
   booking_reference: string;
   guest_id: number;
   created_by: number;
+  total_nights: number;
   booking_date: string;
   check_in: string;
   check_out: string;
@@ -234,6 +235,8 @@ export interface IbookingRooms {
   infant: number;
   changed_rate: number;
   base_rate: number;
+  unit_base_rate: number;
+  unit_changed_rate: number;
 }
 
 // ------------------------ single booking ----------------------//
@@ -249,6 +252,8 @@ export interface BookingRoom {
   infant: number;
   base_rate: number;
   changed_rate: number;
+  unit_base_rate: number;
+  unit_changed_rate: number;
 }
 
 interface BookingGuest {

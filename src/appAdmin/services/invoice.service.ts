@@ -141,5 +141,18 @@ export class InvoiceService extends AbstractServices {
       data,
     };
   }
+
+  public async getSingleBookingRoomsInvoice(req: Request) {
+    const data = await this.Model.hotelInvoiceModel().getSingleFolioInvoice({
+      inv_id: parseInt(req.params.id),
+      hotel_code: req.hotel_admin.hotel_code,
+    });
+
+    return {
+      success: true,
+      code: this.StatusCode.HTTP_OK,
+      data,
+    };
+  }
 }
 export default InvoiceService;

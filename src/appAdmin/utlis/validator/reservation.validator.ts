@@ -96,6 +96,18 @@ export class ReservationValidator {
     remarks: Joi.string().allow("").optional(),
   });
 
+  public adjustBalance = Joi.object({
+    folio_id: Joi.number().required(),
+    amount: Joi.number().required(),
+    remarks: Joi.string().allow("").optional(),
+  });
+
+  public addItemByFolioID = Joi.object({
+    folio_id: Joi.number().required(),
+    amount: Joi.number().required(),
+    remarks: Joi.string().allow("").optional(),
+  });
+
   public refundPayment = Joi.object({
     folio_id: Joi.number().required(),
     amount: Joi.number().required(),

@@ -172,6 +172,25 @@ export class ReservationController extends AbstractController {
       res.status(code).json(data);
     }
   );
+  public adjustAmountByFolioID = this.asyncWrapper.wrap(
+    {
+      bodySchema: this.validator.adjustBalance,
+    },
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.adjustAmountByFolioID(req);
+      res.status(code).json(data);
+    }
+  );
+
+  public addItemByFolioID = this.asyncWrapper.wrap(
+    {
+      bodySchema: this.validator.addItemByFolioID,
+    },
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.addItemByFolioID(req);
+      res.status(code).json(data);
+    }
+  );
 
   public getFolioEntriesbyFolioID = this.asyncWrapper.wrap(
     { paramSchema: this.commonValidator.singleParamValidator() },

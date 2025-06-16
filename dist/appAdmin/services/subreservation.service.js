@@ -61,14 +61,17 @@ class SubReservationService extends abstract_service_1.default {
     calculateTotalsByBookingRooms(rooms, nights, fees) {
         let total_changed_price = 0;
         rooms.forEach((room) => {
-            total_changed_price += room.changed_rate;
+            total_changed_price += room.unit_changed_rate;
         });
         const total = total_changed_price * nights;
-        const total_amount = total + fees.vat + fees.service_charge - fees.discount;
-        const sub_total = total + fees.vat + fees.service_charge;
+        const total_amount = total +
+            Number(fees.vat) +
+            Number(fees.service_charge) -
+            Number(fees.discount);
+        const sub_total = total + Number(fees.vat) + Number(fees.service_charge);
         return { total_amount, sub_total };
     }
-    createMainBooking({ payload, hotel_code, guest_id, sub_total, total_amount, is_checked_in, }) {
+    createMainBooking({ payload, hotel_code, guest_id, sub_total, total_amount, is_checked_in, total_nights, }) {
         var _a, _b;
         return __awaiter(this, void 0, void 0, function* () {
             const reservation_model = this.Model.reservationModel(this.trx);
@@ -84,6 +87,7 @@ class SubReservationService extends abstract_service_1.default {
                 hotel_code,
                 sub_total,
                 total_amount,
+                total_nights,
                 vat: payload.vat,
                 service_charge: payload.service_charge,
                 discount_amount: payload.discount_amount,
@@ -118,6 +122,8 @@ class SubReservationService extends abstract_service_1.default {
                         infant: guest.infant,
                         base_rate,
                         changed_rate,
+                        unit_base_rate: room.rate.base_price,
+                        unit_changed_rate: room.rate.changed_price,
                     });
                 });
             });
@@ -128,8 +134,8 @@ class SubReservationService extends abstract_service_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             const payload = [];
             rooms.forEach((room) => {
-                const base_rate = room.base_rate * nights;
-                const changed_rate = room.changed_rate * nights;
+                const base_rate = room.unit_base_rate * nights;
+                const changed_rate = room.unit_changed_rate * nights;
                 rooms.forEach((room) => {
                     payload.push({
                         booking_id,
@@ -140,6 +146,8 @@ class SubReservationService extends abstract_service_1.default {
                         infant: room.infant,
                         base_rate,
                         changed_rate,
+                        unit_base_rate: room.unit_base_rate,
+                        unit_changed_rate: room.unit_changed_rate,
                     });
                 });
             });

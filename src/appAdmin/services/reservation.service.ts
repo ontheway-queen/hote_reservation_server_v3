@@ -350,15 +350,14 @@ export class ReservationService extends AbstractServices {
 
       // check room type available or not
       body.rooms.forEach(async (room) => {
-        const getAllAvailableRoomsWithType =
-          await this.Model.reservationModel().getAllAvailableRoomsTypeWithAvailableRoomCount(
-            {
-              hotel_code,
-              check_in: body.check_in,
-              check_out: body.check_out,
-              room_type_id: room.room_type_id,
-            }
-          );
+        const getAllAvailableRoomsWithType = await this.Model.reservationModel(
+          trx
+        ).getAllAvailableRoomsTypeWithAvailableRoomCount({
+          hotel_code,
+          check_in: body.check_in,
+          check_out: body.check_out,
+          room_type_id: room.room_type_id,
+        });
 
         if (
           room.guests.length > getAllAvailableRoomsWithType[0].available_rooms
@@ -409,6 +408,7 @@ export class ReservationService extends AbstractServices {
         sub_total,
         total_amount,
         is_checked_in: body.is_checked_in,
+        total_nights,
       });
 
       // Rooms
@@ -442,8 +442,33 @@ export class ReservationService extends AbstractServices {
   }
 
   public async getAllBooking(req: Request) {
+    const {
+      search,
+      booked_from,
+      booked_to,
+      booking_type,
+      checkin_from,
+      checkin_to,
+      checkout_from,
+      checkout_to,
+      limit,
+      skip,
+      status,
+    } = req.query;
+
     const { data, total } = await this.Model.reservationModel().getAllBooking({
       hotel_code: req.hotel_admin.hotel_code,
+      search: search as string,
+      booked_from: booked_from as string,
+      booked_to: booked_to as string,
+      booking_type: booking_type as string,
+      checkin_from: checkin_from as string,
+      checkin_to: checkin_to as string,
+      checkout_from: checkout_from as string,
+      checkout_to: checkout_to as string,
+      limit: limit as string,
+      skip: skip as string,
+      status: status as string,
     });
 
     return {
@@ -743,7 +768,7 @@ export class ReservationService extends AbstractServices {
             }
           );
 
-        if (!available.length || total_rooms > available[0].available_rooms) {
+        if (available.length && total_rooms > available[0].available_rooms) {
           return {
             success: false,
             code: this.StatusCode.HTTP_NOT_FOUND,
@@ -761,16 +786,18 @@ export class ReservationService extends AbstractServices {
         { vat, service_charge, discount: discount_amount }
       );
 
+      console.log({ total_amount, sub_total, booking_id, hotel_code });
+
       // Update booking totals
       await reservationModel.updateRoomBooking(
-        { total_amount, sub_total },
+        { total_amount, sub_total, total_nights },
         hotel_code,
         booking_id
       );
 
       // Update booking rooms
       const roomIDs = booking_rooms.map((room) => room.room_id);
-      await reservationModel.deleteBookingRooms(hotel_code, roomIDs);
+      await reservationModel.deleteBookingRooms(roomIDs);
       await sub.insertInBookingRoomsBySingleBookingRooms(
         booking_rooms,
         booking_id,
@@ -837,7 +864,6 @@ export class ReservationService extends AbstractServices {
       // Insert new charge entry
       await invoiceModel.insertInFolioEntries({
         debit: total_amount,
-        credit: 0,
         folio_id,
         posting_type: "Charge",
         description: "New room charge after date change",
@@ -1164,6 +1190,75 @@ export class ReservationService extends AbstractServices {
         success: true,
         code: this.StatusCode.HTTP_OK,
         message: "Payment has been refunded",
+      };
+    });
+  }
+
+  public async adjustAmountByFolioID(req: Request) {
+    return await this.db.transaction(async (trx) => {
+      const { amount, folio_id, remarks } = req.body as addPaymentReqBody;
+
+      const invModel = this.Model.hotelInvoiceModel(trx);
+      const checkSingleFolio =
+        await invModel.getSingleFoliobyHotelCodeAndFolioID(
+          req.hotel_admin.hotel_code,
+          folio_id
+        );
+
+      if (!checkSingleFolio) {
+        return {
+          success: false,
+          code: this.StatusCode.HTTP_NOT_FOUND,
+          message: this.ResMsg.HTTP_NOT_FOUND,
+        };
+      }
+
+      await this.Model.hotelInvoiceModel().insertInFolioEntries({
+        debit: -amount,
+        credit: 0,
+        folio_id: folio_id,
+        posting_type: "Adjustment",
+        description: remarks,
+      });
+
+      return {
+        success: true,
+        code: this.StatusCode.HTTP_OK,
+        message: this.ResMsg.HTTP_OK,
+      };
+    });
+  }
+
+  public async addItemByFolioID(req: Request) {
+    return await this.db.transaction(async (trx) => {
+      const { amount, folio_id, remarks } = req.body as addPaymentReqBody;
+
+      const invModel = this.Model.hotelInvoiceModel(trx);
+      const checkSingleFolio =
+        await invModel.getSingleFoliobyHotelCodeAndFolioID(
+          req.hotel_admin.hotel_code,
+          folio_id
+        );
+
+      if (!checkSingleFolio) {
+        return {
+          success: false,
+          code: this.StatusCode.HTTP_NOT_FOUND,
+          message: this.ResMsg.HTTP_NOT_FOUND,
+        };
+      }
+
+      await this.Model.hotelInvoiceModel().insertInFolioEntries({
+        debit: amount,
+        folio_id: folio_id,
+        posting_type: "Charge",
+        description: remarks,
+      });
+
+      return {
+        success: true,
+        code: this.StatusCode.HTTP_OK,
+        message: this.ResMsg.HTTP_OK,
       };
     });
   }

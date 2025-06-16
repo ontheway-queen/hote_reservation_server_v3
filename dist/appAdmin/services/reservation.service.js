@@ -300,7 +300,7 @@ class ReservationService extends abstract_service_1.default {
                 const total_nights = sub.calculateNights(body.check_in, body.check_out);
                 // check room type available or not
                 body.rooms.forEach((room) => __awaiter(this, void 0, void 0, function* () {
-                    const getAllAvailableRoomsWithType = yield this.Model.reservationModel().getAllAvailableRoomsTypeWithAvailableRoomCount({
+                    const getAllAvailableRoomsWithType = yield this.Model.reservationModel(trx).getAllAvailableRoomsTypeWithAvailableRoomCount({
                         hotel_code,
                         check_in: body.check_in,
                         check_out: body.check_out,
@@ -346,6 +346,7 @@ class ReservationService extends abstract_service_1.default {
                     sub_total,
                     total_amount,
                     is_checked_in: body.is_checked_in,
+                    total_nights,
                 });
                 // Rooms
                 yield sub.insertBookingRooms(body.rooms, booking.id, total_nights);
@@ -363,8 +364,20 @@ class ReservationService extends abstract_service_1.default {
     }
     getAllBooking(req) {
         return __awaiter(this, void 0, void 0, function* () {
+            const { search, booked_from, booked_to, booking_type, checkin_from, checkin_to, checkout_from, checkout_to, limit, skip, status, } = req.query;
             const { data, total } = yield this.Model.reservationModel().getAllBooking({
                 hotel_code: req.hotel_admin.hotel_code,
+                search: search,
+                booked_from: booked_from,
+                booked_to: booked_to,
+                booking_type: booking_type,
+                checkin_from: checkin_from,
+                checkin_to: checkin_to,
+                checkout_from: checkout_from,
+                checkout_to: checkout_to,
+                limit: limit,
+                skip: skip,
+                status: status,
             });
             return {
                 success: true,
@@ -606,7 +619,7 @@ class ReservationService extends abstract_service_1.default {
                         check_out,
                         room_type_id,
                     });
-                    if (!available.length || total_rooms > available[0].available_rooms) {
+                    if (available.length && total_rooms > available[0].available_rooms) {
                         return {
                             success: false,
                             code: this.StatusCode.HTTP_NOT_FOUND,
@@ -618,11 +631,12 @@ class ReservationService extends abstract_service_1.default {
                 const sub = new subreservation_service_1.SubReservationService(trx);
                 const total_nights = sub.calculateNights(check_in, check_out);
                 const { total_amount, sub_total } = sub.calculateTotalsByBookingRooms(booking_rooms, total_nights, { vat, service_charge, discount: discount_amount });
+                console.log({ total_amount, sub_total, booking_id, hotel_code });
                 // Update booking totals
-                yield reservationModel.updateRoomBooking({ total_amount, sub_total }, hotel_code, booking_id);
+                yield reservationModel.updateRoomBooking({ total_amount, sub_total, total_nights }, hotel_code, booking_id);
                 // Update booking rooms
                 const roomIDs = booking_rooms.map((room) => room.room_id);
-                yield reservationModel.deleteBookingRooms(hotel_code, roomIDs);
+                yield reservationModel.deleteBookingRooms(roomIDs);
                 yield sub.insertInBookingRoomsBySingleBookingRooms(booking_rooms, booking_id, total_nights);
                 // Update room availability
                 yield sub.updateRoomAvailabilityService("booked_room_decrease", booking_rooms, prev_checkin, prev_checkout, hotel_code);
@@ -663,7 +677,6 @@ class ReservationService extends abstract_service_1.default {
                 // Insert new charge entry
                 yield invoiceModel.insertInFolioEntries({
                     debit: total_amount,
-                    credit: 0,
                     folio_id,
                     posting_type: "Charge",
                     description: "New room charge after date change",
@@ -898,6 +911,61 @@ class ReservationService extends abstract_service_1.default {
                     success: true,
                     code: this.StatusCode.HTTP_OK,
                     message: "Payment has been refunded",
+                };
+            }));
+        });
+    }
+    adjustAmountByFolioID(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
+                const { amount, folio_id, remarks } = req.body;
+                const invModel = this.Model.hotelInvoiceModel(trx);
+                const checkSingleFolio = yield invModel.getSingleFoliobyHotelCodeAndFolioID(req.hotel_admin.hotel_code, folio_id);
+                if (!checkSingleFolio) {
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_NOT_FOUND,
+                        message: this.ResMsg.HTTP_NOT_FOUND,
+                    };
+                }
+                yield this.Model.hotelInvoiceModel().insertInFolioEntries({
+                    debit: -amount,
+                    credit: 0,
+                    folio_id: folio_id,
+                    posting_type: "Adjustment",
+                    description: remarks,
+                });
+                return {
+                    success: true,
+                    code: this.StatusCode.HTTP_OK,
+                    message: this.ResMsg.HTTP_OK,
+                };
+            }));
+        });
+    }
+    addItemByFolioID(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
+                const { amount, folio_id, remarks } = req.body;
+                const invModel = this.Model.hotelInvoiceModel(trx);
+                const checkSingleFolio = yield invModel.getSingleFoliobyHotelCodeAndFolioID(req.hotel_admin.hotel_code, folio_id);
+                if (!checkSingleFolio) {
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_NOT_FOUND,
+                        message: this.ResMsg.HTTP_NOT_FOUND,
+                    };
+                }
+                yield this.Model.hotelInvoiceModel().insertInFolioEntries({
+                    debit: amount,
+                    folio_id: folio_id,
+                    posting_type: "Charge",
+                    description: remarks,
+                });
+                return {
+                    success: true,
+                    code: this.StatusCode.HTTP_OK,
+                    message: this.ResMsg.HTTP_OK,
                 };
             }));
         });

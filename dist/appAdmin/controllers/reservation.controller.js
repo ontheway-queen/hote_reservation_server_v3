@@ -117,8 +117,20 @@ class ReservationController extends abstract_controller_1.default {
             const _r = yield this.service.refundPaymentByFolioID(req), { code } = _r, data = __rest(_r, ["code"]);
             res.status(code).json(data);
         }));
+        this.adjustAmountByFolioID = this.asyncWrapper.wrap({
+            bodySchema: this.validator.adjustBalance,
+        }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _s = yield this.service.adjustAmountByFolioID(req), { code } = _s, data = __rest(_s, ["code"]);
+            res.status(code).json(data);
+        }));
+        this.addItemByFolioID = this.asyncWrapper.wrap({
+            bodySchema: this.validator.addItemByFolioID,
+        }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _t = yield this.service.addItemByFolioID(req), { code } = _t, data = __rest(_t, ["code"]);
+            res.status(code).json(data);
+        }));
         this.getFolioEntriesbyFolioID = this.asyncWrapper.wrap({ paramSchema: this.commonValidator.singleParamValidator() }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _s = yield this.service.getFolioEntriesbyFolioID(req), { code } = _s, data = __rest(_s, ["code"]);
+            const _u = yield this.service.getFolioEntriesbyFolioID(req), { code } = _u, data = __rest(_u, ["code"]);
             res.status(code).json(data);
         }));
     }

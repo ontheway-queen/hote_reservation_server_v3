@@ -121,6 +121,19 @@ class InvoiceService extends abstract_service_1.default {
             };
         });
     }
+    getSingleBookingRoomsInvoice(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const data = yield this.Model.hotelInvoiceModel().getSingleFolioInvoice({
+                inv_id: parseInt(req.params.id),
+                hotel_code: req.hotel_admin.hotel_code,
+            });
+            return {
+                success: true,
+                code: this.StatusCode.HTTP_OK,
+                data,
+            };
+        });
+    }
 }
 exports.InvoiceService = InvoiceService;
 exports.default = InvoiceService;

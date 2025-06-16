@@ -49,6 +49,10 @@ class ReservationRouter {
         this.router
             .route("/refund-payment")
             .post(this.controller.refundPaymentByFolioID);
+        this.router
+            .route("/adjust-balance")
+            .post(this.controller.adjustAmountByFolioID);
+        this.router.route("/add-item").post(this.controller.addItemByFolioID);
         this.router.route("/checkin/by/booking/:id").patch(this.controller.checkIn);
         this.router
             .route("/checkout/by/booking/:id")
