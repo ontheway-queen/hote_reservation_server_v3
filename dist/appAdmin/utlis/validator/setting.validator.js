@@ -14,6 +14,7 @@ class SettingValidator {
             area: joi_1.default.number().required(),
             room_info: joi_1.default.string().required(),
             rt_amenities: joi_1.default.string().required(),
+            bed_count: joi_1.default.number().optional(),
             beds: joi_1.default.alternatives()
                 .try(joi_1.default.array().items(joi_1.default.object({
                 bed_type_id: joi_1.default.number().required(),

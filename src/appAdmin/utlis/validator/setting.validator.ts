@@ -9,6 +9,7 @@ class SettingValidator {
     area: Joi.number().required(),
     room_info: Joi.string().required(),
     rt_amenities: Joi.string().required(),
+    bed_count: Joi.number().optional(),
     beds: Joi.alternatives()
       .try(
         Joi.array().items(
