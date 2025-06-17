@@ -81,7 +81,13 @@ class MConfigurationModel extends Schema {
     skip?: number;
     search?: string;
   }) {
-    return await this.db("country")
+    const dtbs = this.db("country");
+
+    if (limit && skip) {
+      dtbs.limit(limit);
+      dtbs.offset(skip);
+    }
+    return await dtbs
       .withSchema(this.PUBLIC_SCHEMA)
       .select("*")
       .where((query) => {
@@ -90,9 +96,7 @@ class MConfigurationModel extends Schema {
             .where("country_code_2_letter", "ilike", `%${search}%`)
             .orWhere("country_name", "ilike", `${search}`);
         }
-      })
-      .limit(limit || 30)
-      .offset(skip || 0);
+      });
   }
 
   // create permission group

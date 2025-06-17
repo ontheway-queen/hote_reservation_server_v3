@@ -14,6 +14,12 @@ export const origin: string[] = [
   "http://10.10.220.49:3002",
   "http://localhost:5173",
   "http://10.10.220.48:4173",
+  "https://admin-v3.hotel360.world",
+  "https://www.admin-v3.hotel360.world",
+  "https://v3.hotel360.world",
+  "https://www.v3.hotel360.world",
+  "https://hotel360.world",
+  "https://www.hotel360.world",
 ];
 
 export const allStrings = [

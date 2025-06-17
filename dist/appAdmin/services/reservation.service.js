@@ -798,6 +798,7 @@ class ReservationService extends abstract_service_1.default {
                     // update
                     yield this.Model.reservationModel().updateRoomBooking({
                         booking_type: "B",
+                        status: "confirmed",
                     }, hotel_code, booking_id);
                     // Availability
                     yield sub.updateRoomAvailabilityForHoldService("hold_decrease", booking_rooms, check_in, check_out, hotel_code);
@@ -805,6 +806,11 @@ class ReservationService extends abstract_service_1.default {
                     // update room availability
                 }
                 else if (reservation_type_status == "canceled") {
+                    // update
+                    yield this.Model.reservationModel().updateRoomBooking({
+                        booking_type: "H",
+                        status: "canceled",
+                    }, hotel_code, booking_id);
                     // Availability
                     yield sub.updateRoomAvailabilityForHoldService("hold_decrease", booking_rooms, check_in, check_out, hotel_code);
                 }

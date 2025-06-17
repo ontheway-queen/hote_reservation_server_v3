@@ -14,6 +14,7 @@ pipeline {
                 sh '''
                     echo "PM2 found, restarting all apps..."
                     pm2 restart all --update-env
+                    pm2 status
                 '''
             }
         }

@@ -1031,6 +1031,7 @@ export class ReservationService extends AbstractServices {
         await this.Model.reservationModel().updateRoomBooking(
           {
             booking_type: "B",
+            status: "confirmed",
           },
           hotel_code,
           booking_id
@@ -1054,6 +1055,16 @@ export class ReservationService extends AbstractServices {
 
         // update room availability
       } else if (reservation_type_status == "canceled") {
+        // update
+        await this.Model.reservationModel().updateRoomBooking(
+          {
+            booking_type: "H",
+            status: "canceled",
+          },
+          hotel_code,
+          booking_id
+        );
+
         // Availability
         await sub.updateRoomAvailabilityForHoldService(
           "hold_decrease",

@@ -431,8 +431,8 @@ export class ReservationModel extends Schema {
 
   public async updateRoomBooking(
     payload: {
-      status?: "checked_in" | "checked_out";
-      booking_type?: "B" | "C";
+      status?: "checked_in" | "checked_out" | "confirmed" | "canceled";
+      booking_type?: "B" | "C" | "H";
       total_amount?: number;
       sub_total?: number;
       total_nights?: number;
