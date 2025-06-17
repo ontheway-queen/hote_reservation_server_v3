@@ -6,7 +6,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const joi_1 = __importDefault(require("joi"));
 class MHotelValidator {
     constructor() {
-        // create hotel input validator
         this.createHotelValidator = joi_1.default.object({
             hotel_name: joi_1.default.string().required(),
             hotel_email: joi_1.default.string()
@@ -18,6 +17,9 @@ class MHotelValidator {
             description: joi_1.default.string().allow("").optional(),
             accommodation_type_id: joi_1.default.number().required(),
             chain_name: joi_1.default.string().allow("").optional(),
+            website_url: joi_1.default.string().allow("").optional(),
+            phone: joi_1.default.string().allow("").optional(),
+            fax: joi_1.default.string().allow("").optional(),
             latitude: joi_1.default.string().required(),
             longitude: joi_1.default.string().required(),
             star_category: joi_1.default.number().integer().required(),
@@ -30,19 +32,38 @@ class MHotelValidator {
             password: joi_1.default.string().trim().regex(/^\S/).required(),
             permission: joi_1.default.string().lowercase().optional(),
         });
-        // update hotel input validator
         this.updateHotelValidator = joi_1.default.object({
             name: joi_1.default.string().optional(),
             expiry_date: joi_1.default.date().optional(),
+            status: joi_1.default.bool().optional(),
+            hotel_email: joi_1.default.string()
+                .email()
+                .lowercase()
+                .trim()
+                .regex(/^\S/)
+                .optional(),
+            description: joi_1.default.string().allow("").optional(),
+            accommodation_type_id: joi_1.default.number().optional(),
+            chain_name: joi_1.default.string().allow("").optional(),
+            latitude: joi_1.default.string().allow("").optional(),
+            longitude: joi_1.default.string().allow("").optional(),
+            star_category: joi_1.default.number().integer().optional(),
+            postal_code: joi_1.default.number().allow().optional(),
+            address: joi_1.default.string().allow("").optional(),
+            city_code: joi_1.default.number().optional(),
+            country_code: joi_1.default.string().optional(),
+            website_url: joi_1.default.string().allow("").optional(),
+            phone: joi_1.default.string().allow("").optional(),
+            fax: joi_1.default.string().allow("").optional(),
+            remove_hotel_images: joi_1.default.array().items(joi_1.default.number().required()).optional(),
         });
-        // get all hotel validator
         this.getAllHotelValidator = joi_1.default.object({
             name: joi_1.default.string().optional(),
+            limit: joi_1.default.string().optional(),
+            skip: joi_1.default.string().optional(),
             group: joi_1.default.string().optional(),
             city: joi_1.default.string().optional(),
-            status: joi_1.default.string()
-                .valid("active", "inactive", "blocked", "expired")
-                .optional(),
+            status: joi_1.default.string().optional(),
             from_date: joi_1.default.date().optional(),
             to_date: joi_1.default.date().optional(),
         });

@@ -8,6 +8,17 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __rest = (this && this.__rest) || function (s, e) {
+    var t = {};
+    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
+        t[p] = s[p];
+    if (s != null && typeof Object.getOwnPropertySymbols === "function")
+        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
+            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
+                t[p[i]] = s[p[i]];
+        }
+    return t;
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -24,7 +35,8 @@ class MHotelService extends abstract_service_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
                 var _a;
-                const { hotel_email, user_name, password, accommodation_type_id, hotel_name, address, chain_name, city_code, country_code, description, expiry_date, latitude, longitude, postal_code, star_category, } = req.body;
+                const { hotel_email, user_name, password, accommodation_type_id, hotel_name, address, chain_name, city_code, country_code, description, expiry_date, latitude, longitude, postal_code, star_category, fax, phone, website_url, } = req.body;
+                console.log(req.body);
                 const expiry = new Date(expiry_date);
                 if (expiry < new Date()) {
                     return {
@@ -92,15 +104,19 @@ class MHotelService extends abstract_service_1.default {
                     chain_name,
                     description,
                     postal_code,
+                    expiry_date,
                 });
                 // insert others info
-                yield model.insertHotelOtherInfo({
+                yield model.insertHotelContactDetails({
                     logo: logoFilename,
-                    expiry_date: expiry,
+                    email: hotel_email,
+                    fax,
+                    phone,
                     hotel_code,
+                    website_url,
                 });
-                // insert hotel images
-                yield model.insertHotelImages(hotelImages);
+                if (hotelImages.length)
+                    yield model.insertHotelImages(hotelImages);
                 // insert Role
                 const roleRes = yield administrationModel.createRole({
                     name: "super-admin",
@@ -124,22 +140,19 @@ class MHotelService extends abstract_service_1.default {
             }));
         });
     }
-    // get all hotel
     getAllHotel(req) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { status, from_date, to_date, name, limit, skip, group, city } = req.query;
+            const { status, from_date, to_date, key, limit, skip } = req.query;
             const model = this.Model.HotelModel();
             const endDate = new Date(to_date);
             endDate.setDate(endDate.getDate() + 1);
             const { data, total } = yield model.getAllHotel({
-                name: name,
+                name: key,
                 status: status,
                 from_date: from_date,
                 to_date: endDate,
                 limit: limit,
                 skip: skip,
-                group: group,
-                city: city,
             });
             return {
                 success: true,
@@ -149,7 +162,6 @@ class MHotelService extends abstract_service_1.default {
             };
         });
     }
-    // get single hotel
     getSingleHotel(req) {
         return __awaiter(this, void 0, void 0, function* () {
             const { id } = req.params;
@@ -193,38 +205,70 @@ class MHotelService extends abstract_service_1.default {
             };
         });
     }
-    // update hotel
     updateHotel(req) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
-                const body = req.body;
+                const _a = req.body, { fax, phone, website_url, hotel_email, remove_hotel_images, expiry_date } = _a, hotelData = __rest(_a, ["fax", "phone", "website_url", "hotel_email", "remove_hotel_images", "expiry_date"]);
                 const { id } = req.params;
-                if (body.expiry_date < new Date()) {
+                const parsedId = parseInt(id);
+                if (expiry_date && new Date(expiry_date) < new Date()) {
                     return {
                         success: false,
                         code: this.StatusCode.HTTP_UNPROCESSABLE_ENTITY,
-                        message: "Date expiry cannot shorter than present Date",
+                        message: "Expiry date cannot be earlier than today",
                     };
                 }
                 const files = req.files || [];
                 const model = this.Model.HotelModel(trx);
-                // check user
-                const checkUser = yield model.getSingleHotel({ email: body.email });
-                if (!checkUser.length) {
+                const existingHotel = yield model.getSingleHotel({
+                    email: hotel_email,
+                });
+                if (!existingHotel || existingHotel.length === 0) {
                     return {
                         success: false,
                         code: this.StatusCode.HTTP_NOT_FOUND,
                         message: this.ResMsg.HTTP_NOT_FOUND,
                     };
                 }
-                if (files.length) {
-                    body["logo"] = files[0].filename;
+                const { hotel_code } = existingHotel[0];
+                // Update hotel main data
+                yield model.updateHotel(Object.assign(Object.assign({}, hotelData), { expiry_date }), { id: parsedId });
+                // Process uploaded files
+                let logoFilename = "";
+                const hotelImages = [];
+                for (const file of files) {
+                    const { fieldname, filename } = file;
+                    if (fieldname === "logo") {
+                        logoFilename = filename;
+                    }
+                    else {
+                        hotelImages.push({
+                            hotel_code,
+                            image_url: filename,
+                            image_caption: undefined,
+                            main_image: fieldname === "main_image" ? "Y" : "N",
+                        });
+                    }
                 }
-                yield model.updateHotel(body, { id: parseInt(id) });
+                // Update contact info
+                yield model.updateHotelContactDetails({
+                    logo: logoFilename,
+                    email: hotel_email,
+                    fax,
+                    phone,
+                    website_url,
+                }, hotel_code);
+                if (hotelImages.length > 0) {
+                    yield model.insertHotelImages(hotelImages);
+                }
+                if (Array.isArray(remove_hotel_images) &&
+                    remove_hotel_images.length > 0) {
+                    yield model.deleteHotelImage(remove_hotel_images, hotel_code);
+                }
                 return {
                     success: true,
                     code: this.StatusCode.HTTP_OK,
-                    message: "User updated successfully",
+                    message: "Hotel updated successfully",
                 };
             }));
         });

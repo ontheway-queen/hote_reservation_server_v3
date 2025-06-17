@@ -103,4 +103,27 @@ export interface IhotelCreateRequestBodyPayload {
   country_code: string;
   expiry_date: Date;
   user_name: string;
+  fax: string;
+  phone: string;
+  website_url: string;
+}
+export interface IUpdateHoteReqBody {
+  name: string;
+  expiry_date: string | Date;
+  status: boolean;
+  hotel_email: string;
+  description: string;
+  accommodation_type_id: number;
+  chain_name: string;
+  latitude: string;
+  longitude: string;
+  star_category: number;
+  postal_code: number;
+  address: string;
+  city_code: number;
+  country_code: string;
+  website_url: string;
+  phone: string;
+  fax: string;
+  remove_hotel_images: number[];
 }

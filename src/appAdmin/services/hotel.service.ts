@@ -71,9 +71,9 @@ class HotelService extends AbstractServices {
     }
 
     // insert photo
-    if (hotelImages.length) {
-      await model.insertHotelImage(hotelImages);
-    }
+    // if (hotelImages.length) {
+    //   await model.insertHotelImage(hotelImages);
+    // }
 
     const rmv_photo = remove_photo ? JSON.parse(remove_photo) : [];
 

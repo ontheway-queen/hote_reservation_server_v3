@@ -31,7 +31,6 @@ class MHotelController extends abstract_controller_1.default {
         super();
         this.mUserService = new mHotel_service_1.default();
         this.mHotelValidator = new mHotel_validator_1.default();
-        // create hotel
         this.createHotel = this.asyncWrapper.wrap({ bodySchema: this.mHotelValidator.createHotelValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
             const _a = yield this.mUserService.createHotel(req), { code } = _a, data = __rest(_a, ["code"]);
             if (data.success) {
@@ -41,12 +40,10 @@ class MHotelController extends abstract_controller_1.default {
                 this.error(data.message, code);
             }
         }));
-        // get all hotel
-        this.getAllHotel = this.asyncWrapper.wrap({ querySchema: this.mHotelValidator.getAllHotelValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+        this.getAllHotel = this.asyncWrapper.wrap({}, (req, res) => __awaiter(this, void 0, void 0, function* () {
             const _b = yield this.mUserService.getAllHotel(req), { code } = _b, data = __rest(_b, ["code"]);
             res.status(code).json(data);
         }));
-        // get single hotel
         this.getSingleHotel = this.asyncWrapper.wrap({ paramSchema: this.commonValidator.singleParamValidator() }, (req, res) => __awaiter(this, void 0, void 0, function* () {
             const _c = yield this.mUserService.getSingleHotel(req), { code } = _c, data = __rest(_c, ["code"]);
             res.status(code).json(data);

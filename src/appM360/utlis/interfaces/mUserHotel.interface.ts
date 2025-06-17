@@ -15,12 +15,35 @@ export interface ICreateHotelPayload {
   latitude: string;
   longitude: string;
   country_code: string;
-}
-export interface IinsertHotelsOtherInfoPayload {
-  logo: string;
   expiry_date: Date;
+}
+
+export interface IUpdateHotelPayload {
+  name: string;
+  hotel_code: number;
+  description?: string;
+  accommodation_type_id: number;
+  accommodation_type_name: string;
+  address?: string;
+  postal_code?: string;
+  chain_name?: string;
+  star_category: number;
+  city_code: number;
+  latitude: string;
+  longitude: string;
+  country_code: string;
+  expiry_date: Date;
+}
+
+export interface IinsertHotelsCDPayload {
+  phone: string;
+  fax: string;
+  website_url: string;
+  email: string;
+  logo: string;
   hotel_code: number;
 }
+
 export interface ICreateHotelUserPayload {
   name: string;
   hotel_code: string;

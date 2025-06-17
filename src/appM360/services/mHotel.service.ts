@@ -3,8 +3,10 @@ import AbstractServices from "../../abstarcts/abstract.service";
 import { newHotelUserAccount } from "../../templates/mHotelUserCredentials.template";
 import Lib from "../../utils/lib/lib";
 import { OTP_FOR_CREDENTIALS } from "../../utils/miscellaneous/constants";
-import { IhotelPermissions } from "../utlis/interfaces/mConfiguration.interfaces.";
-import { IhotelCreateRequestBodyPayload } from "../utlis/interfaces/mHotel.common.interface";
+import {
+  IhotelCreateRequestBodyPayload,
+  IUpdateHoteReqBody,
+} from "../utlis/interfaces/mHotel.common.interface";
 
 class MHotelService extends AbstractServices {
   constructor() {
@@ -29,8 +31,12 @@ class MHotelService extends AbstractServices {
         longitude,
         postal_code,
         star_category,
+        fax,
+        phone,
+        website_url,
       } = req.body as IhotelCreateRequestBodyPayload;
 
+      console.log(req.body);
       const expiry = new Date(expiry_date);
       if (expiry < new Date()) {
         return {
@@ -122,17 +128,20 @@ class MHotelService extends AbstractServices {
         chain_name,
         description,
         postal_code,
+        expiry_date,
       });
 
       // insert others info
-      await model.insertHotelOtherInfo({
+      await model.insertHotelContactDetails({
         logo: logoFilename,
-        expiry_date: expiry,
+        email: hotel_email,
+        fax,
+        phone,
         hotel_code,
+        website_url,
       });
 
-      // insert hotel images
-      await model.insertHotelImages(hotelImages);
+      if (hotelImages.length) await model.insertHotelImages(hotelImages);
 
       // insert Role
       const roleRes = await administrationModel.createRole({
@@ -164,24 +173,20 @@ class MHotelService extends AbstractServices {
     });
   }
 
-  // get all hotel
   public async getAllHotel(req: Request) {
-    const { status, from_date, to_date, name, limit, skip, group, city } =
-      req.query;
+    const { status, from_date, to_date, key, limit, skip } = req.query;
     const model = this.Model.HotelModel();
 
     const endDate = new Date(to_date as string);
     endDate.setDate(endDate.getDate() + 1);
 
     const { data, total } = await model.getAllHotel({
-      name: name as string,
+      name: key as string,
       status: status as string,
       from_date: from_date as string,
       to_date: endDate as unknown as string,
       limit: limit as string,
       skip: skip as string,
-      group: group as string,
-      city: city as string,
     });
 
     return {
@@ -192,7 +197,6 @@ class MHotelService extends AbstractServices {
     };
   }
 
-  // get single hotel
   public async getSingleHotel(req: Request) {
     const { id } = req.params;
 
@@ -243,29 +247,37 @@ class MHotelService extends AbstractServices {
     };
   }
 
-  // update hotel
   public async updateHotel(req: Request) {
     return await this.db.transaction(async (trx) => {
-      const body = req.body;
+      const {
+        fax,
+        phone,
+        website_url,
+        hotel_email,
+        remove_hotel_images,
+        expiry_date,
+        ...hotelData
+      } = req.body as Partial<IUpdateHoteReqBody>;
 
       const { id } = req.params;
+      const parsedId = parseInt(id);
 
-      if (body.expiry_date < new Date()) {
+      if (expiry_date && new Date(expiry_date) < new Date()) {
         return {
           success: false,
           code: this.StatusCode.HTTP_UNPROCESSABLE_ENTITY,
-          message: "Date expiry cannot shorter than present Date",
+          message: "Expiry date cannot be earlier than today",
         };
       }
 
       const files = (req.files as Express.Multer.File[]) || [];
-
       const model = this.Model.HotelModel(trx);
 
-      // check user
-      const checkUser = await model.getSingleHotel({ email: body.email });
+      const existingHotel = await model.getSingleHotel({
+        email: hotel_email,
+      });
 
-      if (!checkUser.length) {
+      if (!existingHotel || existingHotel.length === 0) {
         return {
           success: false,
           code: this.StatusCode.HTTP_NOT_FOUND,
@@ -273,16 +285,61 @@ class MHotelService extends AbstractServices {
         };
       }
 
-      if (files.length) {
-        body["logo"] = files[0].filename;
+      const { hotel_code } = existingHotel[0];
+
+      // Update hotel main data
+      await model.updateHotel({ ...hotelData, expiry_date }, { id: parsedId });
+
+      // Process uploaded files
+      let logoFilename = "";
+      const hotelImages: {
+        hotel_code: number;
+        image_url: string;
+        image_caption?: string;
+        main_image: string;
+      }[] = [];
+
+      for (const file of files) {
+        const { fieldname, filename } = file;
+        if (fieldname === "logo") {
+          logoFilename = filename;
+        } else {
+          hotelImages.push({
+            hotel_code,
+            image_url: filename,
+            image_caption: undefined,
+            main_image: fieldname === "main_image" ? "Y" : "N",
+          });
+        }
       }
 
-      await model.updateHotel(body, { id: parseInt(id) });
+      // Update contact info
+      await model.updateHotelContactDetails(
+        {
+          logo: logoFilename,
+          email: hotel_email,
+          fax,
+          phone,
+          website_url,
+        },
+        hotel_code
+      );
+
+      if (hotelImages.length > 0) {
+        await model.insertHotelImages(hotelImages);
+      }
+
+      if (
+        Array.isArray(remove_hotel_images) &&
+        remove_hotel_images.length > 0
+      ) {
+        await model.deleteHotelImage(remove_hotel_images, hotel_code);
+      }
 
       return {
         success: true,
         code: this.StatusCode.HTTP_OK,
-        message: "User updated successfully",
+        message: "Hotel updated successfully",
       };
     });
   }
