@@ -330,7 +330,7 @@ class ReservationService extends abstract_service_1.default {
                         created_by: req.hotel_admin.id,
                         discount_amount: body.discount_amount,
                         drop: body.drop,
-                        booking_type: body.reservation_type == "confirm" ? "B" : "H",
+                        booking_type: body.reservation_type == "booked" ? "B" : "H",
                         drop_time: body.drop_time,
                         pickup_from: body.pickup_from,
                         pickup: body.pickup,
@@ -633,7 +633,7 @@ class ReservationService extends abstract_service_1.default {
                 const { total_amount, sub_total } = sub.calculateTotalsByBookingRooms(booking_rooms, total_nights, { vat, service_charge, discount: discount_amount });
                 console.log({ total_amount, sub_total, booking_id, hotel_code });
                 // Update booking totals
-                yield reservationModel.updateRoomBooking({ total_amount, sub_total, total_nights }, hotel_code, booking_id);
+                yield reservationModel.updateRoomBooking({ total_amount, sub_total, total_nights, check_out, check_in }, hotel_code, booking_id);
                 // Update booking rooms
                 const roomIDs = booking_rooms.map((room) => room.room_id);
                 yield reservationModel.deleteBookingRooms(roomIDs);
@@ -684,7 +684,7 @@ class ReservationService extends abstract_service_1.default {
                 return {
                     success: true,
                     code: this.StatusCode.HTTP_OK,
-                    message: this.ResMsg.HTTP_OK,
+                    message: "The dates of the reservation have been modified",
                 };
             }));
         });

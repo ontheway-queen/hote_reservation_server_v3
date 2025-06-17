@@ -29,7 +29,7 @@ class MHotelValidator {
   });
 
   public updateHotelValidator = Joi.object({
-    name: Joi.string().optional(),
+    hotel_name: Joi.string().optional(),
     expiry_date: Joi.date().optional(),
     status: Joi.bool().optional(),
     hotel_email: Joi.string()

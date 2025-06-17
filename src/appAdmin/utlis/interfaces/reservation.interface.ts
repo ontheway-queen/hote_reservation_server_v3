@@ -128,7 +128,7 @@ export interface IguestReqBody {
 }
 
 export interface BookingRequestBody {
-  reservation_type: "hold" | "confirm";
+  reservation_type: "hold" | "booked";
   check_in: string;
   is_checked_in: boolean;
   check_out: string;

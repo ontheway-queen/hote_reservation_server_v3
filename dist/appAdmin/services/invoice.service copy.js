@@ -40,7 +40,6 @@ class InvoiceService extends abstract_service_1.default {
                     booking_id,
                     entry_ids: entryIDs,
                 });
-                console.log({ checkFolioEntries });
                 if (checkFolioEntries.length !== entryIDs.length) {
                     return {
                         success: false,
@@ -122,32 +121,6 @@ class InvoiceService extends abstract_service_1.default {
             };
         });
     }
-    deleteSingleFolioInvoice(req) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const invModel = this.Model.hotelInvoiceModel();
-            const inv_id = parseInt(req.params.id);
-            const data = yield invModel.getSingleFolioInvoice({
-                inv_id,
-                hotel_code: req.hotel_admin.hotel_code,
-            });
-            if (!data) {
-                return {
-                    success: false,
-                    code: this.StatusCode.HTTP_NOT_FOUND,
-                    message: this.ResMsg.HTTP_NOT_FOUND,
-                };
-            }
-            const { inv_items } = data;
-            const entryIds = inv_items.map((item) => item.folio_entry_id);
-            yield invModel.updateFolioEntries({ invoiced: false }, entryIds);
-            yield invModel.updateFolioInvoice({ is_void: true }, inv_id);
-            return {
-                success: true,
-                code: this.StatusCode.HTTP_OK,
-                message: "The invoice has been voided",
-            };
-        });
-    }
     getSingleBookingRoomsInvoice(req) {
         return __awaiter(this, void 0, void 0, function* () {
             const data = yield this.Model.hotelInvoiceModel().getSingleFolioInvoice({
@@ -164,4 +137,4 @@ class InvoiceService extends abstract_service_1.default {
 }
 exports.InvoiceService = InvoiceService;
 exports.default = InvoiceService;
-//# sourceMappingURL=invoice.service.js.map
+//# sourceMappingURL=invoice.service%20copy.js.map

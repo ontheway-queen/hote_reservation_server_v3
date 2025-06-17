@@ -83,10 +83,11 @@ class HotelInvoiceModel extends schema_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("invoices as inv")
                 .withSchema(this.RESERVATION_SCHEMA)
-                .select("inv.id", "inv.invoice_number", "inv.invoice_date", "inv.status", "inv.notes")
+                .select("inv.id", "inv.invoice_number", "inv.invoice_date", "inv.status", "inv.notes", "inv.is_void")
                 .leftJoin("invoice_folios as if", "inv.id", "if.invoice_id")
                 .where("inv.hotel_code", hotel_code)
                 .andWhere("if.booking_id", booking_id)
+                .andWhere("inv.is_void", false)
                 .groupBy("inv.id");
         });
     }
@@ -99,6 +100,7 @@ class HotelInvoiceModel extends schema_1.default {
           SELECT JSON_AGG(
             JSON_BUILD_OBJECT(
               'id', fi.id,
+              'folio_entry_id',fi.folio_entry_id,
               'description', fi.description,
               'type', fi.type,
               'debit', fi.debit,
@@ -152,6 +154,14 @@ class HotelInvoiceModel extends schema_1.default {
                 .first();
         });
     }
+    updateFolioInvoice(payload, inv_id) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("invoices")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .update(payload)
+                .where("id", inv_id);
+        });
+    }
     insertInFolioInvoiceItems(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("invoice_folio_items")
@@ -195,8 +205,10 @@ class HotelInvoiceModel extends schema_1.default {
                 .withSchema(this.RESERVATION_SCHEMA)
                 .select("f.id", "f.name", this.db.raw(`(SELECT JSON_AGG(JSON_BUILD_OBJECT('entries_id',fe.id,'description',fe.description,'posting_type',fe.posting_type,'debit',fe.debit,'credit',fe.credit,'created_at',fe.created_at,'is_void',fe.is_void,'invoiced',fe.invoiced)) as folio_entries)`))
                 .leftJoin("folio_entries as fe", "f.id", "fe.folio_id")
-                .where("booking_id", booking_id)
-                .andWhere("hotel_code", hotel_code)
+                .where("f.booking_id", booking_id)
+                .andWhere("fe.is_void", false)
+                .andWhere("fe.invoiced", false)
+                .andWhere("f.hotel_code", hotel_code)
                 .andWhere(function () {
                 if (entry_ids === null || entry_ids === void 0 ? void 0 : entry_ids.length) {
                     this.whereIn("fe.id", entry_ids);
@@ -234,6 +246,7 @@ class HotelInvoiceModel extends schema_1.default {
                 .leftJoin("folio_entries as fe", "f.id", "fe.folio_id")
                 .where("booking_id", booking_id)
                 .andWhere("hotel_code", hotel_code)
+                .andWhere("fe.is_void", false)
                 .andWhere(function () {
                 if (entry_ids === null || entry_ids === void 0 ? void 0 : entry_ids.length) {
                     this.whereIn("fe.id", entry_ids);

@@ -1,10 +1,10 @@
 export interface IinsertFolioPayload {
   hotel_code: number;
-  guest_id: number;
+  guest_id?: number;
   name: string;
   booking_id: number;
   folio_number: string;
-  type: "Primary" | "Split" | "Company";
+  type: "Primary" | "Split" | "Company" | "Custom";
   status: "open" | "closed";
 }
 
@@ -93,77 +93,20 @@ export interface IinsertMoneyRecieptItem {
   paid?: number;
 }
 
-export interface IinsertRoomBookinginvoicePayload {
-  invoice_no: string;
-  hotel_code: number;
-  room_booking_id: number;
-  user_id: number;
-  discount_amount: number;
-  tax_amount?: number;
-  sub_total: number;
-  grand_total: number;
-  due: number;
+type FolioInvoiceItem = {
+  id: number;
+  folio_entry_id: number;
   description: string;
-  type: "online_site" | "front_desk";
-  created_by: number;
-}
+  type: string;
+  debit: number;
+  credit: number;
+};
 
-export interface IinsertRoomBookingSubinvoicePayload {
-  inv_id: number;
-  room_booking_id: number;
-}
-
-export interface IinsertRoomBookingSubinvoiceItemPayload {
-  sub_inv_id: number;
-  room_id?: number;
-  name: string;
-  total_price?: number;
-  quantity?: number;
-}
-
-export interface updateRoomBookingSubinvoicePayload {
-  inv_id: number;
-  room_booking_id: number;
-}
-
-export interface updateRoomBookingSubinvoiceItemPayload {
-  sub_inv_id: number;
-  room_id: number;
-  name: string;
-  total_price: number;
-  quantity?: number;
-}
-
-export interface IinsertHallBookingSubinvoicePayload {
-  inv_id: number;
-  hall_booking_id: number;
-}
-
-export interface IinsertHallBookingSubinvoiceItemPayload {
-  sub_inv_id: number;
-  hall_id: number;
-  name: string;
-  total_price: number;
-  quantity?: number;
-}
-
-export interface updateHallBookingSubinvoicePayload {
-  inv_id: number;
-  hall_booking_id: number;
-}
-
-export interface updateHallBookingSubinvoiceItemPayload {
-  sub_inv_id: number;
-  hall_id: number;
-  name: string;
-  total_price: number;
-  quantity?: number;
-}
-
-export interface updateSingleInvoice {
-  discount_amount: number;
-  tax_amount: number;
-  sub_total: number;
-  grand_total: number;
-  due: number;
-}
+export type ISingleFolioInvoice = {
+  id: number;
+  invoice_number: string;
+  invoice_date: string;
+  status: string;
+  notes: string | null;
+  inv_items: FolioInvoiceItem[];
+};

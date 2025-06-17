@@ -12,7 +12,7 @@ class ReservationValidator {
             check_out: joi_1.default.date().required(),
         });
         this.createBookingValidator = joi_1.default.object({
-            reservation_type: joi_1.default.string().valid("hold", "confirm").required(),
+            reservation_type: joi_1.default.string().valid("hold", "booked").required(),
             is_checked_in: joi_1.default.bool().required(),
             check_in: joi_1.default.date().iso().required(),
             check_out: joi_1.default.date().iso().required(),

@@ -436,6 +436,8 @@ export class ReservationModel extends Schema {
       total_amount?: number;
       sub_total?: number;
       total_nights?: number;
+      check_in?: number;
+      check_out?: number;
     },
     hotel_code: number,
     booking_id: number

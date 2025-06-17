@@ -392,7 +392,7 @@ export class ReservationService extends AbstractServices {
           created_by: req.hotel_admin.id,
           discount_amount: body.discount_amount,
           drop: body.drop,
-          booking_type: body.reservation_type == "confirm" ? "B" : "H",
+          booking_type: body.reservation_type == "booked" ? "B" : "H",
           drop_time: body.drop_time,
           pickup_from: body.pickup_from,
           pickup: body.pickup,
@@ -790,7 +790,7 @@ export class ReservationService extends AbstractServices {
 
       // Update booking totals
       await reservationModel.updateRoomBooking(
-        { total_amount, sub_total, total_nights },
+        { total_amount, sub_total, total_nights, check_out, check_in },
         hotel_code,
         booking_id
       );
@@ -872,7 +872,7 @@ export class ReservationService extends AbstractServices {
       return {
         success: true,
         code: this.StatusCode.HTTP_OK,
-        message: this.ResMsg.HTTP_OK,
+        message: "The dates of the reservation have been modified",
       };
     });
   }

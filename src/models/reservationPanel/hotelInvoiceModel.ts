@@ -1,6 +1,7 @@
 import {
   IinsertFolioEntriesPayload,
   IinsertFolioPayload,
+  ISingleFolioInvoice,
 } from "../../appAdmin/utlis/interfaces/invoice.interface";
 import { TDB } from "../../common/types/commontypes";
 import Schema from "../../utils/miscellaneous/schema";
@@ -101,11 +102,13 @@ class HotelInvoiceModel extends Schema {
         "inv.invoice_number",
         "inv.invoice_date",
         "inv.status",
-        "inv.notes"
+        "inv.notes",
+        "inv.is_void"
       )
       .leftJoin("invoice_folios as if", "inv.id", "if.invoice_id")
       .where("inv.hotel_code", hotel_code)
       .andWhere("if.booking_id", booking_id)
+      .andWhere("inv.is_void", false)
       .groupBy("inv.id");
   }
 
@@ -115,7 +118,7 @@ class HotelInvoiceModel extends Schema {
   }: {
     hotel_code: number;
     inv_id: number;
-  }) {
+  }): Promise<ISingleFolioInvoice> {
     return await this.db("invoices as inv")
       .withSchema(this.RESERVATION_SCHEMA)
       .select(
@@ -130,6 +133,7 @@ class HotelInvoiceModel extends Schema {
           SELECT JSON_AGG(
             JSON_BUILD_OBJECT(
               'id', fi.id,
+              'folio_entry_id',fi.folio_entry_id,
               'description', fi.description,
               'type', fi.type,
               'debit', fi.debit,
@@ -199,6 +203,16 @@ class HotelInvoiceModel extends Schema {
       .where("inv.hotel_code", hotel_code)
       .andWhere("inv.id", inv_id)
       .first();
+  }
+
+  public async updateFolioInvoice(
+    payload: { is_void?: boolean },
+    inv_id: number
+  ) {
+    return await this.db("invoices")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .update(payload)
+      .where("id", inv_id);
   }
 
   public async insertInFolioInvoiceItems(
@@ -272,8 +286,11 @@ class HotelInvoiceModel extends Schema {
         )
       )
       .leftJoin("folio_entries as fe", "f.id", "fe.folio_id")
-      .where("booking_id", booking_id)
-      .andWhere("hotel_code", hotel_code)
+
+      .where("f.booking_id", booking_id)
+      .andWhere("fe.is_void", false)
+      .andWhere("fe.invoiced", false)
+      .andWhere("f.hotel_code", hotel_code)
       .andWhere(function () {
         if (entry_ids?.length) {
           this.whereIn("fe.id", entry_ids);
@@ -359,6 +376,7 @@ class HotelInvoiceModel extends Schema {
       .leftJoin("folio_entries as fe", "f.id", "fe.folio_id")
       .where("booking_id", booking_id)
       .andWhere("hotel_code", hotel_code)
+      .andWhere("fe.is_void", false)
       .andWhere(function () {
         if (entry_ids?.length) {
           this.whereIn("fe.id", entry_ids);

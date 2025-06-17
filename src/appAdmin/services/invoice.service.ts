@@ -36,6 +36,8 @@ export class InvoiceService extends AbstractServices {
           entry_ids: entryIDs,
         });
 
+      console.log({ checkFolioEntries });
+
       if (checkFolioEntries.length !== entryIDs.length) {
         return {
           success: false,
@@ -139,6 +141,38 @@ export class InvoiceService extends AbstractServices {
       success: true,
       code: this.StatusCode.HTTP_OK,
       data,
+    };
+  }
+
+  public async deleteSingleFolioInvoice(req: Request) {
+    const invModel = this.Model.hotelInvoiceModel();
+
+    const inv_id = parseInt(req.params.id);
+    const data = await invModel.getSingleFolioInvoice({
+      inv_id,
+      hotel_code: req.hotel_admin.hotel_code,
+    });
+
+    if (!data) {
+      return {
+        success: false,
+        code: this.StatusCode.HTTP_NOT_FOUND,
+        message: this.ResMsg.HTTP_NOT_FOUND,
+      };
+    }
+
+    const { inv_items } = data;
+
+    const entryIds = inv_items.map((item) => item.folio_entry_id);
+
+    await invModel.updateFolioEntries({ invoiced: false }, entryIds);
+
+    await invModel.updateFolioInvoice({ is_void: true }, inv_id);
+
+    return {
+      success: true,
+      code: this.StatusCode.HTTP_OK,
+      message: "The invoice has been voided",
     };
   }
 

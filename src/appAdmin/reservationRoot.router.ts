@@ -13,6 +13,7 @@ import { ReservationRouter } from "./routers/reservation.router";
 import RoomGuestRouter from "./routers/room.guest.router";
 import RoomRouter from "./routers/room.router";
 import SettingRouter from "./routers/setting.router";
+import FolioRouter from "./routers/folio.router";
 
 export class ReservationRootRouter {
   public router = Router();
@@ -57,6 +58,12 @@ export class ReservationRootRouter {
       "/account",
       this.authChecker.hotelAdminAuthChecker,
       new AccountRouter().router
+    );
+
+    this.router.use(
+      "/folio",
+      this.authChecker.hotelAdminAuthChecker,
+      new FolioRouter().router
     );
 
     this.router.use(

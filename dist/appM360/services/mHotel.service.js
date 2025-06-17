@@ -208,7 +208,8 @@ class MHotelService extends abstract_service_1.default {
     updateHotel(req) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
-                const _a = req.body, { fax, phone, website_url, hotel_email, remove_hotel_images, expiry_date } = _a, hotelData = __rest(_a, ["fax", "phone", "website_url", "hotel_email", "remove_hotel_images", "expiry_date"]);
+                const _a = req.body, { fax, phone, website_url, hotel_email, remove_hotel_images, expiry_date, hotel_name } = _a, hotelData = __rest(_a, ["fax", "phone", "website_url", "hotel_email", "remove_hotel_images", "expiry_date", "hotel_name"]);
+                console.log(req.body, "request body");
                 const { id } = req.params;
                 const parsedId = parseInt(id);
                 if (expiry_date && new Date(expiry_date) < new Date()) {
@@ -221,7 +222,7 @@ class MHotelService extends abstract_service_1.default {
                 const files = req.files || [];
                 const model = this.Model.HotelModel(trx);
                 const existingHotel = yield model.getSingleHotel({
-                    email: hotel_email,
+                    id: parsedId,
                 });
                 if (!existingHotel || existingHotel.length === 0) {
                     return {
@@ -231,8 +232,10 @@ class MHotelService extends abstract_service_1.default {
                     };
                 }
                 const { hotel_code } = existingHotel[0];
-                // Update hotel main data
-                yield model.updateHotel(Object.assign(Object.assign({}, hotelData), { expiry_date }), { id: parsedId });
+                const filteredUpdateData = Object.fromEntries(Object.entries(Object.assign(Object.assign({}, hotelData), { expiry_date, name: hotel_name })).filter(([_, value]) => value !== undefined));
+                if (Object.keys(filteredUpdateData).length > 0) {
+                    yield model.updateHotel(filteredUpdateData, { id: parsedId });
+                }
                 // Process uploaded files
                 let logoFilename = "";
                 const hotelImages = [];
@@ -250,14 +253,14 @@ class MHotelService extends abstract_service_1.default {
                         });
                     }
                 }
-                // Update contact info
-                yield model.updateHotelContactDetails({
-                    logo: logoFilename,
-                    email: hotel_email,
-                    fax,
-                    phone,
-                    website_url,
-                }, hotel_code);
+                if (logoFilename || hotel_email || fax || phone || website_url)
+                    yield model.updateHotelContactDetails({
+                        logo: logoFilename,
+                        email: hotel_email,
+                        fax,
+                        phone,
+                        website_url,
+                    }, hotel_code);
                 if (hotelImages.length > 0) {
                     yield model.insertHotelImages(hotelImages);
                 }

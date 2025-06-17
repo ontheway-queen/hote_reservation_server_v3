@@ -108,7 +108,7 @@ export interface IhotelCreateRequestBodyPayload {
   website_url: string;
 }
 export interface IUpdateHoteReqBody {
-  name: string;
+  hotel_name: string;
   expiry_date: string | Date;
   status: boolean;
   hotel_email: string;

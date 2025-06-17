@@ -256,8 +256,11 @@ class MHotelService extends AbstractServices {
         hotel_email,
         remove_hotel_images,
         expiry_date,
+        hotel_name,
         ...hotelData
       } = req.body as Partial<IUpdateHoteReqBody>;
+
+      console.log(req.body, "request body");
 
       const { id } = req.params;
       const parsedId = parseInt(id);
@@ -274,7 +277,7 @@ class MHotelService extends AbstractServices {
       const model = this.Model.HotelModel(trx);
 
       const existingHotel = await model.getSingleHotel({
-        email: hotel_email,
+        id: parsedId,
       });
 
       if (!existingHotel || existingHotel.length === 0) {
@@ -287,8 +290,18 @@ class MHotelService extends AbstractServices {
 
       const { hotel_code } = existingHotel[0];
 
-      // Update hotel main data
-      await model.updateHotel({ ...hotelData, expiry_date }, { id: parsedId });
+      const filteredUpdateData: Partial<IUpdateHoteReqBody> =
+        Object.fromEntries(
+          Object.entries({
+            ...hotelData,
+            expiry_date,
+            name: hotel_name,
+          }).filter(([_, value]) => value !== undefined)
+        );
+
+      if (Object.keys(filteredUpdateData).length > 0) {
+        await model.updateHotel(filteredUpdateData, { id: parsedId });
+      }
 
       // Process uploaded files
       let logoFilename = "";
@@ -313,17 +326,17 @@ class MHotelService extends AbstractServices {
         }
       }
 
-      // Update contact info
-      await model.updateHotelContactDetails(
-        {
-          logo: logoFilename,
-          email: hotel_email,
-          fax,
-          phone,
-          website_url,
-        },
-        hotel_code
-      );
+      if (logoFilename || hotel_email || fax || phone || website_url)
+        await model.updateHotelContactDetails(
+          {
+            logo: logoFilename,
+            email: hotel_email,
+            fax,
+            phone,
+            website_url,
+          },
+          hotel_code
+        );
 
       if (hotelImages.length > 0) {
         await model.insertHotelImages(hotelImages);

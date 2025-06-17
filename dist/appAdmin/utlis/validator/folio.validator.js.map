@@ -1,0 +1,1 @@
+{"version":3,"file":"folio.validator.js","sourceRoot":"","sources":["../../../../src/appAdmin/utlis/validator/folio.validator.ts"],"names":[],"mappings":";;;;;;AAAA,8CAAsB;AACtB,MAAa,cAAc;IAA3B;QACS,gBAAW,GAAG,aAAG,CAAC,MAAM,CAAC;YAC9B,UAAU,EAAE,aAAG,CAAC,MAAM,EAAE,CAAC,QAAQ,EAAE;YACnC,IAAI,EAAE,aAAG,CAAC,MAAM,EAAE,CAAC,QAAQ,EAAE;SAC9B,CAAC,CAAC;IACL,CAAC;CAAA;AALD,wCAKC"}

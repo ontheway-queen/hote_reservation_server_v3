@@ -40,12 +40,26 @@ class InvoiceController extends AbstractController {
     }
   );
 
+  public deleteSingleFolioInvoice = this.asyncWrapper.wrap(
+    {
+      paramSchema: this.commonValidator.singleParamValidator(),
+    },
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.deleteSingleFolioInvoice(
+        req
+      );
+      res.status(code).json(data);
+    }
+  );
+
   public getSingleBookingRoomsInvoice = this.asyncWrapper.wrap(
     {
       paramSchema: this.commonValidator.singleParamValidator(),
     },
     async (req: Request, res: Response) => {
-      const { code, ...data } = await this.service.getSingleFolioInvoice(req);
+      const { code, ...data } = await this.service.getSingleBookingRoomsInvoice(
+        req
+      );
       res.status(code).json(data);
     }
   );
