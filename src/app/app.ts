@@ -37,7 +37,7 @@ class App {
   // init routers
   private initRouters() {
     this.app.get("/", (_req: Request, res: Response) => {
-      res.send(`Arabs Reservation server is running...🚀`);
+      res.send(`Reservation server is running...🚀`);
     });
     this.app.use("/api/v1", new RootRouter().v1Router);
   }
