@@ -218,7 +218,7 @@ export class SubReservationService extends AbstractServices {
   }
 
   async updateAvailabilityWhenRoomBooking(
-    reservation_type: string,
+    reservation_type: "booked" | "hold",
     rooms: RoomRequest[],
     checkIn: string,
     checkOut: string,
@@ -234,7 +234,7 @@ export class SubReservationService extends AbstractServices {
 
     for (const { room_type_id, total_room } of reservedRoom) {
       for (const date of dates) {
-        if (reservation_type === "confirm") {
+        if (reservation_type === "booked") {
           await reservation_model.updateRoomAvailability({
             type: "booked_room_increase",
             hotel_code,

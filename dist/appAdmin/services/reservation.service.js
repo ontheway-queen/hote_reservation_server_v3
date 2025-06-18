@@ -777,6 +777,7 @@ class ReservationService extends abstract_service_1.default {
                 const hotel_code = req.hotel_admin.hotel_code;
                 const booking_id = parseInt(req.params.id);
                 const { status: reservation_type_status } = req.body;
+                console.log(req.body, "hold body");
                 const sub = new subreservation_service_1.SubReservationService(trx);
                 const data = yield this.Model.reservationModel().getSingleBooking(hotel_code, booking_id);
                 if (!data) {

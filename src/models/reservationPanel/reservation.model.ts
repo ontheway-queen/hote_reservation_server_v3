@@ -62,8 +62,14 @@ export class ReservationModel extends Schema {
                     FROM ?? AS br2
                     JOIN ?? AS b ON br2.booking_id = b.id
                     JOIN ?? AS g ON b.guest_id = g.id
-                    WHERE br2.room_id = r.id
-                    AND b.status !='checked_out'
+WHERE br2.room_id = r.id
+AND (
+  (b.booking_type = 'B' AND b.status NOT IN ('checked_out', 'pending', 'canceled', 'rejected'))
+  OR
+  (b.booking_type = 'H' AND b.status != 'canceled')
+)
+
+
                       AND b.check_in <= ?
                       AND b.check_out >= ?
                       AND b.status != ?
@@ -187,7 +193,22 @@ export class ReservationModel extends Schema {
           .from(`${schema}.bookings as b`)
           .join(`${schema}.booking_rooms as br`, "br.booking_id", "b.id")
           .whereRaw("br.room_id = r.id")
-          .andWhere("b.status", "confirmed")
+          .andWhere(function () {
+            this.where(function () {
+              this.where("b.booking_type", "B").whereNotIn("b.status", [
+                "checked_out",
+                "pending",
+                "canceled",
+                "rejected",
+              ]);
+            }).orWhere(function () {
+              this.where("b.booking_type", "H").where(
+                "b.status",
+                "!=",
+                "canceled"
+              );
+            });
+          })
           .andWhere("b.check_in", "<", check_out)
           .andWhere("b.check_out", ">", check_in);
       });

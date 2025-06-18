@@ -1001,6 +1001,7 @@ export class ReservationService extends AbstractServices {
 
       const { status: reservation_type_status } = req.body;
 
+      console.log(req.body, "hold body");
       const sub = new SubReservationService(trx);
 
       const data = await this.Model.reservationModel().getSingleBooking(

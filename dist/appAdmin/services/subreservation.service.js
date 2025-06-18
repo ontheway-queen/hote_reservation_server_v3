@@ -164,7 +164,7 @@ class SubReservationService extends abstract_service_1.default {
             }));
             for (const { room_type_id, total_room } of reservedRoom) {
                 for (const date of dates) {
-                    if (reservation_type === "confirm") {
+                    if (reservation_type === "booked") {
                         yield reservation_model.updateRoomAvailability({
                             type: "booked_room_increase",
                             hotel_code,
