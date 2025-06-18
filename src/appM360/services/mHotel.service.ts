@@ -147,16 +147,17 @@ class MHotelService extends AbstractServices {
       const roleRes = await administrationModel.createRole({
         name: "super-admin",
         hotel_code,
+        init_role: true,
       });
 
       // insert user admin
-      await administrationModel.insertUserAdmin({
+      await administrationModel.createAdmin({
         email: hotel_email,
         name: user_name,
         password: hashPass,
         role: roleRes[0].id,
         hotel_code,
-        init_creds: true,
+        owner: true,
       });
 
       await Lib.sendEmail(

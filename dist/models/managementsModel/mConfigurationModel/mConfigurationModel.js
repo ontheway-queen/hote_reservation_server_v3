@@ -115,38 +115,19 @@ class MConfigurationModel extends schema_1.default {
         });
     }
     // create permission
-    createPermission({ permission_group_id, name, created_by, }) {
+    createPermission(payload) {
         return __awaiter(this, void 0, void 0, function* () {
-            const insertObj = name.map((item) => {
-                return {
-                    permission_group_id,
-                    name: item,
-                    created_by,
-                };
-            });
-            return yield this.db("permission")
+            return yield this.db("permissions")
                 .withSchema(this.RESERVATION_SCHEMA)
-                .insert(insertObj);
-        });
-    }
-    // get all permission
-    getAllPermissionByHotel(hotel_code) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const res = yield this.db("hotel_permission_view")
-                .withSchema(this.RESERVATION_SCHEMA)
-                .select("*")
-                .where({ hotel_code });
-            return res;
+                .insert(payload);
         });
     }
     // get all permission
     getAllPermission() {
         return __awaiter(this, void 0, void 0, function* () {
-            const res = yield this.db("permission AS p")
+            return yield this.db("permissions")
                 .withSchema(this.RESERVATION_SCHEMA)
-                .select("p.id AS permission_id", "p.name As permission_name", "p.permission_group_id", "pg.name AS permission_group_name")
-                .join("permission_group AS pg", "p.permission_group_id", "pg.id");
-            return res;
+                .select("*");
         });
     }
     // added hotel permission

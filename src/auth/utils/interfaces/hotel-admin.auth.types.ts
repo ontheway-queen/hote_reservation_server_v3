@@ -19,7 +19,7 @@ export interface ICreateUserAdminPayload {
   phone?: string;
   role: number;
   password: string;
-  init_creds: boolean;
+  owner: boolean;
 }
 
 export interface IUpdateAdminPayload {

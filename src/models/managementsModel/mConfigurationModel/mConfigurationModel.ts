@@ -128,50 +128,17 @@ class MConfigurationModel extends Schema {
   }
 
   // create permission
-  public async createPermission({
-    permission_group_id,
-    name,
-    created_by,
-  }: {
-    permission_group_id: number;
-    name: string[];
-    created_by: number;
-  }) {
-    const insertObj = name.map((item: string) => {
-      return {
-        permission_group_id,
-        name: item,
-        created_by,
-      };
-    });
-
-    return await this.db("permission")
+  public async createPermission(payload: { name: string; created_by: number }) {
+    return await this.db("permissions")
       .withSchema(this.RESERVATION_SCHEMA)
-      .insert(insertObj);
-  }
-
-  // get all permission
-  public async getAllPermissionByHotel(hotel_code?: number) {
-    const res = await this.db("hotel_permission_view")
-      .withSchema(this.RESERVATION_SCHEMA)
-      .select("*")
-      .where({ hotel_code });
-
-    return res;
+      .insert(payload);
   }
 
   // get all permission
   public async getAllPermission() {
-    const res = await this.db("permission AS p")
+    return await this.db("permissions")
       .withSchema(this.RESERVATION_SCHEMA)
-      .select(
-        "p.id AS permission_id",
-        "p.name As permission_name",
-        "p.permission_group_id",
-        "pg.name AS permission_group_name"
-      )
-      .join("permission_group AS pg", "p.permission_group_id", "pg.id");
-    return res;
+      .select("*");
   }
 
   // added hotel permission

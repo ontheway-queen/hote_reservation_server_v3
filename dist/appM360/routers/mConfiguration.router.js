@@ -21,6 +21,10 @@ class MConfigurationRouter extends abstract_router_1.default {
             .get(this.controller.getAllCity)
             .post(this.controller.insertCity);
         this.router.route("/country").get(this.controller.getAllCountry);
+        this.router
+            .route("/permission")
+            .get(this.controller.getAllPermission)
+            .post(this.controller.createPermission);
         //------------------------------ Room type amenities ------------------------------//
         //create and get room amenities amenities head
         this.router

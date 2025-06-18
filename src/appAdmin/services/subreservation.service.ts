@@ -392,6 +392,7 @@ export class SubReservationService extends AbstractServices {
       credit: 0,
       folio_id: folio.id,
       posting_type: "Charge",
+      description: "room booking",
     });
 
     if (is_payment_given) {
@@ -406,6 +407,7 @@ export class SubReservationService extends AbstractServices {
         credit: payment.amount,
         folio_id: folio.id,
         posting_type: "Payment",
+        description: "Payment given",
       });
     }
 

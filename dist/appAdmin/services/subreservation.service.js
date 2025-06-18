@@ -290,6 +290,7 @@ class SubReservationService extends abstract_service_1.default {
                 credit: 0,
                 folio_id: folio.id,
                 posting_type: "Charge",
+                description: "room booking",
             });
             if (is_payment_given) {
                 if (!payment)
@@ -300,6 +301,7 @@ class SubReservationService extends abstract_service_1.default {
                     credit: payment.amount,
                     folio_id: folio.id,
                     posting_type: "Payment",
+                    description: "Payment given",
                 });
             }
             const guestModel = this.Model.guestModel(this.trx);

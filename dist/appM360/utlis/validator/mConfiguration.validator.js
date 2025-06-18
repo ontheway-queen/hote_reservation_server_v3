@@ -6,32 +6,22 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const joi_1 = __importDefault(require("joi"));
 class MConfigurationValidator {
     constructor() {
-        // insert city validator
         this.insertCityValidator = joi_1.default.object({
             city_name: joi_1.default.string().required(),
             country_code: joi_1.default.string().required().length(2),
         });
-        // create permission group validator
-        this.createPermissionGroupValidator = joi_1.default.object({
-            name: joi_1.default.string().required(),
-        });
-        // get all admin query validator
         this.getAllAdminQueryValidator = joi_1.default.object({
             limit: joi_1.default.number().optional(),
             skip: joi_1.default.number().optional(),
             status: joi_1.default.string().valid("active", "blocked").optional(),
         });
-        // create permission validator
         this.createPermissionValidator = joi_1.default.object({
-            permission_group_id: joi_1.default.number().required(),
-            name: joi_1.default.array().items(joi_1.default.string()).required(),
+            name: joi_1.default.string().required(),
         });
-        // update permission validator
         this.updatePermissionValidator = joi_1.default.object({
             added: joi_1.default.array().items(joi_1.default.number().required()).optional(),
             deleted: joi_1.default.array().items(joi_1.default.number().required()).optional(),
         });
-        // Define Joi schema for permissions
         this.permissionSchema = joi_1.default.object({
             permission_id: joi_1.default.number().required(),
             permission_type: joi_1.default.string()

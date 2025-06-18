@@ -1,37 +1,26 @@
 import Joi from "joi";
 
 class MConfigurationValidator {
-  // insert city validator
   public insertCityValidator = Joi.object({
     city_name: Joi.string().required(),
     country_code: Joi.string().required().length(2),
   });
 
-  // create permission group validator
-  public createPermissionGroupValidator = Joi.object({
-    name: Joi.string().required(),
-  });
-
-  // get all admin query validator
   public getAllAdminQueryValidator = Joi.object({
     limit: Joi.number().optional(),
     skip: Joi.number().optional(),
     status: Joi.string().valid("active", "blocked").optional(),
   });
 
-  // create permission validator
   public createPermissionValidator = Joi.object({
-    permission_group_id: Joi.number().required(),
-    name: Joi.array().items(Joi.string()).required(),
+    name: Joi.string().required(),
   });
 
-  // update permission validator
   public updatePermissionValidator = Joi.object({
     added: Joi.array().items(Joi.number().required()).optional(),
     deleted: Joi.array().items(Joi.number().required()).optional(),
   });
 
-  // Define Joi schema for permissions
   permissionSchema = Joi.object({
     permission_id: Joi.number().required(),
     permission_type: Joi.string()

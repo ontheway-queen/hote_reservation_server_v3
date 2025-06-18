@@ -121,15 +121,16 @@ class MHotelService extends abstract_service_1.default {
                 const roleRes = yield administrationModel.createRole({
                     name: "super-admin",
                     hotel_code,
+                    init_role: true,
                 });
                 // insert user admin
-                yield administrationModel.insertUserAdmin({
+                yield administrationModel.createAdmin({
                     email: hotel_email,
                     name: user_name,
                     password: hashPass,
                     role: roleRes[0].id,
                     hotel_code,
-                    init_creds: true,
+                    owner: true,
                 });
                 yield lib_1.default.sendEmail(hotel_email, constants_1.OTP_FOR_CREDENTIALS, (0, mHotelUserCredentials_template_1.newHotelUserAccount)(hotel_email, password, hotel_name));
                 return {

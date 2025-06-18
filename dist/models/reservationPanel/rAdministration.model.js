@@ -18,7 +18,6 @@ class RAdministrationModel extends schema_1.default {
         super();
         this.db = db;
     }
-    // create module
     rolePermissionGroup(body) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("permission_group")
@@ -26,7 +25,6 @@ class RAdministrationModel extends schema_1.default {
                 .insert(body);
         });
     }
-    // get permission group
     getRolePermissionGroup() {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("permission_group")
@@ -34,7 +32,24 @@ class RAdministrationModel extends schema_1.default {
                 .select("id", "name");
         });
     }
-    // create permission
+    updateRole({ name, status }, id) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("roles")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .update({ name, status })
+                .where({ id });
+        });
+    }
+    // update role permission
+    updateRolePermission(payload, permission_id, role_id) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("role_permissions")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .update(payload)
+                .where("role_id", role_id)
+                .andWhere("permission_id", permission_id);
+        });
+    }
     createPermission({ permission_group_id, name, created_by, hotel_code, }) {
         return __awaiter(this, void 0, void 0, function* () {
             const insertObj = name.map((item) => {
@@ -50,50 +65,36 @@ class RAdministrationModel extends schema_1.default {
                 .insert(insertObj);
         });
     }
-    // create hotel permission
-    addedHotelPermission(payload) {
+    permissionsList(params) {
+        var _a;
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("hotel_permission")
+            const data = yield this.db("permissions as per")
                 .withSchema(this.RESERVATION_SCHEMA)
-                .insert(payload);
-        });
-    }
-    // get all hotel permission
-    getAllHotelPermission(payload) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const { hotel_code, ids } = payload;
-            console.log({ ids, hotel_code });
-            return yield this.db("hotel_permission")
-                .withSchema(this.RESERVATION_SCHEMA)
-                .select("id", "hotel_code", "permission_id")
-                .where(function () {
-                if (ids === null || ids === void 0 ? void 0 : ids.length) {
-                    this.whereIn("id", ids);
-                }
-                if (hotel_code) {
-                    this.where({ hotel_code });
+                .select("per.id as permission_id", "per.name as permission_name", "per.create_date")
+                .limit(params.limit ? params.limit : 100)
+                .offset(params.skip ? params.skip : 0)
+                .orderBy("per.id", "asc")
+                .where((qb) => {
+                if (params.name) {
+                    qb.where("per.name", params.name);
                 }
             });
-        });
-    }
-    // v2 get all hotel permission code
-    getAllHotelPermissions(payload) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const { hotel_code } = payload;
-            return yield this.db("hotel_permission_view")
+            let count = [];
+            count = yield this.db("permissions")
                 .withSchema(this.RESERVATION_SCHEMA)
-                .select("hotel_code", "permissions")
-                .where(function () {
-                if (hotel_code) {
-                    this.where({ hotel_code });
+                .count("id as total")
+                .where((qb) => {
+                if (params.name) {
+                    qb.where("name", params.name);
                 }
             });
+            return { data, total: (_a = count[0]) === null || _a === void 0 ? void 0 : _a.total };
         });
     }
     // create role permission
     createRolePermission(insertObj) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("role_permission")
+            return yield this.db("role_permissions")
                 .withSchema(this.RESERVATION_SCHEMA)
                 .insert(insertObj);
         });
@@ -110,7 +111,6 @@ class RAdministrationModel extends schema_1.default {
             return res;
         });
     }
-    // create role
     createRole(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("roles")
@@ -119,29 +119,81 @@ class RAdministrationModel extends schema_1.default {
         });
     }
     // get role
-    getAllRole(hotel_code) {
+    roleList({ hotel_code, limit, skip, search, }) {
+        var _a;
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("role")
+            const data = yield this.db("roles as rl")
                 .withSchema(this.RESERVATION_SCHEMA)
-                .select("*")
-                .where({ hotel_code });
+                .select("rl.id as role_id", "rl.name as role_name", "ua.name as created_by", "rl.created_at", "rl.init_role")
+                .leftJoin("user_admin as ua", "ua.id", "rl.created_by")
+                .where("rl.hotel_code", hotel_code)
+                .andWhere(function () {
+                if (search) {
+                    this.andWhere("rl.name", "ilike", `%${search}%`);
+                }
+            })
+                .limit(limit ? limit : 100)
+                .offset(skip ? skip : 0)
+                .orderBy("rl.id", "asc");
+            const count = yield this.db("roles as rl")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .count("rl.id as total")
+                .where("rl.hotel_code", hotel_code)
+                .andWhere(function () {
+                if (search) {
+                    this.andWhere("rl.name", "ilike", `%${search}%`);
+                }
+            });
+            return { data, total: (_a = count[0]) === null || _a === void 0 ? void 0 : _a.total };
         });
     }
     // get single role
-    getSingleRole(id, hotel_code) {
+    getSingleRole({ id, name, permission_id, hotel_code, }) {
         return __awaiter(this, void 0, void 0, function* () {
-            const res = yield this.db("role_permission_view")
+            return yield this.db("roles as rol")
                 .withSchema(this.RESERVATION_SCHEMA)
-                .select("*")
-                .where("role_id", id)
-                .andWhere({ hotel_code });
-            return res;
+                .select("rol.id as role_id", "rol.name as role_name", "rol.status", "rol.init_role", this.db.raw(`
+      case when exists (
+        select 1
+        from ${this.RESERVATION_SCHEMA}.role_permissions rp
+        where rp.role_id = rol.id
+      ) then (
+        select json_agg(
+          json_build_object(
+            'permission_id', per.id,
+            'permission_name', per.name,
+            'read', rp.read,
+            'write', rp.write,
+            'update', rp.update,
+            'delete', rp.delete
+          )
+                order by per.name asc
+        )
+        from ${this.RESERVATION_SCHEMA}.role_permissions rp
+        left join ${this.RESERVATION_SCHEMA}.permissions per
+        on rp.permission_id = per.id
+        where rp.role_id = rol.id
+        group by rp.role_id
+      ) else '[]' end as permissions
+    `))
+                .where((qb) => {
+                if (id) {
+                    qb.where("rol.id", id);
+                }
+                qb.andWhere("rol.hotel_code", hotel_code);
+                if (name) {
+                    qb.where("rol.name", name);
+                }
+                if (permission_id) {
+                    qb.andWhere("per.id", permission_id);
+                }
+            });
         });
     }
     // update role
     updateSingleRole(id, body, hotel_code) {
         return __awaiter(this, void 0, void 0, function* () {
-            const res = yield this.db("role AS r")
+            const res = yield this.db("roles")
                 .withSchema(this.RESERVATION_SCHEMA)
                 .update(body)
                 .where({ id })
@@ -164,29 +216,12 @@ class RAdministrationModel extends schema_1.default {
             return res;
         });
     }
-    // get admins role permission
-    getAdminRolePermission(payload) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const { id, email } = payload;
-            console.log({ id });
-            return yield this.db("admin_permissions")
-                .withSchema(this.RESERVATION_SCHEMA)
-                .where(function () {
-                if (id) {
-                    this.where({ id });
-                }
-                else {
-                    this.where({ email });
-                }
-            });
-        });
-    }
     // insert user admin
-    insertUserAdmin(payload) {
+    createAdmin(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("user_admin")
                 .withSchema(this.RESERVATION_SCHEMA)
-                .insert(payload);
+                .insert(payload, "id");
         });
     }
     getSingleAdmin(where) {
@@ -206,7 +241,7 @@ class RAdministrationModel extends schema_1.default {
       `))
                 .join("hotels as h", "ua.hotel_code", "h.hotel_code")
                 .leftJoin("hotel_contact_details as hcd", "h.hotel_code", "hcd.hotel_code")
-                .leftJoin("roles as r", "ua.role", "r.id")
+                .leftJoin("roles as r", "ua.role_id", "r.id")
                 .modify(function (queryBuilder) {
                 if (id) {
                     queryBuilder.where("ua.id", id);
@@ -227,36 +262,63 @@ class RAdministrationModel extends schema_1.default {
                 .where({ email });
         });
     }
-    // get all admin
-    getAllAdmin(payload) {
+    //get all admin
+    getAllAdmin(filter) {
+        var _a;
         return __awaiter(this, void 0, void 0, function* () {
-            const { limit, skip, status, hotel_code } = payload;
-            const dtbs = this.db("user_admin AS ua");
-            if (limit && skip) {
-                dtbs.limit(parseInt(limit));
-                dtbs.offset(parseInt(skip));
-            }
-            const data = yield dtbs
+            const { limit, role_id, search, skip, status, hotel_code, owner } = filter;
+            const data = yield this.db("user_admin as ua")
                 .withSchema(this.RESERVATION_SCHEMA)
-                .select("ua.id", "ua.email", "ua.name", "ua.avatar", "ua.phone", "ua.status", "r.id As role_id", "r.name As role_name", "ua.created_at")
-                .leftJoin("role AS r", "ua.role", "r.id")
-                .where(function () {
-                if (status) {
-                    this.where("ua.status", status);
+                .select("ua.id", "ua.name", "ua.email", "ua.phone", "ua.photo", "rl.name as role", "rl.id as role_id", "ua.status", "ua.owner")
+                .leftJoin("roles as rl", "rl.id", "ua.role_id")
+                .where((qb) => {
+                if (search) {
+                    qb.where((qbc) => {
+                        qbc.where("ua.name", "ilike", `%${search}%`);
+                        qbc.orWhere("ua.email", "ilike", `%${search}%`);
+                    });
                 }
-                this.andWhere("ua.hotel_code", hotel_code);
-            });
-            const total = yield this.db("user_admin AS ua")
+                if (role_id) {
+                    qb.andWhere("rl.id", role_id);
+                }
+                qb.andWhere("ua.hotel_code", hotel_code);
+                if (status) {
+                    qb.andWhere("ua.status", status);
+                }
+                if (owner) {
+                    qb.andWhere("ua.owner", owner);
+                }
+            })
+                .orderBy("ua.name", "asc")
+                .limit(limit || 100)
+                .offset(skip || 0);
+            let total = [];
+            total = yield this.db("user_admin as ua")
                 .withSchema(this.RESERVATION_SCHEMA)
-                .count("ua.id As total")
-                .leftJoin("role AS r", "ua.role", "r.id")
-                .where(function () {
-                if (status) {
-                    this.where("ua.status", status);
+                .count("ua.id as total")
+                .leftJoin("roles as rl", "rl.id", "ua.role_id")
+                .where((qb) => {
+                if (search) {
+                    qb.where((qbc) => {
+                        qbc.where("ua.name", "ilike", `%${search}%`);
+                        qbc.orWhere("ua.email", "ilike", `%${search}%`);
+                    });
                 }
-                this.andWhere("ua.hotel_code", hotel_code);
+                if (role_id) {
+                    qb.andWhere("rl.id", role_id);
+                }
+                qb.andWhere("ua.hotel_code", hotel_code);
+                if (status) {
+                    qb.andWhere("ua.status", status);
+                }
+                if (owner) {
+                    qb.andWhere("ua.owner", owner);
+                }
             });
-            return { data, total: total[0].total };
+            return {
+                data: data,
+                total: (_a = total[0]) === null || _a === void 0 ? void 0 : _a.total,
+            };
         });
     }
     // update admin model
@@ -274,16 +336,6 @@ class RAdministrationModel extends schema_1.default {
                     this.andWhere({ id });
                 }
             });
-        });
-    }
-    // get admin by id
-    getAdminById(id) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("user_admin AS ua")
-                .withSchema(this.RESERVATION_SCHEMA)
-                .select("ua.id", "ua.email", "ua.password", "ua.name", "ua.avatar", "ua.phone", "ua.status", "r.id As roleId", "r.name As roleName", "ua.created_at")
-                .leftJoin("role AS r", "ua.role", "r.id")
-                .where("ua.id", id);
         });
     }
 }
