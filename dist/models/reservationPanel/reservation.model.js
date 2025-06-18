@@ -54,6 +54,7 @@ class ReservationModel extends schema_1.default {
                     JOIN ?? AS b ON br2.booking_id = b.id
                     JOIN ?? AS g ON b.guest_id = g.id
                     WHERE br2.room_id = r.id
+                    AND b.status !='checked_out'
                       AND b.check_in <= ?
                       AND b.check_out >= ?
                       AND b.status != ?
