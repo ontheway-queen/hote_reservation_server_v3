@@ -7,15 +7,32 @@ class ReportService extends AbstractServices {
   }
 
   public async getHotelStatistics(req: Request) {
-    const { total_room } = await this.Model.dashBoardModel().getHotelStatistics(
+    const { totalRooms } = await this.Model.dashBoardModel().getHotelStatistics(
       req.hotel_admin.hotel_code
     );
+    const { totalArrivals, totalDepartures, totalStays } =
+      await this.Model.dashBoardModel().getHotelStatisticsArrivalDepartureStays(
+        {
+          hotel_code: req.hotel_admin.hotel_code,
+          current_date: req.query.current_date as string,
+        }
+      );
+    const { totalActiveBookings, totalHoldBookings, totalOccupiedRoomsResult } =
+      await this.Model.dashBoardModel().getOccupiedRoomAndBookings({
+        hotel_code: req.hotel_admin.hotel_code,
+      });
 
     return {
       success: true,
       code: this.StatusCode.HTTP_OK,
       data: {
-        total_room,
+        totalRooms,
+        totalArrivals,
+        totalDepartures,
+        totalStays,
+        totalActiveBookings,
+        totalHoldBookings,
+        totalOccupiedRoomsResult,
       },
     };
   }

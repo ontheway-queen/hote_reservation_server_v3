@@ -330,7 +330,112 @@ class DashBoardModel extends Schema {
       .first();
 
     return {
-      total_room: roomCount?.total ? roomCount.total : 0,
+      totalRooms: roomCount?.total ? parseInt(roomCount.total as string) : 0,
+    };
+  }
+
+  public async getHotelStatisticsArrivalDepartureStays({
+    current_date,
+    hotel_code,
+  }: {
+    hotel_code: number;
+    current_date: string;
+  }) {
+    const totalArrivals = await this.db("bookings as b")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .select("b.id as total")
+      .leftJoin("guests as g", "b.guest_id", "g.id")
+      .where("b.hotel_code", hotel_code)
+      .andWhere("b.check_in", current_date)
+      .andWhere("b.status", "confirmed")
+      .first();
+
+    const totalDepartures = await this.db("bookings as b")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .select("b.id as total")
+      .leftJoin("guests as g", "b.guest_id", "g.id")
+      .where("b.hotel_code", hotel_code)
+      .andWhere("b.status", "checked_in")
+      .andWhere("b.check_out", current_date)
+      .first();
+
+    const totalStays = await this.db("bookings as b")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .count("b.id as total")
+      .where("b.hotel_code", hotel_code)
+      .andWhere(function () {
+        this.where("b.check_out", ">", current_date).andWhere(
+          "b.check_in",
+          "<=",
+          current_date
+        );
+      })
+      .andWhere("b.status", "checked_in")
+      .first();
+
+    return {
+      totalStays: totalStays ? Number(totalStays.total) : 0,
+      totalDepartures: totalDepartures ? Number(totalDepartures.total) : 0,
+      totalArrivals: totalArrivals ? Number(totalArrivals.total) : 0,
+    };
+  }
+
+  public async getOccupiedRoomAndBookings({
+    hotel_code,
+  }: {
+    hotel_code: number;
+  }) {
+    const totalOccupiedRoomsResult = await this.db("booking_rooms as br")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .count("br.id as totalrooms")
+      .join("bookings as b", "br.booking_id", "b.id")
+      .where("b.hotel_code", hotel_code)
+      .andWhere(function () {
+        this.where(function () {
+          this.where("b.booking_type", "B").andWhere("b.status", "confirmed");
+        })
+          .orWhere(function () {
+            this.where("b.booking_type", "B").andWhere(
+              "b.status",
+              "checked_in"
+            );
+          })
+          .orWhere(function () {
+            this.where("b.booking_type", "H").andWhere("b.status", "confirmed");
+          });
+      })
+      .first();
+
+    const totalActiveBookings = await this.db("bookings")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .count("id as total")
+      .where(function () {
+        this.where(function () {
+          this.where("booking_type", "B").andWhere("status", "confirmed");
+        }).orWhere(function () {
+          this.where("booking_type", "B").andWhere("status", "checked_in");
+        });
+      })
+      .first();
+
+    const totalHoldBookings = await this.db("bookings")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .count("id as total")
+      .where(function () {
+        this.where("booking_type", "H").andWhere("status", "confirmed");
+      })
+      .first();
+
+    return {
+      totalOccupiedRoomsResult: totalOccupiedRoomsResult
+        ? Number(totalOccupiedRoomsResult.totalrooms)
+        : 0,
+      totalActiveBookings: totalActiveBookings
+        ? Number(totalActiveBookings.total)
+        : 0,
+      totalHoldBookings: totalHoldBookings
+        ? Number(totalHoldBookings.total)
+        : 0,
     };
   }
 
@@ -495,6 +600,7 @@ class DashBoardModel extends Schema {
       )
       .where("rt.hotel_code", hotel_code);
   }
+
   public async getGuestDistributionCountryWise({
     hotel_code,
     limit,

@@ -287,7 +287,91 @@ class DashBoardModel extends schema_1.default {
                 .where({ hotel_code })
                 .first();
             return {
-                total_room: (roomCount === null || roomCount === void 0 ? void 0 : roomCount.total) ? roomCount.total : 0,
+                totalRooms: (roomCount === null || roomCount === void 0 ? void 0 : roomCount.total) ? parseInt(roomCount.total) : 0,
+            };
+        });
+    }
+    getHotelStatisticsArrivalDepartureStays({ current_date, hotel_code, }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const totalArrivals = yield this.db("bookings as b")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .select("b.id as total")
+                .leftJoin("guests as g", "b.guest_id", "g.id")
+                .where("b.hotel_code", hotel_code)
+                .andWhere("b.check_in", current_date)
+                .andWhere("b.status", "confirmed")
+                .first();
+            const totalDepartures = yield this.db("bookings as b")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .select("b.id as total")
+                .leftJoin("guests as g", "b.guest_id", "g.id")
+                .where("b.hotel_code", hotel_code)
+                .andWhere("b.status", "checked_in")
+                .andWhere("b.check_out", current_date)
+                .first();
+            const totalStays = yield this.db("bookings as b")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .count("b.id as total")
+                .where("b.hotel_code", hotel_code)
+                .andWhere(function () {
+                this.where("b.check_out", ">", current_date).andWhere("b.check_in", "<=", current_date);
+            })
+                .andWhere("b.status", "checked_in")
+                .first();
+            return {
+                totalStays: totalStays ? Number(totalStays.total) : 0,
+                totalDepartures: totalDepartures ? Number(totalDepartures.total) : 0,
+                totalArrivals: totalArrivals ? Number(totalArrivals.total) : 0,
+            };
+        });
+    }
+    getOccupiedRoomAndBookings({ hotel_code, }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const totalOccupiedRoomsResult = yield this.db("booking_rooms as br")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .count("br.id as totalrooms")
+                .join("bookings as b", "br.booking_id", "b.id")
+                .where("b.hotel_code", hotel_code)
+                .andWhere(function () {
+                this.where(function () {
+                    this.where("b.booking_type", "B").andWhere("b.status", "confirmed");
+                })
+                    .orWhere(function () {
+                    this.where("b.booking_type", "B").andWhere("b.status", "checked_in");
+                })
+                    .orWhere(function () {
+                    this.where("b.booking_type", "H").andWhere("b.status", "confirmed");
+                });
+            })
+                .first();
+            const totalActiveBookings = yield this.db("bookings")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .count("id as total")
+                .where(function () {
+                this.where(function () {
+                    this.where("booking_type", "B").andWhere("status", "confirmed");
+                }).orWhere(function () {
+                    this.where("booking_type", "B").andWhere("status", "checked_in");
+                });
+            })
+                .first();
+            const totalHoldBookings = yield this.db("bookings")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .count("id as total")
+                .where(function () {
+                this.where("booking_type", "H").andWhere("status", "confirmed");
+            })
+                .first();
+            return {
+                totalOccupiedRoomsResult: totalOccupiedRoomsResult
+                    ? Number(totalOccupiedRoomsResult.totalrooms)
+                    : 0,
+                totalActiveBookings: totalActiveBookings
+                    ? Number(totalActiveBookings.total)
+                    : 0,
+                totalHoldBookings: totalHoldBookings
+                    ? Number(totalHoldBookings.total)
+                    : 0,
             };
         });
     }

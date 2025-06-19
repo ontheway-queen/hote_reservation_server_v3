@@ -958,15 +958,13 @@ export class ReservationService extends AbstractServices {
         hotel_code,
       });
 
-      console.log({ checkDueAmount });
-
-      if (checkDueAmount > 0) {
-        return {
-          success: false,
-          code: this.StatusCode.HTTP_UNPROCESSABLE_ENTITY,
-          message: `This guest has ${checkDueAmount} due. So you cannot checkout`,
-        };
-      }
+      // if (checkDueAmount > 0) {
+      //   return {
+      //     success: false,
+      //     code: this.StatusCode.HTTP_UNPROCESSABLE_ENTITY,
+      //     message: `This guest has ${checkDueAmount} due. So you cannot checkout`,
+      //   };
+      // }
 
       // room avaibility decrease
       await sub.updateRoomAvailabilityService(

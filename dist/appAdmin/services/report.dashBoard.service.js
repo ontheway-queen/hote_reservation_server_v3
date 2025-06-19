@@ -19,12 +19,25 @@ class ReportService extends abstract_service_1.default {
     }
     getHotelStatistics(req) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { total_room } = yield this.Model.dashBoardModel().getHotelStatistics(req.hotel_admin.hotel_code);
+            const { totalRooms } = yield this.Model.dashBoardModel().getHotelStatistics(req.hotel_admin.hotel_code);
+            const { totalArrivals, totalDepartures, totalStays } = yield this.Model.dashBoardModel().getHotelStatisticsArrivalDepartureStays({
+                hotel_code: req.hotel_admin.hotel_code,
+                current_date: req.query.current_date,
+            });
+            const { totalActiveBookings, totalHoldBookings, totalOccupiedRoomsResult } = yield this.Model.dashBoardModel().getOccupiedRoomAndBookings({
+                hotel_code: req.hotel_admin.hotel_code,
+            });
             return {
                 success: true,
                 code: this.StatusCode.HTTP_OK,
                 data: {
-                    total_room,
+                    totalRooms,
+                    totalArrivals,
+                    totalDepartures,
+                    totalStays,
+                    totalActiveBookings,
+                    totalHoldBookings,
+                    totalOccupiedRoomsResult,
                 },
             };
         });
