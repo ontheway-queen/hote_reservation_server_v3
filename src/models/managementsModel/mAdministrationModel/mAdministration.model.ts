@@ -28,29 +28,6 @@ class MAdministrationModel extends Schema {
       .select("id", "name");
   }
 
-  // create permission
-  public async createPermission({
-    permission_group_id,
-    name,
-    created_by,
-  }: {
-    permission_group_id: number;
-    name: string[];
-    created_by: number;
-  }) {
-    const insertObj = name.map((item: string) => {
-      return {
-        permission_group_id,
-        name: item,
-        created_by,
-      };
-    });
-
-    return await this.db("permission")
-      .withSchema(this.M_SCHEMA)
-      .insert(insertObj);
-  }
-
   // get all permission
   public async getAllPermission(payload: {
     ids?: number[];
@@ -75,7 +52,7 @@ class MAdministrationModel extends Schema {
   }
 
   // create role permission
-  public async createRolePermission(insertObj: IcreateRolePermission[]) {
+  public async createRolePermission(insertObj: any[]) {
     const res = await this.db("role_permission")
       .withSchema(this.M_SCHEMA)
       .insert(insertObj);

@@ -106,6 +106,7 @@ export interface IhotelCreateRequestBodyPayload {
   fax: string;
   phone: string;
   website_url: string;
+  permission?: string;
 }
 export interface IUpdateHoteReqBody {
   hotel_name: string;

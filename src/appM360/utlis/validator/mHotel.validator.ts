@@ -52,6 +52,7 @@ class MHotelValidator {
     phone: Joi.string().allow("").optional(),
     fax: Joi.string().allow("").optional(),
     remove_hotel_images: Joi.array().items(Joi.number().required()).optional(),
+    permission: Joi.string().lowercase().optional(),
   });
 
   public getAllHotelValidator = Joi.object({

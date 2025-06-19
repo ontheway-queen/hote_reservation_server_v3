@@ -58,6 +58,26 @@ class MConfigurationController extends AbstractController {
     }
   );
 
+  public createPermissionGroup = this.asyncWrapper.wrap(
+    { bodySchema: this.validator.createPermissionGroupValidator },
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.createPermissionGroup(req);
+
+      res.status(code).json(data);
+    }
+  );
+
+  // get permission group
+  public getPermissionGroup = this.asyncWrapper.wrap(
+    null,
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.getPermissionGroup(req);
+
+      res.status(code).json(data);
+    }
+  );
+
+  // create permission
   public createPermission = this.asyncWrapper.wrap(
     { bodySchema: this.validator.createPermissionValidator },
     async (req: Request, res: Response) => {
@@ -67,6 +87,34 @@ class MConfigurationController extends AbstractController {
     }
   );
 
+  // get single hotel permission
+  public getSingleHotelPermission = this.asyncWrapper.wrap(
+    { paramSchema: this.commonValidator.singleParamValidator() },
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.getSingleHotelPermission(
+        req
+      );
+
+      res.status(code).json(data);
+    }
+  );
+
+  // update single hotel permission
+  public updateSingleHotelPermission = this.asyncWrapper.wrap(
+    {
+      paramSchema: this.commonValidator.singleParamValidator(),
+      bodySchema: this.validator.updatePermissionValidator,
+    },
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.updateSingleHotelPermission(
+        req
+      );
+
+      res.status(code).json(data);
+    }
+  );
+
+  // get all permission
   public getAllPermission = this.asyncWrapper.wrap(
     null,
     async (req: Request, res: Response) => {

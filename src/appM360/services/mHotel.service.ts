@@ -34,9 +34,9 @@ class MHotelService extends AbstractServices {
         fax,
         phone,
         website_url,
+        permission,
       } = req.body as IhotelCreateRequestBodyPayload;
 
-      console.log(req.body);
       const expiry = new Date(expiry_date);
       if (expiry < new Date()) {
         return {
@@ -143,6 +143,43 @@ class MHotelService extends AbstractServices {
 
       if (hotelImages.length) await model.insertHotelImages(hotelImages);
 
+      // ============ create hotel admin step ==============//
+
+      const configModel = this.Model.mConfigurationModel(trx);
+
+      let extractPermission;
+      let permissionRes: any[] = [];
+      if (permission) {
+        extractPermission = JSON.parse(permission);
+
+        // check all permission
+        const checkAllPermission = await configModel.getAllPermission({
+          ids: extractPermission,
+        });
+
+        if (checkAllPermission.length != extractPermission.length) {
+          return {
+            success: false,
+            code: this.StatusCode.HTTP_NOT_FOUND,
+            message: "Invalid Permissions",
+          };
+        }
+
+        const hotel_permission_payload = extractPermission.map(
+          (item: number) => {
+            return {
+              permission_id: item,
+              hotel_code,
+            };
+          }
+        );
+
+        // insert hotel permission
+        permissionRes = await configModel.addedHotelPermission(
+          hotel_permission_payload
+        );
+      }
+
       // insert Role
       const roleRes = await administrationModel.createRole({
         name: "super-admin",
@@ -150,12 +187,42 @@ class MHotelService extends AbstractServices {
         init_role: true,
       });
 
+      if (permission) {
+        const rolePermissionPayload: {
+          role_id: Number;
+          hotel_code: number;
+          h_permission_id: Number;
+          read: number;
+          write: number;
+          update: number;
+          delete: number;
+          created_by?: Number;
+        }[] = [];
+
+        for (let i = 0; i < extractPermission.length; i++) {
+          for (let j = 0; j < 4; j++) {
+            rolePermissionPayload.push({
+              hotel_code,
+              h_permission_id: permissionRes[0].id + i,
+              read: 1,
+              write: 1,
+              update: 1,
+              delete: 1,
+              role_id: roleRes[0].id,
+            });
+          }
+        }
+
+        // insert role permission
+        await administrationModel.createRolePermission(rolePermissionPayload);
+      }
+
       // insert user admin
       await administrationModel.createAdmin({
         email: hotel_email,
         name: user_name,
         password: hashPass,
-        role: roleRes[0].id,
+        role_id: roleRes[0].id,
         hotel_code,
         owner: true,
       });

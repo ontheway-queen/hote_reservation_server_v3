@@ -56,6 +56,7 @@ class MHotelValidator {
             phone: joi_1.default.string().allow("").optional(),
             fax: joi_1.default.string().allow("").optional(),
             remove_hotel_images: joi_1.default.array().items(joi_1.default.number().required()).optional(),
+            permission: joi_1.default.string().lowercase().optional(),
         });
         this.getAllHotelValidator = joi_1.default.object({
             name: joi_1.default.string().optional(),

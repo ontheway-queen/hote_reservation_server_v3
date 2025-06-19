@@ -89,7 +89,7 @@ class MConfigurationModel extends schema_1.default {
             });
         });
     }
-    // create permission group
+    //-------------------- permission ---------------- //
     createPermissionGroup(body) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("permission_group")
@@ -97,7 +97,6 @@ class MConfigurationModel extends schema_1.default {
                 .insert(body);
         });
     }
-    // get all permission group
     getAllRolePermissionGroup(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             const { id, name } = payload;
@@ -114,7 +113,14 @@ class MConfigurationModel extends schema_1.default {
             });
         });
     }
-    // create permission
+    getSinglePermissionGroup(id) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("permission_group")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .select("*")
+                .where({ id });
+        });
+    }
     createPermission(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("permissions")
@@ -123,11 +129,29 @@ class MConfigurationModel extends schema_1.default {
         });
     }
     // get all permission
-    getAllPermission() {
+    getAllPermissionByHotel(hotel_id) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("permissions")
+            const res = yield this.db("hotel_permission_view")
                 .withSchema(this.RESERVATION_SCHEMA)
-                .select("*");
+                .select("*")
+                .where({ hotel_id });
+            return res;
+        });
+    }
+    // get all permission
+    getAllPermission(payload) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { ids, hotel_code } = payload;
+            const res = yield this.db("permissions AS p")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .select("p.id AS permission_id", "p.name As permission_name", "p.permission_group_id", "pg.name AS permission_group_name")
+                .join("permission_group AS pg", "p.permission_group_id", "pg.id")
+                .where(function () {
+                if (ids === null || ids === void 0 ? void 0 : ids.length) {
+                    this.whereIn("p.id", ids);
+                }
+            });
+            return res;
         });
     }
     // added hotel permission
@@ -135,26 +159,26 @@ class MConfigurationModel extends schema_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("hotel_permission")
                 .withSchema(this.RESERVATION_SCHEMA)
-                .insert(payload);
+                .insert(payload, "id");
         });
     }
     // create hotel permission
-    deleteHotelPermission(hotel_code, permission_id) {
+    deleteHotelPermission(hotel_id, permission_id) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("hotel_permission")
                 .withSchema(this.RESERVATION_SCHEMA)
                 .whereIn("permission_id", permission_id)
-                .andWhere({ hotel_code })
+                .andWhere({ hotel_id })
                 .delete();
         });
     }
     // delete hotel hotel role permission
-    deleteHotelRolePermission(hotel_code, h_permission_id) {
+    deleteHotelRolePermission(hotel_id, h_permission_id) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("role_permission")
                 .withSchema(this.RESERVATION_SCHEMA)
                 .whereIn("h_permission_id", h_permission_id)
-                .andWhere({ hotel_code })
+                .andWhere({ hotel_id })
                 .delete();
         });
     }

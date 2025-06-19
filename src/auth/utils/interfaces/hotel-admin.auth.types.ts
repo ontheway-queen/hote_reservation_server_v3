@@ -17,7 +17,7 @@ export interface ICreateUserAdminPayload {
   photo?: string;
   email: string;
   phone?: string;
-  role: number;
+  role_id: number;
   password: string;
   owner: boolean;
 }

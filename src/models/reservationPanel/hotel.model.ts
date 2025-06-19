@@ -22,7 +22,7 @@ class HotelModel extends Schema {
     console.log(payload);
     return await this.db("hotels")
       .withSchema(this.RESERVATION_SCHEMA)
-      .insert(payload);
+      .insert(payload, "id");
   }
 
   public async insertHotelContactDetails(payload: IinsertHotelsCDPayload) {
@@ -55,7 +55,7 @@ class HotelModel extends Schema {
       main_image: string;
     }[]
   ) {
-    return await this.db("hotel_images")
+    return await this.db("hotel_image")
       .withSchema(this.RESERVATION_SCHEMA)
       .insert(body);
   }

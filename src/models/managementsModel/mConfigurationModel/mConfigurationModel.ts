@@ -99,14 +99,17 @@ class MConfigurationModel extends Schema {
       });
   }
 
-  // create permission group
-  public async createPermissionGroup(body: any) {
+  //-------------------- permission ---------------- //
+
+  public async createPermissionGroup(body: {
+    name: string;
+    created_by: number;
+  }) {
     return await this.db("permission_group")
       .withSchema(this.RESERVATION_SCHEMA)
       .insert(body);
   }
 
-  // get all permission group
   public async getAllRolePermissionGroup(payload: {
     name?: string;
     id?: number;
@@ -127,53 +130,91 @@ class MConfigurationModel extends Schema {
       });
   }
 
-  // create permission
-  public async createPermission(payload: { name: string; created_by: number }) {
+  public async getSinglePermissionGroup(id: number) {
+    return await this.db("permission_group")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .select("*")
+      .where({ id });
+  }
+
+  public async createPermission(
+    payload: {
+      permission_group_id: number;
+      name: string[];
+      created_by: number;
+    }[]
+  ) {
     return await this.db("permissions")
       .withSchema(this.RESERVATION_SCHEMA)
       .insert(payload);
   }
 
   // get all permission
-  public async getAllPermission() {
-    return await this.db("permissions")
+  public async getAllPermissionByHotel(hotel_id?: number) {
+    const res = await this.db("hotel_permission_view")
       .withSchema(this.RESERVATION_SCHEMA)
-      .select("*");
+      .select("*")
+      .where({ hotel_id });
+
+    return res;
+  }
+
+  // get all permission
+  public async getAllPermission(payload: {
+    ids?: number[];
+    hotel_code?: number;
+  }) {
+    const { ids, hotel_code } = payload;
+    const res = await this.db("permissions AS p")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .select(
+        "p.id AS permission_id",
+        "p.name As permission_name",
+        "p.permission_group_id",
+        "pg.name AS permission_group_name"
+      )
+      .join("permission_group AS pg", "p.permission_group_id", "pg.id")
+      .where(function () {
+        if (ids?.length) {
+          this.whereIn("p.id", ids);
+        }
+      });
+    return res;
   }
 
   // added hotel permission
   public async addedHotelPermission(
     payload: {
-      hotel_code: number;
+      hotel_id: number;
       permission_id: number;
     }[]
   ) {
     return await this.db("hotel_permission")
       .withSchema(this.RESERVATION_SCHEMA)
-      .insert(payload);
+      .insert(payload, "id");
   }
 
   // create hotel permission
   public async deleteHotelPermission(
-    hotel_code: number,
+    hotel_id: number,
     permission_id: number[]
   ) {
     return await this.db("hotel_permission")
       .withSchema(this.RESERVATION_SCHEMA)
       .whereIn("permission_id", permission_id)
-      .andWhere({ hotel_code })
+      .andWhere({ hotel_id })
       .delete();
   }
 
   // delete hotel hotel role permission
   public async deleteHotelRolePermission(
-    hotel_code: number,
+    hotel_id: number,
     h_permission_id: number[]
   ) {
     return await this.db("role_permission")
       .withSchema(this.RESERVATION_SCHEMA)
       .whereIn("h_permission_id", h_permission_id)
-      .andWhere({ hotel_code })
+      .andWhere({ hotel_id })
       .delete();
   }
 

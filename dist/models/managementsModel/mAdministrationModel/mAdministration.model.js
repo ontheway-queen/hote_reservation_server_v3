@@ -34,21 +34,6 @@ class MAdministrationModel extends schema_1.default {
                 .select("id", "name");
         });
     }
-    // create permission
-    createPermission({ permission_group_id, name, created_by, }) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const insertObj = name.map((item) => {
-                return {
-                    permission_group_id,
-                    name: item,
-                    created_by,
-                };
-            });
-            return yield this.db("permission")
-                .withSchema(this.M_SCHEMA)
-                .insert(insertObj);
-        });
-    }
     // get all permission
     getAllPermission(payload) {
         return __awaiter(this, void 0, void 0, function* () {

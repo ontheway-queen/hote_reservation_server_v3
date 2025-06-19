@@ -35,8 +35,7 @@ class MHotelService extends abstract_service_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
                 var _a;
-                const { hotel_email, user_name, password, accommodation_type_id, hotel_name, address, chain_name, city_code, country_code, description, expiry_date, latitude, longitude, postal_code, star_category, fax, phone, website_url, } = req.body;
-                console.log(req.body);
+                const { hotel_email, user_name, password, accommodation_type_id, hotel_name, address, chain_name, city_code, country_code, description, expiry_date, latitude, longitude, postal_code, star_category, fax, phone, website_url, permission, } = req.body;
                 const expiry = new Date(expiry_date);
                 if (expiry < new Date()) {
                     return {
@@ -117,18 +116,62 @@ class MHotelService extends abstract_service_1.default {
                 });
                 if (hotelImages.length)
                     yield model.insertHotelImages(hotelImages);
+                // ============ create hotel admin step ==============//
+                const configModel = this.Model.mConfigurationModel(trx);
+                let extractPermission;
+                let permissionRes = [];
+                if (permission) {
+                    extractPermission = JSON.parse(permission);
+                    // check all permission
+                    const checkAllPermission = yield configModel.getAllPermission({
+                        ids: extractPermission,
+                    });
+                    if (checkAllPermission.length != extractPermission.length) {
+                        return {
+                            success: false,
+                            code: this.StatusCode.HTTP_NOT_FOUND,
+                            message: "Invalid Permissions",
+                        };
+                    }
+                    const hotel_permission_payload = extractPermission.map((item) => {
+                        return {
+                            permission_id: item,
+                            hotel_code,
+                        };
+                    });
+                    // insert hotel permission
+                    permissionRes = yield configModel.addedHotelPermission(hotel_permission_payload);
+                }
                 // insert Role
                 const roleRes = yield administrationModel.createRole({
                     name: "super-admin",
                     hotel_code,
                     init_role: true,
                 });
+                if (permission) {
+                    const rolePermissionPayload = [];
+                    for (let i = 0; i < extractPermission.length; i++) {
+                        for (let j = 0; j < 4; j++) {
+                            rolePermissionPayload.push({
+                                hotel_code,
+                                h_permission_id: permissionRes[0].id + i,
+                                read: 1,
+                                write: 1,
+                                update: 1,
+                                delete: 1,
+                                role_id: roleRes[0].id,
+                            });
+                        }
+                    }
+                    // insert role permission
+                    yield administrationModel.createRolePermission(rolePermissionPayload);
+                }
                 // insert user admin
                 yield administrationModel.createAdmin({
                     email: hotel_email,
                     name: user_name,
                     password: hashPass,
-                    role: roleRes[0].id,
+                    role_id: roleRes[0].id,
                     hotel_code,
                     owner: true,
                 });

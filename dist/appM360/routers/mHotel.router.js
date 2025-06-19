@@ -12,12 +12,10 @@ class MHotelRouter extends abstract_router_1.default {
         this.callRouter();
     }
     callRouter() {
-        // create hotel and get all hotel
         this.router
             .route("/")
             .post(this.uploader.cloudUploadRaw(this.fileFolders.HOTEL_FILES), this.hotelController.createHotel)
             .get(this.hotelController.getAllHotel);
-        // get single hotel
         this.router
             .route("/:id")
             .get(this.hotelController.getSingleHotel)

@@ -55,51 +55,6 @@ class MAdministrationController extends abstract_controller_1.default {
             const _c = yield this.administrationService.getAllAdmin(req), { code } = _c, data = __rest(_c, ["code"]);
             res.status(code).json(data);
         }));
-        // create permission Group
-        this.createPermissionGroup = this.asyncWrapper.wrap({ bodySchema: this.mAdministratorValidator.createPermissionGroupValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _d = yield this.administrationService.createPermissionGroup(req), { code } = _d, data = __rest(_d, ["code"]);
-            res.status(code).json(data);
-        }));
-        // get permission group
-        this.getPermissionGroup = this.asyncWrapper.wrap(null, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _e = yield this.administrationService.getPermissionGroup(req), { code } = _e, data = __rest(_e, ["code"]);
-            res.status(code).json(data);
-        }));
-        // create permission
-        this.createPermission = this.asyncWrapper.wrap({ bodySchema: this.mAdministratorValidator.createPermissionValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _f = yield this.administrationService.createPermission(req), { code } = _f, data = __rest(_f, ["code"]);
-            res.status(code).json(data);
-        }));
-        // get all permission
-        this.getAllPermission = this.asyncWrapper.wrap(null, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _g = yield this.administrationService.getAllPermission(req), { code } = _g, data = __rest(_g, ["code"]);
-            res.status(code).json(data);
-        }));
-        // create role
-        this.createRole = this.asyncWrapper.wrap({ bodySchema: this.mAdministratorValidator.createRolePermissionValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _h = yield this.administrationService.createRole(req), { code } = _h, data = __rest(_h, ["code"]);
-            res.status(code).json(data);
-        }));
-        // get role
-        this.getRole = this.asyncWrapper.wrap(null, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _j = yield this.administrationService.getRole(req), { code } = _j, data = __rest(_j, ["code"]);
-            res.status(code).json(data);
-        }));
-        // get single role
-        this.getSingleRole = this.asyncWrapper.wrap({ paramSchema: this.commonValidator.singleParamValidator() }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _k = yield this.administrationService.getSingleRole(req), { code } = _k, data = __rest(_k, ["code"]);
-            res.status(code).json(data);
-        }));
-        // update single role
-        this.updateSingleRole = this.asyncWrapper.wrap(null, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _l = yield this.administrationService.updateSingleRole(req), { code } = _l, data = __rest(_l, ["code"]);
-            res.status(code).json(data);
-        }));
-        // get admins role
-        this.getAdminRole = this.asyncWrapper.wrap(null, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _m = yield this.administrationService.getAdminRole(req), { code } = _m, data = __rest(_m, ["code"]);
-            res.status(code).json(data);
-        }));
     }
 }
 exports.default = MAdministrationController;

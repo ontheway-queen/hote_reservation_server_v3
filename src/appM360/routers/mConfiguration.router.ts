@@ -21,12 +21,25 @@ class MConfigurationRouter extends AbstractRouter {
       .get(this.controller.getAllCity)
       .post(this.controller.insertCity);
 
-    this.router.route("/country").get(this.controller.getAllCountry);
+    // ---------------------- for reservation -------------------//
+    this.router
+      .route("/permission-group")
+      .post(this.controller.createPermissionGroup)
+      .get(this.controller.getPermissionGroup);
+
+    this.router
+      .route("/permission/by-hotel/:id")
+      .get(this.controller.getSingleHotelPermission)
+      .patch(this.controller.updateSingleHotelPermission);
 
     this.router
       .route("/permission")
-      .get(this.controller.getAllPermission)
-      .post(this.controller.createPermission);
+      .post(this.controller.createPermission)
+      .get(this.controller.getAllPermission);
+
+    //-------------------------
+
+    this.router.route("/country").get(this.controller.getAllCountry);
 
     //------------------------------ Room type amenities ------------------------------//
 

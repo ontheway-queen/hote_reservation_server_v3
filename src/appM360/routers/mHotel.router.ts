@@ -10,7 +10,6 @@ class MHotelRouter extends AbstractRouter {
     this.callRouter();
   }
   private callRouter() {
-    // create hotel and get all hotel
     this.router
       .route("/")
       .post(
@@ -19,7 +18,6 @@ class MHotelRouter extends AbstractRouter {
       )
       .get(this.hotelController.getAllHotel);
 
-    // get single hotel
     this.router
       .route("/:id")
       .get(this.hotelController.getSingleHotel)

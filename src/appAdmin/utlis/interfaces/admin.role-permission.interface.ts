@@ -1,6 +1,10 @@
 export interface IcreateRolePermission {
   role_id: Number;
+  hotel_code: Number;
   h_permission_id: Number;
-  permission_type: String;
+  read: number;
+  write: number;
+  update: number;
+  delete: number;
   created_by?: Number;
 }

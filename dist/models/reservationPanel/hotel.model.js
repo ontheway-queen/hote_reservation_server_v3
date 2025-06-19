@@ -24,7 +24,7 @@ class HotelModel extends schema_1.default {
             console.log(payload);
             return yield this.db("hotels")
                 .withSchema(this.RESERVATION_SCHEMA)
-                .insert(payload);
+                .insert(payload, "id");
         });
     }
     insertHotelContactDetails(payload) {
@@ -44,7 +44,7 @@ class HotelModel extends schema_1.default {
     }
     insertHotelImages(body) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("hotel_images")
+            return yield this.db("hotel_image")
                 .withSchema(this.RESERVATION_SCHEMA)
                 .insert(body);
         });
