@@ -56,7 +56,7 @@ class RoomModel extends schema_1.default {
                     this.andWhere("r.status", status);
                 }
             })
-                .orderBy("id", "desc");
+                .orderBy("r.room_name", "asc");
             const total = yield this.db("rooms as r")
                 .withSchema(this.RESERVATION_SCHEMA)
                 .count("r.id as total")

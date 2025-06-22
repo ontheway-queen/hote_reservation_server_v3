@@ -147,6 +147,8 @@ export class RoomService extends AbstractServices {
           const date = new Date();
           date.setUTCDate(date.getUTCDate() + i);
           const dateStr = date.toISOString().split("T")[0];
+
+          console.log({ dateStr });
           roomAvaibilityPayload.push({
             hotel_code,
             room_type_id,
