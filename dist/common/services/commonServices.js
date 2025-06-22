@@ -125,6 +125,7 @@ class CommonService extends abstract_service_1.default {
                         tried: tried + 1,
                         matched: 1,
                     }, { id: email_otp_id });
+                    console.log({ type });
                     let secret = config_1.default.JWT_SECRET_HOTEL_ADMIN;
                     switch (type) {
                         case constants_1.OTP_TYPE_FORGET_M_ADMIN:

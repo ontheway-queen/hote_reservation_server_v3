@@ -546,8 +546,8 @@ export class SubReservationService extends AbstractServices {
 
     await hotelInvModel.insertInFolioEntries({
       acc_voucher_id: voucher.id,
-      debit: amount,
-      credit: 0,
+      debit: 0,
+      credit: -amount,
       folio_id: folio_id,
       posting_type: "Refund",
       description: remarks,
