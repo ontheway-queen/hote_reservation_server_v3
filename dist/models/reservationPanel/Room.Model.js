@@ -62,6 +62,7 @@ class RoomModel extends schema_1.default {
                 .count("r.id as total")
                 .join("room_types as rt", "r.room_type_id", "rt.id")
                 .where(function () {
+                this.andWhere("r.hotel_code", hotel_code);
                 if (search) {
                     this.andWhere("r.room_name", "ilike", `%${search}%`);
                 }
