@@ -160,7 +160,7 @@ class ReportModel extends Schema {
         "b.check_out",
         "b.booking_date",
         "br.adults",
-        "br.children",
+        "br.children as child_count",
         "br.infant",
         "b.guest_id",
         "g.first_name",

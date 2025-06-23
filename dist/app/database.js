@@ -7,6 +7,13 @@ exports.db = void 0;
 const knex_1 = __importDefault(require("knex"));
 const config_1 = __importDefault(require("../config/config"));
 let dbInstance;
+/**
+ * Creates a database connection using Knex.js.
+ * This function initializes the database connection only once and returns the instance.
+ * It uses PostgreSQL as the database client.
+ *
+ * @returns {Knex} The Knex instance for database operations.
+ */
 const createDbCon = () => {
     if (!dbInstance) {
         dbInstance = (0, knex_1.default)({
