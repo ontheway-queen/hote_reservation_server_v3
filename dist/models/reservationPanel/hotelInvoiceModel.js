@@ -95,16 +95,27 @@ class HotelInvoiceModel extends schema_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("invoices as inv")
                 .withSchema(this.RESERVATION_SCHEMA)
-                .select("inv.id", "inv.invoice_number", "inv.invoice_date", "inv.status", "inv.notes", this.db.raw(`
+                .select("inv.id", "inv.invoice_number", "inv.invoice_date", "inv.status", "inv.notes", "b.total_nights", "b.check_in", "b.check_out", this.db.raw("check_in::TEXT AS check_in_date"), this.db.raw("check_out::TEXT AS check_out_date"), this.db.raw(`
+        JSON_BUILD_OBJECT(
+          'first_name', g.first_name,
+          'last_name', g.last_name,
+          'nationality', g.nationality,
+          'email', g.email,
+          'phone', g.phone
+        ) AS main_guest_info
+      `), 
+            // Aggregated folio items under the invoice
+            this.db.raw(`
         (
           SELECT JSON_AGG(
             JSON_BUILD_OBJECT(
               'id', fi.id,
-              'folio_entry_id',fi.folio_entry_id,
+              'folio_entry_id', fi.folio_entry_id,
               'description', fi.description,
               'type', fi.type,
               'debit', fi.debit,
-              'credit', fi.credit
+              'credit', fi.credit,
+              'created_at', fi.created_at
             )
           )
           FROM ?? fi
@@ -114,10 +125,13 @@ class HotelInvoiceModel extends schema_1.default {
             WHERE f.invoice_id = inv.id
           )
         ) AS inv_items
-        `, [
+      `, [
                 "hotel_reservation.invoice_folio_items",
                 "hotel_reservation.invoice_folios",
             ]))
+                .leftJoin("invoice_folios as if", "inv.id", "if.invoice_id")
+                .leftJoin("bookings as b", "if.booking_id", "b.id")
+                .leftJoin("guests as g", "b.guest_id", "g.id")
                 .where("inv.hotel_code", hotel_code)
                 .andWhere("inv.id", inv_id)
                 .first();

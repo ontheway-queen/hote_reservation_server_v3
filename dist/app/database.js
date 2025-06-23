@@ -7,7 +7,6 @@ exports.db = void 0;
 const knex_1 = __importDefault(require("knex"));
 const config_1 = __importDefault(require("../config/config"));
 let dbInstance;
-// db
 const createDbCon = () => {
     if (!dbInstance) {
         dbInstance = (0, knex_1.default)({

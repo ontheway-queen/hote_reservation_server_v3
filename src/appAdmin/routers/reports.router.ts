@@ -30,6 +30,10 @@ class ReportRouter extends AbstractRouter {
       .get(this.reportController.getGuestReport);
 
     this.router
+      .route("/room-booking")
+      .get(this.reportController.getRoomBookingReport);
+
+    this.router
       .route("/guest-ledger/by-guest/:id")
       .get(this.reportController.getSingleGuestLedger);
 

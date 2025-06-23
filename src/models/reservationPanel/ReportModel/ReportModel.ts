@@ -115,5 +115,100 @@ class ReportModel extends Schema {
         }
       });
   }
+
+  public async getRoomBookingReport({
+    hotel_code,
+    from_date,
+    to_date,
+    booking_type,
+    status,
+    limit,
+    skip,
+  }: {
+    hotel_code: number;
+    from_date: string;
+    to_date: string;
+    booking_type?: string;
+    status?: string;
+    limit?: string;
+    skip?: string;
+  }) {
+    const endDate = new Date(to_date);
+    endDate.setDate(endDate.getDate() + 1);
+
+    const dtbs = this.db("booking_rooms AS br");
+
+    if (limit && skip) {
+      dtbs.limit(parseInt(limit)).offset(parseInt(skip));
+    }
+
+    const data = await dtbs
+      .withSchema(this.RESERVATION_SCHEMA)
+      .select(
+        "br.id",
+        "b.id as booking_id",
+        "b.check_in",
+        "b.check_out",
+        "b.booking_type",
+        "b.status",
+        "b.comments",
+        "b.company_name",
+        "b.visit_purpose",
+        "r.room_name as room_no",
+        "r.floor_no",
+        "b.check_in",
+        "b.check_out",
+        "b.booking_date",
+        "br.adults",
+        "br.children",
+        "br.infant",
+        "b.guest_id",
+        "g.first_name",
+        "g.last_name",
+        "g.country",
+        "g.nationality",
+        "g.address",
+        "g.email AS guest_email",
+        "g.phone AS guest_phone"
+      )
+      .leftJoin("bookings AS b", "br.booking_id", "b.id")
+      .leftJoin("guests AS g", "b.guest_id", "g.id")
+      .leftJoin("rooms AS r", "br.room_id", "r.id")
+      .where("b.hotel_code", hotel_code)
+      .andWhere((qb) => {
+        if (from_date && to_date) {
+          qb.whereBetween("b.booking_date", [from_date, endDate]);
+        }
+        if (booking_type) {
+          qb.andWhere("b.booking_type", booking_type);
+        }
+        if (status) {
+          qb.andWhere("b.status", status);
+        }
+      });
+
+    const total = await this.db("booking_rooms AS br")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .count("br.id as total")
+      .leftJoin("bookings AS b", "br.booking_id", "b.id")
+      .leftJoin("guests AS g", "b.guest_id", "g.id")
+      .where("b.hotel_code", hotel_code)
+      .andWhere((qb) => {
+        if (from_date && to_date) {
+          qb.whereBetween("b.booking_date", [from_date, endDate]);
+        }
+        if (booking_type) {
+          qb.andWhere("b.booking_type", booking_type);
+        }
+        if (status) {
+          qb.andWhere("b.status", status);
+        }
+      });
+
+    return {
+      data,
+      total: Number(total[0]?.total || 0),
+    };
+  }
 }
 export default ReportModel;

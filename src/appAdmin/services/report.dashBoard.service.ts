@@ -54,6 +54,26 @@ class ReportService extends AbstractServices {
     };
   }
 
+  public async getRoomBookingReport(req: Request) {
+    const { data, total } = await this.Model.reportModel().getRoomBookingReport(
+      {
+        hotel_code: req.hotel_admin.hotel_code,
+        from_date: req.query.from_date as any,
+        to_date: req.query.to_date as string,
+        booking_type: req.query.booking_type as string,
+        status: req.query.status as string,
+        limit: req.query.limit as string,
+        skip: req.query.skip as string,
+      }
+    );
+    return {
+      success: true,
+      code: this.StatusCode.HTTP_OK,
+      total,
+      data,
+    };
+  }
+
   public async getSingleGuestLedger(req: Request) {
     const { from_date, to_date, limit, skip } = req.query;
     const { data, total } = await this.Model.guestModel().getSingleGuestLedeger(

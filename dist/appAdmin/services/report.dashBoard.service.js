@@ -59,6 +59,25 @@ class ReportService extends abstract_service_1.default {
             };
         });
     }
+    getRoomBookingReport(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { data, total } = yield this.Model.reportModel().getRoomBookingReport({
+                hotel_code: req.hotel_admin.hotel_code,
+                from_date: req.query.from_date,
+                to_date: req.query.to_date,
+                booking_type: req.query.booking_type,
+                status: req.query.status,
+                limit: req.query.limit,
+                skip: req.query.skip,
+            });
+            return {
+                success: true,
+                code: this.StatusCode.HTTP_OK,
+                total,
+                data,
+            };
+        });
+    }
     getSingleGuestLedger(req) {
         return __awaiter(this, void 0, void 0, function* () {
             const { from_date, to_date, limit, skip } = req.query;

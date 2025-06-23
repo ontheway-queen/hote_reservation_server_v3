@@ -53,7 +53,7 @@ export class SubReservationService extends AbstractServices {
     rooms: RoomRequest[],
     nights: number,
     fees: { vat: number; service_charge: number; discount: number }
-  ) {
+  ): { total: number; total_amount: number; sub_total: number } {
     let total_changed_price = 0;
 
     rooms.forEach((room) => {
@@ -64,7 +64,7 @@ export class SubReservationService extends AbstractServices {
     const total_amount = total + fees.vat + fees.service_charge - fees.discount;
     const sub_total = total + fees.vat + fees.service_charge;
 
-    return { total_amount, sub_total };
+    return { total, total_amount, sub_total };
   }
 
   public calculateTotalsByBookingRooms(

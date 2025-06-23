@@ -56,7 +56,7 @@ class SubReservationService extends abstract_service_1.default {
         const total = total_changed_price * nights;
         const total_amount = total + fees.vat + fees.service_charge - fees.discount;
         const sub_total = total + fees.vat + fees.service_charge;
-        return { total_amount, sub_total };
+        return { total, total_amount, sub_total };
     }
     calculateTotalsByBookingRooms(rooms, nights, fees) {
         let total_changed_price = 0;

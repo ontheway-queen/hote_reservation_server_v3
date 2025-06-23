@@ -29,6 +29,16 @@ class ReportController extends AbstractController {
     }
   );
 
+  public getRoomBookingReport = this.asyncWrapper.wrap(
+    {},
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.reportService.getRoomBookingReport(
+        req
+      );
+      res.status(code).json(data);
+    }
+  );
+
   public getSingleGuestLedger = this.asyncWrapper.wrap(
     { paramSchema: this.commonValidator.singleParamValidator() },
     async (req: Request, res: Response) => {
