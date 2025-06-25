@@ -87,7 +87,7 @@ class ReportModel extends schema_1.default {
             }
             const data = yield dtbs
                 .withSchema(this.RESERVATION_SCHEMA)
-                .select("br.id", "b.id as booking_id", "b.check_in", "b.check_out", "b.booking_type", "b.status", "b.comments", "b.company_name", "b.visit_purpose", "r.room_name as room_no", "r.floor_no", "b.check_in", "b.check_out", "b.booking_date", "br.adults", "br.children as child_count", "br.infant", "b.guest_id", "g.first_name", "g.last_name", "g.country", "g.nationality", "g.address", "g.email AS guest_email", "g.phone AS guest_phone")
+                .select("br.id", "b.id as booking_id", "b.check_in", "b.check_out", "b.booking_type", "b.status", "b.comments", "b.company_name", "b.visit_purpose", "r.room_name as room_no", "r.floor_no", "b.check_in", "b.check_out", "b.booking_date", "br.cbf", "br.adults", "br.children as child_count", "br.infant", "b.guest_id", "g.first_name", "g.last_name", "g.country", "g.nationality", "g.address", "g.email AS guest_email", "g.phone AS guest_phone")
                 .leftJoin("bookings AS b", "br.booking_id", "b.id")
                 .leftJoin("guests AS g", "b.guest_id", "g.id")
                 .leftJoin("rooms AS r", "br.room_id", "r.id")

@@ -13,7 +13,7 @@ export class ReservationValidator {
     guest: Joi.object({
       first_name: Joi.string().required(),
       last_name: Joi.string().required(),
-      email: Joi.string().email().required(),
+      email: Joi.string().email().allow("").optional(),
       address: Joi.string().allow("").optional(),
       phone: Joi.string().required(),
       nationality: Joi.string().required(),
@@ -44,10 +44,9 @@ export class ReservationValidator {
       otherwise: Joi.forbidden(),
     }),
 
-    discount_amount: Joi.number().min(0).required(),
+    // discount_amount: Joi.number().min(0).required(),
     service_charge: Joi.number().min(0).required(),
     vat: Joi.number().min(0).required(),
-
     rooms: Joi.array()
       .items(
         Joi.object({
@@ -66,6 +65,7 @@ export class ReservationValidator {
                 adults: Joi.number().min(1).required(),
                 children: Joi.number().min(0).required(),
                 infant: Joi.number().min(0).required(),
+                cbf: Joi.number().min(0).required(),
               })
             )
             .min(1)
@@ -77,6 +77,9 @@ export class ReservationValidator {
       .min(1)
       .required(),
 
+    company_name: Joi.string().allow("").optional(),
+    visit_purpose: Joi.string().allow("").optional(),
+    is_company_booked: Joi.boolean().required(),
     special_requests: Joi.string().allow("").optional(),
     is_payment_given: Joi.bool().required(),
     payment: Joi.object({

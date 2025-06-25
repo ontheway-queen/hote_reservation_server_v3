@@ -95,11 +95,12 @@ class HotelInvoiceModel extends schema_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("invoices as inv")
                 .withSchema(this.RESERVATION_SCHEMA)
-                .select("inv.id", "inv.invoice_number", "inv.invoice_date", "inv.status", "inv.notes", "b.total_nights", "b.check_in", "b.check_out", this.db.raw("check_in::TEXT AS check_in_date"), this.db.raw("check_out::TEXT AS check_out_date"), this.db.raw(`
+                .select("inv.id", "inv.invoice_number", "inv.invoice_date", "inv.status", "inv.notes", "b.booking_reference", "b.total_nights", "b.is_company_booked", "b.company_name", "b.check_in", "b.check_out", this.db.raw("check_in::TEXT AS check_in_date"), this.db.raw("check_out::TEXT AS check_out_date"), this.db.raw(`
         JSON_BUILD_OBJECT(
           'first_name', g.first_name,
           'last_name', g.last_name,
           'nationality', g.nationality,
+          'address', g.address,
           'email', g.email,
           'phone', g.phone
         ) AS main_guest_info
@@ -112,13 +113,20 @@ class HotelInvoiceModel extends schema_1.default {
               'id', fi.id,
               'folio_entry_id', fi.folio_entry_id,
               'description', fi.description,
-              'type', fi.type,
+              'type', fi.posting_type,
               'debit', fi.debit,
               'credit', fi.credit,
-              'created_at', fi.created_at
+              'created_at', fi.created_at,
+              'room',fi.room_id,
+              'room_name', r.room_name,
+              'room_type_name', rt.name,
+              'rack_rate', fi.rack_rate,
+              'date', fi.date
             )
           )
           FROM ?? fi
+          left join hotel_reservation.rooms as r on r.id = fi.room_id
+          left join hotel_reservation.room_types as rt on r.room_type_id = rt.id
           WHERE fi.inv_folio_id IN (
             SELECT f.id
             FROM ?? f
@@ -245,8 +253,9 @@ class HotelInvoiceModel extends schema_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("folio_entries as fe")
                 .withSchema(this.RESERVATION_SCHEMA)
-                .select("fe.id", "fe.description", "fe.posting_type", "fe.debit", "fe.credit")
+                .select("fe.id", "fe.description", "fe.posting_type", "fe.rack_rate", "fe.date", "fe.room_id", "r.room_name", "fe.debit", "fe.credit")
                 .join("folios as f", "fe.folio_id", "f.id")
+                .leftJoin("rooms as r", "fe.room_id", "r.id")
                 .where("fe.folio_id", folio_id)
                 .andWhere("f.hotel_code", hotel_code)
                 .andWhere("fe.is_void", false);
@@ -256,10 +265,11 @@ class HotelInvoiceModel extends schema_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("folios as f")
                 .withSchema(this.RESERVATION_SCHEMA)
-                .select("f.id", "f.name", "fe.id as entries_id", "fe.description", "fe.posting_type", "fe.debit", "fe.credit", "fe.is_void", "fe.invoiced")
+                .select("f.id", "f.name", "fe.id as entries_id", "fe.description", "fe.posting_type", "fe.debit", "fe.credit", "fe.is_void", "fe.invoiced", "fe.rack_rate", "fe.date", "fe.room_id", "r.room_name")
                 .leftJoin("folio_entries as fe", "f.id", "fe.folio_id")
-                .where("booking_id", booking_id)
-                .andWhere("hotel_code", hotel_code)
+                .leftJoin("rooms as r", "fe.room_id", "r.id")
+                .where("f.booking_id", booking_id)
+                .andWhere("f.hotel_code", hotel_code)
                 .andWhere("fe.is_void", false)
                 .andWhere(function () {
                 if (entry_ids === null || entry_ids === void 0 ? void 0 : entry_ids.length) {

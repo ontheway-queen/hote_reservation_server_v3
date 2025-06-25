@@ -1,5 +1,6 @@
 import { Knex } from "knex";
 import {
+  BookingRequestBody,
   BookingRoom,
   IbookingReqPayment,
   IbookingRooms,
@@ -11,6 +12,7 @@ import AbstractServices from "../../abstarcts/abstract.service";
 import Lib from "../../utils/lib/lib";
 import { HelperFunction } from "../utlis/library/helperFunction";
 import { Request } from "express";
+import { IinsertFolioEntriesPayload } from "../utlis/interfaces/invoice.interface";
 
 export class SubReservationService extends AbstractServices {
   constructor(private trx: Knex.Transaction) {
@@ -31,6 +33,7 @@ export class SubReservationService extends AbstractServices {
     const guestModel = this.Model.guestModel(this.trx);
     const { data: existingGuests } = await guestModel.getAllGuest({
       email: guest.email,
+      phone: guest.phone,
       hotel_code,
     });
 
@@ -93,8 +96,8 @@ export class SubReservationService extends AbstractServices {
     payload,
     hotel_code,
     guest_id,
-    sub_total,
-    total_amount,
+    // sub_total,
+    // total_amount,
     is_checked_in,
     total_nights,
   }: {
@@ -114,11 +117,14 @@ export class SubReservationService extends AbstractServices {
       pickup: boolean;
       pickup_from?: string;
       pickup_time?: string;
+      is_company_booked: boolean;
+      company_name?: string;
+      visit_purpose?: string;
     };
     hotel_code: number;
     guest_id: number;
-    sub_total: number;
-    total_amount: number;
+    // sub_total: number;
+    // total_amount: number;
     total_nights: number;
     is_checked_in: boolean;
   }): Promise<{ id: number }> {
@@ -135,8 +141,8 @@ export class SubReservationService extends AbstractServices {
       check_out: payload.check_out,
       guest_id,
       hotel_code,
-      sub_total,
-      total_amount,
+      // sub_total,
+      // total_amount,
       total_nights,
       vat: payload.vat,
       service_charge: payload.service_charge,
@@ -152,6 +158,9 @@ export class SubReservationService extends AbstractServices {
       pickup: payload.pickup,
       pickup_from: payload.pickup_from,
       pickup_time: payload.pickup_time,
+      is_company_booked: payload.is_company_booked,
+      company_name: payload.company_name,
+      visit_purpose: payload.visit_purpose,
     });
 
     return booking;
@@ -180,6 +189,7 @@ export class SubReservationService extends AbstractServices {
           changed_rate,
           unit_base_rate: room.rate.base_price,
           unit_changed_rate: room.rate.changed_price,
+          cbf: guest.cbf,
         });
       });
     });
@@ -330,14 +340,21 @@ export class SubReservationService extends AbstractServices {
     }
   }
 
-  public async handlePaymentAndFolioForBooking(
-    is_payment_given: boolean,
-    payment: IbookingReqPayment | undefined,
-    guest_id: number,
-    req: Request,
-    total_amount: number,
-    booking_id: number
-  ) {
+  public async handlePaymentAndFolioForBooking({
+    booking_id,
+    is_payment_given,
+    guest_id,
+    req,
+    total_amount,
+    payment,
+  }: {
+    is_payment_given: boolean;
+    payment: IbookingReqPayment | undefined;
+    guest_id: number;
+    req: Request;
+    total_amount: number;
+    booking_id: number;
+  }) {
     const accountModel = this.Model.accountModel(this.trx);
 
     let voucherData: any;
@@ -379,7 +396,7 @@ export class SubReservationService extends AbstractServices {
       folio_number,
       guest_id,
       hotel_code: req.hotel_admin.hotel_code,
-      name: "Room Booking",
+      name: "Reservation",
       status: "open",
       type: "Primary",
     });
@@ -435,6 +452,112 @@ export class SubReservationService extends AbstractServices {
         debit: 0,
       });
     }
+  }
+
+  public async createRoomBookingFolioWithEntries({
+    body,
+    booking_id,
+    guest_id,
+    req,
+  }: {
+    req: Request;
+    body: BookingRequestBody;
+    booking_id: number;
+    guest_id: number;
+  }) {
+    const hotelInvModel = this.Model.hotelInvoiceModel(this.trx);
+
+    // 1. Generate Folio Number
+    const [lastFolio] = await hotelInvModel.getLasFolioId();
+    const folio_number = HelperFunction.generateFolioNumber(lastFolio?.id);
+
+    // 2. Insert Folio
+    const [folio] = await hotelInvModel.insertInFolio({
+      booking_id,
+      folio_number,
+      guest_id,
+      hotel_code: req.hotel_admin.hotel_code,
+      name: "Reservation",
+      status: "open",
+      type: "Primary",
+    });
+
+    // 3. Generate Folio Entries per night
+    const folioEntriesBookingPayload: IinsertFolioEntriesPayload[] = [];
+
+    const checkInDate = new Date(body.check_in);
+    const checkOutDate = new Date(body.check_out);
+
+    for (
+      let currentDate = new Date(checkInDate);
+      currentDate < checkOutDate;
+      currentDate.setDate(currentDate.getDate() + 1)
+    ) {
+      const formattedDate = currentDate.toISOString().split("T")[0];
+
+      body.rooms.forEach((room) => {
+        room.guests.forEach((guest) => {
+          folioEntriesBookingPayload.push({
+            folio_id: folio.id,
+            date: formattedDate,
+            posting_type: "Charge",
+            debit: room.rate.changed_price,
+            room_id: guest.room_id,
+            description: `Room Tariff`,
+            rack_rate: room.rate.base_price,
+          });
+        });
+      });
+    }
+
+    const today = new Date().toISOString().split("T")[0];
+
+    // 4. Service Charge
+    if (body.service_charge && body.service_charge > 0) {
+      folioEntriesBookingPayload.push({
+        folio_id: folio.id,
+        date: today,
+        posting_type: "Charge",
+        debit: body.service_charge,
+        room_id: 0,
+        description: `Service Charge`,
+        rack_rate: 0,
+      });
+    }
+
+    // 5. VAT
+    if (body.vat && body.vat > 0) {
+      folioEntriesBookingPayload.push({
+        folio_id: folio.id,
+        date: today,
+        posting_type: "Charge",
+        debit: body.vat,
+        room_id: 0,
+        description: `VAT`,
+        rack_rate: 0,
+      });
+    }
+
+    // 6. Payment (if given)
+    if (body.is_payment_given && body.payment?.amount > 0) {
+      folioEntriesBookingPayload.push({
+        folio_id: folio.id,
+        date: today,
+        posting_type: "Payment",
+        debit: body.payment.amount,
+        room_id: 0,
+        description: `Payment Received`,
+        rack_rate: 0,
+      });
+    }
+
+    // 7. Insert All Entries
+    await hotelInvModel.insertInFolioEntries(folioEntriesBookingPayload);
+
+    return {
+      folio,
+      entries: folioEntriesBookingPayload,
+    };
   }
 
   public async handlePaymentAndFolioForAddPayment({

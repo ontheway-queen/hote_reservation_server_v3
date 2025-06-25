@@ -100,6 +100,10 @@ class GuestModel extends Schema {
             .orWhere("country", "like", `%${key}%`);
         }
 
+        if (phone) {
+          this.andWhere("phone", "like", `%${phone}%`);
+        }
+
         if (email) {
           this.andWhere("email", email);
         }

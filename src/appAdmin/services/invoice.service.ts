@@ -84,10 +84,13 @@ export class InvoiceService extends AbstractServices {
             inv_folio_id: number;
             folio_entry_id: number;
             description: string;
-            type: string;
+            posting_type: string;
             debit: number;
             credit: number;
+            room_id?: number;
             folio_id: number;
+            rack_rate: number;
+            date: string;
           }[] = [];
 
           checkFolioEntries.forEach((item) => {
@@ -96,8 +99,11 @@ export class InvoiceService extends AbstractServices {
                 inv_folio_id: invFolioRes[0].id,
                 debit: item.debit,
                 credit: item.credit,
-                type: item.posting_type,
+                posting_type: item.posting_type,
+                rack_rate: item.rack_rate,
+                date: item.date,
                 folio_id: item.id,
+                room_id: item.room_id as number,
                 description: item.description,
                 folio_entry_id: item.entries_id,
               });

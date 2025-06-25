@@ -78,8 +78,11 @@ class InvoiceService extends abstract_service_1.default {
                                 inv_folio_id: invFolioRes[0].id,
                                 debit: item.debit,
                                 credit: item.credit,
-                                type: item.posting_type,
+                                posting_type: item.posting_type,
+                                rack_rate: item.rack_rate,
+                                date: item.date,
                                 folio_id: item.id,
+                                room_id: item.room_id,
                                 description: item.description,
                                 folio_entry_id: item.entries_id,
                             });

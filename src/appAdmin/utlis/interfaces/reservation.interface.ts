@@ -121,7 +121,7 @@ export type CalendarRoomType = {
 export interface IguestReqBody {
   first_name: string;
   last_name: string;
-  email: string;
+  email?: string;
   phone: string;
   nationality: string;
   country: string;
@@ -141,6 +141,9 @@ export interface BookingRequestBody {
   drop_time?: string;
   discount_amount: number;
   service_charge: number;
+  is_company_booked: boolean;
+  company_name?: string;
+  visit_purpose?: string;
   vat: number;
   is_payment_given: boolean;
   rooms: RoomRequest[];
@@ -172,6 +175,7 @@ export interface RoomGuest {
   adults: number;
   children: number;
   infant: number;
+  cbf: number; //breakfast coupon
 }
 
 export interface IRoomBooking {
@@ -185,8 +189,8 @@ export interface IRoomBooking {
   check_out: string;
   booking_type: string;
   status: string;
-  sub_total: number;
-  total_amount: number;
+  // sub_total: number;
+  // total_amount: number;
   vat: number;
   service_charge: number;
   discount_amount: number;
@@ -198,6 +202,9 @@ export interface IRoomBooking {
   drop_time?: string;
   comments?: string;
   source_id: number;
+  is_company_booked: boolean;
+  company_name?: string;
+  visit_purpose?: string;
 }
 export interface IRoomBookingBody {
   name: string;
@@ -237,6 +244,7 @@ export interface IbookingRooms {
   base_rate: number;
   unit_base_rate: number;
   unit_changed_rate: number;
+  cbf?: number; //breakfast coupon
 }
 
 // ------------------------ single booking ----------------------//

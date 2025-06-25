@@ -14,6 +14,9 @@ export interface IinsertFolioEntriesPayload {
   debit?: number;
   credit?: number;
   description?: string;
+  room_id?: number;
+  date?: string;
+  rack_rate?: number;
   posting_type:
     | "Charge"
     | "Payment"

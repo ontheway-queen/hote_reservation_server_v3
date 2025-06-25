@@ -19,7 +19,7 @@ class ReservationValidator {
             guest: joi_1.default.object({
                 first_name: joi_1.default.string().required(),
                 last_name: joi_1.default.string().required(),
-                email: joi_1.default.string().email().required(),
+                email: joi_1.default.string().email().allow("").optional(),
                 address: joi_1.default.string().allow("").optional(),
                 phone: joi_1.default.string().required(),
                 nationality: joi_1.default.string().required(),
@@ -47,7 +47,7 @@ class ReservationValidator {
                 then: joi_1.default.string().isoDate().required(),
                 otherwise: joi_1.default.forbidden(),
             }),
-            discount_amount: joi_1.default.number().min(0).required(),
+            // discount_amount: Joi.number().min(0).required(),
             service_charge: joi_1.default.number().min(0).required(),
             vat: joi_1.default.number().min(0).required(),
             rooms: joi_1.default.array()
@@ -65,6 +65,7 @@ class ReservationValidator {
                     adults: joi_1.default.number().min(1).required(),
                     children: joi_1.default.number().min(0).required(),
                     infant: joi_1.default.number().min(0).required(),
+                    cbf: joi_1.default.number().min(0).required(),
                 }))
                     .min(1)
                     .required(),
@@ -72,6 +73,9 @@ class ReservationValidator {
             }))
                 .min(1)
                 .required(),
+            company_name: joi_1.default.string().allow("").optional(),
+            visit_purpose: joi_1.default.string().allow("").optional(),
+            is_company_booked: joi_1.default.boolean().required(),
             special_requests: joi_1.default.string().allow("").optional(),
             is_payment_given: joi_1.default.bool().required(),
             payment: joi_1.default.object({
