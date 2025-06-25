@@ -3,14 +3,6 @@ import config from "../config/config";
 
 let dbInstance: Knex;
 
-/**
- * Creates a database connection using Knex.js.
- * This function initializes the database connection only once and returns the instance.
- * It uses PostgreSQL as the database client.
- *
- * @returns {Knex} The Knex instance for database operations.
- */
-
 const createDbCon = () => {
   if (!dbInstance) {
     dbInstance = knex({

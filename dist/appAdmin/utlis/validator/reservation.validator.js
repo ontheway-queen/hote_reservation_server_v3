@@ -75,7 +75,7 @@ class ReservationValidator {
                 .required(),
             company_name: joi_1.default.string().allow("").optional(),
             visit_purpose: joi_1.default.string().allow("").optional(),
-            is_company_booked: joi_1.default.boolean().required(),
+            is_company_booked: joi_1.default.boolean().required().default(false),
             special_requests: joi_1.default.string().allow("").optional(),
             is_payment_given: joi_1.default.bool().required(),
             payment: joi_1.default.object({
