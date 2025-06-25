@@ -94,7 +94,7 @@ class ReportModel extends schema_1.default {
                 .where("b.hotel_code", hotel_code)
                 .andWhere((qb) => {
                 if (from_date && to_date) {
-                    qb.whereBetween("b.booking_date", [from_date, endDate]);
+                    qb.whereBetween("b.check_in", [from_date, endDate]);
                 }
                 if (booking_type) {
                     qb.andWhere("b.booking_type", booking_type);
