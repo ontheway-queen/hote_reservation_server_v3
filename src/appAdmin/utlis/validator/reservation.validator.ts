@@ -79,7 +79,7 @@ export class ReservationValidator {
 
     company_name: Joi.string().allow("").optional(),
     visit_purpose: Joi.string().allow("").optional(),
-    is_company_booked: Joi.boolean().required().default(false),
+    is_company_booked: Joi.boolean().optional().default(false),
     special_requests: Joi.string().allow("").optional(),
     is_payment_given: Joi.bool().required(),
     payment: Joi.object({
