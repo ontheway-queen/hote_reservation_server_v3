@@ -190,7 +190,7 @@ export interface IRoomBooking {
   booking_type: string;
   status: string;
   // sub_total: number;
-  // total_amount: number;
+  total_amount: number;
   vat: number;
   service_charge: number;
   discount_amount: number;

@@ -52,11 +52,29 @@ export class SubReservationService extends AbstractServices {
     return insertedGuest.id;
   }
 
+  // public calculateTotals(
+  //   rooms: RoomRequest[],
+  //   nights: number,
+  //   fees: { vat: number; service_charge: number; discount: number }
+  // ): { total: number; total_amount: number; sub_total: number } {
+  //   let total_changed_price = 0;
+
+  //   rooms.forEach((room) => {
+  //     total_changed_price += room.rate.changed_price * room.number_of_rooms;
+  //   });
+
+  //   const total = total_changed_price * nights;
+  //   const total_amount = total + fees.vat + fees.service_charge - fees.discount;
+  //   const sub_total = total + fees.vat + fees.service_charge;
+
+  //   return { total, total_amount, sub_total };
+  // }
+
   public calculateTotals(
     rooms: RoomRequest[],
     nights: number,
     fees: { vat: number; service_charge: number; discount: number }
-  ): { total: number; total_amount: number; sub_total: number } {
+  ): { total_amount: number } {
     let total_changed_price = 0;
 
     rooms.forEach((room) => {
@@ -64,10 +82,10 @@ export class SubReservationService extends AbstractServices {
     });
 
     const total = total_changed_price * nights;
-    const total_amount = total + fees.vat + fees.service_charge - fees.discount;
-    const sub_total = total + fees.vat + fees.service_charge;
 
-    return { total, total_amount, sub_total };
+    const total_amount = total + fees.vat + fees.service_charge;
+
+    return { total_amount };
   }
 
   public calculateTotalsByBookingRooms(
@@ -97,7 +115,7 @@ export class SubReservationService extends AbstractServices {
     hotel_code,
     guest_id,
     // sub_total,
-    // total_amount,
+    total_amount,
     is_checked_in,
     total_nights,
   }: {
@@ -124,7 +142,7 @@ export class SubReservationService extends AbstractServices {
     hotel_code: number;
     guest_id: number;
     // sub_total: number;
-    // total_amount: number;
+    total_amount: number;
     total_nights: number;
     is_checked_in: boolean;
   }): Promise<{ id: number }> {
@@ -142,7 +160,7 @@ export class SubReservationService extends AbstractServices {
       guest_id,
       hotel_code,
       // sub_total,
-      // total_amount,
+      total_amount,
       total_nights,
       vat: payload.vat,
       service_charge: payload.service_charge,

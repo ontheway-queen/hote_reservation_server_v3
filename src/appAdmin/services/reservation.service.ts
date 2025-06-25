@@ -339,6 +339,13 @@ export class ReservationService extends AbstractServices {
       // Guest
       const guest_id = await sub.findOrCreateGuest(body.guest, hotel_code);
 
+      // Totals
+      const { total_amount } = sub.calculateTotals(body.rooms, total_nights, {
+        vat: body.vat,
+        service_charge: body.service_charge,
+        discount: body.discount_amount,
+      });
+
       // Booking
       const booking = await sub.createMainBooking({
         payload: {
@@ -364,7 +371,7 @@ export class ReservationService extends AbstractServices {
         hotel_code,
         guest_id,
         // sub_total,
-        // total_amount,
+        total_amount,
         is_checked_in: body.is_checked_in,
         total_nights,
       });

@@ -297,6 +297,12 @@ class ReservationService extends abstract_service_1.default {
                 }));
                 // Guest
                 const guest_id = yield sub.findOrCreateGuest(body.guest, hotel_code);
+                // Totals
+                const { total_amount } = sub.calculateTotals(body.rooms, total_nights, {
+                    vat: body.vat,
+                    service_charge: body.service_charge,
+                    discount: body.discount_amount,
+                });
                 // Booking
                 const booking = yield sub.createMainBooking({
                     payload: {
@@ -322,7 +328,7 @@ class ReservationService extends abstract_service_1.default {
                     hotel_code,
                     guest_id,
                     // sub_total,
-                    // total_amount,
+                    total_amount,
                     is_checked_in: body.is_checked_in,
                     total_nights,
                 });
