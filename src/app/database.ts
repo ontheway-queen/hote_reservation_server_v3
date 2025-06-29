@@ -3,8 +3,6 @@ import config from "../config/config";
 
 let dbInstance: Knex;
 
-const isProduction = process.env.NODE_ENV === "production";
-
 const createDbCon = () => {
   if (!dbInstance) {
     dbInstance = knex({
@@ -15,10 +13,9 @@ const createDbCon = () => {
         user: config.DB_USER,
         password: config.DB_PASS,
         database: config.DB_NAME,
-        // ssl: isProduction ? { rejectUnauthorized: false } : false,
-        ssl: {
-          rejectUnauthorized: false,
-        },
+        // ssl: {
+        //   rejectUnauthorized: false,
+        // },
       },
       pool: {
         min: 5,

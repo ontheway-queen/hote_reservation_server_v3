@@ -24,6 +24,10 @@ export const origin: string[] = [
   "https://www.main.d2cia6fc41vdc2.amplifyapp.com",
   "https://main.d289joll8dty0k.amplifyapp.com",
   "https://www.main.d289joll8dty0k.amplifyapp.com",
+  "https://thehotel360.com",
+  "https://www.thehotel360.com",
+  "https://admin.thehotel360.com",
+  "https://www.admin.thehotel360.com",
 ];
 
 export const allStrings = [

@@ -27,9 +27,9 @@ class AdministrationRouter extends abstract_router_1.default {
         //     this.administratonController.updateAdmin
         //   );
         // // create permission
-        // this.router
-        //   .route("/permission")
-        //   .get(this.administratonController.getAllPermission);
+        this.router
+            .route("/permission")
+            .get(this.administratonController.getAllPermission);
         // // create role
         // this.router
         //   .route("/role")
@@ -45,10 +45,6 @@ class AdministrationRouter extends abstract_router_1.default {
             .route("/role")
             .post(this.administratonController.createRole)
             .get(this.administratonController.roleList);
-        //create permission, view permission
-        this.router
-            .route("/permission")
-            .get(this.administratonController.permissionList);
         //get role permissions, update role permissions
         this.router
             .route("/role/:id")

@@ -197,64 +197,30 @@ class RAdministrationModel extends Schema {
   }
 
   // get single role
-  public async getSingleRole({
+  public async getSingleRoleByView({
     id,
-    name,
-    permission_id,
     hotel_code,
+    role_name,
   }: {
     id?: number;
-    hotel_code?: number;
-    name?: string;
-    permission_id?: number;
+    hotel_code: number;
+    role_name?: string;
   }) {
-    return await this.db("roles as rol")
+    const res = await this.db("role_permission_view")
       .withSchema(this.RESERVATION_SCHEMA)
-      .select(
-        "rol.id as role_id",
-        "rol.name as role_name",
-        "rol.status",
-        "rol.init_role",
-        this.db.raw(`
-      case when exists (
-        select 1
-        from ${this.RESERVATION_SCHEMA}.role_permissions rp
-        where rp.role_id = rol.id
-      ) then (
-        select json_agg(
-          json_build_object(
-            'permission_id', per.id,
-            'permission_name', per.name,
-            'read', rp.read,
-            'write', rp.write,
-            'update', rp.update,
-            'delete', rp.delete
-          )
-                order by per.name asc
-        )
-        from ${this.RESERVATION_SCHEMA}.role_permissions rp
-        left join ${this.RESERVATION_SCHEMA}.permissions per
-        on rp.permission_id = per.id
-        where rp.role_id = rol.id
-        group by rp.role_id
-      ) else '[]' end as permissions
-    `)
-      )
-      .where((qb) => {
+      .select("*")
+      .andWhere({ hotel_code })
+      .andWhere(function () {
+        if (role_name) {
+          this.where("LOWER(role_name)", role_name.toLowerCase());
+        }
         if (id) {
-          qb.where("rol.id", id);
-        }
-
-        qb.andWhere("rol.hotel_code", hotel_code);
-        if (name) {
-          qb.where("rol.name", name);
-        }
-        if (permission_id) {
-          qb.andWhere("per.id", permission_id);
+          this.where("role_id", id);
         }
       });
-  }
 
+    return res;
+  }
   // update role
   public async updateSingleRole(id: number, body: any, hotel_code: number) {
     const res = await this.db("roles")

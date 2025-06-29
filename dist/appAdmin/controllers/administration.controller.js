@@ -31,15 +31,11 @@ class AdministrationController extends abstract_controller_1.default {
         super();
         this.service = new administration_service_1.default();
         this.validator = new administration_validator_1.default();
-        // // get all permission
-        // public getAllPermission = this.asyncWrapper.wrap(
-        //   null,
-        //   async (req: Request, res: Response) => {
-        //     const { code, ...data } =
-        //       await this.service.getAllPermission(req);
-        //     res.status(code).json(data);
-        //   }
-        // );
+        // get all permission
+        this.getAllPermission = this.asyncWrapper.wrap(null, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _a = yield this.service.getAllPermission(req), { code } = _a, data = __rest(_a, ["code"]);
+            res.status(code).json(data);
+        }));
         // // create role
         // public createRole = this.asyncWrapper.wrap(
         //   { bodySchema: this.administratorValidator.createRolePermissionValidator },
@@ -117,17 +113,12 @@ class AdministrationController extends abstract_controller_1.default {
         // );
         //create role
         this.createRole = this.asyncWrapper.wrap({ bodySchema: this.validator.createRole }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _a = yield this.service.createRole(req), { code } = _a, data = __rest(_a, ["code"]);
+            const _b = yield this.service.createRole(req), { code } = _b, data = __rest(_b, ["code"]);
             res.status(code).json(data);
         }));
         //role list
         this.roleList = this.asyncWrapper.wrap(null, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _b = yield this.service.roleList(req), { code } = _b, data = __rest(_b, ["code"]);
-            res.status(code).json(data);
-        }));
-        //permission list
-        this.permissionList = this.asyncWrapper.wrap(null, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _c = yield this.service.permissionList(req), { code } = _c, data = __rest(_c, ["code"]);
+            const _c = yield this.service.roleList(req), { code } = _c, data = __rest(_c, ["code"]);
             res.status(code).json(data);
         }));
         //get single role permission

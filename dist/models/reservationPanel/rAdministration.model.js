@@ -148,46 +148,21 @@ class RAdministrationModel extends schema_1.default {
         });
     }
     // get single role
-    getSingleRole({ id, name, permission_id, hotel_code, }) {
+    getSingleRoleByView({ id, hotel_code, role_name, }) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("roles as rol")
+            const res = yield this.db("role_permission_view")
                 .withSchema(this.RESERVATION_SCHEMA)
-                .select("rol.id as role_id", "rol.name as role_name", "rol.status", "rol.init_role", this.db.raw(`
-      case when exists (
-        select 1
-        from ${this.RESERVATION_SCHEMA}.role_permissions rp
-        where rp.role_id = rol.id
-      ) then (
-        select json_agg(
-          json_build_object(
-            'permission_id', per.id,
-            'permission_name', per.name,
-            'read', rp.read,
-            'write', rp.write,
-            'update', rp.update,
-            'delete', rp.delete
-          )
-                order by per.name asc
-        )
-        from ${this.RESERVATION_SCHEMA}.role_permissions rp
-        left join ${this.RESERVATION_SCHEMA}.permissions per
-        on rp.permission_id = per.id
-        where rp.role_id = rol.id
-        group by rp.role_id
-      ) else '[]' end as permissions
-    `))
-                .where((qb) => {
+                .select("*")
+                .andWhere({ hotel_code })
+                .andWhere(function () {
+                if (role_name) {
+                    this.where("LOWER(role_name)", role_name.toLowerCase());
+                }
                 if (id) {
-                    qb.where("rol.id", id);
-                }
-                qb.andWhere("rol.hotel_code", hotel_code);
-                if (name) {
-                    qb.where("rol.name", name);
-                }
-                if (permission_id) {
-                    qb.andWhere("per.id", permission_id);
+                    this.where("role_id", id);
                 }
             });
+            return res;
         });
     }
     // update role

@@ -402,12 +402,11 @@ class AdministrationService extends AbstractServices {
 
       const model = this.Model.rAdministrationModel(trx);
       const { role_name, permissions } = req.body;
-      const check_name = await model.getSingleRole({
-        name: role_name,
+      const check_name = await model.getSingleRoleByView({
+        role_name,
         hotel_code,
       });
 
-      console.log({ check_name });
       if (check_name.length) {
         return {
           success: false,
@@ -484,19 +483,41 @@ class AdministrationService extends AbstractServices {
   }
 
   //permission list
-  public async permissionList(req: Request) {
-    const { limit, skip } = req.query;
+  public async getAllPermission(req: Request) {
+    const { hotel_code } = req.hotel_admin;
 
-    const permission_list =
-      await this.Model.rAdministrationModel().permissionsList({
-        limit: Number(limit),
-        skip: Number(skip),
-      });
+    const model = this.Model.mConfigurationModel();
+    const data = await model.getAllPermissionByHotel(hotel_code);
+
+    const { permissions } = data[0];
+
+    const groupedPermissions: any = {};
+
+    permissions.forEach((entry: any) => {
+      const permission_group_id = entry.permission_group_id;
+      const permission = {
+        permission_id: entry.permission_id,
+        permission_name: entry.permission_name,
+        h_permission_id: entry.h_permission_id,
+      };
+
+      if (!groupedPermissions[permission_group_id]) {
+        groupedPermissions[permission_group_id] = {
+          permission_group_id: permission_group_id,
+          permissionGroupName: entry.permission_group_name,
+          permissions: [permission],
+        };
+      } else {
+        groupedPermissions[permission_group_id].permissions.push(permission);
+      }
+    });
+
+    const result = Object.values(groupedPermissions);
+
     return {
       success: true,
       code: this.StatusCode.HTTP_OK,
-      total: permission_list.total,
-      data: permission_list.data,
+      data: result,
     };
   }
 
@@ -505,7 +526,7 @@ class AdministrationService extends AbstractServices {
     const role_id = req.params.id;
 
     const role_permission =
-      await this.Model.rAdministrationModel().getSingleRole({
+      await this.Model.rAdministrationModel().getSingleRoleByView({
         id: parseInt(role_id),
         hotel_code: req.hotel_admin.hotel_code,
       });
@@ -521,7 +542,6 @@ class AdministrationService extends AbstractServices {
     return {
       success: true,
       code: this.StatusCode.HTTP_OK,
-      message: this.ResMsg.HTTP_OK,
       data: role_permission[0],
     };
   }
@@ -533,7 +553,7 @@ class AdministrationService extends AbstractServices {
       const model = this.Model.rAdministrationModel(trx);
       const { id: role_id } = req.params;
 
-      const check_role = await model.getSingleRole({
+      const check_role = await model.getSingleRoleByView({
         id: Number(role_id),
         hotel_code,
       });

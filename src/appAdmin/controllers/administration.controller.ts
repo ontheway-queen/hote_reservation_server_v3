@@ -10,16 +10,15 @@ class AdministrationController extends AbstractController {
     super();
   }
 
-  // // get all permission
-  // public getAllPermission = this.asyncWrapper.wrap(
-  //   null,
-  //   async (req: Request, res: Response) => {
-  //     const { code, ...data } =
-  //       await this.service.getAllPermission(req);
+  // get all permission
+  public getAllPermission = this.asyncWrapper.wrap(
+    null,
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.getAllPermission(req);
 
-  //     res.status(code).json(data);
-  //   }
-  // );
+      res.status(code).json(data);
+    }
+  );
 
   // // create role
   // public createRole = this.asyncWrapper.wrap(
@@ -124,15 +123,6 @@ class AdministrationController extends AbstractController {
     null,
     async (req: Request, res: Response) => {
       const { code, ...data } = await this.service.roleList(req);
-      res.status(code).json(data);
-    }
-  );
-
-  //permission list
-  public permissionList = this.asyncWrapper.wrap(
-    null,
-    async (req: Request, res: Response) => {
-      const { code, ...data } = await this.service.permissionList(req);
       res.status(code).json(data);
     }
   );

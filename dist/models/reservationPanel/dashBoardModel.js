@@ -60,157 +60,6 @@ class DashBoardModel extends schema_1.default {
             };
         });
     }
-    getRoomBookingReport(payload) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const { from_date, to_date, hotel_code } = payload;
-            // exact end date
-            const endDatePlusOneDay = new Date(to_date);
-            endDatePlusOneDay.setDate(endDatePlusOneDay.getDate() + 1);
-            // for ending room booking
-            const total_pending_room_booking = yield this.db("room_booking_view as rbv")
-                .withSchema(this.RESERVATION_SCHEMA)
-                .count("rbv.id as total_pending_room")
-                .where({ hotel_code, status: "pending" })
-                .andWhere(function () {
-                if (from_date && to_date) {
-                    this.andWhereBetween("rbv.created_at", [
-                        from_date,
-                        endDatePlusOneDay,
-                    ]);
-                }
-            });
-            // for ending room booking
-            const total_rejected_room_booking = yield this.db("room_booking_view as rbv")
-                .withSchema(this.RESERVATION_SCHEMA)
-                .count("rbv.id as total_rejected_room")
-                .where({ hotel_code, status: "rejected" })
-                .andWhere(function () {
-                if (from_date && to_date) {
-                    this.andWhereBetween("rbv.created_at", [
-                        from_date,
-                        endDatePlusOneDay,
-                    ]);
-                }
-            });
-            // for count total
-            const total_approved_room_booking = yield this.db("room_booking_view as rbv")
-                .withSchema(this.RESERVATION_SCHEMA)
-                .count("rbv.id as total_approved_room")
-                .where({ hotel_code, status: "approved" })
-                .andWhere(function () {
-                if (from_date && to_date) {
-                    this.andWhereBetween("rbv.created_at", [
-                        from_date,
-                        endDatePlusOneDay,
-                    ]);
-                }
-            });
-            const totalBookingAmount = yield this.db("room_booking_view as rbv")
-                .count("rbv.id as total")
-                .withSchema(this.RESERVATION_SCHEMA)
-                .sum("rbv.grand_total as totalAmount")
-                .where({ hotel_code, status: "approved", pay_status: 1 })
-                .andWhere(function () {
-                if (from_date && to_date) {
-                    this.andWhereBetween("rbv.created_at", [
-                        from_date,
-                        endDatePlusOneDay,
-                    ]);
-                }
-            });
-            return {
-                totalBookingAmount: totalBookingAmount[0].totalAmount,
-                total_approved_room_booking: total_approved_room_booking[0].total_approved_room,
-                total_rejected_room_booking: total_rejected_room_booking[0].total_rejected_room,
-                total_pending_room_booking: total_pending_room_booking[0].total_pending_room,
-            };
-        });
-    }
-    getHallBookingReport(payload) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const { limit, skip, hotel_code, from_date, to_date, user_id } = payload;
-            const dtbs = this.db("hall_booking_view as hbv");
-            if (limit && skip) {
-                dtbs.limit(parseInt(limit));
-                dtbs.offset(parseInt(skip));
-            }
-            const endDatePlusOneDay = new Date(to_date);
-            endDatePlusOneDay.setDate(endDatePlusOneDay.getDate() + 1);
-            const data = yield dtbs.withSchema(this.RESERVATION_SCHEMA);
-            const total_confimed_hall = yield this.db("hall_booking_view as hbv")
-                .withSchema(this.RESERVATION_SCHEMA)
-                .count("hbv.id as total_confimed")
-                .where("hbv.hotel_code", hotel_code)
-                .andWhere({ booking_status: "confirmed" })
-                .andWhere(function () {
-                if (user_id) {
-                    this.andWhere({ user_id });
-                }
-                if (from_date && to_date) {
-                    this.andWhereBetween("hbv.created_at", [
-                        from_date,
-                        endDatePlusOneDay,
-                    ]);
-                }
-            });
-            const total_pending_hall = yield this.db("hall_booking_view as hbv")
-                .withSchema(this.RESERVATION_SCHEMA)
-                .count("hbv.id as total_pending")
-                .where("hbv.hotel_code", hotel_code)
-                .andWhere({ booking_status: "pending" })
-                .andWhere(function () {
-                if (user_id) {
-                    this.andWhere({ user_id });
-                }
-                if (from_date && to_date) {
-                    this.andWhereBetween("hbv.created_at", [
-                        from_date,
-                        endDatePlusOneDay,
-                    ]);
-                }
-            });
-            const total_canceled_hall = yield this.db("hall_booking_view as hbv")
-                .withSchema(this.RESERVATION_SCHEMA)
-                .count("hbv.id as total_canceled")
-                .where("hbv.hotel_code", hotel_code)
-                .andWhere({ booking_status: "canceled" })
-                .andWhere(function () {
-                if (user_id) {
-                    this.andWhere({ user_id });
-                }
-                if (from_date && to_date) {
-                    this.andWhereBetween("hbv.created_at", [
-                        from_date,
-                        endDatePlusOneDay,
-                    ]);
-                }
-            });
-            const totalAmount = yield this.db("hall_booking_view as hbv")
-                .count("hbv.id as total")
-                .withSchema(this.RESERVATION_SCHEMA)
-                .sum("hbv.grand_total as totalAmount")
-                .where("hbv.hotel_code", hotel_code)
-                .andWhere({ booking_status: "confirmed", pay_status: 1 })
-                .andWhere(function () {
-                if (user_id) {
-                    this.andWhere({ user_id });
-                }
-                if (from_date && to_date) {
-                    this.andWhereBetween("hbv.created_at", [
-                        from_date,
-                        endDatePlusOneDay,
-                    ]);
-                }
-            });
-            return {
-                data,
-                totalAmount: totalAmount[0].totalAmount,
-                total_confimed_hall: total_confimed_hall[0].total_confimed,
-                total_pending_hall: total_pending_hall[0].total_pending,
-                total_canceled_hall: total_canceled_hall[0].total_canceled,
-            };
-        });
-    }
     getAccountReport(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             const { ac_type, from_date, hotel_code, to_date } = payload;
@@ -347,6 +196,7 @@ class DashBoardModel extends schema_1.default {
             const totalActiveBookings = yield this.db("bookings")
                 .withSchema(this.RESERVATION_SCHEMA)
                 .count("id as total")
+                .where("hotel_code", hotel_code)
                 .where(function () {
                 this.where(function () {
                     this.where("booking_type", "B").andWhere("status", "confirmed");
@@ -358,6 +208,7 @@ class DashBoardModel extends schema_1.default {
             const totalHoldBookings = yield this.db("bookings")
                 .withSchema(this.RESERVATION_SCHEMA)
                 .count("id as total")
+                .where("hotel_code", hotel_code)
                 .where(function () {
                 this.where("booking_type", "H").andWhere("status", "confirmed");
             })
