@@ -7,6 +7,7 @@ exports.db = void 0;
 const knex_1 = __importDefault(require("knex"));
 const config_1 = __importDefault(require("../config/config"));
 let dbInstance;
+const isProduction = process.env.NODE_ENV === "production";
 const createDbCon = () => {
     if (!dbInstance) {
         dbInstance = (0, knex_1.default)({
@@ -17,9 +18,10 @@ const createDbCon = () => {
                 user: config_1.default.DB_USER,
                 password: config_1.default.DB_PASS,
                 database: config_1.default.DB_NAME,
-                ssl: {
-                    rejectUnauthorized: false,
-                },
+                ssl: isProduction ? { rejectUnauthorized: false } : undefined,
+                // ssl: {
+                //   rejectUnauthorized: false,
+                // },
             },
             pool: {
                 min: 5,
