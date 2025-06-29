@@ -5,6 +5,7 @@ export interface IguestInterface {
   email?: string;
   phone?: string;
   city?: string;
+  address?: string;
   country?: string;
   nationality?: string;
   passport_no?: string;

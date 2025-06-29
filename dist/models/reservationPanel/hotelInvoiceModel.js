@@ -106,34 +106,70 @@ class HotelInvoiceModel extends schema_1.default {
         ) AS main_guest_info
       `), 
             // Aggregated folio items under the invoice
+            //   this.db.raw(
+            //     `
+            //   (
+            //     SELECT JSON_AGG(
+            //       JSON_BUILD_OBJECT(
+            //         'id', fi.id,
+            //         'folio_entry_id', fi.folio_entry_id,
+            //         'description', fi.description,
+            //         'type', fi.posting_type,
+            //         'debit', fi.debit,
+            //         'credit', fi.credit,
+            //         'created_at', fi.created_at,
+            //         'room',fi.room_id,
+            //         'room_name', r.room_name,
+            //         'room_type_name', rt.name,
+            //         'rack_rate', fi.rack_rate,
+            //         'date', fi.date
+            //       )
+            //     )
+            //     FROM ?? fi
+            //     left join hotel_reservation.rooms as r on r.id = fi.room_id
+            //     left join hotel_reservation.room_types as rt on r.room_type_id = rt.id
+            //     WHERE fi.inv_folio_id IN (
+            //       SELECT f.id
+            //       FROM ?? f
+            //       WHERE f.invoice_id = inv.id
+            //     )
+            //     ORDER BY fi.id
+            //   ) AS inv_items
+            // `,
+            //     [
+            //       "hotel_reservation.invoice_folio_items",
+            //       "hotel_reservation.invoice_folios",
+            //     ]
+            //   )
             this.db.raw(`
         (
-          SELECT JSON_AGG(
-            JSON_BUILD_OBJECT(
-              'id', fi.id,
-              'folio_entry_id', fi.folio_entry_id,
-              'description', fi.description,
-              'type', fi.posting_type,
-              'debit', fi.debit,
-              'credit', fi.credit,
-              'created_at', fi.created_at,
-              'room',fi.room_id,
-              'room_name', r.room_name,
-              'room_type_name', rt.name,
-              'rack_rate', fi.rack_rate,
-              'date', fi.date
+          SELECT JSON_AGG(t)
+          FROM (
+            SELECT 
+              fi.id,
+              fi.folio_entry_id,
+              fi.description,
+              fi.posting_type AS type,
+              fi.debit,
+              fi.credit,
+              fi.created_at,
+              fi.room_id AS room,
+              r.room_name,
+              rt.name AS room_type_name,
+              fi.rack_rate,
+              fi.date
+            FROM ?? fi
+            LEFT JOIN hotel_reservation.rooms r ON r.id = fi.room_id
+            LEFT JOIN hotel_reservation.room_types rt ON r.room_type_id = rt.id
+            WHERE fi.inv_folio_id IN (
+              SELECT f.id
+              FROM ?? f
+              WHERE f.invoice_id = inv.id
             )
-          )
-          FROM ?? fi
-          left join hotel_reservation.rooms as r on r.id = fi.room_id
-          left join hotel_reservation.room_types as rt on r.room_type_id = rt.id
-          WHERE fi.inv_folio_id IN (
-            SELECT f.id
-            FROM ?? f
-            WHERE f.invoice_id = inv.id
-          )
+            ORDER BY  fi.id
+          ) t
         ) AS inv_items
-      `, [
+        `, [
                 "hotel_reservation.invoice_folio_items",
                 "hotel_reservation.invoice_folios",
             ]))
@@ -258,7 +294,8 @@ class HotelInvoiceModel extends schema_1.default {
                 .leftJoin("rooms as r", "fe.room_id", "r.id")
                 .where("fe.folio_id", folio_id)
                 .andWhere("f.hotel_code", hotel_code)
-                .andWhere("fe.is_void", false);
+                .andWhere("fe.is_void", false)
+                .orderBy("fe.id", "asc");
         });
     }
     getFoliosEntriesbySingleBooking({ hotel_code, booking_id, entry_ids, posting_type, type, }) {
@@ -283,7 +320,8 @@ class HotelInvoiceModel extends schema_1.default {
                 if (type) {
                     this.andWhereRaw("LOWER(f.type) = ?", [type.toLowerCase()]);
                 }
-            });
+            })
+                .orderBy("fe.id", "asc");
         });
     }
     updateFolioEntries(payload, entryIDs) {

@@ -85,6 +85,13 @@ class ReservationValidator {
             }).optional(),
             source_id: joi_1.default.number().required(),
         });
+        this.getAllBookingByBookingModeValidator = joi_1.default.object({
+            current_date: joi_1.default.string().required(),
+            booking_mode: joi_1.default.string().valid("arrival", "departure", "stay").required(),
+            limit: joi_1.default.string().allow("").optional(),
+            skip: joi_1.default.string().allow("").optional(),
+            search: joi_1.default.string().allow("").optional(),
+        });
         this.addPayment = joi_1.default.object({
             folio_id: joi_1.default.number().required(),
             amount: joi_1.default.number().required(),

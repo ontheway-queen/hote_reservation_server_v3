@@ -78,6 +78,18 @@ export class ReservationController extends AbstractController {
     }
   );
 
+  public getArrivalDepStayBookings = this.asyncWrapper.wrap(
+    {
+      querySchema: this.validator.getAllBookingByBookingModeValidator,
+    },
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.getArrivalDepStayBookings(
+        req
+      );
+      res.status(code).json(data);
+    }
+  );
+
   public getSingleBooking = this.asyncWrapper.wrap(
     { paramSchema: this.commonValidator.singleParamValidator() },
     async (req: Request, res: Response) => {

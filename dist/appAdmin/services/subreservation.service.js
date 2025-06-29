@@ -45,6 +45,7 @@ class SubReservationService extends abstract_service_1.default {
                 country: guest.country,
                 email: guest.email,
                 phone: guest.phone,
+                address: guest.address,
             });
             return insertedGuest.id;
         });
@@ -72,18 +73,13 @@ class SubReservationService extends abstract_service_1.default {
         const total_amount = total + fees.vat + fees.service_charge;
         return { total_amount };
     }
-    calculateTotalsByBookingRooms(rooms, nights, fees) {
+    calculateTotalsByBookingRooms(rooms, nights) {
         let total_changed_price = 0;
         rooms.forEach((room) => {
             total_changed_price += room.unit_changed_rate;
         });
-        const total = total_changed_price * nights;
-        const total_amount = total +
-            Number(fees.vat) +
-            Number(fees.service_charge) -
-            Number(fees.discount);
-        const sub_total = total + Number(fees.vat) + Number(fees.service_charge);
-        return { total_amount, sub_total };
+        const total_amount = total_changed_price * nights;
+        return { total_amount };
     }
     createMainBooking({ payload, hotel_code, guest_id, 
     // sub_total,
@@ -345,6 +341,113 @@ class SubReservationService extends abstract_service_1.default {
             }
         });
     }
+    // public async createRoomBookingFolioWithEntries({
+    //   body,
+    //   booking_id,
+    //   guest_id,
+    //   req,
+    // }: {
+    //   req: Request;
+    //   body: BookingRequestBody;
+    //   booking_id: number;
+    //   guest_id: number;
+    // }) {
+    //   const hotelInvModel = this.Model.hotelInvoiceModel(this.trx);
+    //   // 1. Generate Folio Number
+    //   const [lastFolio] = await hotelInvModel.getLasFolioId();
+    //   const folio_number = HelperFunction.generateFolioNumber(lastFolio?.id);
+    //   // 2. Insert Folio
+    //   const [folio] = await hotelInvModel.insertInFolio({
+    //     booking_id,
+    //     folio_number,
+    //     guest_id,
+    //     hotel_code: req.hotel_admin.hotel_code,
+    //     name: "Reservation",
+    //     status: "open",
+    //     type: "Primary",
+    //   });
+    //   // 3. Generate Folio Entries per night
+    //   const folioEntriesBookingPayload: IinsertFolioEntriesPayload[] = [];
+    //   const checkInDate = new Date(body.check_in);
+    //   const checkOutDate = new Date(body.check_out);
+    //   for (
+    //     let currentDate = new Date(checkInDate);
+    //     currentDate < checkOutDate;
+    //     currentDate.setDate(currentDate.getDate() + 1)
+    //   ) {
+    //     const formattedDate = currentDate.toISOString().split("T")[0];
+    //     body.rooms.forEach((room) => {
+    //       room.guests.forEach((guest) => {
+    //         folioEntriesBookingPayload.push({
+    //           folio_id: folio.id,
+    //           date: formattedDate,
+    //           posting_type: "Charge",
+    //           debit: room.rate.changed_price,
+    //           room_id: guest.room_id,
+    //           description: `Room Tariff`,
+    //           rack_rate: room.rate.base_price,
+    //         });
+    //       });
+    //     });
+    //   }
+    //   const today = new Date().toISOString().split("T")[0];
+    //   // 5. VAT
+    //   if (body.vat && body.vat > 0) {
+    //     for (
+    //       let currentDate = new Date(checkInDate);
+    //       currentDate < checkOutDate;
+    //       currentDate.setDate(currentDate.getDate() + 1)
+    //     ) {
+    //       const formattedDate = currentDate.toISOString().split("T")[0];
+    //       folioEntriesBookingPayload.push({
+    //         folio_id: folio.id,
+    //         date: formattedDate,
+    //         posting_type: "Charge",
+    //         debit: body.vat,
+    //         room_id: 0,
+    //         description: `VAT`,
+    //         rack_rate: 0,
+    //       });
+    //     }
+    //   }
+    //   // 4. Service Charge
+    //   if (body.service_charge && body.service_charge > 0) {
+    //     for (
+    //       let currentDate = new Date(checkInDate);
+    //       currentDate < checkOutDate;
+    //       currentDate.setDate(currentDate.getDate() + 1)
+    //     ) {
+    //       const formattedDate = currentDate.toISOString().split("T")[0];
+    //       folioEntriesBookingPayload.push({
+    //         folio_id: folio.id,
+    //         date: formattedDate,
+    //         posting_type: "Charge",
+    //         debit: body.service_charge,
+    //         room_id: 0,
+    //         description: `Service Charge`,
+    //         rack_rate: 0,
+    //       });
+    //     }
+    //   }
+    //   // 6. Payment (if given)
+    //   if (body.is_payment_given && body.payment?.amount > 0) {
+    //     folioEntriesBookingPayload.push({
+    //       folio_id: folio.id,
+    //       date: today,
+    //       posting_type: "Payment",
+    //       debit: body.payment.amount,
+    //       room_id: 0,
+    //       description: `Payment Received`,
+    //       rack_rate: 0,
+    //     });
+    //   }
+    //   // 7. Insert All Entries
+    //   await hotelInvModel.insertInFolioEntries(folioEntriesBookingPayload);
+    //   return {
+    //     folio,
+    //     entries: folioEntriesBookingPayload,
+    //   };
+    // }
     createRoomBookingFolioWithEntries({ body, booking_id, guest_id, req, }) {
         var _a;
         return __awaiter(this, void 0, void 0, function* () {
@@ -362,12 +465,13 @@ class SubReservationService extends abstract_service_1.default {
                 status: "open",
                 type: "Primary",
             });
-            // 3. Generate Folio Entries per night
+            // 3. Generate Folio Entries per night in proper order
             const folioEntriesBookingPayload = [];
             const checkInDate = new Date(body.check_in);
             const checkOutDate = new Date(body.check_out);
             for (let currentDate = new Date(checkInDate); currentDate < checkOutDate; currentDate.setDate(currentDate.getDate() + 1)) {
                 const formattedDate = currentDate.toISOString().split("T")[0];
+                // 1. Room Tariff
                 body.rooms.forEach((room) => {
                     room.guests.forEach((guest) => {
                         folioEntriesBookingPayload.push({
@@ -381,33 +485,33 @@ class SubReservationService extends abstract_service_1.default {
                         });
                     });
                 });
+                // 2. VAT
+                if (body.vat && body.vat > 0) {
+                    folioEntriesBookingPayload.push({
+                        folio_id: folio.id,
+                        date: formattedDate,
+                        posting_type: "Charge",
+                        debit: body.vat,
+                        room_id: 0,
+                        description: `VAT`,
+                        rack_rate: 0,
+                    });
+                }
+                // 3. Service Charge
+                if (body.service_charge && body.service_charge > 0) {
+                    folioEntriesBookingPayload.push({
+                        folio_id: folio.id,
+                        date: formattedDate,
+                        posting_type: "Charge",
+                        debit: body.service_charge,
+                        room_id: 0,
+                        description: `Service Charge`,
+                        rack_rate: 0,
+                    });
+                }
             }
+            // 4. Payment (if given)
             const today = new Date().toISOString().split("T")[0];
-            // 4. Service Charge
-            if (body.service_charge && body.service_charge > 0) {
-                folioEntriesBookingPayload.push({
-                    folio_id: folio.id,
-                    date: today,
-                    posting_type: "Charge",
-                    debit: body.service_charge,
-                    room_id: 0,
-                    description: `Service Charge`,
-                    rack_rate: 0,
-                });
-            }
-            // 5. VAT
-            if (body.vat && body.vat > 0) {
-                folioEntriesBookingPayload.push({
-                    folio_id: folio.id,
-                    date: today,
-                    posting_type: "Charge",
-                    debit: body.vat,
-                    room_id: 0,
-                    description: `VAT`,
-                    rack_rate: 0,
-                });
-            }
-            // 6. Payment (if given)
             if (body.is_payment_given && ((_a = body.payment) === null || _a === void 0 ? void 0 : _a.amount) > 0) {
                 folioEntriesBookingPayload.push({
                     folio_id: folio.id,
@@ -419,7 +523,7 @@ class SubReservationService extends abstract_service_1.default {
                     rack_rate: 0,
                 });
             }
-            // 7. Insert All Entries
+            // 5. Insert All Entries
             yield hotelInvModel.insertInFolioEntries(folioEntriesBookingPayload);
             return {
                 folio,

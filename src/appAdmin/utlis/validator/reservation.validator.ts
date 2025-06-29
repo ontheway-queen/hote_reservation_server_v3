@@ -91,6 +91,14 @@ export class ReservationValidator {
     source_id: Joi.number().required(),
   });
 
+  public getAllBookingByBookingModeValidator = Joi.object({
+    current_date: Joi.string().required(),
+    booking_mode: Joi.string().valid("arrival", "departure", "stay").required(),
+    limit: Joi.string().allow("").optional(),
+    skip: Joi.string().allow("").optional(),
+    search: Joi.string().allow("").optional(),
+  });
+
   public addPayment = Joi.object({
     folio_id: Joi.number().required(),
     amount: Joi.number().required(),

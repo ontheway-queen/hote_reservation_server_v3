@@ -32,6 +32,10 @@ export class ReservationRouter {
       .get(this.controller.getAllBooking);
 
     this.router
+      .route("/booking/by/booking-mode")
+      .get(this.controller.getArrivalDepStayBookings);
+
+    this.router
       .route("/booking/:id")
       .get(this.controller.getSingleBooking)
       .patch(this.controller.updateSingleBooking);

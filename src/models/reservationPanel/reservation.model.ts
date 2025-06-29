@@ -553,4 +553,202 @@ AND (
         });
     }
   }
+
+  public async getArrivalDepStayBookings({
+    current_date,
+    hotel_code,
+    booking_mode,
+    limit,
+    skip,
+    search,
+  }: {
+    hotel_code: number;
+    current_date: string;
+    limit?: string;
+    skip?: string;
+    search: string;
+    booking_mode: "arrival" | "departure" | "stay";
+  }) {
+    if (booking_mode == "arrival") {
+      const total = await this.db("bookings as b")
+        .withSchema(this.RESERVATION_SCHEMA)
+        .count("b.id as total")
+        .leftJoin("guests as g", "b.guest_id", "g.id")
+        .where("b.hotel_code", hotel_code)
+        .andWhere("b.check_in", current_date)
+        .andWhere("b.status", "confirmed")
+        .andWhere(function () {
+          if (search) {
+            this.andWhere("b.booking_reference", "ilike", `%${search}%`)
+              .orWhere("g.first_name", "ilike", `%${search}%`)
+              .orWhere("g.email", "ilike", `%${search}%`);
+          }
+        })
+        .first();
+
+      const data = await this.db("bookings as b")
+        .withSchema(this.RESERVATION_SCHEMA)
+        .select(
+          "b.id",
+          "b.booking_reference",
+          this.db.raw(`TO_CHAR(b.check_in, 'YYYY-MM-DD') as check_in`),
+          this.db.raw(`TO_CHAR(b.check_out, 'YYYY-MM-DD') as check_out`),
+          this.db.raw(`TO_CHAR(b.booking_date, 'YYYY-MM-DD') as booking_date`),
+          "b.booking_type",
+          "b.status",
+          "src.name as source_name",
+          "b.total_amount",
+          "b.vat",
+          "b.discount_amount",
+          "b.service_charge",
+          "g.id as guest_id",
+          "g.first_name",
+          "g.last_name",
+          "g.email as guest_email"
+        )
+        .leftJoin("sources as src", "b.source_id", "src.id")
+        .leftJoin("guests as g", "b.guest_id", "g.id")
+        .where("b.hotel_code", hotel_code)
+        .andWhere("b.check_in", current_date)
+        .andWhere("b.status", "confirmed")
+        .andWhere(function () {
+          if (search) {
+            this.andWhere("b.booking_reference", "ilike", `%${search}%`)
+              .orWhere("g.first_name", "ilike", `%${search}%`)
+              .orWhere("g.email", "ilike", `%${search}%`);
+          }
+        })
+        .limit(limit ? parseInt(limit) : 50)
+        .offset(skip ? parseInt(skip) : 0)
+        .orderBy("b.id", "desc");
+
+      return {
+        data,
+        total: total ? parseInt(total.total as string) : 0,
+      };
+    } else if (booking_mode == "departure") {
+      const data = await this.db("bookings as b")
+        .withSchema(this.RESERVATION_SCHEMA)
+        .select(
+          "b.id",
+          "b.booking_reference",
+          this.db.raw(`TO_CHAR(b.check_in, 'YYYY-MM-DD') as check_in`),
+          this.db.raw(`TO_CHAR(b.check_out, 'YYYY-MM-DD') as check_out`),
+          this.db.raw(`TO_CHAR(b.booking_date, 'YYYY-MM-DD') as booking_date`),
+          "b.booking_type",
+          "b.status",
+          "src.name as source_name",
+          "b.total_amount",
+          "b.vat",
+          "b.discount_amount",
+          "b.service_charge",
+          "g.id as guest_id",
+          "g.first_name",
+          "g.last_name",
+          "g.email as guest_email"
+        )
+        .leftJoin("sources as src", "b.source_id", "src.id")
+        .leftJoin("guests as g", "b.guest_id", "g.id")
+        .where("b.hotel_code", hotel_code)
+        .andWhere("b.check_out", current_date)
+        .andWhere("b.status", "checked_in")
+        .andWhere(function () {
+          if (search) {
+            this.andWhere("b.booking_reference", "ilike", `%${search}%`)
+              .orWhere("g.first_name", "ilike", `%${search}%`)
+              .orWhere("g.email", "ilike", `%${search}%`);
+          }
+        })
+        .limit(limit ? parseInt(limit) : 50)
+        .offset(skip ? parseInt(skip) : 0)
+        .orderBy("b.id", "desc");
+
+      const total = await this.db("bookings as b")
+        .withSchema(this.RESERVATION_SCHEMA)
+        .count("b.id as total")
+        .leftJoin("guests as g", "b.guest_id", "g.id")
+        .where("b.hotel_code", hotel_code)
+        .andWhere("b.status", "checked_in")
+        .andWhere("b.check_out", current_date)
+        .andWhere(function () {
+          if (search) {
+            this.andWhere("b.booking_reference", "ilike", `%${search}%`)
+              .orWhere("g.first_name", "ilike", `%${search}%`)
+              .orWhere("g.email", "ilike", `%${search}%`);
+          }
+        })
+        .first();
+      return {
+        data,
+        total: total ? parseInt(total.total as string) : 0,
+      };
+    } else {
+      const data = await this.db("bookings as b")
+        .withSchema(this.RESERVATION_SCHEMA)
+        .select(
+          "b.id",
+          "b.booking_reference",
+          this.db.raw(`TO_CHAR(b.check_in, 'YYYY-MM-DD') as check_in`),
+          this.db.raw(`TO_CHAR(b.check_out, 'YYYY-MM-DD') as check_out`),
+          this.db.raw(`TO_CHAR(b.booking_date, 'YYYY-MM-DD') as booking_date`),
+          "b.booking_type",
+          "b.status",
+          "src.name as source_name",
+          "b.total_amount",
+          "b.vat",
+          "b.discount_amount",
+          "b.service_charge",
+          "g.id as guest_id",
+          "g.first_name",
+          "g.last_name",
+          "g.email as guest_email"
+        )
+        .leftJoin("sources as src", "b.source_id", "src.id")
+        .leftJoin("guests as g", "b.guest_id", "g.id")
+        .andWhere(function () {
+          this.where("b.check_out", ">", current_date).andWhere(
+            "b.check_in",
+            "<=",
+            current_date
+          );
+        })
+        .andWhere(function () {
+          if (search) {
+            this.andWhere("b.booking_reference", "ilike", `%${search}%`)
+              .orWhere("g.first_name", "ilike", `%${search}%`)
+              .orWhere("g.email", "ilike", `%${search}%`);
+          }
+        })
+        .andWhere("b.status", "checked_in")
+        .limit(limit ? parseInt(limit) : 50)
+        .offset(skip ? parseInt(skip) : 0)
+        .orderBy("b.id", "desc");
+
+      const total = await this.db("bookings as b")
+        .withSchema(this.RESERVATION_SCHEMA)
+        .count("b.id as total")
+        .leftJoin("guests as g", "b.guest_id", "g.id")
+        .where("b.hotel_code", hotel_code)
+        .andWhere(function () {
+          this.where("b.check_out", ">", current_date).andWhere(
+            "b.check_in",
+            "<=",
+            current_date
+          );
+        })
+        .andWhere(function () {
+          if (search) {
+            this.andWhere("b.booking_reference", "ilike", `%${search}%`)
+              .orWhere("g.first_name", "ilike", `%${search}%`)
+              .orWhere("g.email", "ilike", `%${search}%`);
+          }
+        })
+        .andWhere("b.status", "checked_in")
+        .first();
+      return {
+        data,
+        total: total ? parseInt(total.total as string) : 0,
+      };
+    }
+  }
 }

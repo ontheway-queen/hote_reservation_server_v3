@@ -125,6 +125,7 @@ export interface IguestReqBody {
   phone: string;
   nationality: string;
   country: string;
+  address: string;
 }
 
 export interface BookingRequestBody {
