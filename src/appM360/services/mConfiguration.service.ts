@@ -1,6 +1,10 @@
 import { Request } from "express";
 import AbstractServices from "../../abstarcts/abstract.service";
-import { IhotelPermissions } from "../utlis/interfaces/mConfiguration.interfaces.";
+import {
+  HotelPermission,
+  IhotelPermissions,
+  UpdateHotelPermissionReqBody,
+} from "../utlis/interfaces/mConfiguration.interfaces.";
 
 class MConfigurationService extends AbstractServices {
   constructor() {
@@ -85,11 +89,11 @@ class MConfigurationService extends AbstractServices {
   }
 
   public async getSingleHotelPermission(req: Request) {
-    const { id } = req.params;
+    const { hotel_code } = req.params;
 
     const data: IhotelPermissions[] =
       await this.Model.mConfigurationModel().getAllPermissionByHotel(
-        parseInt(id)
+        parseInt(hotel_code)
       );
 
     const { permissions } = data[0];
@@ -125,84 +129,53 @@ class MConfigurationService extends AbstractServices {
 
   public async updateSingleHotelPermission(req: Request) {
     return await this.db.transaction(async (trx) => {
-      const { id } = req.params;
-
-      const { added, deleted } = req.body;
+      const hotel_code = parseInt(req.params.hotel_code);
+      const { added = [], deleted = [] }: UpdateHotelPermissionReqBody =
+        req.body;
 
       const model = this.Model.mConfigurationModel(trx);
 
       const checkHotelPermission = await model.getAllPermissionByHotel(
-        parseInt(id)
+        hotel_code
       );
 
-      const { permissions } = checkHotelPermission[0];
+      const existingPermissions: HotelPermission[] =
+        checkHotelPermission[0]?.permissions || [];
 
-      let distinctValueForAdd = [];
+      const existingPermissionIds = new Set(
+        existingPermissions.map((perm) => perm.permission_id)
+      );
+      const existingHPermissionMap = new Map<number, number>();
+      existingPermissions.forEach((perm) =>
+        existingHPermissionMap.set(perm.permission_id, perm.h_permission_id)
+      );
 
-      let existRolePermissionIds = [];
+      // Filter only new permissions to add
+      const newPermissionIds = added.filter(
+        (permId) => !existingPermissionIds.has(permId)
+      );
 
-      if (permissions?.length) {
-        existRolePermissionIds = permissions.map(
-          (item: any) => item.h_permission_id
-        );
-        if (added?.length) {
-          let existHotelPermissionIds;
-
-          existHotelPermissionIds = permissions.map(
-            (item: any) => item.permission_id
-          );
-
-          for (let i = 0; i < added.length; i++) {
-            let found = false;
-            for (let j = 0; j < existHotelPermissionIds.length; j++) {
-              if (added[i] == existHotelPermissionIds[j]) {
-                found = true;
-                break;
-              }
-            }
-            if (!found) {
-              distinctValueForAdd.push(added[i]);
-            }
-          }
-        }
-      } else {
-        distinctValueForAdd = added;
+      if (newPermissionIds.length > 0) {
+        const insertPayload = newPermissionIds.map((permId) => ({
+          hotel_code: hotel_code,
+          permission_id: permId,
+        }));
+        await model.addedHotelPermission(insertPayload);
       }
 
-      if (distinctValueForAdd.length) {
-        const hotelPermissionInsertPayload = distinctValueForAdd.map(
-          (item: any) => {
-            return {
-              hotel_id: id,
-              permission_id: item,
-            };
-          }
-        );
+      if (deleted.length > 0) {
+        const hPermissionIdsToDelete = deleted
+          .map((permId) => existingHPermissionMap.get(permId))
+          .filter((id): id is number => id !== undefined);
 
-        // insert hotel permission payload
-        await model.addedHotelPermission(hotelPermissionInsertPayload);
-      }
-
-      if (deleted?.length) {
-        const deleteRolePermission = [];
-
-        for (let i = 0; i < deleted.length; i++) {
-          for (let j = 0; j < permissions.length; j++) {
-            if (deleted[i] == permissions[j].permission_id) {
-              deleteRolePermission.push(permissions[j].h_permission_id);
-            }
-          }
-        }
-
-        // delete role permission
-        if (deleteRolePermission.length) {
+        if (hPermissionIdsToDelete.length > 0) {
           await model.deleteHotelRolePermission(
-            parseInt(id),
-            deleteRolePermission
+            hotel_code,
+            hPermissionIdsToDelete
           );
         }
-        // delte hotel role permission
-        await model.deleteHotelPermission(parseInt(id), deleted);
+
+        await model.deleteHotelPermission(hotel_code, deleted);
       }
 
       return {

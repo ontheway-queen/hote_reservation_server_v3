@@ -45,22 +45,28 @@ class RoomController extends abstract_controller_1.default {
             const _b = yield this.roomService.getAllRoom(req), { code } = _b, data = __rest(_b, ["code"]);
             res.status(code).json(data);
         }));
+        this.getAllRoomByRoomStatus = this.asyncWrapper.wrap({
+            querySchema: this.roomvalidator.getAllHotelRoomByRoomStatusQueryValidator,
+        }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _c = yield this.roomService.getAllRoomByRoomStatus(req), { code } = _c, data = __rest(_c, ["code"]);
+            res.status(code).json(data);
+        }));
         this.getAllRoomByRoomTypes = this.asyncWrapper.wrap({}, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _c = yield this.roomService.getAllRoomByRoomTypes(req), { code } = _c, data = __rest(_c, ["code"]);
+            const _d = yield this.roomService.getAllRoomByRoomTypes(req), { code } = _d, data = __rest(_d, ["code"]);
             res.status(code).json(data);
         }));
         this.getAllAvailableRooms = this.asyncWrapper.wrap({}, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _d = yield this.roomService.getAllAvailableRooms(req), { code } = _d, data = __rest(_d, ["code"]);
+            const _e = yield this.roomService.getAllAvailableRooms(req), { code } = _e, data = __rest(_e, ["code"]);
             res.status(code).json(data);
         }));
         // update single hotel room
         this.updateHotelRoom = this.asyncWrapper.wrap({ bodySchema: this.roomvalidator.updateRoomValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _e = yield this.roomService.updateroom(req), { code } = _e, data = __rest(_e, ["code"]);
+            const _f = yield this.roomService.updateroom(req), { code } = _f, data = __rest(_f, ["code"]);
             res.status(code).json(data);
         }));
         // update single hotel room status
         this.updateHotelRoomStatus = this.asyncWrapper.wrap({ bodySchema: this.roomvalidator.updateRoomStatusValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _f = yield this.roomService.updateRoomStatus(req), { code } = _f, data = __rest(_f, ["code"]);
+            const _g = yield this.roomService.updateRoomStatus(req), { code } = _g, data = __rest(_g, ["code"]);
             res.status(code).json(data);
         }));
     }

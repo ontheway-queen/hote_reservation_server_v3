@@ -82,8 +82,8 @@ class MConfigurationService extends abstract_service_1.default {
     }
     getSingleHotelPermission(req) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { id } = req.params;
-            const data = yield this.Model.mConfigurationModel().getAllPermissionByHotel(parseInt(id));
+            const { hotel_code } = req.params;
+            const data = yield this.Model.mConfigurationModel().getAllPermissionByHotel(parseInt(hotel_code));
             const { permissions } = data[0];
             const groupedPermissions = {};
             permissions === null || permissions === void 0 ? void 0 : permissions.forEach((entry) => {
@@ -114,60 +114,32 @@ class MConfigurationService extends abstract_service_1.default {
     updateSingleHotelPermission(req) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
-                const { id } = req.params;
-                const { added, deleted } = req.body;
+                var _a;
+                const hotel_code = parseInt(req.params.hotel_code);
+                const { added = [], deleted = [] } = req.body;
                 const model = this.Model.mConfigurationModel(trx);
-                const checkHotelPermission = yield model.getAllPermissionByHotel(parseInt(id));
-                const { permissions } = checkHotelPermission[0];
-                let distinctValueForAdd = [];
-                let existRolePermissionIds = [];
-                if (permissions === null || permissions === void 0 ? void 0 : permissions.length) {
-                    existRolePermissionIds = permissions.map((item) => item.h_permission_id);
-                    if (added === null || added === void 0 ? void 0 : added.length) {
-                        let existHotelPermissionIds;
-                        existHotelPermissionIds = permissions.map((item) => item.permission_id);
-                        for (let i = 0; i < added.length; i++) {
-                            let found = false;
-                            for (let j = 0; j < existHotelPermissionIds.length; j++) {
-                                if (added[i] == existHotelPermissionIds[j]) {
-                                    found = true;
-                                    break;
-                                }
-                            }
-                            if (!found) {
-                                distinctValueForAdd.push(added[i]);
-                            }
-                        }
-                    }
+                const checkHotelPermission = yield model.getAllPermissionByHotel(hotel_code);
+                const existingPermissions = ((_a = checkHotelPermission[0]) === null || _a === void 0 ? void 0 : _a.permissions) || [];
+                const existingPermissionIds = new Set(existingPermissions.map((perm) => perm.permission_id));
+                const existingHPermissionMap = new Map();
+                existingPermissions.forEach((perm) => existingHPermissionMap.set(perm.permission_id, perm.h_permission_id));
+                // Filter only new permissions to add
+                const newPermissionIds = added.filter((permId) => !existingPermissionIds.has(permId));
+                if (newPermissionIds.length > 0) {
+                    const insertPayload = newPermissionIds.map((permId) => ({
+                        hotel_code: hotel_code,
+                        permission_id: permId,
+                    }));
+                    yield model.addedHotelPermission(insertPayload);
                 }
-                else {
-                    distinctValueForAdd = added;
-                }
-                if (distinctValueForAdd.length) {
-                    const hotelPermissionInsertPayload = distinctValueForAdd.map((item) => {
-                        return {
-                            hotel_id: id,
-                            permission_id: item,
-                        };
-                    });
-                    // insert hotel permission payload
-                    yield model.addedHotelPermission(hotelPermissionInsertPayload);
-                }
-                if (deleted === null || deleted === void 0 ? void 0 : deleted.length) {
-                    const deleteRolePermission = [];
-                    for (let i = 0; i < deleted.length; i++) {
-                        for (let j = 0; j < permissions.length; j++) {
-                            if (deleted[i] == permissions[j].permission_id) {
-                                deleteRolePermission.push(permissions[j].h_permission_id);
-                            }
-                        }
+                if (deleted.length > 0) {
+                    const hPermissionIdsToDelete = deleted
+                        .map((permId) => existingHPermissionMap.get(permId))
+                        .filter((id) => id !== undefined);
+                    if (hPermissionIdsToDelete.length > 0) {
+                        yield model.deleteHotelRolePermission(hotel_code, hPermissionIdsToDelete);
                     }
-                    // delete role permission
-                    if (deleteRolePermission.length) {
-                        yield model.deleteHotelRolePermission(parseInt(id), deleteRolePermission);
-                    }
-                    // delte hotel role permission
-                    yield model.deleteHotelPermission(parseInt(id), deleted);
+                    yield model.deleteHotelPermission(hotel_code, deleted);
                 }
                 return {
                     success: true,

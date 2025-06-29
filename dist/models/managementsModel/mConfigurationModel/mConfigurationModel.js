@@ -129,12 +129,12 @@ class MConfigurationModel extends schema_1.default {
         });
     }
     // get all permission
-    getAllPermissionByHotel(hotel_id) {
+    getAllPermissionByHotel(hotel_code) {
         return __awaiter(this, void 0, void 0, function* () {
             const res = yield this.db("hotel_permission_view")
                 .withSchema(this.RESERVATION_SCHEMA)
                 .select("*")
-                .where({ hotel_id });
+                .where({ hotel_code });
             return res;
         });
     }
@@ -173,12 +173,12 @@ class MConfigurationModel extends schema_1.default {
         });
     }
     // delete hotel hotel role permission
-    deleteHotelRolePermission(hotel_id, h_permission_id) {
+    deleteHotelRolePermission(hotel_code, h_permission_id) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("role_permission")
                 .withSchema(this.RESERVATION_SCHEMA)
                 .whereIn("h_permission_id", h_permission_id)
-                .andWhere({ hotel_id })
+                .andWhere({ hotel_code })
                 .delete();
         });
     }

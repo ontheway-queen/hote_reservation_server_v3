@@ -6,13 +6,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const joi_1 = __importDefault(require("joi"));
 class RoomValidator {
     constructor() {
-        // create room validator
         this.createRoomValidator = joi_1.default.object({
             room_name: joi_1.default.string().required(),
             floor_no: joi_1.default.number().required(),
             room_type_id: joi_1.default.number().required(),
         });
-        // get all hotel room validator
         this.getAllHotelRoomQueryValidator = joi_1.default.object({
             search: joi_1.default.string().allow("").optional(),
             room_type_id: joi_1.default.number().allow("").optional(),
@@ -21,7 +19,11 @@ class RoomValidator {
             limit: joi_1.default.string().allow("").optional(),
             skip: joi_1.default.string().allow("").optional(),
         });
-        // update hotel room validator
+        this.getAllHotelRoomByRoomStatusQueryValidator = joi_1.default.object({
+            room_type_id: joi_1.default.number().allow("").optional(),
+            current_date: joi_1.default.string().required(),
+            status: joi_1.default.string().allow("").optional(),
+        });
         this.updateRoomValidator = joi_1.default.object({
             room_name: joi_1.default.string().optional(),
             floor_no: joi_1.default.number().optional(),

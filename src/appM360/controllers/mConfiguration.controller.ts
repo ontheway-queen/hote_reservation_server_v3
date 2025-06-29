@@ -89,7 +89,7 @@ class MConfigurationController extends AbstractController {
 
   // get single hotel permission
   public getSingleHotelPermission = this.asyncWrapper.wrap(
-    { paramSchema: this.commonValidator.singleParamValidator() },
+    { paramSchema: this.commonValidator.singleParamValidator("hotel_code") },
     async (req: Request, res: Response) => {
       const { code, ...data } = await this.service.getSingleHotelPermission(
         req
@@ -102,7 +102,7 @@ class MConfigurationController extends AbstractController {
   // update single hotel permission
   public updateSingleHotelPermission = this.asyncWrapper.wrap(
     {
-      paramSchema: this.commonValidator.singleParamValidator(),
+      paramSchema: this.commonValidator.singleParamValidator("hotel_code"),
       bodySchema: this.validator.updatePermissionValidator,
     },
     async (req: Request, res: Response) => {

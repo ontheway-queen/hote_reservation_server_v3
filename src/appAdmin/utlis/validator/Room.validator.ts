@@ -1,13 +1,11 @@
 import Joi from "joi";
 class RoomValidator {
-  // create room validator
   public createRoomValidator = Joi.object({
     room_name: Joi.string().required(),
     floor_no: Joi.number().required(),
     room_type_id: Joi.number().required(),
   });
 
-  // get all hotel room validator
   public getAllHotelRoomQueryValidator = Joi.object({
     search: Joi.string().allow("").optional(),
     room_type_id: Joi.number().allow("").optional(),
@@ -17,7 +15,12 @@ class RoomValidator {
     skip: Joi.string().allow("").optional(),
   });
 
-  // update hotel room validator
+  public getAllHotelRoomByRoomStatusQueryValidator = Joi.object({
+    room_type_id: Joi.number().allow("").optional(),
+    current_date: Joi.string().required(),
+    status: Joi.string().allow("").optional(),
+  });
+
   public updateRoomValidator = Joi.object({
     room_name: Joi.string().optional(),
     floor_no: Joi.number().optional(),

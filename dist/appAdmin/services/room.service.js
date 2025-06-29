@@ -162,6 +162,26 @@ class RoomService extends abstract_service_1.default {
             };
         });
     }
+    getAllRoomByRoomStatus(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { search, limit, skip, room_type_id, status } = req.query;
+            const { hotel_code } = req.hotel_admin;
+            const { data, total } = yield this.Model.RoomModel().getAllRoomByRoomStatus({
+                limit: limit,
+                status: status,
+                skip: skip,
+                hotel_code,
+                room_type_id: parseInt(room_type_id),
+                current_date: req.query.current_date,
+            });
+            return {
+                success: true,
+                code: this.StatusCode.HTTP_OK,
+                total,
+                data,
+            };
+        });
+    }
     getAllRoomByRoomTypes(req) {
         return __awaiter(this, void 0, void 0, function* () {
             const { hotel_code } = req.hotel_admin;

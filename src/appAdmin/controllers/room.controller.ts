@@ -30,6 +30,18 @@ class RoomController extends AbstractController {
     }
   );
 
+  public getAllRoomByRoomStatus = this.asyncWrapper.wrap(
+    {
+      querySchema: this.roomvalidator.getAllHotelRoomByRoomStatusQueryValidator,
+    },
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.roomService.getAllRoomByRoomStatus(
+        req
+      );
+      res.status(code).json(data);
+    }
+  );
+
   public getAllRoomByRoomTypes = this.asyncWrapper.wrap(
     {},
     async (req: Request, res: Response) => {

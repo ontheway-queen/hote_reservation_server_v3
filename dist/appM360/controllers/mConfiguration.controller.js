@@ -68,13 +68,13 @@ class MConfigurationController extends abstract_controller_1.default {
             res.status(code).json(data);
         }));
         // get single hotel permission
-        this.getSingleHotelPermission = this.asyncWrapper.wrap({ paramSchema: this.commonValidator.singleParamValidator() }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+        this.getSingleHotelPermission = this.asyncWrapper.wrap({ paramSchema: this.commonValidator.singleParamValidator("hotel_code") }, (req, res) => __awaiter(this, void 0, void 0, function* () {
             const _j = yield this.service.getSingleHotelPermission(req), { code } = _j, data = __rest(_j, ["code"]);
             res.status(code).json(data);
         }));
         // update single hotel permission
         this.updateSingleHotelPermission = this.asyncWrapper.wrap({
-            paramSchema: this.commonValidator.singleParamValidator(),
+            paramSchema: this.commonValidator.singleParamValidator("hotel_code"),
             bodySchema: this.validator.updatePermissionValidator,
         }, (req, res) => __awaiter(this, void 0, void 0, function* () {
             const _k = yield this.service.updateSingleHotelPermission(req), { code } = _k, data = __rest(_k, ["code"]);

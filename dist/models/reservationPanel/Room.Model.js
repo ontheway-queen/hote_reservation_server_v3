@@ -88,7 +88,6 @@ class RoomModel extends schema_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             const { hotel_code, adult, child, check_in, check_out, limit, skip } = payload;
             const totalGuests = (adult !== null && adult !== void 0 ? adult : 1) + (child !== null && child !== void 0 ? child : 0);
-            console.log({ totalGuests });
             // Calculate number of nights
             const checkInDate = new Date(check_in);
             const checkOutDate = new Date(check_out);
@@ -207,7 +206,6 @@ class RoomModel extends schema_1.default {
                 .first();
         });
     }
-    // update hotel room
     updateRoom(roomId, hotel_code, payload) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("rooms")
@@ -215,6 +213,88 @@ class RoomModel extends schema_1.default {
                 .update(payload)
                 .where({ id: roomId })
                 .andWhere({ hotel_code });
+        });
+    }
+    getAllRoomByRoomStatus(payload) {
+        var _a, _b;
+        return __awaiter(this, void 0, void 0, function* () {
+            const { hotel_code, room_type_id, status, limit, skip, current_date, } = payload;
+            console.log({ current_date });
+            const dtbs = this.db("rooms as r").withSchema(this.RESERVATION_SCHEMA);
+            const parsedLimit = parseInt(limit);
+            const parsedSkip = parseInt(skip);
+            if (!isNaN(parsedLimit) && !isNaN(parsedSkip)) {
+                dtbs.limit(parsedLimit).offset(parsedSkip);
+            }
+            const data = yield this.db
+                .withSchema(this.RESERVATION_SCHEMA)
+                .select("r.floor_no", this.db.raw(`
+      JSON_AGG(
+        JSON_BUILD_OBJECT(
+          'id', r.id,
+          'hotel_code', r.hotel_code,
+          'room_no', r.room_name,
+          'floor_no', r.floor_no,
+          'room_type_id', r.room_type_id,
+          'status', r.status,
+          'room_type_name', rt.name,
+          'bookings', COALESCE((
+            SELECT JSON_AGG(
+              JSON_BUILD_OBJECT(
+                'booking_id', b.id,
+                'booking_reference', b.booking_reference,
+                'check_in', b.check_in,
+                'check_out', b.check_out,
+                'booking_type', b.booking_type,
+                'booking_status', b.status,
+                'guest_first_name', g.first_name,
+                'guest_last_name', g.last_name,
+                'guest_id', g.id
+              )
+            )
+            FROM hotel_reservation.booking_rooms br
+            JOIN hotel_reservation.bookings b ON b.id = br.booking_id
+            LEFT JOIN hotel_reservation.guests g ON g.id = b.guest_id
+            WHERE br.room_id = r.id
+            AND b.check_in <= ?
+              AND b.check_out >= ?
+              AND b.hotel_code = r.hotel_code
+              AND b.booking_type = ?
+              AND (b.status = ? OR b.status = ?)
+          ), '[]')
+        )
+      ) AS rooms
+    `, [current_date, current_date, "B", "confirmed", "checked_in"]))
+                .from("rooms as r")
+                .join("room_types as rt", "r.room_type_id", "rt.id")
+                .where("r.hotel_code", hotel_code)
+                .modify((qb) => {
+                if (status) {
+                    qb.andWhere("r.status", status);
+                }
+                if (room_type_id) {
+                    qb.andWhere("r.room_type_id", room_type_id);
+                }
+            })
+                .groupBy("r.floor_no")
+                .orderBy("r.floor_no", "asc");
+            const total = yield this.db("rooms as r")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .count("r.id as total")
+                .join("room_types as rt", "r.room_type_id", "rt.id")
+                .where(function () {
+                this.andWhere("r.hotel_code", hotel_code);
+                if (room_type_id) {
+                    this.andWhere("r.room_type_id", room_type_id);
+                }
+                if (status) {
+                    this.andWhere("r.status", status);
+                }
+            });
+            return {
+                data,
+                total: ((_a = total[0]) === null || _a === void 0 ? void 0 : _a.total) ? parseInt((_b = total[0]) === null || _b === void 0 ? void 0 : _b.total) : 0,
+            };
         });
     }
 }

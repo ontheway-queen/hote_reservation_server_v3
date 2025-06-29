@@ -26,7 +26,7 @@ class MConfigurationRouter extends abstract_router_1.default {
             .post(this.controller.createPermissionGroup)
             .get(this.controller.getPermissionGroup);
         this.router
-            .route("/permission/by-hotel/:id")
+            .route("/permission/by-hotel-code/:hotel_code")
             .get(this.controller.getSingleHotelPermission)
             .patch(this.controller.updateSingleHotelPermission);
         this.router

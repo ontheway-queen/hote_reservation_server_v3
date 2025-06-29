@@ -190,6 +190,30 @@ export class RoomService extends AbstractServices {
     };
   }
 
+  public async getAllRoomByRoomStatus(req: Request) {
+    const { search, limit, skip, room_type_id, status } = req.query;
+
+    const { hotel_code } = req.hotel_admin;
+
+    const { data, total } = await this.Model.RoomModel().getAllRoomByRoomStatus(
+      {
+        limit: limit as string,
+        status: status as string,
+        skip: skip as string,
+        hotel_code,
+        room_type_id: parseInt(room_type_id as string),
+        current_date: req.query.current_date as string,
+      }
+    );
+
+    return {
+      success: true,
+      code: this.StatusCode.HTTP_OK,
+      total,
+      data,
+    };
+  }
+
   public async getAllRoomByRoomTypes(req: Request) {
     const { hotel_code } = req.hotel_admin;
 

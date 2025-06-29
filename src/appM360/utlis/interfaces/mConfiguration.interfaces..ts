@@ -19,3 +19,13 @@ export interface IUpdateRoomTypeAmenitiesPayload {
   room_amenities: string;
   status: number;
 }
+
+export interface UpdateHotelPermissionReqBody {
+  added?: number[];
+  deleted?: number[];
+}
+
+export interface HotelPermission {
+  h_permission_id: number;
+  permission_id: number;
+}
