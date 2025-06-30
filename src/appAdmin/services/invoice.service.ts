@@ -15,7 +15,6 @@ export class InvoiceService extends AbstractServices {
         req.body as IinsertFolioInvoiceReqPayload;
 
       const invoiceModel = this.Model.hotelInvoiceModel(trx);
-      const reservationModel = this.Model.reservationModel(trx);
 
       const entryIDs: number[] = [];
       const folioIDs: number[] = [];
@@ -119,6 +118,9 @@ export class InvoiceService extends AbstractServices {
         success: true,
         code: this.StatusCode.HTTP_SUCCESSFUL,
         message: "Invoice has been created",
+        data: {
+          invoice_id: invRes[0].id,
+        },
       };
     });
   }

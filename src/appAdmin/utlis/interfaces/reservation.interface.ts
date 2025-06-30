@@ -132,6 +132,7 @@ export interface BookingRequestBody {
   reservation_type: "hold" | "booked";
   check_in: string;
   is_checked_in: boolean;
+  is_individual_booking: boolean;
   check_out: string;
   guest: IguestReqBody;
   pickup: boolean;
@@ -190,6 +191,7 @@ export interface IRoomBooking {
   check_out: string;
   booking_type: string;
   status: string;
+  is_individual_booking: boolean;
   // sub_total: number;
   total_amount: number;
   vat: number;
@@ -282,6 +284,7 @@ export interface IBookingDetails extends BookingGuest {
   booking_reference: string;
   booking_date: string; // or Date if parsed
   check_in: string;
+  is_individual_booking: boolean;
   check_out: string;
   booking_type: string;
   status: string;

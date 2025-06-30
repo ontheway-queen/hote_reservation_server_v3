@@ -120,11 +120,11 @@ class ReservationService extends abstract_service_1.default {
                 const { total_amount } = sub.calculateTotals(body.rooms, total_nights, {
                     vat: body.vat,
                     service_charge: body.service_charge,
-                    discount: body.discount_amount,
                 });
                 // Booking
                 const booking = yield sub.createMainBooking({
                     payload: {
+                        is_individual_booking: body.is_individual_booking,
                         check_in: body.check_in,
                         check_out: body.check_out,
                         created_by: req.hotel_admin.id,

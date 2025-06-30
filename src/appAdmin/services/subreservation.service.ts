@@ -53,28 +53,10 @@ export class SubReservationService extends AbstractServices {
     return insertedGuest.id;
   }
 
-  // public calculateTotals(
-  //   rooms: RoomRequest[],
-  //   nights: number,
-  //   fees: { vat: number; service_charge: number; discount: number }
-  // ): { total: number; total_amount: number; sub_total: number } {
-  //   let total_changed_price = 0;
-
-  //   rooms.forEach((room) => {
-  //     total_changed_price += room.rate.changed_price * room.number_of_rooms;
-  //   });
-
-  //   const total = total_changed_price * nights;
-  //   const total_amount = total + fees.vat + fees.service_charge - fees.discount;
-  //   const sub_total = total + fees.vat + fees.service_charge;
-
-  //   return { total, total_amount, sub_total };
-  // }
-
   public calculateTotals(
     rooms: RoomRequest[],
     nights: number,
-    fees: { vat: number; service_charge: number; discount: number }
+    fees: { vat: number; service_charge: number }
   ): { total_amount: number } {
     let total_changed_price = 0;
 
@@ -116,6 +98,7 @@ export class SubReservationService extends AbstractServices {
       booking_type: string;
       special_requests?: string;
       vat: number;
+      is_individual_booking: boolean;
       service_charge: number;
       discount_amount: number;
       source_id: number;
@@ -151,6 +134,7 @@ export class SubReservationService extends AbstractServices {
       guest_id,
       hotel_code,
       // sub_total,
+      is_individual_booking: payload.is_individual_booking,
       total_amount,
       total_nights,
       vat: payload.vat,

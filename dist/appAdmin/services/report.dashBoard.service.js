@@ -59,14 +59,12 @@ class ReportService extends abstract_service_1.default {
             };
         });
     }
-    getRoomBookingReport(req) {
+    inhouseGuestListReport(req) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { data, total } = yield this.Model.reportModel().getRoomBookingReport({
+            const { data, total } = yield this.Model.reportModel().inhouseGuestListReport({
+                search: req.query.search,
                 hotel_code: req.hotel_admin.hotel_code,
-                from_date: req.query.from_date,
-                to_date: req.query.to_date,
-                booking_type: req.query.booking_type,
-                status: req.query.status,
+                current_date: req.query.current_date,
                 limit: req.query.limit,
                 skip: req.query.skip,
             });

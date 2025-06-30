@@ -286,6 +286,9 @@ AND (
     const endBookedDate = booked_to ? new Date(booked_to) : null;
     if (endBookedDate) endBookedDate.setDate(endBookedDate.getDate() + 1);
 
+    const limitNum = limit ? Number(limit) : 50;
+    const offsetNum = skip ? Number(skip) : 0;
+
     const data = await this.db("bookings as b")
       .withSchema(this.RESERVATION_SCHEMA)
       .select(
@@ -296,15 +299,40 @@ AND (
         this.db.raw(`TO_CHAR(b.booking_date, 'YYYY-MM-DD') as booking_date`),
         "b.booking_type",
         "b.status",
-        "src.name as source_name",
+        "b.is_individual_booking",
         "b.total_amount",
         "b.vat",
         "b.discount_amount",
         "b.service_charge",
+        "src.name as source_name",
         "g.id as guest_id",
         "g.first_name",
         "g.last_name",
-        "g.email as guest_email"
+        "g.email as guest_email",
+        this.db.raw(
+          `(
+            SELECT JSON_AGG(JSON_BUILD_OBJECT(
+              'id', br.id,
+              'room_type_id', br.room_type_id,
+              'room_type_name', rt.name,
+              'room_id', br.room_id,
+              'room_name', r.room_name,
+              'adults', br.adults,
+              'children', br.children,
+              'infant', br.infant
+             
+            ))
+            FROM ?? AS br
+            LEFT JOIN ?? AS rt ON br.room_type_id = rt.id
+            LEFT JOIN ?? AS r ON br.room_id = r.id
+            WHERE br.booking_id = b.id
+          ) AS booking_rooms`,
+          [
+            "hotel_reservation.booking_rooms",
+            "hotel_reservation.room_types",
+            "hotel_reservation.rooms",
+          ]
+        )
       )
       .leftJoin("sources as src", "b.source_id", "src.id")
       .leftJoin("guests as g", "b.guest_id", "g.id")
@@ -316,28 +344,26 @@ AND (
         if (checkout_from && checkout_to) {
           this.andWhereBetween("b.check_out", [checkout_from, endCheckOutDate]);
         }
-
         if (booked_from && booked_to) {
           this.andWhereBetween("b.booking_date", [booked_from, endBookedDate]);
         }
-
         if (search) {
-          this.andWhere("b.booking_reference", "ilike", `%${search}%`)
-            .orWhere("g.first_name", "ilike", `%${search}%`)
-            .orWhere("g.email", "ilike", `%${search}%`);
+          this.andWhere(function () {
+            this.where("b.booking_reference", "ilike", `%${search}%`)
+              .orWhere("g.first_name", "ilike", `%${search}%`)
+              .orWhere("g.email", "ilike", `%${search}%`);
+          });
         }
-
         if (status) {
           this.andWhere("b.status", status);
         }
-
         if (booking_type) {
           this.andWhere("b.booking_type", booking_type);
         }
       })
       .orderBy("b.id", "desc")
-      .limit(limit ? Number(limit) : 50)
-      .offset(skip ? Number(skip) : 0);
+      .limit(limitNum)
+      .offset(offsetNum);
 
     const total = await this.db("bookings as b")
       .withSchema(this.RESERVATION_SCHEMA)
@@ -392,6 +418,7 @@ AND (
         this.db.raw(`TO_CHAR(b.booking_date, 'YYYY-MM-DD') as booking_date`),
         "b.booking_type",
         "b.status",
+        "b.is_individual_booking",
         "src.name as source_name",
         "b.total_amount",
         "b.vat",

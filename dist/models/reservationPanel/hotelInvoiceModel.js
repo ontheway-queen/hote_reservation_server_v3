@@ -95,7 +95,7 @@ class HotelInvoiceModel extends schema_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("invoices as inv")
                 .withSchema(this.RESERVATION_SCHEMA)
-                .select("inv.id", "inv.invoice_number", "inv.invoice_date", "inv.status", "inv.notes", "b.booking_reference", "b.total_nights", "b.is_company_booked", "b.company_name", "b.check_in", "b.check_out", this.db.raw("check_in::TEXT AS check_in_date"), this.db.raw("check_out::TEXT AS check_out_date"), this.db.raw(`
+                .select("inv.id", "inv.invoice_number", "inv.invoice_date", "inv.status", "inv.notes", "b.booking_reference", "b.total_nights", "b.is_individual_booking", "b.is_company_booked", "b.company_name", "b.check_in", "b.check_out", this.db.raw("check_in::TEXT AS check_in_date"), this.db.raw("check_out::TEXT AS check_out_date"), this.db.raw(`
         JSON_BUILD_OBJECT(
           'first_name', g.first_name,
           'last_name', g.last_name,
@@ -261,7 +261,7 @@ class HotelInvoiceModel extends schema_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("folios as f")
                 .withSchema(this.RESERVATION_SCHEMA)
-                .select("f.id", "f.name", this.db.raw(`(SELECT JSON_AGG(JSON_BUILD_OBJECT('entries_id',fe.id,'description',fe.description,'posting_type',fe.posting_type,'debit',fe.debit,'credit',fe.credit,'created_at',fe.created_at,'is_void',fe.is_void,'invoiced',fe.invoiced)) as folio_entries)`))
+                .select("f.id", "f.name", this.db.raw(`(SELECT JSON_AGG(JSON_BUILD_OBJECT('entries_id',fe.id,'description',fe.description,'posting_type',fe.posting_type,'debit',fe.debit,'credit',fe.credit,'created_at',fe.created_at,'is_void',fe.is_void,'invoiced',fe.invoiced,'date',fe.date)) as folio_entries)`))
                 .leftJoin("folio_entries as fe", "f.id", "fe.folio_id")
                 .where("f.booking_id", booking_id)
                 .andWhere("fe.is_void", false)

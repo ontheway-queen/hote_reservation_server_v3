@@ -129,6 +129,7 @@ class HotelInvoiceModel extends Schema {
         "inv.notes",
         "b.booking_reference",
         "b.total_nights",
+        "b.is_individual_booking",
         "b.is_company_booked",
         "b.company_name",
         "b.check_in",
@@ -352,7 +353,7 @@ class HotelInvoiceModel extends Schema {
         "f.id",
         "f.name",
         this.db.raw(
-          `(SELECT JSON_AGG(JSON_BUILD_OBJECT('entries_id',fe.id,'description',fe.description,'posting_type',fe.posting_type,'debit',fe.debit,'credit',fe.credit,'created_at',fe.created_at,'is_void',fe.is_void,'invoiced',fe.invoiced)) as folio_entries)`
+          `(SELECT JSON_AGG(JSON_BUILD_OBJECT('entries_id',fe.id,'description',fe.description,'posting_type',fe.posting_type,'debit',fe.debit,'credit',fe.credit,'created_at',fe.created_at,'is_void',fe.is_void,'invoiced',fe.invoiced,'date',fe.date)) as folio_entries)`
         )
       )
       .leftJoin("folio_entries as fe", "f.id", "fe.folio_id")

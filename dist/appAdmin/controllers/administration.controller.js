@@ -36,124 +36,53 @@ class AdministrationController extends abstract_controller_1.default {
             const _a = yield this.service.getAllPermission(req), { code } = _a, data = __rest(_a, ["code"]);
             res.status(code).json(data);
         }));
-        // // create role
-        // public createRole = this.asyncWrapper.wrap(
-        //   { bodySchema: this.administratorValidator.createRolePermissionValidator },
-        //   async (req: Request, res: Response) => {
-        //     const { code, ...data } = await this.service.createRole(
-        //       req
-        //     );
-        //     res.status(code).json(data);
-        //   }
-        // );
-        // // get role
-        // public getRole = this.asyncWrapper.wrap(
-        //   null,
-        //   async (req: Request, res: Response) => {
-        //     const { code, ...data } = await this.service.getRole(req);
-        //     res.status(code).json(data);
-        //   }
-        // );
-        // // get single role
-        // public getSingleRole = this.asyncWrapper.wrap(
-        //   { paramSchema: this.commonValidator.singleParamValidator() },
-        //   async (req: Request, res: Response) => {
-        //     const { code, ...data } = await this.service.getSingleRole(
-        //       req
-        //     );
-        //     res.status(code).json(data);
-        //   }
-        // );
-        // // update single role
-        // public updateSingleRole = this.asyncWrapper.wrap(
-        //   null,
-        //   async (req: Request, res: Response) => {
-        //     const { code, ...data } =
-        //       await this.service.updateSingleRole(req);
-        //     res.status(code).json(data);
-        //   }
-        // );
-        // // create admin
-        // public createAdmin = this.asyncWrapper.wrap(
-        //   { bodySchema: this.administratorValidator.createAdminValidator },
-        //   async (req: Request, res: Response) => {
-        //     const { code, ...data } = await this.service.createAdmin(
-        //       req
-        //     );
-        //     if (data.success) {
-        //       res.status(code).json(data);
-        //     } else {
-        //       this.error(data.message, code);
-        //     }
-        //   }
-        // );
-        // // update admin
-        // public updateAdmin = this.asyncWrapper.wrap(
-        //   null,
-        //   async (req: Request, res: Response) => {
-        //     const { code, ...data } = await this.service.updateAdmin(
-        //       req
-        //     );
-        //     if (data.success) {
-        //       res.status(code).json(data);
-        //     } else {
-        //       this.error(data.message, code);
-        //     }
-        //   }
-        // );
-        // // get all admin
-        // public getAllAdmin = this.asyncWrapper.wrap(
-        //   { querySchema: this.administratorValidator.getAllAdminQueryValidator },
-        //   async (req: Request, res: Response) => {
-        //     const { code, ...data } = await this.service.getAllAdmin(
-        //       req
-        //     );
-        //     res.status(code).json(data);
-        //   }
-        // );
-        //create role
-        this.createRole = this.asyncWrapper.wrap({ bodySchema: this.validator.createRole }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+        // create role
+        this.createRole = this.asyncWrapper.wrap({}, (req, res) => __awaiter(this, void 0, void 0, function* () {
             const _b = yield this.service.createRole(req), { code } = _b, data = __rest(_b, ["code"]);
             res.status(code).json(data);
         }));
-        //role list
-        this.roleList = this.asyncWrapper.wrap(null, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _c = yield this.service.roleList(req), { code } = _c, data = __rest(_c, ["code"]);
+        // get role
+        this.getAllRole = this.asyncWrapper.wrap(null, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _c = yield this.service.getAllRole(req), { code } = _c, data = __rest(_c, ["code"]);
             res.status(code).json(data);
         }));
-        //get single role permission
-        this.getSingleRolePermission = this.asyncWrapper.wrap({ paramSchema: this.commonValidator.singleParamValidator() }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _d = yield this.service.getSingleRolePermission(req), { code } = _d, data = __rest(_d, ["code"]);
+        this.getSingleRole = this.asyncWrapper.wrap({ paramSchema: this.commonValidator.singleParamValidator() }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _d = yield this.service.getSingleRole(req), { code } = _d, data = __rest(_d, ["code"]);
             res.status(code).json(data);
         }));
-        //update role permission
-        this.updateRolePermissions = this.asyncWrapper.wrap({
-            paramSchema: this.commonValidator.singleParamValidator(),
-            bodySchema: this.validator.updateRolePermissions,
-        }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _e = yield this.service.updateRolePermissions(req), { code } = _e, data = __rest(_e, ["code"]);
+        this.updateSingleRole = this.asyncWrapper.wrap({ bodySchema: this.validator.updateRolePermissions }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _e = yield this.service.updateSingleRole(req), { code } = _e, data = __rest(_e, ["code"]);
             res.status(code).json(data);
         }));
-        //create admin
+        // create admin
         this.createAdmin = this.asyncWrapper.wrap({
             bodySchema: this.validator.createAdmin,
         }, (req, res) => __awaiter(this, void 0, void 0, function* () {
             const _f = yield this.service.createAdmin(req), { code } = _f, data = __rest(_f, ["code"]);
+            if (data.success) {
+                res.status(code).json(data);
+            }
+            else {
+                this.error(data.message, code);
+            }
+        }));
+        // update admin
+        this.updateAdmin = this.asyncWrapper.wrap(null, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _g = yield this.service.updateAdmin(req), { code } = _g, data = __rest(_g, ["code"]);
+            if (data.success) {
+                res.status(code).json(data);
+            }
+            else {
+                this.error(data.message, code);
+            }
+        }));
+        // get all admin
+        this.getAllAdmin = this.asyncWrapper.wrap({}, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _h = yield this.service.getAllAdmin(req), { code } = _h, data = __rest(_h, ["code"]);
             res.status(code).json(data);
         }));
-        //get all admin
-        this.getAllAdmin = this.asyncWrapper.wrap({ querySchema: this.validator.getAllAdminQueryValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _g = yield this.service.getAllAdmin(req), { code } = _g, data = __rest(_g, ["code"]);
-            res.status(code).json(data);
-        }));
-        //get single admin
         this.getSingleAdmin = this.asyncWrapper.wrap({ paramSchema: this.commonValidator.singleParamValidator() }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _h = yield this.service.getSingleAdmin(req), { code } = _h, data = __rest(_h, ["code"]);
-            res.status(code).json(data);
-        }));
-        //update admin
-        this.updateAdmin = this.asyncWrapper.wrap({ bodySchema: this.validator.updateAdmin }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _j = yield this.service.updateAdmin(req), { code } = _j, data = __rest(_j, ["code"]);
+            const _j = yield this.service.getSingleAdmin(req), { code } = _j, data = __rest(_j, ["code"]);
             res.status(code).json(data);
         }));
     }

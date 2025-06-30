@@ -37,8 +37,8 @@ class MAdministrationModel extends schema_1.default {
     // get all permission
     getAllPermission(payload) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { ids, hotel_code } = payload;
-            const res = yield this.db("permission AS p")
+            const { ids } = payload;
+            return yield this.db("permission AS p")
                 .withSchema(this.RESERVATION_SCHEMA)
                 .select("p.id AS permission_id", "p.name As permission_name", "p.permission_group_id", "pg.name AS permission_group_name")
                 .join("permission_group AS pg", "p.permission_group_id", "pg.id")
@@ -47,7 +47,6 @@ class MAdministrationModel extends schema_1.default {
                     this.whereIn("p.id", ids);
                 }
             });
-            return res;
         });
     }
     // create role permission
@@ -80,18 +79,10 @@ class MAdministrationModel extends schema_1.default {
             return res;
         });
     }
-    // create permission of role
-    // public async createPermissionOfRole(permissionObj: any) {
-    //   const res = await this.db("rolePermission")
-    //     .withSchema(this.ADMINISTRATION_SCHEMA)
-    //     .insert(permissionObj, "roleId");
-    //   return res;
-    // }
     // get role
     getRole() {
         return __awaiter(this, void 0, void 0, function* () {
-            const res = yield this.db("role").withSchema(this.M_SCHEMA).select("*");
-            return res;
+            return yield this.db("role").withSchema(this.M_SCHEMA).select("*");
         });
     }
     // get single role
@@ -162,7 +153,6 @@ class MAdministrationModel extends schema_1.default {
             });
         });
     }
-    // get admin by id
     // get all admin
     getAllAdmin(limit, skip, status) {
         return __awaiter(this, void 0, void 0, function* () {

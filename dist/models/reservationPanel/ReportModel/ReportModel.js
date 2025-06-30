@@ -76,11 +76,9 @@ class ReportModel extends schema_1.default {
             });
         });
     }
-    getRoomBookingReport({ hotel_code, from_date, to_date, booking_type, status, limit, skip, }) {
+    inhouseGuestListReport({ hotel_code, current_date, search, limit, room_id, skip, }) {
         var _a;
         return __awaiter(this, void 0, void 0, function* () {
-            const endDate = new Date(to_date);
-            endDate.setDate(endDate.getDate() + 1);
             const dtbs = this.db("booking_rooms AS br");
             if (limit && skip) {
                 dtbs.limit(parseInt(limit)).offset(parseInt(skip));
@@ -93,14 +91,21 @@ class ReportModel extends schema_1.default {
                 .leftJoin("rooms AS r", "br.room_id", "r.id")
                 .where("b.hotel_code", hotel_code)
                 .andWhere((qb) => {
-                if (from_date && to_date) {
-                    qb.whereBetween("b.check_in", [from_date, endDate]);
+                qb.whereRaw("Date(b.check_in) <= ?", [current_date]).andWhereRaw("Date(b.check_out) >= ?", [current_date]);
+                qb.andWhere("b.booking_type", "B");
+                qb.andWhere("b.status", "checked_in");
+                if (search) {
+                    qb.andWhere((subQb) => {
+                        subQb
+                            .where("g.first_name", "like", `%${search}%`)
+                            .orWhere("g.last_name", "like", `%${search}%`)
+                            .orWhere("g.email", "like", `%${search}%`)
+                            .orWhere("g.phone", "like", `%${search}%`)
+                            .orWhere("r.room_name", "like", `%${search}%`);
+                    });
                 }
-                if (booking_type) {
-                    qb.andWhere("b.booking_type", booking_type);
-                }
-                if (status) {
-                    qb.andWhere("b.status", status);
+                if (room_id) {
+                    qb.andWhere("br.room_id", room_id);
                 }
             });
             const total = yield this.db("booking_rooms AS br")
@@ -110,14 +115,21 @@ class ReportModel extends schema_1.default {
                 .leftJoin("guests AS g", "b.guest_id", "g.id")
                 .where("b.hotel_code", hotel_code)
                 .andWhere((qb) => {
-                if (from_date && to_date) {
-                    qb.whereBetween("b.booking_date", [from_date, endDate]);
+                qb.whereRaw("Date(b.check_in) <= ?", [current_date]).andWhereRaw("Date(b.check_out) >= ?", [current_date]);
+                qb.andWhere("b.booking_type", "B");
+                qb.andWhere("b.status", "checked_in");
+                if (search) {
+                    qb.andWhere((subQb) => {
+                        subQb
+                            .where("g.first_name", "like", `%${search}%`)
+                            .orWhere("g.last_name", "like", `%${search}%`)
+                            .orWhere("g.email", "like", `%${search}%`)
+                            .orWhere("g.phone", "like", `%${search}%`)
+                            .orWhere("r.room_name", "like", `%${search}%`);
+                    });
                 }
-                if (booking_type) {
-                    qb.andWhere("b.booking_type", booking_type);
-                }
-                if (status) {
-                    qb.andWhere("b.status", status);
+                if (room_id) {
+                    qb.andWhere("br.room_id", room_id);
                 }
             });
             return {

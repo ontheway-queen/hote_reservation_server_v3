@@ -1,5 +1,5 @@
+import { number } from "joi";
 import { IcreateRolePermission } from "../../appAdmin/utlis/interfaces/admin.role-permission.interface";
-import { IUpdateAdminUserPayload } from "../../appM360/utlis/interfaces/mUserAdmin.interfaces";
 import {
   ICreateUserAdminPayload,
   IUpdateAdminPayload,
@@ -16,29 +16,45 @@ class RAdministrationModel extends Schema {
     this.db = db;
   }
 
-  public async rolePermissionGroup(body: any) {
-    return await this.db("permission_group")
+  public async getHotelAllPermissionByHotel({
+    hotel_code,
+    ids,
+  }: {
+    hotel_code: number;
+    ids?: number[];
+  }): Promise<{ id: number; hotel_code: number; permission_id: number }[]> {
+    return await this.db("hotel_permission")
       .withSchema(this.RESERVATION_SCHEMA)
-      .insert(body);
+      .select("id", "hotel_code", "permission_id")
+      .where({ hotel_code })
+      .andWhere(function () {
+        if (ids?.length) {
+          this.whereIn("id", ids);
+        }
+      });
   }
 
-  public async getRolePermissionGroup() {
-    return await this.db("permission_group")
+  public async getHotelPermissionViewByHotel({
+    hotel_code,
+  }: {
+    hotel_code: number;
+  }): Promise<{
+    hotel_code: number;
+    permissions: {
+      permission_id: number;
+      permission_name: string;
+      h_permission_id: number;
+      permission_group_id: number;
+      permission_group_name: string;
+    }[];
+  }> {
+    return await this.db("hotel_permission_view")
       .withSchema(this.RESERVATION_SCHEMA)
-      .select("id", "name");
+      .select("hotel_code", "permissions")
+      .where({ hotel_code })
+      .first();
   }
 
-  public async updateRole(
-    { name, status }: { name?: string; status?: number },
-    id: number
-  ) {
-    return await this.db("roles")
-      .withSchema(this.RESERVATION_SCHEMA)
-      .update({ name, status })
-      .where({ id });
-  }
-
-  // update role permission
   public async updateRolePermission(
     payload: {
       write: number;
@@ -47,14 +63,16 @@ class RAdministrationModel extends Schema {
       read: number;
       updated_by: number;
     },
-    permission_id: number,
-    role_id: number
+    h_permission_id: number,
+    role_id: number,
+    hotel_code: number
   ) {
     return await this.db("role_permissions")
       .withSchema(this.RESERVATION_SCHEMA)
       .update(payload)
       .where("role_id", role_id)
-      .andWhere("permission_id", permission_id);
+      .andWhere("h_permission_id", h_permission_id)
+      .andWhere("hotel_code", hotel_code);
   }
 
   public async createPermission({
@@ -82,49 +100,33 @@ class RAdministrationModel extends Schema {
       .insert(insertObj);
   }
 
-  public async permissionsList(params: {
-    name?: string;
-    limit?: number;
-    skip?: number;
-  }) {
-    const data = await this.db("permissions as per")
-      .withSchema(this.RESERVATION_SCHEMA)
-      .select(
-        "per.id as permission_id",
-        "per.name as permission_name",
-        "per.create_date"
-      )
-      .limit(params.limit ? params.limit : 100)
-      .offset(params.skip ? params.skip : 0)
-      .orderBy("per.id", "asc")
-      .where((qb) => {
-        if (params.name) {
-          qb.where("per.name", params.name);
-        }
-      });
-
-    let count: any[] = [];
-
-    count = await this.db("permissions")
-      .withSchema(this.RESERVATION_SCHEMA)
-      .count("id as total")
-      .where((qb) => {
-        if (params.name) {
-          qb.where("name", params.name);
-        }
-      });
-
-    return { data, total: count[0]?.total };
-  }
-
-  // create role permission
-  public async createRolePermission(insertObj: IcreateRolePermission[]) {
+  public async insertInRolePermission(insertObj: IcreateRolePermission[]) {
     return await this.db("role_permissions")
       .withSchema(this.RESERVATION_SCHEMA)
       .insert(insertObj);
   }
 
-  // delete role perimission
+  public async getRolePermissionByRole({
+    h_permission_ids,
+    hotel_code,
+    role_id,
+  }: {
+    hotel_code: number;
+    h_permission_ids: number[];
+    role_id: number;
+  }) {
+    return await this.db("role_permissions")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .select("h_permission_id", "role_id", "read", "write", "update", "delete")
+      .where("hotel_code", hotel_code)
+      .andWhere(function () {
+        if (h_permission_ids?.length) {
+          this.whereIn("h_permission_id", h_permission_ids);
+        }
+      })
+      .andWhere("role_id", role_id);
+  }
+
   public async deleteRolePermission(
     h_permission_id: number,
     permission_type: string,
@@ -151,8 +153,7 @@ class RAdministrationModel extends Schema {
       .insert(payload, "id");
   }
 
-  // get role
-  public async roleList({
+  public async getAllRole({
     hotel_code,
     limit,
     skip,
@@ -162,7 +163,16 @@ class RAdministrationModel extends Schema {
     skip: number;
     hotel_code: number;
     search: string;
-  }) {
+  }): Promise<{
+    data: {
+      role_id: number;
+      role_name: number;
+      created_by: string;
+      created_at: string;
+      init_role: boolean;
+    }[];
+    total: number;
+  }> {
     const data = await this.db("roles as rl")
       .withSchema(this.RESERVATION_SCHEMA)
       .select(
@@ -193,10 +203,9 @@ class RAdministrationModel extends Schema {
         }
       });
 
-    return { data, total: count[0]?.total };
+    return { data, total: parseInt(count[0]?.total as string) | 0 };
   }
 
-  // get single role
   public async getSingleRoleByView({
     id,
     hotel_code,
@@ -205,8 +214,24 @@ class RAdministrationModel extends Schema {
     id?: number;
     hotel_code: number;
     role_name?: string;
-  }) {
-    const res = await this.db("role_permission_view")
+  }): Promise<{
+    role_id: number;
+    role_name: string;
+    hotel_code: number;
+    init_role: boolean;
+    permissions: {
+      permission_group_id: number;
+      permission_group_name: string;
+      h_permission_id: number;
+      permission_id: number;
+      permission_name: string;
+      read: number;
+      write: number;
+      update: number;
+      delete: number;
+    }[];
+  }> {
+    return await this.db("role_permission_view")
       .withSchema(this.RESERVATION_SCHEMA)
       .select("*")
       .andWhere({ hotel_code })
@@ -217,24 +242,20 @@ class RAdministrationModel extends Schema {
         if (id) {
           this.where("role_id", id);
         }
-      });
-
-    return res;
+      })
+      .first();
   }
-  // update role
+
   public async updateSingleRole(id: number, body: any, hotel_code: number) {
-    const res = await this.db("roles")
+    return await this.db("roles")
       .withSchema(this.RESERVATION_SCHEMA)
       .update(body)
       .where({ id })
       .andWhere({ hotel_code });
-
-    return res;
   }
 
-  // get role by name
   public async getRoleByName(name: string, hotel_code: number) {
-    const res = await this.db("role")
+    return await this.db("roles")
       .withSchema(this.RESERVATION_SCHEMA)
       .select("*")
       .where({ hotel_code })
@@ -243,80 +264,12 @@ class RAdministrationModel extends Schema {
           this.where("name", "like", `${name}%`);
         }
       });
-
-    return res;
   }
 
-  // insert user admin
   public async createAdmin(payload: ICreateUserAdminPayload) {
     return await this.db("user_admin")
       .withSchema(this.RESERVATION_SCHEMA)
       .insert(payload, "id");
-  }
-
-  public async getSingleAdmin(where: { email?: string; id?: number }) {
-    const { email, id } = where;
-    return await this.db("user_admin AS ua")
-      .withSchema(this.RESERVATION_SCHEMA)
-      .select(
-        "ua.id",
-        "ua.email",
-        "ua.hotel_code",
-        "h.name as hotel_name",
-        "ua.phone",
-        "ua.password",
-        "ua.photo",
-        "ua.name",
-        "ua.status",
-        "r.id as role_id",
-        "r.name as role_name",
-        "ua.created_at",
-        this.db.raw(`
-        JSON_BUILD_OBJECT(
-          'phone', hcd.phone,
-          'fax', hcd.fax,
-          'address',h.address,
-          'website_url', hcd.website_url,
-          'email', hcd.email,
-          'logo',hcd.logo
-        ) as hotel_contact_details
-      `)
-      )
-      .join("hotels as h", "ua.hotel_code", "h.hotel_code")
-      .leftJoin(
-        "hotel_contact_details as hcd",
-        "h.hotel_code",
-        "hcd.hotel_code"
-      )
-      .leftJoin("roles as r", "ua.role_id", "r.id")
-      .modify(function (queryBuilder) {
-        if (id) {
-          queryBuilder.where("ua.id", id);
-        }
-        if (email) {
-          queryBuilder.whereRaw("LOWER(ua.email) = ? ", [email.toLowerCase()]);
-        }
-      });
-  }
-
-  // get admin by email
-  public async getAdminByEmail(email: string) {
-    return await this.db("user_admin AS ua")
-      .withSchema(this.RESERVATION_SCHEMA)
-      .select(
-        "ua.id",
-        "ua.email",
-        "ua.password",
-        "ua.name",
-        "ua.avatar",
-        "ua.phone",
-        "ua.status",
-        "r.id As roleId",
-        "r.name As roleName",
-        "ua.created_at"
-      )
-      .leftJoin("role AS r", "ua.role", "r.id")
-      .where({ email });
   }
 
   //get all admin
@@ -327,7 +280,7 @@ class RAdministrationModel extends Schema {
     skip?: number;
     hotel_code: number;
     status?: string;
-    owner?: boolean;
+    owner?: string;
   }) {
     const { limit, role_id, search, skip, status, hotel_code, owner } = filter;
     const data = await this.db("user_admin as ua")
@@ -399,6 +352,60 @@ class RAdministrationModel extends Schema {
       data: data,
       total: total[0]?.total,
     };
+  }
+
+  public async getSingleAdmin(where: {
+    email?: string;
+    id?: number;
+
+    hotel_code?: number;
+  }) {
+    const { email, id, hotel_code } = where;
+    return await this.db("user_admin AS ua")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .select(
+        "ua.id",
+        "ua.email",
+        "ua.hotel_code",
+        "h.name as hotel_name",
+        "ua.phone",
+        "ua.password",
+        "ua.photo",
+        "ua.name",
+        "ua.status",
+        "r.id as role_id",
+        "r.name as role_name",
+        "ua.created_at",
+        this.db.raw(`
+        JSON_BUILD_OBJECT(
+          'phone', hcd.phone,
+          'fax', hcd.fax,
+          'address',h.address,
+          'website_url', hcd.website_url,
+          'email', hcd.email,
+          'logo',hcd.logo
+        ) as hotel_contact_details
+      `)
+      )
+      .join("hotels as h", "ua.hotel_code", "h.hotel_code")
+      .leftJoin(
+        "hotel_contact_details as hcd",
+        "h.hotel_code",
+        "hcd.hotel_code"
+      )
+      .leftJoin("roles as r", "ua.role_id", "r.id")
+      .modify(function (queryBuilder) {
+        if (id) {
+          queryBuilder.where("ua.id", id);
+        }
+        if (email) {
+          queryBuilder.whereRaw("LOWER(ua.email) = ? ", [email.toLowerCase()]);
+        }
+
+        if (hotel_code) {
+          queryBuilder.where("ua.hotel_code", hotel_code);
+        }
+      });
   }
 
   // update admin model

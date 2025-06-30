@@ -214,7 +214,7 @@ class MHotelService extends AbstractServices {
         }
 
         // insert role permission
-        await administrationModel.createRolePermission(rolePermissionPayload);
+        await administrationModel.insertInRolePermission(rolePermissionPayload);
       }
 
       // insert user admin
@@ -315,6 +315,119 @@ class MHotelService extends AbstractServices {
     };
   }
 
+  // old
+  // public async updateHotel(req: Request) {
+  //   return await this.db.transaction(async (trx) => {
+  //     const {
+  //       fax,
+  //       phone,
+  //       website_url,
+  //       hotel_email,
+  //       remove_hotel_images,
+  //       expiry_date,
+  //       hotel_name,
+  //       ...hotelData
+  //     } = req.body as Partial<IUpdateHoteReqBody>;
+
+  //     console.log(req.body, "request body");
+
+  //     const { id } = req.params;
+  //     const parsedId = parseInt(id);
+
+  //     if (expiry_date && new Date(expiry_date) < new Date()) {
+  //       return {
+  //         success: false,
+  //         code: this.StatusCode.HTTP_UNPROCESSABLE_ENTITY,
+  //         message: "Expiry date cannot be earlier than today",
+  //       };
+  //     }
+
+  //     const files = (req.files as Express.Multer.File[]) || [];
+
+  //     console.log({ files });
+  //     const model = this.Model.HotelModel(trx);
+
+  //     const existingHotel = await model.getSingleHotel({
+  //       id: parsedId,
+  //     });
+
+  //     if (!existingHotel || existingHotel.length === 0) {
+  //       return {
+  //         success: false,
+  //         code: this.StatusCode.HTTP_NOT_FOUND,
+  //         message: this.ResMsg.HTTP_NOT_FOUND,
+  //       };
+  //     }
+
+  //     const { hotel_code } = existingHotel[0];
+
+  //     const filteredUpdateData: Partial<IUpdateHoteReqBody> =
+  //       Object.fromEntries(
+  //         Object.entries({
+  //           ...hotelData,
+  //           expiry_date,
+  //           name: hotel_name,
+  //         }).filter(([_, value]) => value !== undefined)
+  //       );
+
+  //     if (Object.keys(filteredUpdateData).length > 0) {
+  //       await model.updateHotel(filteredUpdateData, { id: parsedId });
+  //     }
+
+  //     // Process uploaded files
+  //     let logoFilename = "";
+  //     const hotelImages: {
+  //       hotel_code: number;
+  //       image_url: string;
+  //       image_caption?: string;
+  //       main_image: string;
+  //     }[] = [];
+
+  //     for (const file of files) {
+  //       const { fieldname, filename } = file;
+  //       if (fieldname === "logo") {
+  //         logoFilename = filename;
+  //       } else {
+  //         hotelImages.push({
+  //           hotel_code,
+  //           image_url: filename,
+  //           image_caption: undefined,
+  //           main_image: fieldname === "main_image" ? "Y" : "N",
+  //         });
+  //       }
+  //     }
+  //     console.log(logoFilename, "logo filename");
+  //     if (logoFilename || hotel_email || fax || phone || website_url)
+  //       await model.updateHotelContactDetails(
+  //         {
+  //           logo: logoFilename,
+  //           email: hotel_email,
+  //           fax,
+  //           phone,
+  //           website_url,
+  //         },
+  //         hotel_code
+  //       );
+
+  //     if (hotelImages.length > 0) {
+  //       await model.insertHotelImages(hotelImages);
+  //     }
+
+  //     if (
+  //       Array.isArray(remove_hotel_images) &&
+  //       remove_hotel_images.length > 0
+  //     ) {
+  //       await model.deleteHotelImage(remove_hotel_images, hotel_code);
+  //     }
+
+  //     return {
+  //       success: true,
+  //       code: this.StatusCode.HTTP_OK,
+  //       message: "Hotel updated successfully",
+  //     };
+  //   });
+  // }
+
   public async updateHotel(req: Request) {
     return await this.db.transaction(async (trx) => {
       const {
@@ -328,10 +441,9 @@ class MHotelService extends AbstractServices {
         ...hotelData
       } = req.body as Partial<IUpdateHoteReqBody>;
 
-      console.log(req.body, "request body");
-
       const { id } = req.params;
       const parsedId = parseInt(id);
+      const files = (req.files as Express.Multer.File[]) || [];
 
       if (expiry_date && new Date(expiry_date) < new Date()) {
         return {
@@ -341,12 +453,8 @@ class MHotelService extends AbstractServices {
         };
       }
 
-      const files = (req.files as Express.Multer.File[]) || [];
       const model = this.Model.HotelModel(trx);
-
-      const existingHotel = await model.getSingleHotel({
-        id: parsedId,
-      });
+      const existingHotel = await model.getSingleHotel({ id: parsedId });
 
       if (!existingHotel || existingHotel.length === 0) {
         return {
@@ -358,6 +466,7 @@ class MHotelService extends AbstractServices {
 
       const { hotel_code } = existingHotel[0];
 
+      // Filter out only defined fields for update
       const filteredUpdateData: Partial<IUpdateHoteReqBody> =
         Object.fromEntries(
           Object.entries({
@@ -371,8 +480,8 @@ class MHotelService extends AbstractServices {
         await model.updateHotel(filteredUpdateData, { id: parsedId });
       }
 
-      // Process uploaded files
-      let logoFilename = "";
+      // === Handle file uploads ===
+      let logoFilename: string | undefined;
       const hotelImages: {
         hotel_code: number;
         image_url: string;
@@ -382,6 +491,7 @@ class MHotelService extends AbstractServices {
 
       for (const file of files) {
         const { fieldname, filename } = file;
+
         if (fieldname === "logo") {
           logoFilename = filename;
         } else {
@@ -394,22 +504,32 @@ class MHotelService extends AbstractServices {
         }
       }
 
-      if (logoFilename || hotel_email || fax || phone || website_url)
-        await model.updateHotelContactDetails(
-          {
-            logo: logoFilename,
-            email: hotel_email,
-            fax,
-            phone,
-            website_url,
-          },
-          hotel_code
-        );
+      // === Update hotel contact details ===
+      const contactUpdates: Record<string, string | undefined> = {
+        email: hotel_email,
+        fax,
+        phone,
+        website_url,
+      };
 
+      if (logoFilename) {
+        contactUpdates.logo = logoFilename;
+      }
+
+      const hasContactUpdates = Object.values(contactUpdates).some(
+        (val) => val !== undefined
+      );
+
+      if (hasContactUpdates) {
+        await model.updateHotelContactDetails(contactUpdates, hotel_code);
+      }
+
+      // === Insert new hotel images ===
       if (hotelImages.length > 0) {
         await model.insertHotelImages(hotelImages);
       }
 
+      // === Remove selected hotel images ===
       if (
         Array.isArray(remove_hotel_images) &&
         remove_hotel_images.length > 0

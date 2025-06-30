@@ -131,18 +131,17 @@ class MConfigurationModel extends schema_1.default {
     // get all permission
     getAllPermissionByHotel(hotel_code) {
         return __awaiter(this, void 0, void 0, function* () {
-            const res = yield this.db("hotel_permission_view")
+            return yield this.db("hotel_permission_view")
                 .withSchema(this.RESERVATION_SCHEMA)
                 .select("*")
                 .where({ hotel_code });
-            return res;
         });
     }
     // get all permission
     getAllPermission(payload) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { ids, hotel_code } = payload;
-            const res = yield this.db("permissions AS p")
+            const { ids } = payload;
+            return yield this.db("permissions AS p")
                 .withSchema(this.RESERVATION_SCHEMA)
                 .select("p.id AS permission_id", "p.name As permission_name", "p.permission_group_id", "pg.name AS permission_group_name")
                 .join("permission_group AS pg", "p.permission_group_id", "pg.id")
@@ -151,7 +150,6 @@ class MConfigurationModel extends schema_1.default {
                     this.whereIn("p.id", ids);
                 }
             });
-            return res;
         });
     }
     // added hotel permission

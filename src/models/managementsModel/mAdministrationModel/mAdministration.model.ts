@@ -29,12 +29,9 @@ class MAdministrationModel extends Schema {
   }
 
   // get all permission
-  public async getAllPermission(payload: {
-    ids?: number[];
-    hotel_code?: number;
-  }) {
-    const { ids, hotel_code } = payload;
-    const res = await this.db("permission AS p")
+  public async getAllPermission(payload: { ids?: number[] }) {
+    const { ids } = payload;
+    return await this.db("permission AS p")
       .withSchema(this.RESERVATION_SCHEMA)
       .select(
         "p.id AS permission_id",
@@ -48,7 +45,6 @@ class MAdministrationModel extends Schema {
           this.whereIn("p.id", ids);
         }
       });
-    return res;
   }
 
   // create role permission
@@ -83,19 +79,9 @@ class MAdministrationModel extends Schema {
     return res;
   }
 
-  // create permission of role
-  // public async createPermissionOfRole(permissionObj: any) {
-  //   const res = await this.db("rolePermission")
-  //     .withSchema(this.ADMINISTRATION_SCHEMA)
-  //     .insert(permissionObj, "roleId");
-  //   return res;
-  // }
-
   // get role
   public async getRole() {
-    const res = await this.db("role").withSchema(this.M_SCHEMA).select("*");
-
-    return res;
+    return await this.db("role").withSchema(this.M_SCHEMA).select("*");
   }
 
   // get single role
@@ -181,8 +167,6 @@ class MAdministrationModel extends Schema {
         }
       });
   }
-
-  // get admin by id
 
   // get all admin
   public async getAllAdmin(limit: string, skip: string, status: string) {

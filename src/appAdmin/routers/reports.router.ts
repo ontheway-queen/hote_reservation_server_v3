@@ -30,8 +30,8 @@ class ReportRouter extends AbstractRouter {
       .get(this.reportController.getGuestReport);
 
     this.router
-      .route("/room-booking")
-      .get(this.reportController.getRoomBookingReport);
+      .route("/inhouse-guest")
+      .get(this.reportController.inhouseGuestListReport);
 
     this.router
       .route("/guest-ledger/by-guest/:id")

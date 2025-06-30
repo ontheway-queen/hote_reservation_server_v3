@@ -25,7 +25,6 @@ class InvoiceService extends abstract_service_1.default {
                 const { hotel_code } = req.hotel_admin;
                 const { booking_id, folio_entry_ids, notes } = req.body;
                 const invoiceModel = this.Model.hotelInvoiceModel(trx);
-                const reservationModel = this.Model.reservationModel(trx);
                 const entryIDs = [];
                 const folioIDs = [];
                 folio_entry_ids.forEach((item) => {
@@ -95,6 +94,9 @@ class InvoiceService extends abstract_service_1.default {
                     success: true,
                     code: this.StatusCode.HTTP_SUCCESSFUL,
                     message: "Invoice has been created",
+                    data: {
+                        invoice_id: invRes[0].id,
+                    },
                 };
             }));
         });

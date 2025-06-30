@@ -151,21 +151,16 @@ class MConfigurationModel extends Schema {
 
   // get all permission
   public async getAllPermissionByHotel(hotel_code: number) {
-    const res = await this.db("hotel_permission_view")
+    return await this.db("hotel_permission_view")
       .withSchema(this.RESERVATION_SCHEMA)
       .select("*")
       .where({ hotel_code });
-
-    return res;
   }
 
   // get all permission
-  public async getAllPermission(payload: {
-    ids?: number[];
-    hotel_code?: number;
-  }) {
-    const { ids, hotel_code } = payload;
-    const res = await this.db("permissions AS p")
+  public async getAllPermission(payload: { ids?: number[] }) {
+    const { ids } = payload;
+    return await this.db("permissions AS p")
       .withSchema(this.RESERVATION_SCHEMA)
       .select(
         "p.id AS permission_id",
@@ -179,7 +174,6 @@ class MConfigurationModel extends Schema {
           this.whereIn("p.id", ids);
         }
       });
-    return res;
   }
 
   // added hotel permission

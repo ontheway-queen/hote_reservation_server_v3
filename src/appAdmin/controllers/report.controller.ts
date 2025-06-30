@@ -29,10 +29,13 @@ class ReportController extends AbstractController {
     }
   );
 
-  public getRoomBookingReport = this.asyncWrapper.wrap(
-    {},
+  public inhouseGuestListReport = this.asyncWrapper.wrap(
+    {
+      querySchema:
+        this.dashBoardValidator.getGuegetInhouseGuestListReportstReport,
+    },
     async (req: Request, res: Response) => {
-      const { code, ...data } = await this.reportService.getRoomBookingReport(
+      const { code, ...data } = await this.reportService.inhouseGuestListReport(
         req
       );
       res.status(code).json(data);

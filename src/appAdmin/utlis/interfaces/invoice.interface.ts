@@ -110,6 +110,7 @@ export type ISingleFolioInvoice = {
   invoice_number: string;
   invoice_date: string;
   status: string;
+  is_individual_booking: boolean;
   notes: string | null;
   inv_items: FolioInvoiceItem[];
 };

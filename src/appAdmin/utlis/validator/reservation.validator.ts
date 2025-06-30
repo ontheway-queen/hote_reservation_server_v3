@@ -8,6 +8,7 @@ export class ReservationValidator {
   public createBookingValidator = Joi.object({
     reservation_type: Joi.string().valid("hold", "booked").required(),
     is_checked_in: Joi.bool().required(),
+    is_individual_booking: Joi.bool().required(),
     check_in: Joi.date().iso().required(),
     check_out: Joi.date().iso().required(),
     guest: Joi.object({
