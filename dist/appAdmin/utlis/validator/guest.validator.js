@@ -32,6 +32,21 @@ class GuestValidator {
         this.getHallGuestValidator = joi_1.default.object({
         // id: Joi.number().allow("").optional(),
         });
+        this.updateSingleGuestValidator = joi_1.default.object({
+            first_name: joi_1.default.string().required(),
+            last_name: joi_1.default.string().allow("").optional(),
+            email: joi_1.default.string()
+                .allow("")
+                .email()
+                .lowercase()
+                .trim()
+                .regex(/^\S/)
+                .optional(),
+            address: joi_1.default.string().allow("").optional(),
+            phone: joi_1.default.number().allow("").optional(),
+            country: joi_1.default.string().lowercase().allow("").trim().regex(/^\S/).optional(),
+            nationality: joi_1.default.string().allow("").optional(),
+        });
     }
 }
 exports.default = GuestValidator;

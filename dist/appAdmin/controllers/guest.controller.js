@@ -46,6 +46,10 @@ class GuestController extends abstract_controller_1.default {
             const _c = yield this.guestService.getSingleGuest(req), { code } = _c, data = __rest(_c, ["code"]);
             res.status(code).json(data);
         }));
+        this.updateSingleGuest = this.asyncWrapper.wrap({ bodySchema: this.guestValidator.updateSingleGuestValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _d = yield this.guestService.updateSingleGuestValidator(req), { code } = _d, data = __rest(_d, ["code"]);
+            res.status(code).json(data);
+        }));
     }
 }
 exports.default = GuestController;

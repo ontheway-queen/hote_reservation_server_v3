@@ -94,5 +94,60 @@ export class GuestService extends AbstractServices {
       data: singleGuest[0],
     };
   }
+
+  public async updateSingleGuestValidator(req: Request) {
+    const {
+      first_name,
+      last_name,
+      email,
+      address,
+      phone,
+      country,
+      nationality,
+    } = req.body;
+
+    console.log(req.body);
+    const { hotel_code } = req.hotel_admin;
+
+    // Model
+    const model = this.Model.guestModel();
+
+    // Check if user already exists
+    const checkUser = await model.getSingleGuest({
+      hotel_code,
+      id: parseInt(req.params.id),
+    });
+
+    if (checkUser.length === 0) {
+      return {
+        success: false,
+        code: this.StatusCode.HTTP_NOT_FOUND,
+        message: "Guest not found",
+      };
+    }
+
+    // Update guest
+    await model.updateSingleGuest(
+      {
+        id: parseInt(req.params.id),
+        hotel_code,
+      },
+      {
+        first_name,
+        last_name,
+        email,
+        address,
+        phone,
+        country,
+        nationality,
+      }
+    );
+
+    return {
+      success: true,
+      code: this.StatusCode.HTTP_OK,
+      message: "Guest updated successfully",
+    };
+  }
 }
 export default GuestService;
