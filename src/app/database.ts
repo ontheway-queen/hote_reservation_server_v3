@@ -2,7 +2,6 @@ import knex, { Knex } from "knex";
 import config from "../config/config";
 
 let dbInstance: Knex;
-//knex
 
 const createDbCon = () => {
   if (!dbInstance) {
@@ -14,9 +13,9 @@ const createDbCon = () => {
         user: config.DB_USER,
         password: config.DB_PASS,
         database: config.DB_NAME,
-        ssl: {
-          rejectUnauthorized: false,
-        },
+        // ssl: {
+        //   rejectUnauthorized: false,
+        // },
       },
       pool: {
         min: 5,

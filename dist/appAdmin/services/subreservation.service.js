@@ -500,8 +500,26 @@ class SubReservationService extends abstract_service_1.default {
             // 4. Payment (if given)
             const today = new Date().toISOString().split("T")[0];
             if (body.is_payment_given && ((_a = body.payment) === null || _a === void 0 ? void 0 : _a.amount) > 0) {
+                // const accountModel = this.Model.accountModel(this.trx);
+                // const [account] = await accountModel.getSingleAccount({
+                //   hotel_code: req.hotel_admin.hotel_code,
+                //   id: body.payment.acc_id,
+                // });
+                // if (!account) throw new Error("Invalid Account");
+                // const voucher_no = await new HelperFunction().generateVoucherNo();
+                // const [voucher] = await accountModel.insertAccVoucher({
+                //   acc_head_id: account.acc_head_id,
+                //   created_by: req.hotel_admin.id,
+                //   debit: body.payment.amount,
+                //   credit: 0,
+                //   description: `Payment for booking ${booking_id}`,
+                //   voucher_type: "PAYMENT",
+                //   voucher_date: today,
+                //   voucher_no,
+                // });
                 folioEntriesBookingPayload.push({
                     folio_id: folio.id,
+                    // acc_voucher_id:voucher.id,
                     date: today,
                     posting_type: "Payment",
                     credit: body.payment.amount,
