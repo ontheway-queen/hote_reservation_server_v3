@@ -227,10 +227,13 @@ class ReportModel extends Schema {
         }
       });
 
-    const [sumResult] = await this.db("booking_rooms AS br")
+    const [info] = await this.db("booking_rooms AS br")
       .withSchema(this.RESERVATION_SCHEMA)
       .select(
         this.db.raw("SUM(br.cbf) AS total_cbf"),
+        this.db.raw("SUM(br.adults) AS total_adults"),
+        this.db.raw("SUM(br.children) AS total_children"),
+        this.db.raw("SUM(br.infant) AS total_infant"),
         this.db.raw("SUM(br.adults + br.children + br.infant) AS total_person")
       )
       .leftJoin("bookings AS b", "br.booking_id", "b.id")
@@ -264,8 +267,11 @@ class ReportModel extends Schema {
     return {
       data,
       total: Number(total[0]?.total || 0),
-      total_cbf: Number(sumResult?.total_cbf || 0),
-      total_person: Number(sumResult?.total_person || 0),
+      total_cbf: Number(info?.total_cbf || 0),
+      total_adult: Number(info?.total_adults || 0),
+      total_children: Number(info?.total_children || 0),
+      total_infant: Number(info?.total_infant || 0),
+      total_person: Number(info?.total_person || 0),
     };
   }
 }

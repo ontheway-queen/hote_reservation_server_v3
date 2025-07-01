@@ -98,7 +98,8 @@ class GuestModel extends Schema {
         if (key) {
           this.andWhere("first_name", "like", `%${key}%`)
             .orWhere("email", "like", `%${key}%`)
-            .orWhere("country", "like", `%${key}%`);
+            .orWhere("country", "like", `%${key}%`)
+            .orWhere("phone", "like", `%${key}%`);
         }
 
         if (phone) {
@@ -122,8 +123,13 @@ class GuestModel extends Schema {
         if (key) {
           this.andWhere("first_name", "like", `%${key}%`)
             .orWhere("email", "like", `%${key}%`)
-            .orWhere("country", "like", `%${key}%`);
+            .orWhere("country", "like", `%${key}%`)
+            .orWhere("phone", "like", `%${key}%`);
         }
+        if (phone) {
+          this.andWhere("phone", "like", `%${phone}%`);
+        }
+
         if (email) {
           this.andWhere("email", email);
         }

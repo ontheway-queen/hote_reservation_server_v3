@@ -18,7 +18,7 @@ class GuestValidator {
 
   // get all guest list validator
   public getAllGuestValidator = Joi.object({
-    key: Joi.string().allow("").optional(),
+    search: Joi.string().allow("").optional(),
     email: Joi.string().allow("").optional(),
     status: Joi.string().allow("").optional(),
     limit: Joi.string().allow("").optional(),

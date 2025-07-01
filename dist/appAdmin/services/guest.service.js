@@ -61,11 +61,11 @@ class GuestService extends abstract_service_1.default {
     // get All guest service
     getAllGuest(req) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { key, email, limit, skip, status } = req.query;
+            const { search, email, limit, skip, status } = req.query;
             const { hotel_code } = req.hotel_admin;
             const { data, total } = yield this.Model.guestModel().getAllGuest({
                 status: status,
-                key: key,
+                key: search,
                 email: email,
                 limit: limit,
                 skip: skip,

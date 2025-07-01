@@ -132,9 +132,9 @@ class ReportModel extends schema_1.default {
                     qb.andWhere("br.room_id", room_id);
                 }
             });
-            const [sumResult] = yield this.db("booking_rooms AS br")
+            const [info] = yield this.db("booking_rooms AS br")
                 .withSchema(this.RESERVATION_SCHEMA)
-                .select(this.db.raw("SUM(br.cbf) AS total_cbf"), this.db.raw("SUM(br.adults + br.children + br.infant) AS total_person"))
+                .select(this.db.raw("SUM(br.cbf) AS total_cbf"), this.db.raw("SUM(br.adults) AS total_adults"), this.db.raw("SUM(br.children) AS total_children"), this.db.raw("SUM(br.infant) AS total_infant"), this.db.raw("SUM(br.adults + br.children + br.infant) AS total_person"))
                 .leftJoin("bookings AS b", "br.booking_id", "b.id")
                 .leftJoin("guests AS g", "b.guest_id", "g.id")
                 .leftJoin("rooms AS r", "br.room_id", "r.id")
@@ -160,8 +160,11 @@ class ReportModel extends schema_1.default {
             return {
                 data,
                 total: Number(((_a = total[0]) === null || _a === void 0 ? void 0 : _a.total) || 0),
-                total_cbf: Number((sumResult === null || sumResult === void 0 ? void 0 : sumResult.total_cbf) || 0),
-                total_person: Number((sumResult === null || sumResult === void 0 ? void 0 : sumResult.total_person) || 0),
+                total_cbf: Number((info === null || info === void 0 ? void 0 : info.total_cbf) || 0),
+                total_adult: Number((info === null || info === void 0 ? void 0 : info.total_adults) || 0),
+                total_children: Number((info === null || info === void 0 ? void 0 : info.total_children) || 0),
+                total_infant: Number((info === null || info === void 0 ? void 0 : info.total_infant) || 0),
+                total_person: Number((info === null || info === void 0 ? void 0 : info.total_person) || 0),
             };
         });
     }

@@ -55,12 +55,12 @@ export class GuestService extends AbstractServices {
 
   // get All guest service
   public async getAllGuest(req: Request) {
-    const { key, email, limit, skip, status } = req.query;
+    const { search, email, limit, skip, status } = req.query;
     const { hotel_code } = req.hotel_admin;
 
     const { data, total } = await this.Model.guestModel().getAllGuest({
       status: status as string,
-      key: key as string,
+      key: search as string,
       email: email as string,
       limit: limit as string,
       skip: skip as string,
