@@ -55,7 +55,7 @@ class ReportService extends AbstractServices {
   }
 
   public async inhouseGuestListReport(req: Request) {
-    const { data, total } =
+    const { data, total, total_cbf, total_person } =
       await this.Model.reportModel().inhouseGuestListReport({
         search: req.query.search as string,
         hotel_code: req.hotel_admin.hotel_code,
@@ -68,6 +68,8 @@ class ReportService extends AbstractServices {
       success: true,
       code: this.StatusCode.HTTP_OK,
       total,
+      total_cbf,
+      total_person,
       data,
     };
   }

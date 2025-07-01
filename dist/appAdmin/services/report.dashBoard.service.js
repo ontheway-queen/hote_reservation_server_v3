@@ -61,7 +61,7 @@ class ReportService extends abstract_service_1.default {
     }
     inhouseGuestListReport(req) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { data, total } = yield this.Model.reportModel().inhouseGuestListReport({
+            const { data, total, total_cbf, total_person } = yield this.Model.reportModel().inhouseGuestListReport({
                 search: req.query.search,
                 hotel_code: req.hotel_admin.hotel_code,
                 current_date: req.query.current_date,
@@ -72,6 +72,8 @@ class ReportService extends abstract_service_1.default {
                 success: true,
                 code: this.StatusCode.HTTP_OK,
                 total,
+                total_cbf,
+                total_person,
                 data,
             };
         });

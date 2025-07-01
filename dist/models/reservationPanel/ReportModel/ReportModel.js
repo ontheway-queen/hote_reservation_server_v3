@@ -132,9 +132,36 @@ class ReportModel extends schema_1.default {
                     qb.andWhere("br.room_id", room_id);
                 }
             });
+            const [sumResult] = yield this.db("booking_rooms AS br")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .select(this.db.raw("SUM(br.cbf) AS total_cbf"), this.db.raw("SUM(br.adults + br.children + br.infant) AS total_person"))
+                .leftJoin("bookings AS b", "br.booking_id", "b.id")
+                .leftJoin("guests AS g", "b.guest_id", "g.id")
+                .leftJoin("rooms AS r", "br.room_id", "r.id")
+                .where("b.hotel_code", hotel_code)
+                .andWhere((qb) => {
+                qb.whereRaw("Date(b.check_in) <= ?", [current_date]).andWhereRaw("Date(b.check_out) >= ?", [current_date]);
+                qb.andWhere("b.booking_type", "B");
+                qb.andWhere("b.status", "checked_in");
+                if (search) {
+                    qb.andWhere((subQb) => {
+                        subQb
+                            .where("g.first_name", "like", `%${search}%`)
+                            .orWhere("g.last_name", "like", `%${search}%`)
+                            .orWhere("g.email", "like", `%${search}%`)
+                            .orWhere("g.phone", "like", `%${search}%`)
+                            .orWhere("r.room_name", "like", `%${search}%`);
+                    });
+                }
+                if (room_id) {
+                    qb.andWhere("br.room_id", room_id);
+                }
+            });
             return {
                 data,
                 total: Number(((_a = total[0]) === null || _a === void 0 ? void 0 : _a.total) || 0),
+                total_cbf: Number((sumResult === null || sumResult === void 0 ? void 0 : sumResult.total_cbf) || 0),
+                total_person: Number((sumResult === null || sumResult === void 0 ? void 0 : sumResult.total_person) || 0),
             };
         });
     }
