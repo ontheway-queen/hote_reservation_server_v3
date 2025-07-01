@@ -19,7 +19,6 @@ class GuestRouter extends abstract_router_1.default {
             .get(this.guestController.getAllGuest);
         // single guest router
         this.router.route("/:id").get(this.guestController.getSingleGuest);
-        // insert guest ledger
     }
 }
 exports.default = GuestRouter;

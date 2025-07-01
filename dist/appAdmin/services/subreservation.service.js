@@ -31,7 +31,7 @@ class SubReservationService extends abstract_service_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             const guestModel = this.Model.guestModel(this.trx);
             const { data: existingGuests } = yield guestModel.getAllGuest({
-                email: guest.email,
+                // email: guest.email,
                 phone: guest.phone,
                 hotel_code,
             });
