@@ -12,7 +12,6 @@ class RoomSettingController extends AbstractController {
 
   //=================== Room Type Controller ======================//
 
-  // Create Room Type
   public createRoomType = this.asyncWrapper.wrap(
     { bodySchema: this.settingValidator.createRoomTypeValidator },
     async (req: Request, res: Response) => {
@@ -24,7 +23,6 @@ class RoomSettingController extends AbstractController {
     }
   );
 
-  // Get All Room Type
   public getAllRoomType = this.asyncWrapper.wrap(
     { querySchema: this.settingValidator.getAllRoomTypeQueryValidator },
     async (req: Request, res: Response) => {
@@ -36,7 +34,6 @@ class RoomSettingController extends AbstractController {
     }
   );
 
-  // single Room Type
   public getSingleRoomType = this.asyncWrapper.wrap(
     { paramSchema: this.commonValidator.singleParamValidator() },
     async (req: Request, res: Response) => {
@@ -48,7 +45,6 @@ class RoomSettingController extends AbstractController {
     }
   );
 
-  // Update Room Type
   public updateRoomType = this.asyncWrapper.wrap(
     { bodySchema: this.settingValidator.updateRoomTypeValidator },
     async (req: Request, res: Response) => {
@@ -60,7 +56,6 @@ class RoomSettingController extends AbstractController {
     }
   );
 
-  // Delete Room Type
   public deleteRoomType = this.asyncWrapper.wrap(
     { paramSchema: this.commonValidator.singleParamValidator() },
     async (req: Request, res: Response) => {
@@ -72,7 +67,6 @@ class RoomSettingController extends AbstractController {
     }
   );
 
-  // Get All Room Type Categories
   public getAllRoomTypeAmenities = this.asyncWrapper.wrap(
     null,
     async (req: Request, res: Response) => {
@@ -85,7 +79,6 @@ class RoomSettingController extends AbstractController {
 
   //=================== Room Type Categories Controller ======================//
 
-  // Create Room Type Categories
   public createRoomTypeCategories = this.asyncWrapper.wrap(
     { bodySchema: this.settingValidator.createRoomTypeCategoriesValidator },
     async (req: Request, res: Response) => {
@@ -96,7 +89,6 @@ class RoomSettingController extends AbstractController {
     }
   );
 
-  // Get All Room Type Categories
   public getAllRoomTypeCategories = this.asyncWrapper.wrap(
     null,
     async (req: Request, res: Response) => {
@@ -107,7 +99,6 @@ class RoomSettingController extends AbstractController {
     }
   );
 
-  // Update Room Type Categories
   public updateRoomTypeCategories = this.asyncWrapper.wrap(
     { bodySchema: this.settingValidator.UpdateRoomTypeCategoriesValidator },
     async (req: Request, res: Response) => {
@@ -118,7 +109,6 @@ class RoomSettingController extends AbstractController {
     }
   );
 
-  // Delete Room Type
   public deleteRoomTypeCategories = this.asyncWrapper.wrap(
     { paramSchema: this.commonValidator.singleParamValidator() },
     async (req: Request, res: Response) => {
@@ -131,7 +121,6 @@ class RoomSettingController extends AbstractController {
 
   //=================== Bed Type Controller ======================//
 
-  // Create Bed Type
   public createBedType = this.asyncWrapper.wrap(
     { bodySchema: this.settingValidator.createBedTypeValidator },
     async (req: Request, res: Response) => {
@@ -143,7 +132,6 @@ class RoomSettingController extends AbstractController {
     }
   );
 
-  // Get All Bed Type
   public getAllBedType = this.asyncWrapper.wrap(
     { querySchema: this.settingValidator.getAllBedTypeQueryValidator },
     async (req: Request, res: Response) => {
@@ -155,7 +143,6 @@ class RoomSettingController extends AbstractController {
     }
   );
 
-  // Update Bed Type
   public updateBedType = this.asyncWrapper.wrap(
     { bodySchema: this.settingValidator.UpdateBedTypeValidator },
     async (req: Request, res: Response) => {
@@ -167,13 +154,96 @@ class RoomSettingController extends AbstractController {
     }
   );
 
-  // Delete Bed Type
   public deleteBedType = this.asyncWrapper.wrap(
     { paramSchema: this.commonValidator.singleParamValidator() },
     async (req: Request, res: Response) => {
       const { code, ...data } = await this.roomSettingService.deleteBedType(
         req
       );
+
+      res.status(code).json(data);
+    }
+  );
+
+  //=================== Floor Setup Controller ======================//
+
+  public createFloorSetup = this.asyncWrapper.wrap(
+    { bodySchema: this.settingValidator.createFloorSetupValidator },
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.roomSettingService.createFloorSetup(
+        req
+      );
+
+      res.status(code).json(data);
+    }
+  );
+
+  public getAllFloorSetup = this.asyncWrapper.wrap(
+    null,
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.roomSettingService.getAllFloorSetup(
+        req
+      );
+
+      res.status(code).json(data);
+    }
+  );
+
+  public updateFloorSetup = this.asyncWrapper.wrap(
+    { bodySchema: this.settingValidator.updateFloorSetupValidator },
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.roomSettingService.updateFloorSetup(
+        req
+      );
+
+      res.status(code).json(data);
+    }
+  );
+
+  public deleteFloorSetup = this.asyncWrapper.wrap(
+    { paramSchema: this.commonValidator.singleParamValidator() },
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.roomSettingService.deleteFloorSetup(
+        req
+      );
+
+      res.status(code).json(data);
+    }
+  );
+
+  //=================== Building Setup Controller ======================//
+  public createBuildingSetup = this.asyncWrapper.wrap(
+    { bodySchema: this.settingValidator.createBuildingSetupValidator },
+    async (req: Request, res: Response) => {
+      const { code, ...data } =
+        await this.roomSettingService.createBuildingSetup(req);
+
+      res.status(code).json(data);
+    }
+  );
+  public getAllBuildingSetup = this.asyncWrapper.wrap(
+    null,
+    async (req: Request, res: Response) => {
+      const { code, ...data } =
+        await this.roomSettingService.getAllBuildingSetup(req);
+
+      res.status(code).json(data);
+    }
+  );
+  public updateBuildingSetup = this.asyncWrapper.wrap(
+    { bodySchema: this.settingValidator.updateBuildingSetupValidator },
+    async (req: Request, res: Response) => {
+      const { code, ...data } =
+        await this.roomSettingService.updateBuildingSetup(req);
+
+      res.status(code).json(data);
+    }
+  );
+  public deleteBuildingSetup = this.asyncWrapper.wrap(
+    { paramSchema: this.commonValidator.singleParamValidator() },
+    async (req: Request, res: Response) => {
+      const { code, ...data } =
+        await this.roomSettingService.deleteBuildingSetup(req);
 
       res.status(code).json(data);
     }

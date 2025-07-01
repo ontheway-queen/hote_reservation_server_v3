@@ -378,6 +378,24 @@ class SettingValidator {
                 .optional(),
             remove_meal_items: joi_1.default.array().items(joi_1.default.number().required()).optional(),
         });
+        //==================== Floor Setup validation ======================//
+        this.createFloorSetupValidator = joi_1.default.object({
+            floor_no: joi_1.default.number().required(),
+        });
+        this.updateFloorSetupValidator = joi_1.default.object({
+            floor_no: joi_1.default.number().required(),
+            status: joi_1.default.boolean().optional(),
+        });
+        //==================== Building Setup validation ======================//
+        this.createBuildingSetupValidator = joi_1.default.object({
+            building_no: joi_1.default.number().required(),
+            description: joi_1.default.string().optional(),
+        });
+        this.updateBuildingSetupValidator = joi_1.default.object({
+            building_no: joi_1.default.number().required(),
+            description: joi_1.default.string().allow("").optional(),
+            status: joi_1.default.boolean().optional(),
+        });
     }
 }
 exports.default = SettingValidator;

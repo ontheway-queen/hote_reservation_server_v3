@@ -461,5 +461,28 @@ class SettingValidator {
 
     remove_meal_items: Joi.array().items(Joi.number().required()).optional(),
   });
+
+  //==================== Floor Setup validation ======================//
+
+  public createFloorSetupValidator = Joi.object({
+    floor_no: Joi.number().required(),
+  });
+
+  public updateFloorSetupValidator = Joi.object({
+    floor_no: Joi.number().required(),
+    status: Joi.boolean().optional(),
+  });
+
+  //==================== Building Setup validation ======================//
+  public createBuildingSetupValidator = Joi.object({
+    building_no: Joi.number().required(),
+    description: Joi.string().optional(),
+  });
+
+  public updateBuildingSetupValidator = Joi.object({
+    building_no: Joi.number().required(),
+    description: Joi.string().allow("").optional(),
+    status: Joi.boolean().optional(),
+  });
 }
 export default SettingValidator;

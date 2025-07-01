@@ -1344,5 +1344,142 @@ class SettingModel extends Schema {
       .where({ id })
       .del();
   }
+
+  // =================== floor Model ======================//
+  public async createFloor(payload: { hotel_code: number; floor_no: string }) {
+    return await this.db("floors")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .insert(payload, "id");
+  }
+
+  public async getAllFloors(payload: {
+    limit?: string;
+    skip?: string;
+    status?: string;
+    hotel_code: number;
+    search?: string;
+  }) {
+    const { limit, skip, hotel_code, search, status } = payload;
+
+    const dtbs = this.db("floors");
+
+    if (limit && skip) {
+      dtbs.limit(parseInt(limit as string));
+      dtbs.offset(parseInt(skip as string));
+    }
+
+    const data = await dtbs
+      .withSchema(this.RESERVATION_SCHEMA)
+      .select("id", "hotel_code", "floor_no")
+      .where("hotel_code", hotel_code)
+      .andWhere(function () {
+        if (search) {
+          this.andWhere("floor_no", search);
+        }
+        this.andWhere("is_deleted", false);
+        if (status) {
+          this.andWhere("status", status);
+        }
+      })
+      .orderBy("id", "asc");
+
+    return { data };
+  }
+
+  public async getSingleFloor(id: number, hotel_code: number) {
+    return await this.db("floors")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .select("id", "hotel_code", "floor_no")
+      .where({ id, hotel_code })
+      .andWhere("is_deleted", false)
+      .first();
+  }
+
+  public async updateFloor(
+    id: number,
+    hotel_code: number,
+    payload: { floor_no: string }
+  ) {
+    return await this.db("floors")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .where({ id, hotel_code })
+      .update(payload);
+  }
+
+  public async deleteFloor(id: number, hotel_code: number) {
+    return await this.db("floors")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .update({ is_deleted: true })
+      .where({ id, hotel_code });
+  }
+
+  // ===================== building Model ======================//
+  public async createBuilding(payload: {
+    hotel_code: number;
+    building_no: string;
+    description?: string;
+  }) {
+    return await this.db("buildings")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .insert(payload, "id");
+  }
+
+  public async getAllBuildings(payload: {
+    limit?: string;
+    skip?: string;
+    status?: string;
+    hotel_code: number;
+    search?: string;
+  }) {
+    const { limit, skip, hotel_code, search, status } = payload;
+
+    const dtbs = this.db("buildings");
+
+    if (limit && skip) {
+      dtbs.limit(parseInt(limit as string));
+      dtbs.offset(parseInt(skip as string));
+    }
+
+    const data = await dtbs
+      .withSchema(this.RESERVATION_SCHEMA)
+      .select("id", "hotel_code", "building_no", "description")
+      .where("hotel_code", hotel_code)
+      .andWhere(function () {
+        if (search) {
+          this.andWhere("building_no", search);
+        }
+        this.andWhere("is_deleted", false);
+        if (status) {
+          this.andWhere("status", status);
+        }
+      })
+      .orderBy("id", "asc");
+
+    return { data };
+  }
+  public async getSingleBuilding(id: number, hotel_code: number) {
+    return await this.db("buildings")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .select("id", "hotel_code", "building_no", "description")
+      .where({ id, hotel_code })
+      .andWhere("is_deleted", false)
+      .first();
+  }
+  public async updateBuilding(
+    id: number,
+    hotel_code: number,
+    payload: { name: string }
+  ) {
+    return await this.db("buildings")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .where({ id, hotel_code })
+      .update(payload);
+  }
+  public async deleteBuilding(id: number, hotel_code: number) {
+    return await this.db("buildings")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .update({ is_deleted: true })
+      .where({ id, hotel_code });
+  }
 }
 export default SettingModel;

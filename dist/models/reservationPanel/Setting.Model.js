@@ -1033,6 +1033,124 @@ class SettingModel extends schema_1.default {
                 .del();
         });
     }
+    // =================== floor Model ======================//
+    createFloor(payload) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("floors")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .insert(payload, "id");
+        });
+    }
+    getAllFloors(payload) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { limit, skip, hotel_code, search, status } = payload;
+            const dtbs = this.db("floors");
+            if (limit && skip) {
+                dtbs.limit(parseInt(limit));
+                dtbs.offset(parseInt(skip));
+            }
+            const data = yield dtbs
+                .withSchema(this.RESERVATION_SCHEMA)
+                .select("id", "hotel_code", "floor_no")
+                .where("hotel_code", hotel_code)
+                .andWhere(function () {
+                if (search) {
+                    this.andWhere("floor_no", search);
+                }
+                this.andWhere("is_deleted", false);
+                if (status) {
+                    this.andWhere("status", status);
+                }
+            })
+                .orderBy("id", "asc");
+            return { data };
+        });
+    }
+    getSingleFloor(id, hotel_code) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("floors")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .select("id", "hotel_code", "floor_no")
+                .where({ id, hotel_code })
+                .andWhere("is_deleted", false)
+                .first();
+        });
+    }
+    updateFloor(id, hotel_code, payload) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("floors")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .where({ id, hotel_code })
+                .update(payload);
+        });
+    }
+    deleteFloor(id, hotel_code) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("floors")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .update({ is_deleted: true })
+                .where({ id, hotel_code });
+        });
+    }
+    // ===================== building Model ======================//
+    createBuilding(payload) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("buildings")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .insert(payload, "id");
+        });
+    }
+    getAllBuildings(payload) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { limit, skip, hotel_code, search, status } = payload;
+            const dtbs = this.db("buildings");
+            if (limit && skip) {
+                dtbs.limit(parseInt(limit));
+                dtbs.offset(parseInt(skip));
+            }
+            const data = yield dtbs
+                .withSchema(this.RESERVATION_SCHEMA)
+                .select("id", "hotel_code", "building_no", "description")
+                .where("hotel_code", hotel_code)
+                .andWhere(function () {
+                if (search) {
+                    this.andWhere("building_no", search);
+                }
+                this.andWhere("is_deleted", false);
+                if (status) {
+                    this.andWhere("status", status);
+                }
+            })
+                .orderBy("id", "asc");
+            return { data };
+        });
+    }
+    getSingleBuilding(id, hotel_code) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("buildings")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .select("id", "hotel_code", "building_no", "description")
+                .where({ id, hotel_code })
+                .andWhere("is_deleted", false)
+                .first();
+        });
+    }
+    updateBuilding(id, hotel_code, payload) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("buildings")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .where({ id, hotel_code })
+                .update(payload);
+        });
+    }
+    deleteBuilding(id, hotel_code) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("buildings")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .update({ is_deleted: true })
+                .where({ id, hotel_code });
+        });
+    }
 }
 exports.default = SettingModel;
 //# sourceMappingURL=Setting.Model.js.map

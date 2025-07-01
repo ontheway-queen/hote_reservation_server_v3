@@ -604,5 +604,225 @@ class RoomSettingService extends AbstractServices {
       };
     });
   }
+
+  //=================== Floor Setup ======================//
+
+  public async createFloorSetup(req: Request) {
+    return await this.db.transaction(async (trx) => {
+      const { hotel_code } = req.hotel_admin;
+      const { floor_no } = req.body;
+
+      // check if floor already exists
+      const model = this.Model.settingModel(trx);
+      const { data } = await model.getAllFloors({
+        search: floor_no,
+        hotel_code,
+      });
+
+      if (data.length) {
+        return {
+          success: false,
+          code: this.StatusCode.HTTP_CONFLICT,
+          message: "Floor already exists",
+        };
+      }
+
+      await model.createFloor({ hotel_code, floor_no });
+
+      return {
+        success: true,
+        code: this.StatusCode.HTTP_SUCCESSFUL,
+        message: "Floor created successfully.",
+      };
+    });
+  }
+
+  public async getAllFloorSetup(req: Request) {
+    const { hotel_code } = req.hotel_admin;
+    const { limit, skip, search, status } = req.query;
+
+    const model = this.Model.settingModel();
+
+    const { data } = await model.getAllFloors({
+      status: status as string,
+      limit: limit as string,
+      skip: skip as string,
+      search: search as string,
+      hotel_code,
+    });
+
+    return {
+      success: true,
+      code: this.StatusCode.HTTP_OK,
+      data,
+    };
+  }
+
+  public async updateFloorSetup(req: Request) {
+    return await this.db.transaction(async (trx) => {
+      const { hotel_code } = req.hotel_admin;
+      const { id } = req.params;
+
+      const model = this.Model.settingModel(trx);
+
+      // check if floor exists
+      const data = await model.getSingleFloor(parseInt(id), hotel_code);
+
+      if (!data) {
+        return {
+          success: false,
+          code: this.StatusCode.HTTP_NOT_FOUND,
+          message: "Floor not found",
+        };
+      }
+
+      await model.updateFloor(parseInt(id), hotel_code, req.body);
+
+      return {
+        success: true,
+        code: this.StatusCode.HTTP_OK,
+        message: "Floor updated successfully",
+      };
+    });
+  }
+
+  public async deleteFloorSetup(req: Request) {
+    return await this.db.transaction(async (trx) => {
+      const { hotel_code } = req.hotel_admin;
+      const { id } = req.params;
+
+      const model = this.Model.settingModel(trx);
+
+      // check if floor exists
+      const data = await model.getSingleFloor(parseInt(id), hotel_code);
+
+      if (!data) {
+        return {
+          success: false,
+          code: this.StatusCode.HTTP_NOT_FOUND,
+          message: "Floor not found",
+        };
+      }
+
+      await model.deleteFloor(parseInt(id), hotel_code);
+
+      return {
+        success: true,
+        code: this.StatusCode.HTTP_OK,
+        message: "Floor deleted successfully",
+      };
+    });
+  }
+
+  //=================== Building Setup ======================//
+
+  public async createBuildingSetup(req: Request) {
+    return await this.db.transaction(async (trx) => {
+      const { hotel_code } = req.hotel_admin;
+      const { building_no } = req.body;
+
+      console.log(req.body);
+
+      // check if building already exists
+      const model = this.Model.settingModel(trx);
+      const { data } = await model.getAllBuildings({
+        search: building_no,
+        hotel_code,
+      });
+
+      if (data.length) {
+        return {
+          success: false,
+          code: this.StatusCode.HTTP_CONFLICT,
+          message: "Building already exists",
+        };
+      }
+
+      await model.createBuilding({ hotel_code, ...req.body });
+
+      return {
+        success: true,
+        code: this.StatusCode.HTTP_SUCCESSFUL,
+        message: "Building created successfully.",
+      };
+    });
+  }
+
+  public async getAllBuildingSetup(req: Request) {
+    const { hotel_code } = req.hotel_admin;
+    const { limit, skip, search, status } = req.query;
+
+    const model = this.Model.settingModel();
+
+    const { data } = await model.getAllBuildings({
+      status: status as string,
+      limit: limit as string,
+      skip: skip as string,
+      search: search as string,
+      hotel_code,
+    });
+
+    return {
+      success: true,
+      code: this.StatusCode.HTTP_OK,
+      data,
+    };
+  }
+
+  public async updateBuildingSetup(req: Request) {
+    return await this.db.transaction(async (trx) => {
+      const { hotel_code } = req.hotel_admin;
+      const { id } = req.params;
+
+      const model = this.Model.settingModel(trx);
+
+      // check if building exists
+      const data = await model.getSingleBuilding(parseInt(id), hotel_code);
+
+      if (!data) {
+        return {
+          success: false,
+          code: this.StatusCode.HTTP_NOT_FOUND,
+          message: "Building not found",
+        };
+      }
+
+      await model.updateBuilding(parseInt(id), hotel_code, req.body);
+
+      return {
+        success: true,
+        code: this.StatusCode.HTTP_OK,
+        message: "Building updated successfully",
+      };
+    });
+  }
+
+  public async deleteBuildingSetup(req: Request) {
+    return await this.db.transaction(async (trx) => {
+      const { hotel_code } = req.hotel_admin;
+      const { id } = req.params;
+
+      const model = this.Model.settingModel(trx);
+
+      // check if building exists
+      const data = await model.getSingleBuilding(parseInt(id), hotel_code);
+
+      if (!data) {
+        return {
+          success: false,
+          code: this.StatusCode.HTTP_NOT_FOUND,
+          message: "Building not found",
+        };
+      }
+
+      await model.deleteBuilding(parseInt(id), hotel_code);
+
+      return {
+        success: true,
+        code: this.StatusCode.HTTP_OK,
+        message: "Building deleted successfully",
+      };
+    });
+  }
 }
 export default RoomSettingService;

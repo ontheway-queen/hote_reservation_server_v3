@@ -50,6 +50,26 @@ class RoomSettingRouter extends abstract_router_1.default {
             .route("/bed-type/:id")
             .patch(this.roomSettingController.updateBedType)
             .delete(this.roomSettingController.deleteBedType);
+        // floor setup
+        this.router
+            .route("/floor")
+            .post(this.roomSettingController.createFloorSetup)
+            .get(this.roomSettingController.getAllFloorSetup);
+        // edit and remove floor setup
+        this.router
+            .route("/floor/:id")
+            .patch(this.roomSettingController.updateFloorSetup)
+            .delete(this.roomSettingController.deleteFloorSetup);
+        //==================== Building Setup Router ======================//
+        this.router
+            .route("/building")
+            .post(this.roomSettingController.createBuildingSetup)
+            .get(this.roomSettingController.getAllBuildingSetup);
+        // edit and remove building setup
+        this.router
+            .route("/building/:id")
+            .patch(this.roomSettingController.updateBuildingSetup)
+            .delete(this.roomSettingController.deleteBuildingSetup);
     }
 }
 exports.default = RoomSettingRouter;

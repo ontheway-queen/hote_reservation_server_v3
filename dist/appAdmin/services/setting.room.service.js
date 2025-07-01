@@ -509,6 +509,197 @@ class RoomSettingService extends abstract_service_1.default {
             }));
         });
     }
+    //=================== Floor Setup ======================//
+    createFloorSetup(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
+                const { hotel_code } = req.hotel_admin;
+                const { floor_no } = req.body;
+                // check if floor already exists
+                const model = this.Model.settingModel(trx);
+                const { data } = yield model.getAllFloors({
+                    search: floor_no,
+                    hotel_code,
+                });
+                if (data.length) {
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_CONFLICT,
+                        message: "Floor already exists",
+                    };
+                }
+                yield model.createFloor({ hotel_code, floor_no });
+                return {
+                    success: true,
+                    code: this.StatusCode.HTTP_SUCCESSFUL,
+                    message: "Floor created successfully.",
+                };
+            }));
+        });
+    }
+    getAllFloorSetup(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { hotel_code } = req.hotel_admin;
+            const { limit, skip, search, status } = req.query;
+            const model = this.Model.settingModel();
+            const { data } = yield model.getAllFloors({
+                status: status,
+                limit: limit,
+                skip: skip,
+                search: search,
+                hotel_code,
+            });
+            return {
+                success: true,
+                code: this.StatusCode.HTTP_OK,
+                data,
+            };
+        });
+    }
+    updateFloorSetup(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
+                const { hotel_code } = req.hotel_admin;
+                const { id } = req.params;
+                const model = this.Model.settingModel(trx);
+                // check if floor exists
+                const data = yield model.getSingleFloor(parseInt(id), hotel_code);
+                if (!data) {
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_NOT_FOUND,
+                        message: "Floor not found",
+                    };
+                }
+                yield model.updateFloor(parseInt(id), hotel_code, req.body);
+                return {
+                    success: true,
+                    code: this.StatusCode.HTTP_OK,
+                    message: "Floor updated successfully",
+                };
+            }));
+        });
+    }
+    deleteFloorSetup(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
+                const { hotel_code } = req.hotel_admin;
+                const { id } = req.params;
+                const model = this.Model.settingModel(trx);
+                // check if floor exists
+                const data = yield model.getSingleFloor(parseInt(id), hotel_code);
+                if (!data) {
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_NOT_FOUND,
+                        message: "Floor not found",
+                    };
+                }
+                yield model.deleteFloor(parseInt(id), hotel_code);
+                return {
+                    success: true,
+                    code: this.StatusCode.HTTP_OK,
+                    message: "Floor deleted successfully",
+                };
+            }));
+        });
+    }
+    //=================== Building Setup ======================//
+    createBuildingSetup(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
+                const { hotel_code } = req.hotel_admin;
+                const { building_no } = req.body;
+                console.log(req.body);
+                // check if building already exists
+                const model = this.Model.settingModel(trx);
+                const { data } = yield model.getAllBuildings({
+                    search: building_no,
+                    hotel_code,
+                });
+                if (data.length) {
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_CONFLICT,
+                        message: "Building already exists",
+                    };
+                }
+                yield model.createBuilding(Object.assign({ hotel_code }, req.body));
+                return {
+                    success: true,
+                    code: this.StatusCode.HTTP_SUCCESSFUL,
+                    message: "Building created successfully.",
+                };
+            }));
+        });
+    }
+    getAllBuildingSetup(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { hotel_code } = req.hotel_admin;
+            const { limit, skip, search, status } = req.query;
+            const model = this.Model.settingModel();
+            const { data } = yield model.getAllBuildings({
+                status: status,
+                limit: limit,
+                skip: skip,
+                search: search,
+                hotel_code,
+            });
+            return {
+                success: true,
+                code: this.StatusCode.HTTP_OK,
+                data,
+            };
+        });
+    }
+    updateBuildingSetup(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
+                const { hotel_code } = req.hotel_admin;
+                const { id } = req.params;
+                const model = this.Model.settingModel(trx);
+                // check if building exists
+                const data = yield model.getSingleBuilding(parseInt(id), hotel_code);
+                if (!data) {
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_NOT_FOUND,
+                        message: "Building not found",
+                    };
+                }
+                yield model.updateBuilding(parseInt(id), hotel_code, req.body);
+                return {
+                    success: true,
+                    code: this.StatusCode.HTTP_OK,
+                    message: "Building updated successfully",
+                };
+            }));
+        });
+    }
+    deleteBuildingSetup(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
+                const { hotel_code } = req.hotel_admin;
+                const { id } = req.params;
+                const model = this.Model.settingModel(trx);
+                // check if building exists
+                const data = yield model.getSingleBuilding(parseInt(id), hotel_code);
+                if (!data) {
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_NOT_FOUND,
+                        message: "Building not found",
+                    };
+                }
+                yield model.deleteBuilding(parseInt(id), hotel_code);
+                return {
+                    success: true,
+                    code: this.StatusCode.HTTP_OK,
+                    message: "Building deleted successfully",
+                };
+            }));
+        });
+    }
 }
 exports.default = RoomSettingService;
 //# sourceMappingURL=setting.room.service.js.map
