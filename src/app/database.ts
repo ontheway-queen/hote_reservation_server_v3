@@ -2,6 +2,7 @@ import knex, { Knex } from "knex";
 import config from "../config/config";
 
 let dbInstance: Knex;
+//knex
 
 const createDbCon = () => {
   if (!dbInstance) {
