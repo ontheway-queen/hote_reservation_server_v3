@@ -631,7 +631,31 @@ AND (
           "g.id as guest_id",
           "g.first_name",
           "g.last_name",
-          "g.email as guest_email"
+          "g.email as guest_email",
+          this.db.raw(
+            `
+            (
+              SELECT COALESCE(JSON_AGG(JSON_BUILD_OBJECT(
+                'id', br.id,
+                'room_type_id', br.room_type_id,
+                'room_type_name', rt.name,
+                'room_id', br.room_id,
+                'room_name', r.room_name,
+                'adults', br.adults,
+                'children', br.children,
+                'infant', br.infant
+              )), '[]'::json)
+              FROM ?? AS br
+              LEFT JOIN ?? AS rt ON br.room_type_id = rt.id
+              LEFT JOIN ?? AS r ON br.room_id = r.id
+              WHERE br.booking_id = b.id
+            ) AS booking_rooms`,
+            [
+              "hotel_reservation.booking_rooms",
+              "hotel_reservation.room_types",
+              "hotel_reservation.rooms",
+            ]
+          )
         )
         .leftJoin("sources as src", "b.source_id", "src.id")
         .leftJoin("guests as g", "b.guest_id", "g.id")
@@ -672,7 +696,31 @@ AND (
           "g.id as guest_id",
           "g.first_name",
           "g.last_name",
-          "g.email as guest_email"
+          "g.email as guest_email",
+          this.db.raw(
+            `
+            (
+              SELECT COALESCE(JSON_AGG(JSON_BUILD_OBJECT(
+                'id', br.id,
+                'room_type_id', br.room_type_id,
+                'room_type_name', rt.name,
+                'room_id', br.room_id,
+                'room_name', r.room_name,
+                'adults', br.adults,
+                'children', br.children,
+                'infant', br.infant
+              )), '[]'::json)
+              FROM ?? AS br
+              LEFT JOIN ?? AS rt ON br.room_type_id = rt.id
+              LEFT JOIN ?? AS r ON br.room_id = r.id
+              WHERE br.booking_id = b.id
+            ) AS booking_rooms`,
+            [
+              "hotel_reservation.booking_rooms",
+              "hotel_reservation.room_types",
+              "hotel_reservation.rooms",
+            ]
+          )
         )
         .leftJoin("sources as src", "b.source_id", "src.id")
         .leftJoin("guests as g", "b.guest_id", "g.id")
@@ -728,7 +776,31 @@ AND (
           "g.id as guest_id",
           "g.first_name",
           "g.last_name",
-          "g.email as guest_email"
+          "g.email as guest_email",
+          this.db.raw(
+            `
+            (
+              SELECT COALESCE(JSON_AGG(JSON_BUILD_OBJECT(
+                'id', br.id,
+                'room_type_id', br.room_type_id,
+                'room_type_name', rt.name,
+                'room_id', br.room_id,
+                'room_name', r.room_name,
+                'adults', br.adults,
+                'children', br.children,
+                'infant', br.infant
+              )), '[]'::json)
+              FROM ?? AS br
+              LEFT JOIN ?? AS rt ON br.room_type_id = rt.id
+              LEFT JOIN ?? AS r ON br.room_id = r.id
+              WHERE br.booking_id = b.id
+            ) AS booking_rooms`,
+            [
+              "hotel_reservation.booking_rooms",
+              "hotel_reservation.room_types",
+              "hotel_reservation.rooms",
+            ]
+          )
         )
         .leftJoin("sources as src", "b.source_id", "src.id")
         .leftJoin("guests as g", "b.guest_id", "g.id")

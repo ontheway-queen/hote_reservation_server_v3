@@ -427,7 +427,27 @@ AND (
                     .first();
                 const data = yield this.db("bookings as b")
                     .withSchema(this.RESERVATION_SCHEMA)
-                    .select("b.id", "b.booking_reference", this.db.raw(`TO_CHAR(b.check_in, 'YYYY-MM-DD') as check_in`), this.db.raw(`TO_CHAR(b.check_out, 'YYYY-MM-DD') as check_out`), this.db.raw(`TO_CHAR(b.booking_date, 'YYYY-MM-DD') as booking_date`), "b.booking_type", "b.status", "src.name as source_name", "b.total_amount", "b.vat", "b.discount_amount", "b.service_charge", "g.id as guest_id", "g.first_name", "g.last_name", "g.email as guest_email")
+                    .select("b.id", "b.booking_reference", this.db.raw(`TO_CHAR(b.check_in, 'YYYY-MM-DD') as check_in`), this.db.raw(`TO_CHAR(b.check_out, 'YYYY-MM-DD') as check_out`), this.db.raw(`TO_CHAR(b.booking_date, 'YYYY-MM-DD') as booking_date`), "b.booking_type", "b.status", "src.name as source_name", "b.total_amount", "b.vat", "b.discount_amount", "b.service_charge", "g.id as guest_id", "g.first_name", "g.last_name", "g.email as guest_email", this.db.raw(`
+            (
+              SELECT COALESCE(JSON_AGG(JSON_BUILD_OBJECT(
+                'id', br.id,
+                'room_type_id', br.room_type_id,
+                'room_type_name', rt.name,
+                'room_id', br.room_id,
+                'room_name', r.room_name,
+                'adults', br.adults,
+                'children', br.children,
+                'infant', br.infant
+              )), '[]'::json)
+              FROM ?? AS br
+              LEFT JOIN ?? AS rt ON br.room_type_id = rt.id
+              LEFT JOIN ?? AS r ON br.room_id = r.id
+              WHERE br.booking_id = b.id
+            ) AS booking_rooms`, [
+                    "hotel_reservation.booking_rooms",
+                    "hotel_reservation.room_types",
+                    "hotel_reservation.rooms",
+                ]))
                     .leftJoin("sources as src", "b.source_id", "src.id")
                     .leftJoin("guests as g", "b.guest_id", "g.id")
                     .where("b.hotel_code", hotel_code)
@@ -451,7 +471,27 @@ AND (
             else if (booking_mode == "departure") {
                 const data = yield this.db("bookings as b")
                     .withSchema(this.RESERVATION_SCHEMA)
-                    .select("b.id", "b.booking_reference", this.db.raw(`TO_CHAR(b.check_in, 'YYYY-MM-DD') as check_in`), this.db.raw(`TO_CHAR(b.check_out, 'YYYY-MM-DD') as check_out`), this.db.raw(`TO_CHAR(b.booking_date, 'YYYY-MM-DD') as booking_date`), "b.booking_type", "b.status", "src.name as source_name", "b.total_amount", "b.vat", "b.discount_amount", "b.service_charge", "g.id as guest_id", "g.first_name", "g.last_name", "g.email as guest_email")
+                    .select("b.id", "b.booking_reference", this.db.raw(`TO_CHAR(b.check_in, 'YYYY-MM-DD') as check_in`), this.db.raw(`TO_CHAR(b.check_out, 'YYYY-MM-DD') as check_out`), this.db.raw(`TO_CHAR(b.booking_date, 'YYYY-MM-DD') as booking_date`), "b.booking_type", "b.status", "src.name as source_name", "b.total_amount", "b.vat", "b.discount_amount", "b.service_charge", "g.id as guest_id", "g.first_name", "g.last_name", "g.email as guest_email", this.db.raw(`
+            (
+              SELECT COALESCE(JSON_AGG(JSON_BUILD_OBJECT(
+                'id', br.id,
+                'room_type_id', br.room_type_id,
+                'room_type_name', rt.name,
+                'room_id', br.room_id,
+                'room_name', r.room_name,
+                'adults', br.adults,
+                'children', br.children,
+                'infant', br.infant
+              )), '[]'::json)
+              FROM ?? AS br
+              LEFT JOIN ?? AS rt ON br.room_type_id = rt.id
+              LEFT JOIN ?? AS r ON br.room_id = r.id
+              WHERE br.booking_id = b.id
+            ) AS booking_rooms`, [
+                    "hotel_reservation.booking_rooms",
+                    "hotel_reservation.room_types",
+                    "hotel_reservation.rooms",
+                ]))
                     .leftJoin("sources as src", "b.source_id", "src.id")
                     .leftJoin("guests as g", "b.guest_id", "g.id")
                     .where("b.hotel_code", hotel_code)
@@ -490,7 +530,27 @@ AND (
             else {
                 const data = yield this.db("bookings as b")
                     .withSchema(this.RESERVATION_SCHEMA)
-                    .select("b.id", "b.booking_reference", this.db.raw(`TO_CHAR(b.check_in, 'YYYY-MM-DD') as check_in`), this.db.raw(`TO_CHAR(b.check_out, 'YYYY-MM-DD') as check_out`), this.db.raw(`TO_CHAR(b.booking_date, 'YYYY-MM-DD') as booking_date`), "b.booking_type", "b.status", "src.name as source_name", "b.total_amount", "b.vat", "b.discount_amount", "b.service_charge", "g.id as guest_id", "g.first_name", "g.last_name", "g.email as guest_email")
+                    .select("b.id", "b.booking_reference", this.db.raw(`TO_CHAR(b.check_in, 'YYYY-MM-DD') as check_in`), this.db.raw(`TO_CHAR(b.check_out, 'YYYY-MM-DD') as check_out`), this.db.raw(`TO_CHAR(b.booking_date, 'YYYY-MM-DD') as booking_date`), "b.booking_type", "b.status", "src.name as source_name", "b.total_amount", "b.vat", "b.discount_amount", "b.service_charge", "g.id as guest_id", "g.first_name", "g.last_name", "g.email as guest_email", this.db.raw(`
+            (
+              SELECT COALESCE(JSON_AGG(JSON_BUILD_OBJECT(
+                'id', br.id,
+                'room_type_id', br.room_type_id,
+                'room_type_name', rt.name,
+                'room_id', br.room_id,
+                'room_name', r.room_name,
+                'adults', br.adults,
+                'children', br.children,
+                'infant', br.infant
+              )), '[]'::json)
+              FROM ?? AS br
+              LEFT JOIN ?? AS rt ON br.room_type_id = rt.id
+              LEFT JOIN ?? AS r ON br.room_id = r.id
+              WHERE br.booking_id = b.id
+            ) AS booking_rooms`, [
+                    "hotel_reservation.booking_rooms",
+                    "hotel_reservation.room_types",
+                    "hotel_reservation.rooms",
+                ]))
                     .leftJoin("sources as src", "b.source_id", "src.id")
                     .leftJoin("guests as g", "b.guest_id", "g.id")
                     .andWhere(function () {
