@@ -659,7 +659,7 @@ export class SubReservationService extends AbstractServices {
         folio_id: folio.id,
         date: today,
         posting_type: "Payment",
-        debit: body.payment.amount,
+        credit: body.payment.amount,
         room_id: 0,
         description: `Payment Received`,
         rack_rate: 0,
