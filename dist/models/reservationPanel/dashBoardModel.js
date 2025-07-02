@@ -144,7 +144,7 @@ class DashBoardModel extends schema_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             const totalArrivals = yield this.db("bookings as b")
                 .withSchema(this.RESERVATION_SCHEMA)
-                .select("b.id as total")
+                .count("b.id as total")
                 .leftJoin("guests as g", "b.guest_id", "g.id")
                 .where("b.hotel_code", hotel_code)
                 .andWhere("b.check_in", current_date)
@@ -152,7 +152,7 @@ class DashBoardModel extends schema_1.default {
                 .first();
             const totalDepartures = yield this.db("bookings as b")
                 .withSchema(this.RESERVATION_SCHEMA)
-                .select("b.id as total")
+                .count("b.id as total")
                 .leftJoin("guests as g", "b.guest_id", "g.id")
                 .where("b.hotel_code", hotel_code)
                 .andWhere("b.status", "checked_in")

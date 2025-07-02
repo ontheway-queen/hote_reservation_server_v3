@@ -158,7 +158,7 @@ class DashBoardModel extends Schema {
   }) {
     const totalArrivals = await this.db("bookings as b")
       .withSchema(this.RESERVATION_SCHEMA)
-      .select("b.id as total")
+      .count("b.id as total")
       .leftJoin("guests as g", "b.guest_id", "g.id")
       .where("b.hotel_code", hotel_code)
       .andWhere("b.check_in", current_date)
@@ -167,7 +167,7 @@ class DashBoardModel extends Schema {
 
     const totalDepartures = await this.db("bookings as b")
       .withSchema(this.RESERVATION_SCHEMA)
-      .select("b.id as total")
+      .count("b.id as total")
       .leftJoin("guests as g", "b.guest_id", "g.id")
       .where("b.hotel_code", hotel_code)
       .andWhere("b.status", "checked_in")
