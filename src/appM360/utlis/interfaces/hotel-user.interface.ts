@@ -1,19 +1,14 @@
 export interface IUpdateUser {
-  hotel_code: number;
-  name?: string;
+  first_name?: string;
+  last_name?: string;
+  email?: string;
   phone?: string;
-  email: string;
-  photo?: string;
-  country?: string;
-  city?: string;
   address?: string;
-  zip_code?: number;
-  postal_code?: number;
-  passport_no?: string;
-  nid_no?: string;
-  user_type?: "guest" | "user";
-  last_balance?: number;
-  status?: "active" | "inactive" | "blocked";
+  country_code?: string;
+  passport_number?: string;
+  nationality?: string;
+  country?: string;
+  is_active?: boolean;
 }
 
 export interface IUpdateUserPayload {

@@ -31,13 +31,13 @@ export class SubReservationService extends AbstractServices {
     hotel_code: number
   ): Promise<number> {
     const guestModel = this.Model.guestModel(this.trx);
-    const { data: existingGuests } = await guestModel.getAllGuest({
-      email: guest.email,
-      phone: guest.phone,
-      hotel_code,
-    });
+    // const { data: existingGuests } = await guestModel.getAllGuest({
+    //   // email: guest.email,
+    //   phone: guest.phone,
+    //   hotel_code,
+    // });
 
-    if (existingGuests.length) return existingGuests[0].id;
+    // if (existingGuests.length) return existingGuests[0].id;
 
     const [insertedGuest] = await guestModel.createGuest({
       hotel_code,

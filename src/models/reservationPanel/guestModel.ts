@@ -86,6 +86,7 @@ class GuestModel extends Schema {
         "first_name",
         "last_name",
         "email",
+        "address",
         "phone",
         "country",
         "is_active",
@@ -97,7 +98,8 @@ class GuestModel extends Schema {
         if (key) {
           this.andWhere("first_name", "like", `%${key}%`)
             .orWhere("email", "like", `%${key}%`)
-            .orWhere("country", "like", `%${key}%`);
+            .orWhere("country", "like", `%${key}%`)
+            .orWhere("phone", "like", `%${key}%`);
         }
 
         if (phone) {
@@ -121,8 +123,13 @@ class GuestModel extends Schema {
         if (key) {
           this.andWhere("first_name", "like", `%${key}%`)
             .orWhere("email", "like", `%${key}%`)
-            .orWhere("country", "like", `%${key}%`);
+            .orWhere("country", "like", `%${key}%`)
+            .orWhere("phone", "like", `%${key}%`);
         }
+        if (phone) {
+          this.andWhere("phone", "like", `%${phone}%`);
+        }
+
         if (email) {
           this.andWhere("email", email);
         }
@@ -157,15 +164,14 @@ class GuestModel extends Schema {
   }
 
   public async updateSingleGuest(
-    payload: { last_balance?: number },
-    where: { hotel_code?: number; id?: number }
+    where: { id: number; hotel_code: number },
+    payload: IUpdateUser
   ) {
-    const { hotel_code, id } = where;
-    return await this.db("user")
+    const { id, hotel_code } = where;
+    return await this.db("guests")
       .withSchema(this.RESERVATION_SCHEMA)
-      .update(payload)
-      .where({ hotel_code })
-      .andWhere({ id });
+      .where({ id, hotel_code })
+      .update(payload);
   }
 
   public async getSingleGuestLedeger({

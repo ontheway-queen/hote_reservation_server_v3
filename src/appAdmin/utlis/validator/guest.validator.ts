@@ -18,7 +18,7 @@ class GuestValidator {
 
   // get all guest list validator
   public getAllGuestValidator = Joi.object({
-    key: Joi.string().allow("").optional(),
+    search: Joi.string().allow("").optional(),
     email: Joi.string().allow("").optional(),
     status: Joi.string().allow("").optional(),
     limit: Joi.string().allow("").optional(),
@@ -28,6 +28,22 @@ class GuestValidator {
   // get all guest list validator
   public getHallGuestValidator = Joi.object({
     // id: Joi.number().allow("").optional(),
+  });
+
+  public updateSingleGuestValidator = Joi.object({
+    first_name: Joi.string().required(),
+    last_name: Joi.string().allow("").optional(),
+    email: Joi.string()
+      .allow("")
+      .email()
+      .lowercase()
+      .trim()
+      .regex(/^\S/)
+      .optional(),
+    address: Joi.string().allow("").optional(),
+    phone: Joi.string().allow("").optional(),
+    country: Joi.string().lowercase().allow("").trim().regex(/^\S/).optional(),
+    nationality: Joi.string().allow("").optional(),
   });
 }
 export default GuestValidator;

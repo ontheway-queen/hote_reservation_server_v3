@@ -30,13 +30,12 @@ class SubReservationService extends abstract_service_1.default {
     findOrCreateGuest(guest, hotel_code) {
         return __awaiter(this, void 0, void 0, function* () {
             const guestModel = this.Model.guestModel(this.trx);
-            const { data: existingGuests } = yield guestModel.getAllGuest({
-                email: guest.email,
-                phone: guest.phone,
-                hotel_code,
-            });
-            if (existingGuests.length)
-                return existingGuests[0].id;
+            // const { data: existingGuests } = await guestModel.getAllGuest({
+            //   // email: guest.email,
+            //   phone: guest.phone,
+            //   hotel_code,
+            // });
+            // if (existingGuests.length) return existingGuests[0].id;
             const [insertedGuest] = yield guestModel.createGuest({
                 hotel_code,
                 first_name: guest.first_name,

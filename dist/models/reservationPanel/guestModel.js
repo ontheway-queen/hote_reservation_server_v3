@@ -65,14 +65,15 @@ class GuestModel extends schema_1.default {
                 dtbs.offset(parseInt(skip));
             }
             const data = yield dtbs
-                .select("id", "first_name", "last_name", "email", "phone", "country", "is_active", "created_at")
+                .select("id", "first_name", "last_name", "email", "address", "phone", "country", "is_active", "created_at")
                 .withSchema(this.RESERVATION_SCHEMA)
                 .where({ hotel_code })
                 .andWhere(function () {
                 if (key) {
                     this.andWhere("first_name", "like", `%${key}%`)
                         .orWhere("email", "like", `%${key}%`)
-                        .orWhere("country", "like", `%${key}%`);
+                        .orWhere("country", "like", `%${key}%`)
+                        .orWhere("phone", "like", `%${key}%`);
                 }
                 if (phone) {
                     this.andWhere("phone", "like", `%${phone}%`);
@@ -93,7 +94,11 @@ class GuestModel extends schema_1.default {
                 if (key) {
                     this.andWhere("first_name", "like", `%${key}%`)
                         .orWhere("email", "like", `%${key}%`)
-                        .orWhere("country", "like", `%${key}%`);
+                        .orWhere("country", "like", `%${key}%`)
+                        .orWhere("phone", "like", `%${key}%`);
+                }
+                if (phone) {
+                    this.andWhere("phone", "like", `%${phone}%`);
                 }
                 if (email) {
                     this.andWhere("email", email);
@@ -122,14 +127,13 @@ class GuestModel extends schema_1.default {
             });
         });
     }
-    updateSingleGuest(payload, where) {
+    updateSingleGuest(where, payload) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { hotel_code, id } = where;
-            return yield this.db("user")
+            const { id, hotel_code } = where;
+            return yield this.db("guests")
                 .withSchema(this.RESERVATION_SCHEMA)
-                .update(payload)
-                .where({ hotel_code })
-                .andWhere({ id });
+                .where({ id, hotel_code })
+                .update(payload);
         });
     }
     getSingleGuestLedeger({ guest_id, hotel_code, from_date, to_date, limit, skip, }) {

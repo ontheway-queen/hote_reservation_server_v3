@@ -55,19 +55,31 @@ class ReportService extends AbstractServices {
   }
 
   public async inhouseGuestListReport(req: Request) {
-    const { data, total } =
-      await this.Model.reportModel().inhouseGuestListReport({
-        search: req.query.search as string,
-        hotel_code: req.hotel_admin.hotel_code,
-        current_date: req.query.current_date as string,
-        limit: req.query.limit as string,
-        skip: req.query.skip as string,
-      });
+    const {
+      data,
+      total,
+      total_cbf,
+      total_person,
+      total_adult,
+      total_children,
+      total_infant,
+    } = await this.Model.reportModel().inhouseGuestListReport({
+      search: req.query.search as string,
+      hotel_code: req.hotel_admin.hotel_code,
+      current_date: req.query.current_date as string,
+      limit: req.query.limit as string,
+      skip: req.query.skip as string,
+    });
 
     return {
       success: true,
       code: this.StatusCode.HTTP_OK,
       total,
+      total_cbf,
+      total_adult,
+      total_children,
+      total_infant,
+      total_person,
       data,
     };
   }

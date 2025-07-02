@@ -61,11 +61,11 @@ class GuestService extends abstract_service_1.default {
     // get All guest service
     getAllGuest(req) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { key, email, limit, skip, status } = req.query;
+            const { search, email, limit, skip, status } = req.query;
             const { hotel_code } = req.hotel_admin;
             const { data, total } = yield this.Model.guestModel().getAllGuest({
                 status: status,
-                key: key,
+                key: search,
                 email: email,
                 limit: limit,
                 skip: skip,
@@ -96,6 +96,45 @@ class GuestService extends abstract_service_1.default {
                 success: true,
                 code: this.StatusCode.HTTP_OK,
                 data: singleGuest[0],
+            };
+        });
+    }
+    updateSingleGuestValidator(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { first_name, last_name, email, address, phone, country, nationality, } = req.body;
+            console.log(req.body);
+            const { hotel_code } = req.hotel_admin;
+            // Model
+            const model = this.Model.guestModel();
+            // Check if user already exists
+            const checkUser = yield model.getSingleGuest({
+                hotel_code,
+                id: parseInt(req.params.id),
+            });
+            if (checkUser.length === 0) {
+                return {
+                    success: false,
+                    code: this.StatusCode.HTTP_NOT_FOUND,
+                    message: "Guest not found",
+                };
+            }
+            // Update guest
+            yield model.updateSingleGuest({
+                id: parseInt(req.params.id),
+                hotel_code,
+            }, {
+                first_name,
+                last_name,
+                email,
+                address,
+                phone,
+                country,
+                nationality,
+            });
+            return {
+                success: true,
+                code: this.StatusCode.HTTP_OK,
+                message: "Guest updated successfully",
             };
         });
     }

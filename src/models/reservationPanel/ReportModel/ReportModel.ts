@@ -227,9 +227,51 @@ class ReportModel extends Schema {
         }
       });
 
+    const [info] = await this.db("booking_rooms AS br")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .select(
+        this.db.raw("SUM(br.cbf) AS total_cbf"),
+        this.db.raw("SUM(br.adults) AS total_adults"),
+        this.db.raw("SUM(br.children) AS total_children"),
+        this.db.raw("SUM(br.infant) AS total_infant"),
+        this.db.raw("SUM(br.adults + br.children + br.infant) AS total_person")
+      )
+      .leftJoin("bookings AS b", "br.booking_id", "b.id")
+      .leftJoin("guests AS g", "b.guest_id", "g.id")
+      .leftJoin("rooms AS r", "br.room_id", "r.id")
+      .where("b.hotel_code", hotel_code)
+      .andWhere((qb) => {
+        qb.whereRaw("Date(b.check_in) <= ?", [current_date]).andWhereRaw(
+          "Date(b.check_out) >= ?",
+          [current_date]
+        );
+        qb.andWhere("b.booking_type", "B");
+        qb.andWhere("b.status", "checked_in");
+
+        if (search) {
+          qb.andWhere((subQb) => {
+            subQb
+              .where("g.first_name", "like", `%${search}%`)
+              .orWhere("g.last_name", "like", `%${search}%`)
+              .orWhere("g.email", "like", `%${search}%`)
+              .orWhere("g.phone", "like", `%${search}%`)
+              .orWhere("r.room_name", "like", `%${search}%`);
+          });
+        }
+
+        if (room_id) {
+          qb.andWhere("br.room_id", room_id);
+        }
+      });
+
     return {
       data,
       total: Number(total[0]?.total || 0),
+      total_cbf: Number(info?.total_cbf || 0),
+      total_adult: Number(info?.total_adults || 0),
+      total_children: Number(info?.total_children || 0),
+      total_infant: Number(info?.total_infant || 0),
+      total_person: Number(info?.total_person || 0),
     };
   }
 }

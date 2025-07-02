@@ -35,5 +35,14 @@ class GuestController extends AbstractController {
       res.status(code).json(data);
     }
   );
+
+  public updateSingleGuest = this.asyncWrapper.wrap(
+    { bodySchema: this.guestValidator.updateSingleGuestValidator },
+    async (req: Request, res: Response) => {
+      const { code, ...data } =
+        await this.guestService.updateSingleGuestValidator(req);
+      res.status(code).json(data);
+    }
+  );
 }
 export default GuestController;
