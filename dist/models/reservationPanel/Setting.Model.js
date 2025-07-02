@@ -19,7 +19,6 @@ class SettingModel extends schema_1.default {
         this.db = db;
     }
     //=================== Room Type  ======================//
-    // create room type
     createRoomType(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("room_types")
@@ -27,7 +26,6 @@ class SettingModel extends schema_1.default {
                 .insert(payload, "id");
         });
     }
-    // Get All Room Type
     getAllRoomType(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             const { limit, skip, search, is_active, hotel_code, ids } = payload;
@@ -40,8 +38,9 @@ class SettingModel extends schema_1.default {
                 .withSchema(this.RESERVATION_SCHEMA)
                 .select("rt.id", "rt.name", "rt.area", "rtc.name as rt_category_name", "rt.is_active")
                 .join("room_type_categories as rtc", "rt.categories_type_id", "rtc.id")
-                .where(function () {
-                this.andWhere("rt.hotel_code", hotel_code);
+                .where("rt.hotel_code", hotel_code)
+                .andWhere("rt.is_deleted", false)
+                .andWhere(function () {
                 if (search) {
                     this.andWhere("rt.name", "ilike", `%${search}%`);
                 }
@@ -56,8 +55,9 @@ class SettingModel extends schema_1.default {
             const total = yield this.db("room_types as rt")
                 .withSchema(this.RESERVATION_SCHEMA)
                 .count("rt.id as total")
-                .where(function () {
-                this.andWhere("rt.hotel_code", hotel_code);
+                .where("rt.hotel_code", hotel_code)
+                .andWhere("rt.is_deleted", false)
+                .andWhere(function () {
                 if (search) {
                     this.andWhere("rt.name", "ilike", `%${search}%`);
                 }
@@ -71,9 +71,9 @@ class SettingModel extends schema_1.default {
             return { total: total[0].total, data };
         });
     }
-    // get single room type
     getSingleRoomType(id, hotel_code) {
         return __awaiter(this, void 0, void 0, function* () {
+            console.log({ id, hotel_code });
             return yield this.db("room_types as rt")
                 .withSchema(this.RESERVATION_SCHEMA)
                 .select("rt.id", "rt.name", "rt.area", "rta.rt_amenities", "rtc.name as rt_category_name", "rt.is_active", "rt.description", "rt.area", "rt.is_active", "rt.room_info", "rt.categories_type_id", this.db.raw(`
@@ -94,11 +94,11 @@ class SettingModel extends schema_1.default {
                 .leftJoin("room_type_photos as rtp", "rt.id", "rtp.room_type_id")
                 .leftJoin("room_type_amenities as rta", "rt.id", "rta.room_type_id")
                 .where("rt.id", id)
+                .andWhere("rt.is_deleted", false)
                 .andWhere("rt.hotel_code", hotel_code)
                 .groupBy("rt.id", "rtc.name", "rta.rt_amenities");
         });
     }
-    // Update room type
     updateRoomType(id, hotel_code, payload) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("room_types")
@@ -107,13 +107,12 @@ class SettingModel extends schema_1.default {
                 .update(payload);
         });
     }
-    // Delete Room Type
     deleteRoomType(id, hotel_code) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("hotel_room_type")
+            return yield this.db("room_types")
                 .withSchema(this.RESERVATION_SCHEMA)
                 .where({ id, hotel_code })
-                .del();
+                .update({ is_deleted: true });
         });
     }
     insertRoomTypePhotos(payload) {
@@ -156,7 +155,6 @@ class SettingModel extends schema_1.default {
         });
     }
     //=================== Room Type Categories ======================//
-    // create room type Categories
     createRoomTypeCategories(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("room_type_categories")
@@ -164,7 +162,6 @@ class SettingModel extends schema_1.default {
                 .insert(payload);
         });
     }
-    // Get All Room Type Categories
     getAllRoomTypeCategories(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             const { limit, skip, search, status, hotel_code, exact_match } = payload;
@@ -191,7 +188,6 @@ class SettingModel extends schema_1.default {
                 .offset(skip ? parseInt(skip) : 0);
         });
     }
-    // get single room type Categories
     getSingleRoomTypeCategories(id, hotel_code) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("room_type_categories")
@@ -201,7 +197,6 @@ class SettingModel extends schema_1.default {
                 .first();
         });
     }
-    // Update room type Categories
     updateRoomTypeCategories(id, hotel_code, payload) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("room_type_categories")
@@ -210,7 +205,6 @@ class SettingModel extends schema_1.default {
                 .update(payload);
         });
     }
-    // Delete Room Type Categories
     deleteRoomTypeCategories(id, hotel_code) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("room_type_categories")

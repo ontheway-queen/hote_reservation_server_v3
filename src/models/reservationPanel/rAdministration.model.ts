@@ -170,6 +170,7 @@ class RAdministrationModel extends Schema {
       created_by: string;
       created_at: string;
       init_role: boolean;
+      status: boolean;
     }[];
     total: number;
   }> {
@@ -179,6 +180,7 @@ class RAdministrationModel extends Schema {
         "rl.id as role_id",
         "rl.name as role_name",
         "ua.name as created_by",
+        "rl.status",
         "rl.created_at",
         "rl.init_role"
       )
@@ -261,7 +263,7 @@ class RAdministrationModel extends Schema {
       .where({ hotel_code })
       .andWhere(function () {
         if (name) {
-          this.where("name", "like", `${name}%`);
+          this.whereRaw("LOWER(name) = ?", [name.toLowerCase()]);
         }
       });
   }

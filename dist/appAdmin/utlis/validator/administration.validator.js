@@ -29,7 +29,7 @@ class AdministrationValidator {
             status: joi_1.default.number().valid(0, 1).optional(),
             update_permissions: joi_1.default.array()
                 .items({
-                permission_id: joi_1.default.number().required(),
+                h_permission_id: joi_1.default.number().required(),
                 read: joi_1.default.number().valid(0, 1).required(),
                 update: joi_1.default.number().valid(0, 1).required(),
                 write: joi_1.default.number().valid(0, 1).required(),

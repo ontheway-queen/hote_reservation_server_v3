@@ -125,7 +125,7 @@ class AdministrationService extends abstract_service_1.default {
                 };
             }
             const files = req.files || [];
-            req.body["avatar"] = (files === null || files === void 0 ? void 0 : files.length) && files[0].filename;
+            req.body["photo"] = (files === null || files === void 0 ? void 0 : files.length) && files[0].filename;
             yield adminModel.updateAdmin(req.body, {
                 id: parseInt(req.params.id),
             });
@@ -180,6 +180,7 @@ class AdministrationService extends abstract_service_1.default {
                 const model = this.Model.rAdministrationModel(trx);
                 // check role
                 const checkRole = yield model.getRoleByName(role_name, hotel_code);
+                console.log({ checkRole });
                 if (checkRole.length) {
                     return {
                         success: false,
@@ -224,15 +225,16 @@ class AdministrationService extends abstract_service_1.default {
     }
     getAllRole(req) {
         return __awaiter(this, void 0, void 0, function* () {
-            const data = yield this.Model.rAdministrationModel().getAllRole({
+            const { data, total } = yield this.Model.rAdministrationModel().getAllRole({
                 hotel_code: req.hotel_admin.hotel_code,
-                limit: Number(req.query.limit) || 50,
-                skip: Number(req.query.skip) || 0,
+                limit: Number(req.query.limit),
+                skip: Number(req.query.skip),
                 search: req.query.search,
             });
             return {
                 success: true,
                 code: this.StatusCode.HTTP_OK,
+                total,
                 data,
             };
         });
@@ -247,7 +249,8 @@ class AdministrationService extends abstract_service_1.default {
             });
             const { permissions } = data, rest = __rest(data, ["permissions"]);
             const output_data = [];
-            permissions.forEach((entry) => {
+            console.log(data);
+            permissions === null || permissions === void 0 ? void 0 : permissions.forEach((entry) => {
                 const permissionGroupId = entry.permission_group_id;
                 const permission = {
                     permission_id: entry.permission_id,

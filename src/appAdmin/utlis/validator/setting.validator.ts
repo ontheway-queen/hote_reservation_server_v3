@@ -1,4 +1,4 @@
-import Joi from "joi";
+import Joi, { build } from "joi";
 
 class SettingValidator {
   // create room Type validation
@@ -7,6 +7,7 @@ class SettingValidator {
     description: Joi.string().required(),
     categories_type_id: Joi.number().required(),
     area: Joi.number().required(),
+    building_id: Joi.number().required(),
     room_info: Joi.string().required(),
     rt_amenities: Joi.string().required(),
     bed_count: Joi.number().optional(),

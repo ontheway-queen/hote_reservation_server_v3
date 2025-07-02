@@ -36,7 +36,8 @@ class RoomRouter extends AbstractRouter {
       .patch(
         this.uploader.cloudUploadRaw(this.fileFolders.ROOM_FILES),
         this.roomController.updateHotelRoom
-      );
+      )
+      .delete(this.roomController.deleteHotelRoom);
   }
 }
 export default RoomRouter;

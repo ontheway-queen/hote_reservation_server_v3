@@ -119,7 +119,7 @@ class AdministrationService extends AbstractServices {
 
     const files = (req.files as Express.Multer.File[]) || [];
 
-    req.body["avatar"] = files?.length && files[0].filename;
+    req.body["photo"] = files?.length && files[0].filename;
 
     await adminModel.updateAdmin(req.body, {
       id: parseInt(req.params.id),
@@ -185,12 +185,13 @@ class AdministrationService extends AbstractServices {
           delete: number;
         }[];
       };
+
       const { id, hotel_code } = req.hotel_admin;
       const model = this.Model.rAdministrationModel(trx);
 
       // check role
       const checkRole = await model.getRoleByName(role_name, hotel_code);
-
+      console.log({ checkRole });
       if (checkRole.length) {
         return {
           success: false,
@@ -260,16 +261,17 @@ class AdministrationService extends AbstractServices {
   }
 
   public async getAllRole(req: Request) {
-    const data = await this.Model.rAdministrationModel().getAllRole({
+    const { data, total } = await this.Model.rAdministrationModel().getAllRole({
       hotel_code: req.hotel_admin.hotel_code,
-      limit: Number(req.query.limit as string) || 50,
-      skip: Number(req.query.skip as string) || 0,
+      limit: Number(req.query.limit as string),
+      skip: Number(req.query.skip as string),
       search: req.query.search as string,
     });
 
     return {
       success: true,
       code: this.StatusCode.HTTP_OK,
+      total,
       data,
     };
   }
@@ -297,8 +299,9 @@ class AdministrationService extends AbstractServices {
         delete?: number;
       }[];
     }[] = [];
+    console.log(data);
 
-    permissions.forEach((entry) => {
+    permissions?.forEach((entry) => {
       const permissionGroupId = entry.permission_group_id;
       const permission = {
         permission_id: entry.permission_id,

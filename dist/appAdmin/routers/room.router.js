@@ -28,7 +28,8 @@ class RoomRouter extends abstract_router_1.default {
             .patch(this.roomController.updateHotelRoomStatus);
         this.router
             .route("/:room_id")
-            .patch(this.uploader.cloudUploadRaw(this.fileFolders.ROOM_FILES), this.roomController.updateHotelRoom);
+            .patch(this.uploader.cloudUploadRaw(this.fileFolders.ROOM_FILES), this.roomController.updateHotelRoom)
+            .delete(this.roomController.deleteHotelRoom);
     }
 }
 exports.default = RoomRouter;

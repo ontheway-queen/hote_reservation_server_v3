@@ -9,7 +9,7 @@ class RoomController extends AbstractController {
   constructor() {
     super();
   }
-  // Create room
+
   public createroom = this.asyncWrapper.wrap(
     { bodySchema: this.roomvalidator.createRoomValidator },
     async (req: Request, res: Response) => {
@@ -62,7 +62,6 @@ class RoomController extends AbstractController {
     }
   );
 
-  // update single hotel room
   public updateHotelRoom = this.asyncWrapper.wrap(
     { bodySchema: this.roomvalidator.updateRoomValidator },
     async (req: Request, res: Response) => {
@@ -71,7 +70,14 @@ class RoomController extends AbstractController {
     }
   );
 
-  // update single hotel room status
+  public deleteHotelRoom = this.asyncWrapper.wrap(
+    { paramSchema: this.commonValidator.singleParamValidator("room_id") },
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.roomService.deleteHotelRoom(req);
+      res.status(code).json(data);
+    }
+  );
+
   public updateHotelRoomStatus = this.asyncWrapper.wrap(
     { bodySchema: this.roomvalidator.updateRoomStatusValidator },
     async (req: Request, res: Response) => {

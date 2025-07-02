@@ -11,13 +11,8 @@ import {
   IUpdatedesignation,
   IUpdateHallAmenitiesPayload,
   IUpdatePayrollMonths,
-  IUpdateRoomTypeBodyPayload,
   IUpdateRoomTypePayload,
 } from "../../appAdmin/utlis/interfaces/setting.interface";
-import {
-  ICreateRoomTypeAmenitiesPayload,
-  IUpdateRoomTypeAmenitiesPayload,
-} from "../../appM360/utlis/interfaces/mConfiguration.interfaces.";
 
 import { TDB } from "../../common/types/commontypes";
 import Schema from "../../utils/miscellaneous/schema";
@@ -32,14 +27,12 @@ class SettingModel extends Schema {
 
   //=================== Room Type  ======================//
 
-  // create room type
   public async createRoomType(payload: ICreateRoomTypePayload) {
     return await this.db("room_types")
       .withSchema(this.RESERVATION_SCHEMA)
       .insert(payload, "id");
   }
 
-  // Get All Room Type
   public async getAllRoomType(payload: {
     limit?: string;
     skip?: string;
@@ -67,9 +60,9 @@ class SettingModel extends Schema {
         "rt.is_active"
       )
       .join("room_type_categories as rtc", "rt.categories_type_id", "rtc.id")
-      .where(function () {
-        this.andWhere("rt.hotel_code", hotel_code);
-
+      .where("rt.hotel_code", hotel_code)
+      .andWhere("rt.is_deleted", false)
+      .andWhere(function () {
         if (search) {
           this.andWhere("rt.name", "ilike", `%${search}%`);
         }
@@ -86,9 +79,9 @@ class SettingModel extends Schema {
     const total = await this.db("room_types as rt")
       .withSchema(this.RESERVATION_SCHEMA)
       .count("rt.id as total")
-      .where(function () {
-        this.andWhere("rt.hotel_code", hotel_code);
-
+      .where("rt.hotel_code", hotel_code)
+      .andWhere("rt.is_deleted", false)
+      .andWhere(function () {
         if (search) {
           this.andWhere("rt.name", "ilike", `%${search}%`);
         }
@@ -103,8 +96,32 @@ class SettingModel extends Schema {
     return { total: total[0].total, data };
   }
 
-  // get single room type
-  public async getSingleRoomType(id: number, hotel_code: number) {
+  public async getSingleRoomType(
+    id: number,
+    hotel_code: number
+  ): Promise<
+    {
+      id: number;
+      name: string;
+      area: string;
+      rt_amenities: any;
+      rt_category_name: string;
+      is_active: boolean;
+      description: string;
+      room_info: any;
+      categories_type_id: number;
+      beds: {
+        bed_type_id: number;
+        bed_type_name: string;
+        quantity: number;
+      }[];
+      photos: {
+        photo_id: number;
+        photo_url: string;
+      }[];
+    }[]
+  > {
+    console.log({ id, hotel_code });
     return await this.db("room_types as rt")
       .withSchema(this.RESERVATION_SCHEMA)
       .select(
@@ -139,11 +156,11 @@ class SettingModel extends Schema {
       .leftJoin("room_type_photos as rtp", "rt.id", "rtp.room_type_id")
       .leftJoin("room_type_amenities as rta", "rt.id", "rta.room_type_id")
       .where("rt.id", id)
+      .andWhere("rt.is_deleted", false)
       .andWhere("rt.hotel_code", hotel_code)
       .groupBy("rt.id", "rtc.name", "rta.rt_amenities");
   }
 
-  // Update room type
   public async updateRoomType(
     id: number,
     hotel_code: number,
@@ -155,12 +172,11 @@ class SettingModel extends Schema {
       .update(payload);
   }
 
-  // Delete Room Type
   public async deleteRoomType(id: number, hotel_code: number) {
-    return await this.db("hotel_room_type")
+    return await this.db("room_types")
       .withSchema(this.RESERVATION_SCHEMA)
       .where({ id, hotel_code })
-      .del();
+      .update({ is_deleted: true });
   }
 
   public async insertRoomTypePhotos(
@@ -218,7 +234,6 @@ class SettingModel extends Schema {
 
   //=================== Room Type Categories ======================//
 
-  // create room type Categories
   public async createRoomTypeCategories(payload: {
     name: string;
     hotel_code: number;
@@ -228,7 +243,6 @@ class SettingModel extends Schema {
       .insert(payload);
   }
 
-  // Get All Room Type Categories
   public async getAllRoomTypeCategories(payload: {
     limit?: string;
     skip?: string;
@@ -264,7 +278,6 @@ class SettingModel extends Schema {
       .offset(skip ? parseInt(skip) : 0);
   }
 
-  // get single room type Categories
   public async getSingleRoomTypeCategories(id: number, hotel_code: number) {
     return await this.db("room_type_categories")
       .withSchema(this.RESERVATION_SCHEMA)
@@ -273,7 +286,6 @@ class SettingModel extends Schema {
       .first();
   }
 
-  // Update room type Categories
   public async updateRoomTypeCategories(
     id: number,
     hotel_code: number,
@@ -285,7 +297,6 @@ class SettingModel extends Schema {
       .update(payload);
   }
 
-  // Delete Room Type Categories
   public async deleteRoomTypeCategories(id: number, hotel_code: number) {
     return await this.db("room_type_categories")
       .withSchema(this.RESERVATION_SCHEMA)

@@ -31,7 +31,6 @@ class RoomController extends abstract_controller_1.default {
         super();
         this.roomService = new room_service_1.default();
         this.roomvalidator = new Room_validator_1.default();
-        // Create room
         this.createroom = this.asyncWrapper.wrap({ bodySchema: this.roomvalidator.createRoomValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
             const _a = yield this.roomService.createRoom(req), { code } = _a, data = __rest(_a, ["code"]);
             if (data.success) {
@@ -59,14 +58,16 @@ class RoomController extends abstract_controller_1.default {
             const _e = yield this.roomService.getAllAvailableRooms(req), { code } = _e, data = __rest(_e, ["code"]);
             res.status(code).json(data);
         }));
-        // update single hotel room
         this.updateHotelRoom = this.asyncWrapper.wrap({ bodySchema: this.roomvalidator.updateRoomValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
             const _f = yield this.roomService.updateroom(req), { code } = _f, data = __rest(_f, ["code"]);
             res.status(code).json(data);
         }));
-        // update single hotel room status
+        this.deleteHotelRoom = this.asyncWrapper.wrap({ paramSchema: this.commonValidator.singleParamValidator("room_id") }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _g = yield this.roomService.deleteHotelRoom(req), { code } = _g, data = __rest(_g, ["code"]);
+            res.status(code).json(data);
+        }));
         this.updateHotelRoomStatus = this.asyncWrapper.wrap({ bodySchema: this.roomvalidator.updateRoomStatusValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _g = yield this.roomService.updateRoomStatus(req), { code } = _g, data = __rest(_g, ["code"]);
+            const _h = yield this.roomService.updateRoomStatus(req), { code } = _h, data = __rest(_h, ["code"]);
             res.status(code).json(data);
         }));
     }

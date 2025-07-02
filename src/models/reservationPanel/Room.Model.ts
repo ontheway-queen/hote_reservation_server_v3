@@ -60,7 +60,8 @@ class RoomModel extends Schema {
         "rt.name as room_type_name"
       )
       .join("room_types as rt", "r.room_type_id", "rt.id")
-      .where(function () {
+      .andWhere("r.is_deleted", false)
+      .andWhere(function () {
         this.andWhere("r.hotel_code", hotel_code);
         if (exact_name) {
           this.andWhereRaw("LOWER(r.room_name) = ?", [
@@ -226,10 +227,21 @@ class RoomModel extends Schema {
     return { data, total: total[0]?.total };
   }
 
-  public async getSingleRoom(hotel_code: number, room_id: number) {
+  public async getSingleRoom(
+    hotel_code: number,
+    room_id: number
+  ): Promise<
+    {
+      id: number;
+      room_name: string;
+      floor_no: string;
+      room_type_id: number;
+      status: string;
+    }[]
+  > {
     return await this.db("rooms")
       .withSchema(this.RESERVATION_SCHEMA)
-      .select("*")
+      .select("id", "room_name", "floor_no", "room_type_id", "status")
       .where({ hotel_code })
       .andWhere({ id: room_id });
   }
@@ -369,6 +381,7 @@ class RoomModel extends Schema {
       .from("rooms as r")
       .join("room_types as rt", "r.room_type_id", "rt.id")
       .where("r.hotel_code", hotel_code)
+      .andWhere("r.is_deleted", false)
       .modify((qb) => {
         if (status) {
           qb.andWhere("r.status", status);
@@ -384,8 +397,9 @@ class RoomModel extends Schema {
       .withSchema(this.RESERVATION_SCHEMA)
       .count("r.id as total")
       .join("room_types as rt", "r.room_type_id", "rt.id")
+      .where("r.hotel_code", hotel_code)
+      .andWhere("r.is_deleted", false)
       .where(function () {
-        this.andWhere("r.hotel_code", hotel_code);
         if (room_type_id) {
           this.andWhere("r.room_type_id", room_type_id);
         }

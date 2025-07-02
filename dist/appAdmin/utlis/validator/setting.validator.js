@@ -12,6 +12,7 @@ class SettingValidator {
             description: joi_1.default.string().required(),
             categories_type_id: joi_1.default.number().required(),
             area: joi_1.default.number().required(),
+            building_id: joi_1.default.number().required(),
             room_info: joi_1.default.string().required(),
             rt_amenities: joi_1.default.string().required(),
             bed_count: joi_1.default.number().optional(),

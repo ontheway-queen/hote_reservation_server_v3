@@ -109,7 +109,7 @@ class RAdministrationModel extends schema_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             const data = yield this.db("roles as rl")
                 .withSchema(this.RESERVATION_SCHEMA)
-                .select("rl.id as role_id", "rl.name as role_name", "ua.name as created_by", "rl.created_at", "rl.init_role")
+                .select("rl.id as role_id", "rl.name as role_name", "ua.name as created_by", "rl.status", "rl.created_at", "rl.init_role")
                 .leftJoin("user_admin as ua", "ua.id", "rl.created_by")
                 .where("rl.hotel_code", hotel_code)
                 .andWhere(function () {
@@ -166,7 +166,7 @@ class RAdministrationModel extends schema_1.default {
                 .where({ hotel_code })
                 .andWhere(function () {
                 if (name) {
-                    this.where("name", "like", `${name}%`);
+                    this.whereRaw("LOWER(name) = ?", [name.toLowerCase()]);
                 }
             });
         });

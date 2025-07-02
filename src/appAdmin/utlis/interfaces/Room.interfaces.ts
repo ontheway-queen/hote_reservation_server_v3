@@ -49,6 +49,7 @@ export interface IupdateRoomBody {
   room_name: string;
   floor_no: number;
   room_type_id: number;
+  is_deleted?: boolean;
   status:
     | "in_service"
     | "out_of_service"

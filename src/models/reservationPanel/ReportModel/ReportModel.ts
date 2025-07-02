@@ -145,6 +145,7 @@ class ReportModel extends Schema {
         "b.check_in",
         "b.check_out",
         "b.booking_type",
+        "b.is_individual_booking",
         "b.status",
         "b.comments",
         "b.company_name",

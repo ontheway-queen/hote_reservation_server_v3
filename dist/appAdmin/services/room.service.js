@@ -244,10 +244,41 @@ class RoomService extends abstract_service_1.default {
                         };
                     }
                 }
-                yield roomModel.updateRoom(parseInt(room_id), hotel_code, {
-                    room_name: req.body.room_name,
-                    floor_no: req.body.floor_no,
-                });
+                const { room_type_id: exist_room_type_id } = existingRoom[0];
+                if (room_type_id && exist_room_type_id !== room_type_id) {
+                    const exRoomAvailability = yield roomModel.getRoomAvailabilitiesByRoomTypeId(hotel_code, exist_room_type_id);
+                    console.log({ exRoomAvailability });
+                    const newGivenRoomTypesRoomAvailability = yield roomModel.getRoomAvailabilitiesByRoomTypeId(hotel_code, room_type_id);
+                    if (newGivenRoomTypesRoomAvailability) {
+                        yield roomModel.updateInRoomAvailabilities(hotel_code, room_type_id, {
+                            total_rooms: newGivenRoomTypesRoomAvailability.total_rooms + 1,
+                            available_rooms: newGivenRoomTypesRoomAvailability.available_rooms + 1,
+                        });
+                    }
+                    else {
+                        const roomAvaibilityPayload = [];
+                        for (let i = 0; i < 365; i++) {
+                            const date = new Date();
+                            date.setUTCDate(date.getUTCDate() + i);
+                            const dateStr = date.toISOString().split("T")[0];
+                            console.log({ dateStr });
+                            roomAvaibilityPayload.push({
+                                hotel_code,
+                                room_type_id,
+                                date: dateStr,
+                                available_rooms: 1,
+                                total_rooms: 1,
+                            });
+                        }
+                        yield roomModel.insertInRoomAvilabilities(roomAvaibilityPayload);
+                    }
+                    yield roomModel.updateInRoomAvailabilities(hotel_code, exist_room_type_id, {
+                        total_rooms: exRoomAvailability.total_rooms - 1,
+                        available_rooms: exRoomAvailability.available_rooms - 1,
+                    });
+                    req.body["room_type_id"] = room_type_id;
+                }
+                yield roomModel.updateRoom(parseInt(room_id), hotel_code, req.body);
                 return {
                     success: true,
                     code: this.StatusCode.HTTP_OK,
@@ -302,6 +333,38 @@ class RoomService extends abstract_service_1.default {
                     success: true,
                     code: this.StatusCode.HTTP_OK,
                     message: `Room status updated to ${status}.`,
+                };
+            }));
+        });
+    }
+    deleteHotelRoom(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
+                const { room_id } = req.params;
+                const { hotel_code } = req.hotel_admin;
+                const roomModel = this.Model.RoomModel(trx);
+                const roomId = parseInt(room_id);
+                const existingRoom = yield roomModel.getSingleRoom(hotel_code, roomId);
+                console.log({ existingRoom });
+                if (!existingRoom.length) {
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_NOT_FOUND,
+                        message: this.ResMsg.HTTP_NOT_FOUND,
+                    };
+                }
+                const currentRoom = existingRoom[0];
+                const availability = yield roomModel.getRoomAvailabilitiesByRoomTypeId(hotel_code, currentRoom.room_type_id);
+                yield roomModel.updateInRoomAvailabilities(hotel_code, currentRoom.room_type_id, {
+                    total_rooms: availability.total_rooms - 1,
+                    available_rooms: availability.available_rooms - 1,
+                });
+                // Update the room status
+                yield roomModel.updateRoom(roomId, hotel_code, { is_deleted: true });
+                return {
+                    success: true,
+                    code: this.StatusCode.HTTP_OK,
+                    message: `Room has been deleted`,
                 };
             }));
         });

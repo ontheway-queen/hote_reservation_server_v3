@@ -186,6 +186,7 @@ AND (
       )
       .leftJoin(`${schema}.room_types as rt`, "r.room_type_id", "rt.id")
       .where("r.hotel_code", hotel_code)
+      .andWhere("r.is_deleted", false)
       .andWhere("r.room_type_id", room_type_id)
       .whereExists(availableRoomTypes())
       .whereNotExists(function () {
@@ -278,13 +279,13 @@ AND (
     booking_type?: string;
   }) {
     const endCheckInDate = checkin_to ? new Date(checkin_to) : null;
-    if (endCheckInDate) endCheckInDate.setDate(endCheckInDate.getDate() + 1);
+    // if (endCheckInDate) endCheckInDate.setDate(endCheckInDate.getDate() + 1);
 
     const endCheckOutDate = checkout_to ? new Date(checkout_to) : null;
-    if (endCheckOutDate) endCheckOutDate.setDate(endCheckOutDate.getDate() + 1);
+    // if (endCheckOutDate) endCheckOutDate.setDate(endCheckOutDate.getDate() + 1);
 
     const endBookedDate = booked_to ? new Date(booked_to) : null;
-    if (endBookedDate) endBookedDate.setDate(endBookedDate.getDate() + 1);
+    // if (endBookedDate) endBookedDate.setDate(endBookedDate.getDate() + 1);
 
     const limitNum = limit ? Number(limit) : 50;
     const offsetNum = skip ? Number(skip) : 0;
