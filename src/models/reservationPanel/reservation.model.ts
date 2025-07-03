@@ -806,6 +806,7 @@ AND (
         )
         .leftJoin("sources as src", "b.source_id", "src.id")
         .leftJoin("guests as g", "b.guest_id", "g.id")
+        .where("b.hotel_code", hotel_code)
         .andWhere(function () {
           this.where("b.check_out", ">", current_date).andWhere(
             "b.check_in",
