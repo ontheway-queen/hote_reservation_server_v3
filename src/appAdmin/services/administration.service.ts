@@ -342,8 +342,13 @@ class AdministrationService extends AbstractServices {
       role_name,
       update_permissions,
       deleted,
-    }: { role_name: string; update_permissions: any[]; deleted: number[] } =
-      req.body;
+      status,
+    }: {
+      role_name: string;
+      update_permissions: any[];
+      deleted: number[];
+      status: boolean;
+    } = req.body;
     const updated_permissions: any[] = [...new Set(update_permissions)];
     console.log("firstly", updated_permissions);
 
@@ -486,6 +491,12 @@ class AdministrationService extends AbstractServices {
             })
           );
         }
+      }
+
+      // update role
+
+      if (typeof status === "boolean") {
+        await model.updateSingleRole(Number(role_id), { status }, hotel_code);
       }
 
       return {

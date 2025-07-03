@@ -209,7 +209,7 @@ AND (
             const offsetNum = skip ? Number(skip) : 0;
             const data = yield this.db("bookings as b")
                 .withSchema(this.RESERVATION_SCHEMA)
-                .select("b.id", "b.booking_reference", this.db.raw(`TO_CHAR(b.check_in, 'YYYY-MM-DD') as check_in`), this.db.raw(`TO_CHAR(b.check_out, 'YYYY-MM-DD') as check_out`), this.db.raw(`TO_CHAR(b.booking_date, 'YYYY-MM-DD') as booking_date`), "b.booking_type", "b.status", "b.is_individual_booking", "b.total_amount", "b.vat", "b.discount_amount", "b.service_charge", "src.name as source_name", "g.id as guest_id", "g.first_name", "g.last_name", "g.email as guest_email", this.db.raw(`(
+                .select("b.id", "b.booking_reference", this.db.raw(`TO_CHAR(b.check_in, 'YYYY-MM-DD') as check_in`), this.db.raw(`TO_CHAR(b.check_out, 'YYYY-MM-DD') as check_out`), this.db.raw(`TO_CHAR(b.booking_date, 'YYYY-MM-DD') as booking_date`), "b.booking_type", "b.status", "b.is_individual_booking", "b.total_amount", "b.vat", "b.discount_amount", "b.service_charge", "src.name as source_name", "g.id as guest_id", "g.first_name", "g.last_name", "g.email as guest_email", "g.phone as guest_phone", this.db.raw(`(
             SELECT JSON_AGG(JSON_BUILD_OBJECT(
               'id', br.id,
               'room_type_id', br.room_type_id,

@@ -310,6 +310,7 @@ AND (
         "g.first_name",
         "g.last_name",
         "g.email as guest_email",
+        "g.phone as guest_phone",
         this.db.raw(
           `(
             SELECT JSON_AGG(JSON_BUILD_OBJECT(
