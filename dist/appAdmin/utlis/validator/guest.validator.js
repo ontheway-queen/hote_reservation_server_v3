@@ -33,7 +33,7 @@ class GuestValidator {
         // id: Joi.number().allow("").optional(),
         });
         this.updateSingleGuestValidator = joi_1.default.object({
-            first_name: joi_1.default.string().required(),
+            first_name: joi_1.default.string().allow("").optional(),
             last_name: joi_1.default.string().allow("").optional(),
             email: joi_1.default.string()
                 .allow("")
