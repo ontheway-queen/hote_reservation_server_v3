@@ -196,6 +196,13 @@ AND (
                 .insert(payload);
         });
     }
+    insertBookingRoomGuest(payload) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("booking_room_guest")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .insert(payload);
+        });
+    }
     getAllBooking({ hotel_code, checkin_from, checkin_to, checkout_from, checkout_to, booked_from, booked_to, limit, search, skip, booking_type, status, }) {
         var _a, _b;
         return __awaiter(this, void 0, void 0, function* () {

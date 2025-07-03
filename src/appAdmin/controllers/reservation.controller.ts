@@ -70,6 +70,16 @@ export class ReservationController extends AbstractController {
     }
   );
 
+  public createGroupBooking = this.asyncWrapper.wrap(
+    {
+      bodySchema: this.validator.createGroupBookingValidator,
+    },
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.createGroupBooking(req);
+      res.status(code).json(data);
+    }
+  );
+
   public getAllBooking = this.asyncWrapper.wrap(
     {},
     async (req: Request, res: Response) => {

@@ -251,6 +251,19 @@ AND (
       .insert(payload);
   }
 
+  public async insertBookingRoomGuest(
+    payload: {
+      hotel_code: number;
+      booking_id: number;
+      room_id: number;
+      guest_id: number;
+    }[]
+  ) {
+    return await this.db("booking_room_guest")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .insert(payload);
+  }
+
   public async getAllBooking({
     hotel_code,
     checkin_from,

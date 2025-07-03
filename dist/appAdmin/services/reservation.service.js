@@ -169,6 +169,95 @@ class ReservationService extends abstract_service_1.default {
             }));
         });
     }
+    createGroupBooking(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
+                const { hotel_code } = req.hotel_admin;
+                const body = req.body;
+                const sub = new subreservation_service_1.SubReservationService(trx);
+                const total_nights = sub.calculateNights(body.check_in, body.check_out);
+                if (total_nights <= 0) {
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_BAD_REQUEST,
+                        message: "Check-in date must be before check-out date",
+                    };
+                }
+                // check room type available or not
+                body.booked_room_types.forEach((rt) => __awaiter(this, void 0, void 0, function* () {
+                    const getAllAvailableRoomsWithType = yield this.Model.reservationModel(trx).getAllAvailableRoomsTypeWithAvailableRoomCount({
+                        hotel_code,
+                        check_in: body.check_in,
+                        check_out: body.check_out,
+                        room_type_id: rt.room_type_id,
+                    });
+                    if (rt.rooms.length > getAllAvailableRoomsWithType[0].available_rooms) {
+                        return {
+                            success: false,
+                            code: this.StatusCode.HTTP_NOT_FOUND,
+                            message: "Room Assigned is more than available rooms",
+                        };
+                    }
+                }));
+                const leadGuest = body.booked_room_types
+                    .flatMap((rt) => rt.rooms)
+                    .flatMap((room) => room.guest_info)
+                    .find((guest) => guest.is_lead_guest) || {};
+                // Guest
+                const guest_id = yield sub.findOrCreateGuest(leadGuest, hotel_code);
+                // Totals
+                const { total_amount } = sub.calculateTotalsForGroupBooking(body.booked_room_types, total_nights, {
+                    vat: body.vat,
+                    service_charge: body.service_charge,
+                });
+                // Booking
+                const booking = yield sub.createMainBooking({
+                    payload: {
+                        is_individual_booking: body.is_individual_booking,
+                        check_in: body.check_in,
+                        check_out: body.check_out,
+                        created_by: req.hotel_admin.id,
+                        discount_amount: body.discount_amount,
+                        drop: body.drop,
+                        booking_type: body.reservation_type == "booked" ? "B" : "H",
+                        drop_time: body.drop_time,
+                        pickup_from: body.pickup_from,
+                        pickup: body.pickup,
+                        source_id: body.source_id,
+                        drop_to: body.drop_to,
+                        special_requests: body.special_requests,
+                        vat: body.vat,
+                        pickup_time: body.pickup_time,
+                        service_charge: body.service_charge,
+                        is_company_booked: body.is_company_booked,
+                        company_name: body.company_name,
+                        visit_purpose: body.visit_purpose,
+                    },
+                    hotel_code,
+                    guest_id,
+                    // sub_total,
+                    total_amount,
+                    is_checked_in: body.is_checked_in,
+                    total_nights,
+                });
+                // Rooms
+                yield sub.insertBookingRoomsForGroupBooking(body.booked_room_types, booking.id, total_nights);
+                // Availability
+                yield sub.updateAvailabilityWhenGroupRoomBooking(body.reservation_type, body.booked_room_types, body.check_in, body.check_out, hotel_code);
+                yield sub.createGroupRoomBookingFolioWithEntries({
+                    body,
+                    guest_id,
+                    booking_id: booking.id,
+                    req,
+                });
+                return {
+                    success: true,
+                    code: this.StatusCode.HTTP_SUCCESSFUL,
+                    message: "Booking created successfully",
+                };
+            }));
+        });
+    }
     getAllBooking(req) {
         return __awaiter(this, void 0, void 0, function* () {
             const { search, booked_from, booked_to, booking_type, checkin_from, checkin_to, checkout_from, checkout_to, limit, skip, status, } = req.query;

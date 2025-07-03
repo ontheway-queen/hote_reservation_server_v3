@@ -3,6 +3,8 @@ import AbstractServices from "../../abstarcts/abstract.service";
 import {
   addPaymentReqBody,
   BookingRequestBody,
+  IGBookingRequestBody,
+  IguestReqBody,
 } from "../utlis/interfaces/reservation.interface";
 import { SubReservationService } from "./subreservation.service";
 import { IinsertFolioEntriesPayload } from "../utlis/interfaces/invoice.interface";
@@ -185,6 +187,123 @@ export class ReservationService extends AbstractServices {
       );
 
       await sub.createRoomBookingFolioWithEntries({
+        body,
+        guest_id,
+        booking_id: booking.id,
+        req,
+      });
+
+      return {
+        success: true,
+        code: this.StatusCode.HTTP_SUCCESSFUL,
+        message: "Booking created successfully",
+      };
+    });
+  }
+
+  public async createGroupBooking(req: Request) {
+    return await this.db.transaction(async (trx) => {
+      const { hotel_code } = req.hotel_admin;
+      const body = req.body as IGBookingRequestBody;
+
+      const sub = new SubReservationService(trx);
+
+      const total_nights = sub.calculateNights(body.check_in, body.check_out);
+      if (total_nights <= 0) {
+        return {
+          success: false,
+          code: this.StatusCode.HTTP_BAD_REQUEST,
+          message: "Check-in date must be before check-out date",
+        };
+      }
+
+      // check room type available or not
+      body.booked_room_types.forEach(async (rt) => {
+        const getAllAvailableRoomsWithType = await this.Model.reservationModel(
+          trx
+        ).getAllAvailableRoomsTypeWithAvailableRoomCount({
+          hotel_code,
+          check_in: body.check_in,
+          check_out: body.check_out,
+          room_type_id: rt.room_type_id,
+        });
+
+        if (rt.rooms.length > getAllAvailableRoomsWithType[0].available_rooms) {
+          return {
+            success: false,
+            code: this.StatusCode.HTTP_NOT_FOUND,
+            message: "Room Assigned is more than available rooms",
+          };
+        }
+      });
+
+      const leadGuest: IguestReqBody =
+        body.booked_room_types
+          .flatMap((rt) => rt.rooms)
+          .flatMap((room) => room.guest_info)
+          .find((guest) => guest.is_lead_guest) || ({} as IguestReqBody);
+
+      // Guest
+      const guest_id = await sub.findOrCreateGuest(leadGuest, hotel_code);
+
+      // Totals
+      const { total_amount } = sub.calculateTotalsForGroupBooking(
+        body.booked_room_types,
+        total_nights,
+        {
+          vat: body.vat,
+          service_charge: body.service_charge,
+        }
+      );
+
+      // Booking
+      const booking = await sub.createMainBooking({
+        payload: {
+          is_individual_booking: body.is_individual_booking,
+          check_in: body.check_in,
+          check_out: body.check_out,
+          created_by: req.hotel_admin.id,
+          discount_amount: body.discount_amount,
+          drop: body.drop,
+          booking_type: body.reservation_type == "booked" ? "B" : "H",
+          drop_time: body.drop_time,
+          pickup_from: body.pickup_from,
+          pickup: body.pickup,
+          source_id: body.source_id,
+          drop_to: body.drop_to,
+          special_requests: body.special_requests,
+          vat: body.vat,
+          pickup_time: body.pickup_time,
+          service_charge: body.service_charge,
+          is_company_booked: body.is_company_booked,
+          company_name: body.company_name,
+          visit_purpose: body.visit_purpose,
+        },
+        hotel_code,
+        guest_id,
+        // sub_total,
+        total_amount,
+        is_checked_in: body.is_checked_in,
+        total_nights,
+      });
+
+      // Rooms
+      await sub.insertBookingRoomsForGroupBooking(
+        body.booked_room_types,
+        booking.id,
+        total_nights
+      );
+
+      // Availability
+      await sub.updateAvailabilityWhenGroupRoomBooking(
+        body.reservation_type,
+        body.booked_room_types,
+        body.check_in,
+        body.check_out,
+        hotel_code
+      );
+
+      await sub.createGroupRoomBookingFolioWithEntries({
         body,
         guest_id,
         booking_id: booking.id,
