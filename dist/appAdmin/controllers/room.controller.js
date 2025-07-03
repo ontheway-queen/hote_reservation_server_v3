@@ -70,6 +70,18 @@ class RoomController extends abstract_controller_1.default {
             const _h = yield this.roomService.updateRoomStatus(req), { code } = _h, data = __rest(_h, ["code"]);
             res.status(code).json(data);
         }));
+        // get all rooms by room type
+        this.getAllRoomByRoomType = this.asyncWrapper.wrap({
+            paramSchema: this.commonValidator.singleParamValidator("room_type_id"),
+        }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _j = yield this.roomService.getAllRoomByRoomType(req), { code } = _j, data = __rest(_j, ["code"]);
+            res.status(code).json(data);
+        }));
+        // get all occupied rooms using date
+        this.getAllOccupiedRooms = this.asyncWrapper.wrap({ querySchema: this.roomvalidator.getAllOccupiedRoomsQueryValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _k = yield this.roomService.getAllOccupiedRooms(req), { code } = _k, data = __rest(_k, ["code"]);
+            res.status(code).json(data);
+        }));
     }
 }
 exports.default = RoomController;

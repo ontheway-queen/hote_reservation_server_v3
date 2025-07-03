@@ -34,6 +34,9 @@ class RoomValidator {
                 .allow("in_service", "out_of_service", "clean", "dirty", "under_maintenance")
                 .required(),
         });
+        this.getAllOccupiedRoomsQueryValidator = joi_1.default.object({
+            date: joi_1.default.string().required(),
+        });
     }
 }
 exports.default = RoomValidator;

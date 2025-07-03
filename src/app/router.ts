@@ -5,20 +5,23 @@ import AuthRouter from "../auth/auth.router";
 import CommonRouter from "../common/router/common.router";
 
 class RootRouter {
-  public v1Router = Router();
+	public v1Router = Router();
 
-  constructor() {
-    this.callV1Router();
-  }
+	constructor() {
+		this.callV1Router();
+	}
 
-  private callV1Router() {
-    this.v1Router.use("/common", new CommonRouter().router);
+	private callV1Router() {
+		this.v1Router.use("/common", new CommonRouter().router);
 
-    this.v1Router.use("/auth", new AuthRouter().AuthRouter);
+		this.v1Router.use("/auth", new AuthRouter().AuthRouter);
 
-    this.v1Router.use("/reservation", new ReservationRootRouter().router);
+		this.v1Router.use("/reservation", new ReservationRootRouter().router);
 
-    this.v1Router.use("/management", new ManagementRouter().managementRouter);
-  }
+		this.v1Router.use(
+			"/management",
+			new ManagementRouter().managementRouter
+		);
+	}
 }
 export default RootRouter;

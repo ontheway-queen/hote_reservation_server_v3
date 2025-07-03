@@ -22,7 +22,9 @@ class RoomRouter extends abstract_router_1.default {
         this.router
             .route("/by/room-types")
             .get(this.roomController.getAllRoomByRoomTypes);
-        this.router.route("/search").get(this.roomController.getAllAvailableRooms);
+        this.router
+            .route("/search")
+            .get(this.roomController.getAllAvailableRooms);
         this.router
             .route("/status/:room_id")
             .patch(this.roomController.updateHotelRoomStatus);
@@ -30,6 +32,14 @@ class RoomRouter extends abstract_router_1.default {
             .route("/:room_id")
             .patch(this.uploader.cloudUploadRaw(this.fileFolders.ROOM_FILES), this.roomController.updateHotelRoom)
             .delete(this.roomController.deleteHotelRoom);
+        // get all occupied rooms using date
+        this.router
+            .route("/occupied-rooms")
+            .get(this.roomController.getAllOccupiedRooms);
+        // get all rooms by room type
+        this.router
+            .route("/:room_type_id")
+            .get(this.roomController.getAllRoomByRoomType);
     }
 }
 exports.default = RoomRouter;

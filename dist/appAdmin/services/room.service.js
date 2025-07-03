@@ -251,8 +251,10 @@ class RoomService extends abstract_service_1.default {
                     const newGivenRoomTypesRoomAvailability = yield roomModel.getRoomAvailabilitiesByRoomTypeId(hotel_code, room_type_id);
                     if (newGivenRoomTypesRoomAvailability) {
                         yield roomModel.updateInRoomAvailabilities(hotel_code, room_type_id, {
-                            total_rooms: newGivenRoomTypesRoomAvailability.total_rooms + 1,
-                            available_rooms: newGivenRoomTypesRoomAvailability.available_rooms + 1,
+                            total_rooms: newGivenRoomTypesRoomAvailability.total_rooms +
+                                1,
+                            available_rooms: newGivenRoomTypesRoomAvailability.available_rooms +
+                                1,
                         });
                     }
                     else {
@@ -314,13 +316,15 @@ class RoomService extends abstract_service_1.default {
                     };
                 }
                 const availability = yield roomModel.getRoomAvailabilitiesByRoomTypeId(hotel_code, currentRoom.room_type_id);
-                if (currentStatus != "out_of_service" && status === "out_of_service") {
+                if (currentStatus != "out_of_service" &&
+                    status === "out_of_service") {
                     yield roomModel.updateInRoomAvailabilities(hotel_code, currentRoom.room_type_id, {
                         total_rooms: availability.total_rooms - 1,
                         available_rooms: availability.available_rooms - 1,
                     });
                 }
-                else if (currentStatus == "out_of_service" && status === "in_service") {
+                else if (currentStatus == "out_of_service" &&
+                    status === "in_service") {
                     // Going back to in_service: increase availability
                     yield roomModel.updateInRoomAvailabilities(hotel_code, currentRoom.room_type_id, {
                         total_rooms: availability.total_rooms + 1,
@@ -360,13 +364,34 @@ class RoomService extends abstract_service_1.default {
                     available_rooms: availability.available_rooms - 1,
                 });
                 // Update the room status
-                yield roomModel.updateRoom(roomId, hotel_code, { is_deleted: true });
+                yield roomModel.updateRoom(roomId, hotel_code, {
+                    is_deleted: true,
+                });
                 return {
                     success: true,
                     code: this.StatusCode.HTTP_OK,
                     message: `Room has been deleted`,
                 };
             }));
+        });
+    }
+    // get all rooms by room type
+    getAllRoomByRoomType(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { hotel_code } = req.hotel_admin;
+            const id = req.params.room_type_id;
+            const model = this.Model.RoomModel();
+            const data = yield model.getAllRoomByRoomType(hotel_code, Number(id));
+            return Object.assign({ success: true, code: this.StatusCode.HTTP_OK, message: this.ResMsg.HTTP_OK }, data);
+        });
+    }
+    // get all occupied rooms using date
+    getAllOccupiedRooms(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const date = req.query.date;
+            const model = this.Model.RoomModel();
+            const data = yield model.getAllOccupiedRooms(date);
+            return Object.assign({ success: true, code: this.StatusCode.HTTP_OK, message: this.ResMsg.HTTP_OK }, data);
         });
     }
 }

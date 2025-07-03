@@ -92,7 +92,8 @@ class RoomModel extends schema_1.default {
             // Calculate number of nights
             const checkInDate = new Date(check_in);
             const checkOutDate = new Date(check_out);
-            const number_of_nights = Math.ceil((checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24));
+            const number_of_nights = Math.ceil((checkOutDate.getTime() - checkInDate.getTime()) /
+                (1000 * 60 * 60 * 24));
             if (number_of_nights <= 0) {
                 throw new Error("Invalid check-in and check-out date range");
             }
@@ -297,6 +298,69 @@ class RoomModel extends schema_1.default {
             return {
                 data,
                 total: ((_a = total[0]) === null || _a === void 0 ? void 0 : _a.total) ? parseInt((_b = total[0]) === null || _b === void 0 ? void 0 : _b.total) : 0,
+            };
+        });
+    }
+    // get all rooms by room type
+    getAllRoomByRoomType(hotel_code, id) {
+        var _a, _b;
+        return __awaiter(this, void 0, void 0, function* () {
+            console.log({ hotel_code });
+            const data = yield this.db("rooms as r")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .select("r.id", "r.room_name", "r.floor_no", "r.status", "ua.id as created_by_id", "ua.name as created_by_name")
+                .join("user_admin as ua", "ua.id", "r.created_by")
+                .where("r.room_type_id", id)
+                .andWhere("r.is_deleted", false)
+                .andWhere("r.hotel_code", hotel_code);
+            const total = yield this.db("rooms as r")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .count("r.id as total")
+                .where("r.room_type_id", id)
+                .andWhere("r.is_deleted", false)
+                .andWhere("r.hotel_code", hotel_code);
+            return {
+                total: ((_a = total[0]) === null || _a === void 0 ? void 0 : _a.total) ? parseInt((_b = total[0]) === null || _b === void 0 ? void 0 : _b.total) : 0,
+                data,
+            };
+        });
+    }
+    // Get all occupied rooms using a specific date
+    getAllOccupiedRooms(date) {
+        var _a;
+        return __awaiter(this, void 0, void 0, function* () {
+            const data = yield this.db("booking_rooms as br")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .select("br.id", "br.adults", "br.children", "br.infant", "br.booking_id", "bk.total_nights", "bk.status", this.db.raw(`TO_CHAR(bk.check_in, 'YYYY-MM-DD') as check_in`), this.db.raw(`TO_CHAR(bk.check_out, 'YYYY-MM-DD') as check_out`), this.db.raw(`TO_CHAR(bk.booking_date, 'YYYY-MM-DD') as booking_date`), "r.id as room_id", "r.room_name", "r.floor_no", this.db.raw(`json_build_object(
+				'id', g.id,
+				'name', g.first_name,
+				'email', g.email,
+				'phone', g.phone
+			) as guest`), this.db.raw(`json_build_object(
+				'id', rt.id,
+				'name', rt.name
+			) as room_type`))
+                .join("bookings as bk", "bk.id", "br.booking_id")
+                .leftJoin("rooms as r", "r.id", "br.room_id")
+                .leftJoin("guests as g", "g.id", "bk.guest_id")
+                .join("room_types as rt", "rt.id", "br.room_type_id")
+                .where((qb) => {
+                qb.where("bk.status", "checked_in").orWhere("bk.status", "confirmed");
+            })
+                .andWhere("bk.check_in", "<=", date)
+                .andWhere("bk.check_out", ">", date);
+            const totalResult = yield this.db("booking_rooms as br")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .join("bookings as bk", "bk.id", "br.booking_id")
+                .where((qb) => {
+                qb.where("bk.status", "checked_in").orWhere("bk.status", "confirmed");
+            })
+                .andWhere("bk.check_in", "<=", date)
+                .andWhere("bk.check_out", ">", date)
+                .count("br.id as total");
+            return {
+                total: parseInt((_a = totalResult === null || totalResult === void 0 ? void 0 : totalResult[0]) === null || _a === void 0 ? void 0 : _a.total) || 0,
+                data,
             };
         });
     }
