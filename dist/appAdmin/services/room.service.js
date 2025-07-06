@@ -251,10 +251,8 @@ class RoomService extends abstract_service_1.default {
                     const newGivenRoomTypesRoomAvailability = yield roomModel.getRoomAvailabilitiesByRoomTypeId(hotel_code, room_type_id);
                     if (newGivenRoomTypesRoomAvailability) {
                         yield roomModel.updateInRoomAvailabilities(hotel_code, room_type_id, {
-                            total_rooms: newGivenRoomTypesRoomAvailability.total_rooms +
-                                1,
-                            available_rooms: newGivenRoomTypesRoomAvailability.available_rooms +
-                                1,
+                            total_rooms: newGivenRoomTypesRoomAvailability.total_rooms + 1,
+                            available_rooms: newGivenRoomTypesRoomAvailability.available_rooms + 1,
                         });
                     }
                     else {
@@ -316,15 +314,13 @@ class RoomService extends abstract_service_1.default {
                     };
                 }
                 const availability = yield roomModel.getRoomAvailabilitiesByRoomTypeId(hotel_code, currentRoom.room_type_id);
-                if (currentStatus != "out_of_service" &&
-                    status === "out_of_service") {
+                if (currentStatus != "out_of_service" && status === "out_of_service") {
                     yield roomModel.updateInRoomAvailabilities(hotel_code, currentRoom.room_type_id, {
                         total_rooms: availability.total_rooms - 1,
                         available_rooms: availability.available_rooms - 1,
                     });
                 }
-                else if (currentStatus == "out_of_service" &&
-                    status === "in_service") {
+                else if (currentStatus == "out_of_service" && status === "in_service") {
                     // Going back to in_service: increase availability
                     yield roomModel.updateInRoomAvailabilities(hotel_code, currentRoom.room_type_id, {
                         total_rooms: availability.total_rooms + 1,

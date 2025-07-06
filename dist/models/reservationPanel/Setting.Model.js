@@ -173,9 +173,7 @@ class SettingModel extends schema_1.default {
                     this.andWhere("rtc.name", "like", `%${search}%`);
                 }
                 if (exact_match) {
-                    this.andWhereRaw("LOWER(rtc.name) = ?", [
-                        exact_match.toLowerCase(),
-                    ]);
+                    this.andWhereRaw("LOWER(rtc.name) = ?", [exact_match.toLowerCase()]);
                 }
                 if (status) {
                     this.andWhere("rtc.status", status);

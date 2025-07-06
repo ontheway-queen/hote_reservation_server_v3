@@ -22,9 +22,7 @@ class RoomRouter extends abstract_router_1.default {
         this.router
             .route("/by/room-types")
             .get(this.roomController.getAllRoomByRoomTypes);
-        this.router
-            .route("/search")
-            .get(this.roomController.getAllAvailableRooms);
+        this.router.route("/search").get(this.roomController.getAllAvailableRooms);
         this.router
             .route("/status/:room_id")
             .patch(this.roomController.updateHotelRoomStatus);

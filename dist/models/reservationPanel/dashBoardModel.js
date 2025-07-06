@@ -174,13 +174,16 @@ class DashBoardModel extends schema_1.default {
             };
         });
     }
-    getOccupiedRoomAndBookings({ hotel_code, }) {
+    getOccupiedRoomAndBookings({ hotel_code, current_date, }) {
         return __awaiter(this, void 0, void 0, function* () {
             const totalOccupiedRoomsResult = yield this.db("booking_rooms as br")
                 .withSchema(this.RESERVATION_SCHEMA)
                 .count("br.id as totalrooms")
                 .join("bookings as b", "br.booking_id", "b.id")
                 .where("b.hotel_code", hotel_code)
+                .andWhere(function () {
+                this.where("b.check_out", ">", current_date).andWhere("b.check_in", "<=", current_date);
+            })
                 .andWhere(function () {
                 this.where(function () {
                     this.where("b.booking_type", "B").andWhere("b.status", "confirmed");

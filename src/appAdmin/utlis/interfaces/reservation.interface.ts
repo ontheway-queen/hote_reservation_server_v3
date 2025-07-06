@@ -369,3 +369,22 @@ export interface addPaymentReqBody {
   payment_date: string;
   remarks: string;
 }
+
+// --------------------------- Update -------------------------//
+
+export interface IUpdateBookingRequestBody {
+  guest: IguestReqBody;
+  pickup: boolean;
+  pickup_from: string;
+  pickup_time: string;
+  drop: boolean;
+  drop_to: string;
+  drop_time: string;
+  is_company_booked: boolean;
+  company_name?: string;
+  visit_purpose?: string;
+  add_room_types: IGBookedRoomTypeRequest[];
+  special_requests: string;
+  source_id: number;
+  removed_rooms: number[];
+}

@@ -332,6 +332,7 @@ class ReservationService extends abstract_service_1.default {
     }
     updateSingleBooking(req) {
         return __awaiter(this, void 0, void 0, function* () {
+            const {} = req.body;
             const checkSingleBooking = yield this.Model.reservationModel().getSingleBooking(req.hotel_admin.hotel_code, parseInt(req.params.id));
             if (!checkSingleBooking) {
                 return {
@@ -345,6 +346,628 @@ class ReservationService extends abstract_service_1.default {
                 code: this.StatusCode.HTTP_OK,
                 // data,
             };
+        });
+    }
+    updateGroupBooking(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
+                var _a;
+                const { hotel_code } = req.hotel_admin;
+                const booking_id = parseInt(req.params.booking_id);
+                const body = req.body;
+                const checkSingleBooking = yield this.Model.reservationModel().getSingleBooking(req.hotel_admin.hotel_code, parseInt(req.params.id));
+                if (!checkSingleBooking) {
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_NOT_FOUND,
+                        message: this.ResMsg.HTTP_NOT_FOUND,
+                    };
+                }
+                const { check_in, check_out, booked_room_types, vat, service_charge, is_individual_booking, reservation_type, discount_amount, pickup, drop, drop_time, pickup_time, pickup_from, drop_to, source_id, special_requests, is_company_booked, company_name, visit_purpose, is_checked_in, } = body;
+                const sub = new subreservation_service_1.SubReservationService(trx);
+                // 1. Calculate nights
+                const total_nights = sub.calculateNights(check_in, check_out);
+                if (total_nights <= 0) {
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_BAD_REQUEST,
+                        message: "Check-in date must be before check-out date",
+                    };
+                }
+                // 2. Validate room availability
+                for (const rt of booked_room_types) {
+                    const availableRooms = yield this.Model.reservationModel(trx).getAllAvailableRoomsTypeWithAvailableRoomCount({
+                        hotel_code,
+                        check_in,
+                        check_out,
+                        room_type_id: rt.room_type_id,
+                        exclude_booking_id: booking_id, // Exclude current booking from availability check
+                    });
+                    if (rt.rooms.length > (((_a = availableRooms[0]) === null || _a === void 0 ? void 0 : _a.available_rooms) || 0)) {
+                        return {
+                            success: false,
+                            code: this.StatusCode.HTTP_NOT_FOUND,
+                            message: "Room Assigned is more than available rooms",
+                        };
+                    }
+                }
+                // 3. Get lead guest
+                let leadGuest = null;
+                outer: for (const rt of booked_room_types) {
+                    for (const room of rt.rooms) {
+                        for (const guest of room.guest_info) {
+                            if (guest.is_lead_guest) {
+                                leadGuest = guest;
+                                break outer;
+                            }
+                        }
+                    }
+                }
+                if (!leadGuest) {
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_BAD_REQUEST,
+                        message: "Lead guest information is required",
+                    };
+                }
+                // 4. Insert or get lead guest
+                const guest_id = yield sub.findOrCreateGuest(leadGuest, hotel_code);
+                // 5. Calculate total
+                const { total_amount } = sub.calculateTotalsForGroupBooking(booked_room_types, total_nights, { vat, service_charge });
+                // 6. Update main booking
+                yield sub.updateMainBooking({
+                    payload: {
+                        check_in,
+                        check_out,
+                        updated_by: req.hotel_admin.id,
+                        discount_amount,
+                        drop,
+                        drop_time,
+                        pickup,
+                        pickup_from,
+                        pickup_time,
+                        drop_to,
+                        source_id,
+                        special_requests,
+                        vat,
+                        service_charge,
+                        is_individual_booking,
+                        is_company_booked,
+                        company_name,
+                        visit_purpose,
+                    },
+                    booking_id,
+                    hotel_code,
+                    guest_id,
+                    total_amount,
+                    is_checked_in,
+                    total_nights,
+                });
+                // 7. Delete previous booking_rooms, room_guests, and folio entries
+                yield sub.deleteBookingRoomsAndGuests(booking_id);
+                yield sub.deleteFolioEntriesByBookingId(booking_id); // Optional: keep history if needed
+                // 8. Insert updated booking_rooms and guests
+                yield sub.insertBookingRoomsForGroupBooking(booked_room_types, booking_id, total_nights, hotel_code);
+                // 9. Update availability
+                yield sub.updateAvailabilityWhenGroupRoomBooking(reservation_type, booked_room_types, check_in, check_out, hotel_code);
+                // 10. Recreate folio and ledger entries
+                yield sub.createGroupRoomBookingFolioWithEntries({
+                    body,
+                    guest_id,
+                    booking_id,
+                    req,
+                });
+                return {
+                    success: true,
+                    code: this.StatusCode.HTTP_SUCCESSFUL,
+                    message: "Booking updated successfully",
+                    data: {
+                        booking_id,
+                        total_amount,
+                    },
+                };
+            }));
+        });
+    }
+    // public async updatePartialReservation(req: Request) {
+    //   return await this.db.transaction(async (trx) => {
+    //     const booking_id = parseInt(req.params.booking_id);
+    //     const { hotel_code } = req.hotel_admin;
+    //     const body = req.body as {
+    //       check_in?: string;
+    //       check_out?: string;
+    //       visit_purpose?: string;
+    //       pickup?: boolean;
+    //       pickup_from?: string;
+    //       pickup_time?: string;
+    //       drop?: boolean;
+    //       drop_time?: string;
+    //       drop_to?: string;
+    //       special_requests?: string;
+    //       is_company_booked?: boolean;
+    //       company_name?: string;
+    //       source_id?: number;
+    //       // Full room structure (optional if only guest info changes)
+    //       booked_room_types?: any[];
+    //       // Partial guest info updates inside rooms
+    //       changed_booking_rooms?: Array<{
+    //         id?: number;
+    //         room_id?: number;
+    //         guest_info?: Array<{
+    //           guest_id?: number;
+    //           first_name?: string;
+    //           last_name?: string;
+    //           email?: string;
+    //           phone?: string;
+    //           address?: string;
+    //           country_id?: number;
+    //         }>;
+    //       }>;
+    //     };
+    //     const sub = new SubReservationService(trx);
+    //     const model = this.Model.reservationModel(trx);
+    //     const guestModel = this.Model.guestModel(trx);
+    //     // 1. Fetch original booking
+    //     const booking =
+    //       await model.getSingleBooking(
+    //         req.hotel_admin.hotel_code,
+    //         parseInt(req.params.id)
+    //       );
+    //     if (!booking) {
+    //       return {
+    //         success: false,
+    //         code: this.StatusCode.HTTP_NOT_FOUND,
+    //         message: this.ResMsg.HTTP_NOT_FOUND,
+    //       };
+    //     }
+    //     // 2. Update booking core fields if any
+    //     const updated_fields: any = {};
+    //     if (body.check_in) updated_fields.check_in = body.check_in;
+    //     if (body.check_out) updated_fields.check_out = body.check_out;
+    //     if (body.visit_purpose !== undefined)
+    //       updated_fields.visit_purpose = body.visit_purpose;
+    //     if (body.special_requests !== undefined)
+    //       updated_fields.special_requests = body.special_requests;
+    //     if (body.pickup !== undefined) updated_fields.pickup = body.pickup;
+    //     if (body.pickup_from) updated_fields.pickup_from = body.pickup_from;
+    //     if (body.pickup_time) updated_fields.pickup_time = body.pickup_time;
+    //     if (body.drop !== undefined) updated_fields.drop = body.drop;
+    //     if (body.drop_to) updated_fields.drop_to = body.drop_to;
+    //     if (body.drop_time) updated_fields.drop_time = body.drop_time;
+    //     if (body.is_company_booked !== undefined)
+    //       updated_fields.is_company_booked = body.is_company_booked;
+    //     if (body.company_name !== undefined)
+    //       updated_fields.company_name = body.company_name;
+    //     if (body.source_id !== undefined)
+    //       updated_fields.source_id = body.source_id;
+    //     if (Object.keys(updated_fields).length > 0) {
+    //       updated_fields.updated_at = trx.fn.now();
+    //       updated_fields.updated_by = req.hotel_admin.id;
+    //       // await trx("bookings")
+    //       //   .withSchema(this.RESERVATION_SCHEMA)
+    //       //   .where({ id: booking_id })
+    //       //   .update(updated_fields);
+    //       await model.updateRoomBooking(updated_fields,hotel_code,booking_id);
+    //     }
+    //     // 3. Update guest info if provided in changed_booking_rooms
+    //     if (body.changed_booking_rooms && body.changed_booking_rooms.length > 0) {
+    //       for (const room of body.changed_booking_rooms) {
+    //         if (room.guest_info && room.guest_info.length > 0) {
+    //           for (const guest of room.guest_info) {
+    //             if (guest.guest_id) {
+    //               // await trx("guests")
+    //               //   .withSchema(this.RESERVATION_SCHEMA)
+    //               //   .where("id", guest.guest_id)
+    //               //   .update({
+    //               //     first_name: guest.first_name,
+    //               //     last_name: guest.last_name,
+    //               //     email: guest.email,
+    //               //     phone: guest.phone,
+    //               //     address: guest.address,
+    //               //     country: guest.country,
+    //               //     nationality: guest.nationality,
+    //               //     updated_at: trx.fn.now(),
+    //               //     updated_by: req.hotel_admin.id,
+    //               //   });
+    //               // update guests
+    //               await guestModel.updateSingleGuest(
+    //                 {
+    //                   id: guest.guest_id,
+    //                   hotel_code,
+    //                 },
+    //                 {
+    //                   first_name: guest.first_name,
+    //                   last_name: guest.last_name,
+    //                   email: guest.email,
+    //                   phone: guest.phone,
+    //                   address: guest.address,
+    //                   country_id: guest.country_id,
+    //                 }
+    //               );
+    //             } else {
+    //               // Insert new guest if no guest_id present (optional)
+    //               // You can add insert logic here if needed
+    //             }
+    //           }
+    //         }
+    //       }
+    //     }
+    //     // 4. If full booked_room_types payload present, compare and update rooms if changed
+    //     if (body.booked_room_types && body.booked_room_types.length > 0) {
+    //       const final_check_in = body.check_in || booking.check_in;
+    //       const final_check_out = body.check_out || booking.check_out;
+    //       const total_nights = sub.calculateNights(
+    //         final_check_in,
+    //         final_check_out
+    //       );
+    //       // Fetch current rooms + guests
+    //       const currentRooms = await sub.getBookingRoomsWithGuests(booking_id);
+    //       const isRoomStructureChanged = sub.hasRoomStructureChanged(
+    //         currentRooms,
+    //         body.booked_room_types,
+    //         total_nights
+    //       );
+    //       if (isRoomStructureChanged) {
+    //         // Delete old booking rooms and guests
+    //         await sub.deleteBookingRoomsAndGuests(booking_id);
+    //         // Validate availability and insert new rooms & guests
+    //         for (const rt of body.booked_room_types) {
+    //           const availability = await this.Model.reservationModel(
+    //             trx
+    //           ).getAllAvailableRoomsTypeWithAvailableRoomCount({
+    //             hotel_code,
+    //             check_in: final_check_in,
+    //             check_out: final_check_out,
+    //             room_type_id: rt.room_type_id,
+    //             exclude_booking_id: booking_id,
+    //           });
+    //           const available_count = availability[0]?.available_rooms || 0;
+    //           if (rt.rooms.length > available_count) {
+    //             throw new Error(
+    //               `Room type ${rt.room_type_id} does not have enough availability.`
+    //             );
+    //           }
+    //           for (const room of rt.rooms) {
+    //             const guest_ids = await sub.insertGuests(
+    //               room.guest_info,
+    //               hotel_code
+    //             );
+    //             await sub.insertBookingRoom({
+    //               booking_id,
+    //               room_type_id: rt.room_type_id,
+    //               room_id: room.room_id,
+    //               adults: room.adults,
+    //               children: room.children,
+    //               infant: room.infant,
+    //               base_rate: room.rate.base_rate,
+    //               changed_rate: room.rate.changed_rate,
+    //               unit_base_rate: room.rate.base_rate * total_nights,
+    //               unit_changed_rate: room.rate.changed_rate * total_nights,
+    //               guest_ids,
+    //             });
+    //           }
+    //         }
+    //         // Update availability after changes
+    //         await sub.updateAvailabilityWhenGroupRoomBooking(
+    //           booking.booking_type === "B" ? "booked" : "hold",
+    //           body.booked_room_types,
+    //           final_check_in,
+    //           final_check_out,
+    //           hotel_code
+    //         );
+    //         // Handle folio adjustments (void & reinsert if payment exists)
+    //         await sub.handleFolioAdjustmentForUpdate(booking_id, req);
+    //       }
+    //     }
+    //     return {
+    //       success: true,
+    //       message: "Reservation updated successfully",
+    //     };
+    //   });
+    // }
+    // public async updatePartialReservation(req: Request) {
+    //   return await this.db.transaction(async (trx) => {
+    //     const booking_id = parseInt(req.params.booking_id);
+    //     const { hotel_code } = req.hotel_admin;
+    //     const body = req.body;
+    //     const model = this.Model.reservationModel(trx);
+    //     const guestModel = this.Model.guestModel(trx);
+    //     const sub = new SubReservationService(trx);
+    //     // 1. Get booking
+    //     const booking = await model.getSingleBooking(hotel_code, booking_id);
+    //     if (!booking) {
+    //       return {
+    //         success: false,
+    //         code: this.StatusCode.HTTP_NOT_FOUND,
+    //         message: this.ResMsg.HTTP_NOT_FOUND,
+    //       };
+    //     }
+    //     // 2. Update booking metadata
+    //     const updatedFields: any = {};
+    //     const fieldMap = [
+    //       "check_in",
+    //       "check_out",
+    //       "visit_purpose",
+    //       "pickup",
+    //       "pickup_from",
+    //       "pickup_time",
+    //       "drop",
+    //       "drop_time",
+    //       "drop_to",
+    //       "special_requests",
+    //       "is_company_booked",
+    //       "company_name",
+    //       "source_id",
+    //     ];
+    //     for (const key of fieldMap) {
+    //       if (body[key] !== undefined) updatedFields[key] = body[key];
+    //     }
+    //     if (Object.keys(updatedFields).length > 0) {
+    //       updatedFields.updated_at = trx.fn.now();
+    //       updatedFields.updated_by = req.hotel_admin.id;
+    //       await model.updateRoomBooking(updatedFields, hotel_code, booking_id);
+    //     }
+    //     // 3. Update room guest info (no room change)
+    //     if (Array.isArray(body.changed_booking_rooms)) {
+    //       for (const room of body.changed_booking_rooms) {
+    //         if (Array.isArray(room.guest_info)) {
+    //           for (const guest of room.guest_info) {
+    //             if (guest.guest_id) {
+    //               await guestModel.updateSingleGuest(
+    //                 { id: guest.guest_id, hotel_code },
+    //                 {
+    //                   first_name: guest.first_name,
+    //                   last_name: guest.last_name,
+    //                   email: guest.email,
+    //                   phone: guest.phone,
+    //                   address: guest.address,
+    //                   country_id: guest.country_id,
+    //                 }
+    //               );
+    //             }
+    //           }
+    //         }
+    //       }
+    //     }
+    //     // 4. Handle removed rooms (optional)
+    //     if (Array.isArray(body.removed_rooms) && body.removed_rooms.length > 0) {
+    //       await sub.removeBookingRoomsByRoomIds(booking_id, body.removed_rooms);
+    //     }
+    //     // 5. Handle add_room_types (optional)
+    //     const total_nights = sub.calculateNights(
+    //       body.check_in || booking.check_in,
+    //       body.check_out || booking.check_out
+    //     );
+    //     if (Array.isArray(body.add_room_types)) {
+    //       for (const rt of body.add_room_types) {
+    //         const available =
+    //           await model.getAllAvailableRoomsTypeWithAvailableRoomCount({
+    //             hotel_code,
+    //             check_in: body.check_in || booking.check_in,
+    //             check_out: body.check_out || booking.check_out,
+    //             room_type_id: rt.room_type_id,
+    //             exclude_booking_id: booking_id,
+    //           });
+    //         const available_count = available[0]?.available_rooms || 0;
+    //         if (rt.rooms.length > available_count) {
+    //           throw new Error(
+    //             `Not enough availability for room type ${rt.room_type_id}`
+    //           );
+    //         }
+    //         for (const room of rt.rooms) {
+    //           const guest_ids = await sub.insertGuests(
+    //             room.guest_info,
+    //             hotel_code
+    //           );
+    //           await sub.insertBookingRoom({
+    //             booking_id,
+    //             room_type_id: rt.room_type_id,
+    //             room_id: room.room_id,
+    //             adults: room.adults,
+    //             children: room.children,
+    //             infant: room.infant,
+    //             base_rate: room.rate.base_rate,
+    //             changed_rate: room.rate.changed_rate,
+    //             unit_base_rate: room.rate.base_rate * total_nights,
+    //             unit_changed_rate: room.rate.changed_rate * total_nights,
+    //             guest_ids,
+    //           });
+    //         }
+    //       }
+    //       // Update availability
+    //       await sub.updateAvailabilityWhenGroupRoomBooking(
+    //         booking.booking_type === "B" ? "booked" : "hold",
+    //         body.add_room_types,
+    //         body.check_in || booking.check_in,
+    //         body.check_out || booking.check_out,
+    //         hotel_code
+    //       );
+    //     }
+    //     // 6. Recalculate folio (if any room added/removed/updated)
+    //     if (
+    //       (Array.isArray(body.add_room_types) &&
+    //         body.add_room_types.length > 0) ||
+    //       (Array.isArray(body.removed_rooms) && body.removed_rooms.length > 0)
+    //     ) {
+    //       // 6.1. Void old folio entries (preserve folio, avoid deletion)
+    //       await sub.voidFolioEntriesForBooking(booking_id);
+    //       // 6.2. Insert new folio entries for updated rooms
+    //       const updatedRoomList = await sub.getBookingRoomsWithGuests(booking_id);
+    //       await sub.recreateFolioEntries({
+    //         booking_id,
+    //         guest_id: booking.guest_id,
+    //         hotel_code,
+    //         rooms: updatedRoomList,
+    //         req,
+    //         total_nights,
+    //       });
+    //     }
+    //     return {
+    //       success: true,
+    //       message: "Reservation updated successfully",
+    //     };
+    //   });
+    // }
+    updatePartialReservation(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
+                var _a;
+                const booking_id = parseInt(req.params.booking_id);
+                const { hotel_code } = req.hotel_admin;
+                const body = req.body;
+                const model = this.Model.reservationModel(trx);
+                const guestModel = this.Model.guestModel(trx);
+                const sub = new subreservation_service_1.SubReservationService(trx);
+                const booking = yield model.getSingleBooking(hotel_code, booking_id);
+                if (!booking) {
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_NOT_FOUND,
+                        message: this.ResMsg.HTTP_NOT_FOUND,
+                    };
+                }
+                const updatedFields = {};
+                const keys = [
+                    "check_in",
+                    "check_out",
+                    "visit_purpose",
+                    "pickup",
+                    "pickup_from",
+                    "pickup_time",
+                    "drop",
+                    "drop_time",
+                    "drop_to",
+                    "special_requests",
+                    "is_company_booked",
+                    "company_name",
+                    "source_id",
+                ];
+                for (const key of keys) {
+                    if (body[key] !== undefined)
+                        updatedFields[key] = body[key];
+                }
+                if (Object.keys(updatedFields).length > 0) {
+                    updatedFields.updated_at = trx.fn.now();
+                    updatedFields.updated_by = req.hotel_admin.id;
+                    yield model.updateRoomBooking(updatedFields, hotel_code, booking_id);
+                }
+                // Update guest info
+                if (Array.isArray(body.changed_booking_rooms)) {
+                    for (const room of body.changed_booking_rooms) {
+                        if (Array.isArray(room.guest_info)) {
+                            for (const guest of room.guest_info) {
+                                if (guest.guest_id) {
+                                    yield guestModel.updateSingleGuest({ id: guest.guest_id, hotel_code }, {
+                                        first_name: guest.first_name,
+                                        last_name: guest.last_name,
+                                        email: guest.email,
+                                        phone: guest.phone,
+                                        address: guest.address,
+                                        country_id: guest.country_id,
+                                    });
+                                }
+                            }
+                        }
+                    }
+                }
+                const final_check_in = body.check_in || booking.check_in;
+                const final_check_out = body.check_out || booking.check_out;
+                const total_nights = sub.calculateNights(final_check_in, final_check_out);
+                // Handle removed rooms
+                if (Array.isArray(body.removed_rooms) && body.removed_rooms.length > 0) {
+                    yield sub.removeBookingRoomsByRoomIds(booking_id, body.removed_rooms);
+                }
+                // Handle changed booking rooms (rate/occupancy)
+                if (Array.isArray(body.changed_booking_rooms)) {
+                    for (const room of body.changed_booking_rooms) {
+                        if (!room.id)
+                            continue;
+                        const updateData = {};
+                        if (room.adults !== undefined)
+                            updateData.adults = room.adults;
+                        if (room.children !== undefined)
+                            updateData.children = room.children;
+                        if (room.infant !== undefined)
+                            updateData.infant = room.infant;
+                        if (room.base_rate !== undefined)
+                            updateData.base_rate = room.base_rate;
+                        if (room.changed_rate !== undefined)
+                            updateData.changed_rate = room.changed_rate;
+                        if (room.base_rate !== undefined && total_nights > 0)
+                            updateData.unit_base_rate = room.base_rate * total_nights;
+                        if (room.changed_rate !== undefined && total_nights > 0)
+                            updateData.unit_changed_rate = room.changed_rate * total_nights;
+                        if (Object.keys(updateData).length > 0) {
+                            updateData.updated_at = trx.fn.now();
+                            updateData.updated_by = req.hotel_admin.id;
+                            yield trx("booking_rooms")
+                                .withSchema(this.RESERVATION_SCHEMA)
+                                .where("id", room.id)
+                                .andWhere("booking_id", booking_id)
+                                .update(updateData);
+                        }
+                    }
+                }
+                // Handle add_room_types
+                if (Array.isArray(body.add_room_types)) {
+                    for (const rt of body.add_room_types) {
+                        const availability = yield model.getAllAvailableRoomsTypeWithAvailableRoomCount({
+                            hotel_code,
+                            check_in: final_check_in,
+                            check_out: final_check_out,
+                            room_type_id: rt.room_type_id,
+                            exclude_booking_id: booking_id,
+                        });
+                        const available = ((_a = availability[0]) === null || _a === void 0 ? void 0 : _a.available_rooms) || 0;
+                        if (rt.rooms.length > available) {
+                            throw new Error(`Room type ${rt.room_type_id} has insufficient availability.`);
+                        }
+                        for (const room of rt.rooms) {
+                            const guest_ids = yield sub.insertGuests(room.guest_info, hotel_code);
+                            yield sub.insertBookingRoom({
+                                booking_id,
+                                room_type_id: rt.room_type_id,
+                                room_id: room.room_id,
+                                adults: room.adults,
+                                children: room.children,
+                                infant: room.infant,
+                                base_rate: room.rate.base_rate,
+                                changed_rate: room.rate.changed_rate,
+                                unit_base_rate: room.rate.base_rate * total_nights,
+                                unit_changed_rate: room.rate.changed_rate * total_nights,
+                                guest_ids,
+                            });
+                        }
+                    }
+                    yield sub.updateAvailabilityWhenGroupRoomBooking(booking.booking_type === "B" ? "booked" : "hold", body.add_room_types, final_check_in, final_check_out, hotel_code);
+                }
+                // Check if folio needs update
+                const shouldUpdateFolio = (Array.isArray(body.add_room_types) &&
+                    body.add_room_types.length > 0) ||
+                    (Array.isArray(body.removed_rooms) && body.removed_rooms.length > 0) ||
+                    (Array.isArray(body.changed_booking_rooms) &&
+                        body.changed_booking_rooms.some((room) => room.changed_rate !== undefined ||
+                            room.base_rate !== undefined ||
+                            room.adults !== undefined ||
+                            room.children !== undefined ||
+                            room.infant !== undefined));
+                if (shouldUpdateFolio) {
+                    yield sub.voidFolioEntriesForBooking(booking_id);
+                    const updatedRooms = yield sub.getBookingRoomsWithGuests(booking_id);
+                    yield sub.recreateFolioEntries({
+                        booking_id,
+                        guest_id: booking.guest_id,
+                        hotel_code,
+                        rooms: updatedRooms,
+                        req,
+                        total_nights,
+                    });
+                }
+                return {
+                    success: true,
+                    message: "Reservation updated successfully",
+                };
+            }));
         });
     }
     changeDatesOfBooking(req) {

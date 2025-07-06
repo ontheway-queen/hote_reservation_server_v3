@@ -169,6 +169,62 @@ class ReservationValidator {
             skip: joi_1.default.string().allow("").optional(),
             search: joi_1.default.string().allow("").optional(),
         });
+        this.updateSingleBookingValidator = joi_1.default.object({
+            pickup: joi_1.default.boolean().optional(),
+            pickup_from: joi_1.default.when("pickup", {
+                is: true,
+                then: joi_1.default.string().required(),
+                otherwise: joi_1.default.forbidden(),
+            }),
+            pickup_time: joi_1.default.when("pickup", {
+                is: true,
+                then: joi_1.default.string().isoDate().required(),
+                otherwise: joi_1.default.forbidden(),
+            }),
+            drop: joi_1.default.boolean().optional(),
+            drop_to: joi_1.default.when("drop", {
+                is: true,
+                then: joi_1.default.string().required(),
+                otherwise: joi_1.default.forbidden(),
+            }),
+            drop_time: joi_1.default.when("drop", {
+                is: true,
+                then: joi_1.default.string().isoDate().required(),
+                otherwise: joi_1.default.forbidden(),
+            }),
+            // discount_amount: Joi.number().min(0).required(),
+            service_charge: joi_1.default.number().min(0).required(),
+            vat: joi_1.default.number().min(0).required(),
+            add_room_types: joi_1.default.array()
+                .items(joi_1.default.object({
+                room_type_id: joi_1.default.number().required(),
+                rate_plan_id: joi_1.default.number().required(),
+                rate: joi_1.default.object({
+                    base_price: joi_1.default.number().required(),
+                    changed_price: joi_1.default.number().required(),
+                }).required(),
+                number_of_rooms: joi_1.default.number().min(1).required(),
+                guests: joi_1.default.array()
+                    .items(joi_1.default.object({
+                    room_id: joi_1.default.number().required(),
+                    adults: joi_1.default.number().min(1).required(),
+                    children: joi_1.default.number().min(0).required(),
+                    infant: joi_1.default.number().min(0).required(),
+                    cbf: joi_1.default.number().min(0).required(),
+                }))
+                    .min(1)
+                    .required(),
+                meal_plans_ids: joi_1.default.array().items(joi_1.default.number()).optional(),
+            }))
+                .min(1)
+                .required(),
+            removed_rooms: joi_1.default.number().optional(),
+            company_name: joi_1.default.string().allow("").optional(),
+            visit_purpose: joi_1.default.string().allow("").optional(),
+            is_company_booked: joi_1.default.boolean().optional(),
+            special_requests: joi_1.default.string().allow("").optional(),
+            source_id: joi_1.default.number().optional(),
+        });
         this.addPayment = joi_1.default.object({
             folio_id: joi_1.default.number().required(),
             amount: joi_1.default.number().required(),

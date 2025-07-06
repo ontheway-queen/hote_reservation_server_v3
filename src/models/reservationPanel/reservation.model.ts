@@ -100,8 +100,15 @@ AND (
     check_out: string;
     hotel_code: number;
     room_type_id?: number;
+    exclude_booking_id?: number;
   }): Promise<IAvailableRoomType[]> {
-    const { hotel_code, check_in, check_out, room_type_id } = payload;
+    const {
+      hotel_code,
+      check_in,
+      check_out,
+      room_type_id,
+      exclude_booking_id,
+    } = payload;
 
     return await this.db("room_types as rt")
       .withSchema(this.RESERVATION_SCHEMA)
@@ -128,11 +135,33 @@ AND (
       .leftJoin("rate_plan_details as rpd", "rt.id", "rpd.room_type_id")
       .leftJoin("rate_plans as rp", "rpd.rate_plan_id", "rp.id")
       .where("rt.hotel_code", hotel_code)
+      .andWhere("rt.is_deleted", false)
       .andWhere("ra.date", ">=", check_in)
       .andWhere("ra.date", "<", check_out)
       .andWhere(function () {
         if (room_type_id) {
           this.andWhere("rt.id", room_type_id);
+        }
+      })
+      .modify((qb) => {
+        if (exclude_booking_id) {
+          qb.leftJoin(
+            this.db.raw(
+              `(
+            SELECT br.room_type_id, br.check_in::date + gs.i AS date
+            FROM booking_rooms br
+            JOIN generate_series(0, br.nights - 1) AS gs(i) ON TRUE
+            WHERE br.booking_id = ?
+          ) AS exclude_dates`,
+              [exclude_booking_id]
+            ),
+            function () {
+              this.on("ra.room_type_id", "exclude_dates.room_type_id").andOn(
+                "ra.date",
+                "exclude_dates.date"
+              );
+            }
+          );
         }
       })
       .groupBy("rt.id")
@@ -417,6 +446,86 @@ AND (
     };
   }
 
+  // public async getSingleBooking(
+  //   hotel_code: number,
+  //   booking_id: number
+  // ): Promise<IBookingDetails | undefined> {
+  //   return await this.db("bookings as b")
+  //     .withSchema(this.RESERVATION_SCHEMA)
+  //     .select(
+  //       "b.id",
+  //       "b.booking_reference",
+  //       this.db.raw(`TO_CHAR(b.check_in, 'YYYY-MM-DD') as check_in`),
+  //       this.db.raw(`TO_CHAR(b.check_out, 'YYYY-MM-DD') as check_out`),
+  //       this.db.raw(`TO_CHAR(b.booking_date, 'YYYY-MM-DD') as booking_date`),
+  //       "b.booking_type",
+  //       "b.status",
+  //       "b.is_individual_booking",
+  //       "src.name as source_name",
+  //       "b.total_amount",
+  //       "b.vat",
+  //       "b.discount_amount",
+  //       "b.service_charge",
+  //       "b.payment_status",
+  //       "b.comments",
+  //       "b.pickup",
+  //       "b.pickup_from",
+  //       "b.pickup_time",
+  //       "b.drop",
+  //       "b.drop_time",
+  //       "b.drop_to",
+  //       "g.id as guest_id",
+  //       "g.first_name",
+  //       "g.last_name",
+  //       "g.email as guest_email",
+  //       "g.phone",
+  //       "g.address",
+  //       "g.country",
+  //       "g.passport_number",
+  //       "g.nationality",
+  //       this.db.raw(
+  //         `(
+  //         SELECT json_agg(
+  //           json_build_object(
+  //             'id', br.id,
+  //             'room_type_id', br.room_type_id,
+  //             'room_type_name', rt.name,
+  //             'room_id', br.room_id,
+  //             'room_name', r.room_name,
+  //             'adults', br.adults,
+  //             'children', br.children,
+  //             'infant', br.infant,
+  //             'base_rate', br.base_rate,
+  //             'changed_rate', br.changed_rate,
+  //             'unit_base_rate', br.unit_base_rate,
+  //             'unit_changed_rate', br.unit_changed_rate,
+  //             (SELECT json_agg(json_build_object('guest_id',g.id,'first_name',g.first_name,'last_name',g.last_name,'email',g.email,'phone',g.phone,'address',g.address,'country',c.country_name,'nationality',c.nationality,)) from hotel_reservation.booking_room_guest brg
+  //             join guest as g  on brg.guest_id = g.id
+  //                 left join public.country as c  on g.country_id = c.id
+
+  //             ) as guest_info
+
+  //           )
+  //         )
+  //         FROM ?? AS br
+  //         LEFT JOIN ?? AS rt ON br.room_type_id = rt.id
+  //         LEFT JOIN ?? AS r ON br.room_id = r.id
+  //         WHERE br.booking_id = b.id
+  //       ) AS booking_rooms`,
+  //         [
+  //           `${this.RESERVATION_SCHEMA}.booking_rooms`,
+  //           `${this.RESERVATION_SCHEMA}.room_types`,
+  //           `${this.RESERVATION_SCHEMA}.rooms`,
+  //         ]
+  //       )
+  //     )
+  //     .leftJoin("sources as src", "b.source_id", "src.id")
+  //     .leftJoin("guests as g", "b.guest_id", "g.id")
+  //     .where("b.hotel_code", hotel_code)
+  //     .andWhere("b.id", booking_id)
+  //     .first();
+  // }
+
   public async getSingleBooking(
     hotel_code: number,
     booking_id: number
@@ -451,32 +560,53 @@ AND (
         "g.email as guest_email",
         "g.phone",
         "g.address",
-        "g.country",
+        "c.country_name",
         "g.passport_number",
-        "g.nationality",
+        "c.nationality",
         this.db.raw(
           `(
-          SELECT json_agg(
-            json_build_object(
-              'id', br.id,
-              'room_type_id', br.room_type_id,
-              'room_type_name', rt.name,
-              'room_id', br.room_id,
-              'room_name', r.room_name,
-              'adults', br.adults,
-              'children', br.children,
-              'infant', br.infant,
-              'base_rate', br.base_rate,
-              'changed_rate', br.changed_rate,
-              'unit_base_rate', br.unit_base_rate,
-              'unit_changed_rate', br.unit_changed_rate
+            SELECT json_agg(
+              json_build_object(
+                'id', br.id,
+                'room_type_id', br.room_type_id,
+                'room_type_name', rt.name,
+                'room_id', br.room_id,
+                'room_name', r.room_name,
+                'adults', br.adults,
+                'children', br.children,
+                'infant', br.infant,
+                'base_rate', br.base_rate,
+                'changed_rate', br.changed_rate,
+                'unit_base_rate', br.unit_base_rate,
+                'unit_changed_rate', br.unit_changed_rate,
+                'room_guests', (
+                  SELECT COALESCE(
+                    json_agg(
+                      json_build_object(
+                        'guest_id', gg.id,
+                        'first_name', gg.first_name,
+                        'last_name', gg.last_name,
+                        'email', gg.email,
+                        'phone', gg.phone,
+                        'address', gg.address,
+                        'country', c.country_name,
+                        'nationality', c.nationality
+                      )
+                    ),
+                    '[]'::json
+                  )
+                  FROM hotel_reservation.booking_room_guest AS brg
+                  JOIN hotel_reservation.guests AS gg ON brg.guest_id = gg.id
+                  LEFT JOIN public.country AS c ON gg.country_id = c.id
+                  WHERE brg.booking_room_id = br.id
+                )
+              )
             )
-          )
-          FROM ?? AS br
-          LEFT JOIN ?? AS rt ON br.room_type_id = rt.id
-          LEFT JOIN ?? AS r ON br.room_id = r.id
-          WHERE br.booking_id = b.id
-        ) AS booking_rooms`,
+            FROM ?? AS br
+            LEFT JOIN ?? AS rt ON br.room_type_id = rt.id
+            LEFT JOIN ?? AS r ON br.room_id = r.id
+            WHERE br.booking_id = b.id
+          ) AS booking_rooms`,
           [
             `${this.RESERVATION_SCHEMA}.booking_rooms`,
             `${this.RESERVATION_SCHEMA}.room_types`,
@@ -486,6 +616,7 @@ AND (
       )
       .leftJoin("sources as src", "b.source_id", "src.id")
       .leftJoin("guests as g", "b.guest_id", "g.id")
+      .joinRaw("left join public.country c on g.country_id = c.id")
       .where("b.hotel_code", hotel_code)
       .andWhere("b.id", booking_id)
       .first();
