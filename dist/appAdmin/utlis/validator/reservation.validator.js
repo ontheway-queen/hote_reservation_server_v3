@@ -124,6 +124,9 @@ class ReservationValidator {
                     .items(joi_1.default.object({
                     room_id: joi_1.default.number().required(),
                     cbf: joi_1.default.number().required().default(0),
+                    adults: joi_1.default.number().min(1).required(),
+                    children: joi_1.default.number().min(0).required(),
+                    infant: joi_1.default.number().min(0).required(),
                     rate: joi_1.default.object({
                         base_rate: joi_1.default.number().required(),
                         changed_rate: joi_1.default.number().required(),

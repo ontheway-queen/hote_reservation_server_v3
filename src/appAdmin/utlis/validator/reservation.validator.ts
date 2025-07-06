@@ -135,6 +135,9 @@ export class ReservationValidator {
               Joi.object({
                 room_id: Joi.number().required(),
                 cbf: Joi.number().required().default(0),
+                adults: Joi.number().min(1).required(),
+                children: Joi.number().min(0).required(),
+                infant: Joi.number().min(0).required(),
                 rate: Joi.object({
                   base_rate: Joi.number().required(),
                   changed_rate: Joi.number().required(),

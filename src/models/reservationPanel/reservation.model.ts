@@ -248,17 +248,15 @@ AND (
   public async insertBookingRoom(payload: IbookingRooms[]) {
     return await this.db("booking_rooms")
       .withSchema(this.RESERVATION_SCHEMA)
-      .insert(payload);
+      .insert(payload, "id");
   }
 
-  public async insertBookingRoomGuest(
-    payload: {
-      hotel_code: number;
-      booking_id: number;
-      room_id: number;
-      guest_id: number;
-    }[]
-  ) {
+  public async insertBookingRoomGuest(payload: {
+    hotel_code: number;
+    is_lead_guest: boolean;
+    booking_room_id: number;
+    guest_id: number;
+  }) {
     return await this.db("booking_room_guest")
       .withSchema(this.RESERVATION_SCHEMA)
       .insert(payload);

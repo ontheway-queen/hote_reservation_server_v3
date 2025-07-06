@@ -193,7 +193,7 @@ AND (
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("booking_rooms")
                 .withSchema(this.RESERVATION_SCHEMA)
-                .insert(payload);
+                .insert(payload, "id");
         });
     }
     insertBookingRoomGuest(payload) {

@@ -172,10 +172,13 @@ class ReservationService extends abstract_service_1.default {
     createGroupBooking(req) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
+                var _a;
                 const { hotel_code } = req.hotel_admin;
                 const body = req.body;
+                const { check_in, check_out, booked_room_types, vat, service_charge, is_individual_booking, reservation_type, discount_amount, pickup, drop, drop_time, pickup_time, pickup_from, drop_to, source_id, special_requests, is_company_booked, company_name, visit_purpose, is_checked_in, } = body;
                 const sub = new subreservation_service_1.SubReservationService(trx);
-                const total_nights = sub.calculateNights(body.check_in, body.check_out);
+                // Calculate total nights
+                const total_nights = sub.calculateNights(check_in, check_out);
                 if (total_nights <= 0) {
                     return {
                         success: false,
@@ -183,67 +186,79 @@ class ReservationService extends abstract_service_1.default {
                         message: "Check-in date must be before check-out date",
                     };
                 }
-                // check room type available or not
-                body.booked_room_types.forEach((rt) => __awaiter(this, void 0, void 0, function* () {
-                    const getAllAvailableRoomsWithType = yield this.Model.reservationModel(trx).getAllAvailableRoomsTypeWithAvailableRoomCount({
+                // Validate room availability
+                for (const rt of booked_room_types) {
+                    const availableRooms = yield this.Model.reservationModel(trx).getAllAvailableRoomsTypeWithAvailableRoomCount({
                         hotel_code,
-                        check_in: body.check_in,
-                        check_out: body.check_out,
+                        check_in,
+                        check_out,
                         room_type_id: rt.room_type_id,
                     });
-                    if (rt.rooms.length > getAllAvailableRoomsWithType[0].available_rooms) {
+                    if (rt.rooms.length > (((_a = availableRooms[0]) === null || _a === void 0 ? void 0 : _a.available_rooms) || 0)) {
                         return {
                             success: false,
                             code: this.StatusCode.HTTP_NOT_FOUND,
                             message: "Room Assigned is more than available rooms",
                         };
                     }
-                }));
-                const leadGuest = body.booked_room_types
-                    .flatMap((rt) => rt.rooms)
-                    .flatMap((room) => room.guest_info)
-                    .find((guest) => guest.is_lead_guest) || {};
-                // Guest
+                }
+                // Find lead guest
+                let leadGuest = null;
+                outer: for (const rt of booked_room_types) {
+                    for (const room of rt.rooms) {
+                        for (const guest of room.guest_info) {
+                            if (guest.is_lead_guest) {
+                                leadGuest = guest;
+                                break outer;
+                            }
+                        }
+                    }
+                }
+                if (!leadGuest) {
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_BAD_REQUEST,
+                        message: "Lead guest information is required",
+                    };
+                }
+                // Insert or get lead guest
                 const guest_id = yield sub.findOrCreateGuest(leadGuest, hotel_code);
-                // Totals
-                const { total_amount } = sub.calculateTotalsForGroupBooking(body.booked_room_types, total_nights, {
-                    vat: body.vat,
-                    service_charge: body.service_charge,
-                });
-                // Booking
+                // Calculate total
+                const { total_amount } = sub.calculateTotalsForGroupBooking(booked_room_types, total_nights, { vat, service_charge });
+                // Create main booking
                 const booking = yield sub.createMainBooking({
                     payload: {
-                        is_individual_booking: body.is_individual_booking,
-                        check_in: body.check_in,
-                        check_out: body.check_out,
+                        is_individual_booking,
+                        check_in,
+                        check_out,
                         created_by: req.hotel_admin.id,
-                        discount_amount: body.discount_amount,
-                        drop: body.drop,
-                        booking_type: body.reservation_type == "booked" ? "B" : "H",
-                        drop_time: body.drop_time,
-                        pickup_from: body.pickup_from,
-                        pickup: body.pickup,
-                        source_id: body.source_id,
-                        drop_to: body.drop_to,
-                        special_requests: body.special_requests,
-                        vat: body.vat,
-                        pickup_time: body.pickup_time,
-                        service_charge: body.service_charge,
-                        is_company_booked: body.is_company_booked,
-                        company_name: body.company_name,
-                        visit_purpose: body.visit_purpose,
+                        discount_amount,
+                        drop,
+                        booking_type: reservation_type === "booked" ? "B" : "H",
+                        drop_time,
+                        pickup_from,
+                        pickup,
+                        source_id,
+                        drop_to,
+                        special_requests,
+                        vat,
+                        pickup_time,
+                        service_charge,
+                        is_company_booked,
+                        company_name,
+                        visit_purpose,
                     },
                     hotel_code,
                     guest_id,
-                    // sub_total,
                     total_amount,
-                    is_checked_in: body.is_checked_in,
+                    is_checked_in,
                     total_nights,
                 });
-                // Rooms
-                yield sub.insertBookingRoomsForGroupBooking(body.booked_room_types, booking.id, total_nights);
-                // Availability
-                yield sub.updateAvailabilityWhenGroupRoomBooking(body.reservation_type, body.booked_room_types, body.check_in, body.check_out, hotel_code);
+                // Insert booking rooms
+                yield sub.insertBookingRoomsForGroupBooking(booked_room_types, booking.id, total_nights, hotel_code);
+                // Update availability
+                yield sub.updateAvailabilityWhenGroupRoomBooking(reservation_type, booked_room_types, check_in, check_out, hotel_code);
+                // Create folio and ledger entries
                 yield sub.createGroupRoomBookingFolioWithEntries({
                     body,
                     guest_id,
@@ -254,6 +269,10 @@ class ReservationService extends abstract_service_1.default {
                     success: true,
                     code: this.StatusCode.HTTP_SUCCESSFUL,
                     message: "Booking created successfully",
+                    data: {
+                        booking_id: booking.id,
+                        total_amount,
+                    },
                 };
             }));
         });
