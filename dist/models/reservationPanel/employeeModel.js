@@ -29,14 +29,14 @@ class EmployeeModel extends schema_1.default {
     // Get All Employee Model
     getAllEmployee(payload) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { key, hotel_code, limit, skip, category } = payload;
+            const { key, hotel_code, limit, skip } = payload;
             const dtbs = this.db("employee as e");
             if (limit && skip) {
                 dtbs.limit(parseInt(limit));
                 dtbs.offset(parseInt(skip));
             }
             const data = yield dtbs
-                .select("e.id", "e.name", "e.email", "e.mobile_no", "d.name as department", "de.name as designation", "e.category", "e.salary", "e.joining_date", "e.status")
+                .select("e.id", "e.name", "e.email", "e.mobile_no", "d.name as department", "de.name as designation", "e.salary", "e.joining_date", "e.status")
                 .withSchema(this.RESERVATION_SCHEMA)
                 .leftJoin("department as d", "e.department_id", "d.id")
                 .leftJoin("designation as de", "e.designation_id", "de.id")
@@ -46,9 +46,6 @@ class EmployeeModel extends schema_1.default {
                     this.andWhere("e.name", "like", `%${key}%`)
                         .orWhere("e.email", "like", `%${key}%`)
                         .orWhere("d.name", "like", `%${key}%`);
-                }
-                if (category) {
-                    this.andWhere("e.category", "like", `%${category}%`);
                 }
             })
                 .orderBy("e.id", "desc");
@@ -64,9 +61,6 @@ class EmployeeModel extends schema_1.default {
                         .orWhere("e.email", "like", `%${key}%`)
                         .orWhere("d.name", "like", `%${key}%`);
                 }
-                if (category) {
-                    this.andWhere("e.category", "like", `%${category}%`);
-                }
             });
             return { data, total: total[0].total };
         });
@@ -74,11 +68,15 @@ class EmployeeModel extends schema_1.default {
     // Get Single Employee
     getSingleEmployee(id, hotel_code) {
         return __awaiter(this, void 0, void 0, function* () {
-            const data = yield this.db("employee_view as ev")
+            const data = yield this.db("employee as e")
                 .withSchema(this.RESERVATION_SCHEMA)
-                .select("ev.id", "ev.name", "ev.photo", "ev.dep_id", "ev.dep_name as department", "ev.des_id", "ev.res_id", "ev.admin_id", "ev.res_name", "ev.des_name as designation", "ev.email", "ev.mobile_no", "ev.address", "ev.blood_group", "ev.salary", "ev.status", "ev.birth_date", "ev.category", "ev.appointment_date", "ev.joining_date", "ev.created_by", "ev.created_at", "ev.updated_at")
-                .where("ev.id", id)
-                .andWhere("ev.hotel_code", hotel_code);
+                .select("e.id", "e.name", "e.email", "e.mobile_no", "e.photo", "e.blood_group", "dep.id as department_id", "dep.name as department_name", "des.id as designation_id", "des.name as designation_name", "e.salary", this.db.raw("to_char(e.dob, 'YYYY-MM-DD') as dob"), this.db.raw("to_char(e.appointment_date, 'YYYY-MM-DD') as appointment_date"), this.db.raw("to_char(e.joining_date, 'YYYY-MM-DD') as joining_date"), "e.hotel_code", "h.name as hotel_name", "ua.id as created_by_id", "ua.name as created_by_name", "e.address", "e.status", "e.created_at", "e.is_deleted")
+                .join("hotels as h", "h.hotel_code", "e.hotel_code")
+                .join("department as dep", "e.department_id", "dep.id")
+                .join("designation as des", "des.id", "e.designation_id")
+                .join("user_admin as ua", "ua.id", "e.created_by")
+                .where("e.id", id)
+                .andWhere("e.hotel_code", hotel_code);
             return data.length > 0 ? data[0] : [];
         });
     }

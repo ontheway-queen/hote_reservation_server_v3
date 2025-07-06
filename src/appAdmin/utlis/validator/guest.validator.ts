@@ -31,7 +31,7 @@ class GuestValidator {
   });
 
   public updateSingleGuestValidator = Joi.object({
-    first_name: Joi.string().required(),
+    first_name: Joi.string().allow("").optional(),
     last_name: Joi.string().allow("").optional(),
     email: Joi.string()
       .allow("")

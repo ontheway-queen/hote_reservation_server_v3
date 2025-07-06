@@ -220,67 +220,132 @@ class RoomModel extends schema_1.default {
     getAllRoomByRoomStatus(payload) {
         var _a, _b;
         return __awaiter(this, void 0, void 0, function* () {
-            const { hotel_code, room_type_id, status, limit, skip, current_date, } = payload;
-            console.log({ current_date });
-            const dtbs = this.db("rooms as r").withSchema(this.RESERVATION_SCHEMA);
-            const parsedLimit = parseInt(limit);
-            const parsedSkip = parseInt(skip);
-            if (!isNaN(parsedLimit) && !isNaN(parsedSkip)) {
-                dtbs.limit(parsedLimit).offset(parsedSkip);
-            }
-            const data = yield this.db
-                .withSchema(this.RESERVATION_SCHEMA)
-                .select("r.floor_no", this.db.raw(`
-      JSON_AGG(
-        JSON_BUILD_OBJECT(
-          'id', r.id,
-          'hotel_code', r.hotel_code,
-          'room_no', r.room_name,
-          'floor_no', r.floor_no,
-          'room_type_id', r.room_type_id,
-          'status', r.status,
-          'room_type_name', rt.name,
-          'bookings', COALESCE((
-            SELECT JSON_AGG(
-              JSON_BUILD_OBJECT(
-                'booking_id', b.id,
-                'booking_reference', b.booking_reference,
-                'check_in', b.check_in,
-                'check_out', b.check_out,
-                'booking_type', b.booking_type,
-                'booking_status', b.status,
-                'guest_first_name', g.first_name,
-                'guest_last_name', g.last_name,
-                'guest_id', g.id
+            const { hotel_code, room_type_id, status, limit, skip, current_date } = payload;
+            // old code which not suitable for sorting
+            // const dtbs = this.db("rooms as r").withSchema(this.RESERVATION_SCHEMA);
+            // const parsedLimit = parseInt(limit as string);
+            // const parsedSkip = parseInt(skip as string);
+            // if (!isNaN(parsedLimit) && !isNaN(parsedSkip)) {
+            //   dtbs.limit(parsedLimit).offset(parsedSkip);
+            // }
+            // const data = await this.db
+            //   .withSchema(this.RESERVATION_SCHEMA)
+            //   .select(
+            //     "r.floor_no",
+            //     this.db.raw(
+            //       `
+            //   JSON_AGG(
+            //     JSON_BUILD_OBJECT(
+            //       'id', r.id,
+            //       'hotel_code', r.hotel_code,
+            //       'room_no', r.room_name,
+            //       'floor_no', r.floor_no,
+            //       'room_type_id', r.room_type_id,
+            //       'status', r.status,
+            //       'room_type_name', rt.name,
+            //       'bookings', COALESCE((
+            //         SELECT JSON_AGG(
+            //           JSON_BUILD_OBJECT(
+            //             'booking_id', b.id,
+            //             'booking_reference', b.booking_reference,
+            //             'check_in', b.check_in,
+            //             'check_out', b.check_out,
+            //             'booking_type', b.booking_type,
+            //             'booking_status', b.status,
+            //             'guest_first_name', g.first_name,
+            //             'guest_last_name', g.last_name,
+            //             'guest_id', g.id
+            //           )
+            //         )
+            //         FROM hotel_reservation.booking_rooms br
+            //         JOIN hotel_reservation.bookings b ON b.id = br.booking_id
+            //         LEFT JOIN hotel_reservation.guests g ON g.id = b.guest_id
+            //         WHERE br.room_id = r.id
+            //         AND b.check_in <= ?
+            //           AND b.check_out >= ?
+            //           AND b.hotel_code = r.hotel_code
+            //           AND b.booking_type = ?
+            //           AND (b.status = ? OR b.status = ?)
+            //       ), '[]')
+            //     )
+            //     ) AS rooms
+            // `,
+            //       [current_date, current_date, "B", "confirmed", "checked_in"]
+            //     )
+            //   )
+            //   .from("rooms as r")
+            //   .join("room_types as rt", "r.room_type_id", "rt.id")
+            //   .where("r.hotel_code", hotel_code)
+            //   .andWhere("r.is_deleted", false)
+            //   .modify((qb) => {
+            //     if (status) {
+            //       qb.andWhere("r.status", status);
+            //     }
+            //     if (room_type_id) {
+            //       qb.andWhere("r.room_type_id", room_type_id);
+            //     }
+            //   })
+            //   .groupBy("r.floor_no")
+            //   .orderBy("r.floor_no", "asc");
+            // new code
+            const data = yield this.db.raw(`
+      SELECT
+        floor_no,
+        JSON_AGG(room_obj ORDER BY room_no_int) AS rooms
+      FROM (
+        SELECT
+          r.floor_no,
+          CAST(r.room_name AS INTEGER) AS room_no_int,
+          JSON_BUILD_OBJECT(
+            'id', r.id,
+            'hotel_code', r.hotel_code,
+            'room_no', r.room_name,
+            'floor_no', r.floor_no,
+            'room_type_id', r.room_type_id,
+            'status', r.status,
+            'room_type_name', rt.name,
+            'bookings', COALESCE((
+              SELECT JSON_AGG(
+                JSON_BUILD_OBJECT(
+                  'booking_id', b.id,
+                  'booking_reference', b.booking_reference,
+                  'check_in', b.check_in,
+                  'check_out', b.check_out,
+                  'booking_type', b.booking_type,
+                  'booking_status', b.status,
+                  'guest_first_name', g.first_name,
+                  'guest_last_name', g.last_name,
+                  'guest_id', g.id
+                )
               )
-            )
-            FROM hotel_reservation.booking_rooms br
-            JOIN hotel_reservation.bookings b ON b.id = br.booking_id
-            LEFT JOIN hotel_reservation.guests g ON g.id = b.guest_id
-            WHERE br.room_id = r.id
-            AND b.check_in <= ?
-              AND b.check_out >= ?
-              AND b.hotel_code = r.hotel_code
-              AND b.booking_type = ?
-              AND (b.status = ? OR b.status = ?)
-          ), '[]')
-        )
-      ) AS rooms
-    `, [current_date, current_date, "B", "confirmed", "checked_in"]))
-                .from("rooms as r")
-                .join("room_types as rt", "r.room_type_id", "rt.id")
-                .where("r.hotel_code", hotel_code)
-                .andWhere("r.is_deleted", false)
-                .modify((qb) => {
-                if (status) {
-                    qb.andWhere("r.status", status);
-                }
-                if (room_type_id) {
-                    qb.andWhere("r.room_type_id", room_type_id);
-                }
-            })
-                .groupBy("r.floor_no")
-                .orderBy("r.floor_no", "asc");
+              FROM ${this.RESERVATION_SCHEMA}.booking_rooms br
+              JOIN ${this.RESERVATION_SCHEMA}.bookings b ON b.id = br.booking_id
+              LEFT JOIN ${this.RESERVATION_SCHEMA}.guests g ON g.id = b.guest_id
+              WHERE br.room_id = r.id
+                AND b.check_in <= ?
+                AND b.check_out >= ?
+                AND b.hotel_code = r.hotel_code
+                AND b.booking_type = ?
+                AND (b.status = ? OR b.status = ?)
+            ), '[]')
+          ) AS room_obj
+        FROM ${this.RESERVATION_SCHEMA}.rooms r
+        JOIN ${this.RESERVATION_SCHEMA}.room_types rt ON r.room_type_id = rt.id
+        WHERE r.hotel_code = ?
+          AND r.is_deleted = false
+          ${status ? `AND r.status = '${status}'` : ""}
+          ${room_type_id ? `AND r.room_type_id = '${room_type_id}'` : ""}
+      ) AS sorted_rooms
+      GROUP BY floor_no
+      ORDER BY floor_no ASC
+    `, [
+                current_date,
+                current_date,
+                "B",
+                "confirmed",
+                "checked_in",
+                hotel_code,
+            ]);
             const total = yield this.db("rooms as r")
                 .withSchema(this.RESERVATION_SCHEMA)
                 .count("r.id as total")

@@ -19,6 +19,12 @@ class GuestModel extends Schema {
       .insert(payload, "id");
   }
 
+  public async createGuestForGroupBooking(payload: IguestInterface) {
+    return await this.db("guests")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .insert(payload, "id");
+  }
+
   public async getAllGuestEmail(payload: {
     email: string;
     hotel_code: number;

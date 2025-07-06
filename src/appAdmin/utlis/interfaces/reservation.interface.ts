@@ -123,8 +123,9 @@ export interface IguestReqBody {
   last_name: string;
   email?: string;
   phone: string;
-  nationality: string;
-  country: string;
+  nationality?: string;
+  country?: string;
+  country_id: number;
   address: string;
 }
 
@@ -154,12 +155,6 @@ export interface BookingRequestBody {
   source_id: number;
 }
 
-export interface IbookingReqPayment {
-  method: "MOBILE_BANKING" | "BANK" | "CASH";
-  acc_id: number;
-  amount: number;
-}
-
 export interface RoomRequest {
   room_type_id: number;
   rate_plan_id: number;
@@ -171,13 +166,75 @@ export interface RoomRequest {
   guests: RoomGuest[];
   meal_plans_ids?: number[];
 }
-
 export interface RoomGuest {
   room_id: number;
   adults: number;
   children: number;
   infant: number;
   cbf: number; //breakfast coupon
+}
+
+export interface IGBookingRequestBody {
+  reservation_type: "hold" | "booked";
+  check_in: string;
+  is_checked_in: boolean;
+  is_individual_booking: boolean;
+  check_out: string;
+  guest: IguestReqBody;
+  pickup: boolean;
+  pickup_from?: string;
+  pickup_time?: string;
+  drop: boolean;
+  drop_to?: string;
+  drop_time?: string;
+  discount_amount: number;
+  service_charge: number;
+  is_company_booked: boolean;
+  company_name?: string;
+  visit_purpose?: string;
+  vat: number;
+  is_payment_given: boolean;
+  booked_room_types: IGBookedRoomTypeRequest[];
+  special_requests?: string;
+  payment: IbookingReqPayment;
+  source_id: number;
+}
+
+export interface IbookingReqPayment {
+  method: "MOBILE_BANKING" | "BANK" | "CASH";
+  acc_id: number;
+  amount: number;
+}
+
+export interface IGBookedRoomTypeRequest {
+  room_type_id: number;
+  rate_plan_id: number;
+
+  number_of_rooms: number;
+  rooms: IGBRoomGuest[];
+  meal_plans_ids?: number[];
+}
+
+export interface IGBRoomGuest {
+  room_id: number;
+  adults: number;
+  children: number;
+  infant: number;
+  cbf: number;
+  rate: {
+    base_rate: number;
+    changed_rate: number;
+  };
+  guest_info: {
+    first_name: string;
+    last_name: string;
+    email: string;
+    phone: string;
+    country_id: number;
+    address: string;
+    type: "adult" | "child" | "infant";
+    is_lead_guest: boolean;
+  }[];
 }
 
 export interface IRoomBooking {

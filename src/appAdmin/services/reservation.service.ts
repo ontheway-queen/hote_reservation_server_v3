@@ -3,6 +3,8 @@ import AbstractServices from "../../abstarcts/abstract.service";
 import {
   addPaymentReqBody,
   BookingRequestBody,
+  IGBookingRequestBody,
+  IguestReqBody,
 } from "../utlis/interfaces/reservation.interface";
 import { SubReservationService } from "./subreservation.service";
 import { IinsertFolioEntriesPayload } from "../utlis/interfaces/invoice.interface";
@@ -195,6 +197,165 @@ export class ReservationService extends AbstractServices {
         success: true,
         code: this.StatusCode.HTTP_SUCCESSFUL,
         message: "Booking created successfully",
+      };
+    });
+  }
+
+  public async createGroupBooking(req: Request) {
+    return await this.db.transaction(async (trx) => {
+      const { hotel_code } = req.hotel_admin;
+      const body = req.body as IGBookingRequestBody;
+
+      const {
+        check_in,
+        check_out,
+        booked_room_types,
+        vat,
+        service_charge,
+        is_individual_booking,
+        reservation_type,
+        discount_amount,
+        pickup,
+        drop,
+        drop_time,
+        pickup_time,
+        pickup_from,
+        drop_to,
+        source_id,
+        special_requests,
+        is_company_booked,
+        company_name,
+        visit_purpose,
+        is_checked_in,
+      } = body;
+
+      const sub = new SubReservationService(trx);
+
+      // Calculate total nights
+      const total_nights = sub.calculateNights(check_in, check_out);
+      if (total_nights <= 0) {
+        return {
+          success: false,
+          code: this.StatusCode.HTTP_BAD_REQUEST,
+          message: "Check-in date must be before check-out date",
+        };
+      }
+
+      // Validate room availability
+      for (const rt of booked_room_types) {
+        const availableRooms = await this.Model.reservationModel(
+          trx
+        ).getAllAvailableRoomsTypeWithAvailableRoomCount({
+          hotel_code,
+          check_in,
+          check_out,
+          room_type_id: rt.room_type_id,
+        });
+
+        if (rt.rooms.length > (availableRooms[0]?.available_rooms || 0)) {
+          return {
+            success: false,
+            code: this.StatusCode.HTTP_NOT_FOUND,
+            message: "Room Assigned is more than available rooms",
+          };
+        }
+      }
+
+      // Find lead guest
+      let leadGuest: IguestReqBody | null = null;
+
+      outer: for (const rt of booked_room_types) {
+        for (const room of rt.rooms) {
+          for (const guest of room.guest_info) {
+            if (guest.is_lead_guest) {
+              leadGuest = guest;
+              break outer;
+            }
+          }
+        }
+      }
+
+      if (!leadGuest) {
+        return {
+          success: false,
+          code: this.StatusCode.HTTP_BAD_REQUEST,
+          message: "Lead guest information is required",
+        };
+      }
+
+      // Insert or get lead guest
+      const guest_id = await sub.findOrCreateGuest(leadGuest, hotel_code);
+
+      // Calculate total
+      const { total_amount } = sub.calculateTotalsForGroupBooking(
+        booked_room_types,
+        total_nights,
+        { vat, service_charge }
+      );
+
+      // Create main booking
+      const booking = await sub.createMainBooking({
+        payload: {
+          is_individual_booking,
+          check_in,
+          check_out,
+          created_by: req.hotel_admin.id,
+          discount_amount,
+          drop,
+          booking_type: reservation_type === "booked" ? "B" : "H",
+          drop_time,
+          pickup_from,
+          pickup,
+          source_id,
+          drop_to,
+          special_requests,
+          vat,
+          pickup_time,
+          service_charge,
+          is_company_booked,
+          company_name,
+          visit_purpose,
+        },
+        hotel_code,
+        guest_id,
+        total_amount,
+        is_checked_in,
+        total_nights,
+      });
+
+      // Insert booking rooms
+      await sub.insertBookingRoomsForGroupBooking(
+        booked_room_types,
+        booking.id,
+        total_nights,
+        hotel_code
+      );
+
+      // Update availability
+      await sub.updateAvailabilityWhenGroupRoomBooking(
+        reservation_type,
+        booked_room_types,
+        check_in,
+        check_out,
+        hotel_code
+      );
+
+      // Create folio and ledger entries
+      await sub.createGroupRoomBookingFolioWithEntries({
+        body,
+        guest_id,
+        booking_id: booking.id,
+        req,
+      });
+
+      return {
+        success: true,
+        code: this.StatusCode.HTTP_SUCCESSFUL,
+        message: "Booking created successfully",
+        data: {
+          booking_id: booking.id,
+          total_amount,
+        },
       };
     });
   }

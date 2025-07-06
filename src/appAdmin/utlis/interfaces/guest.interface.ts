@@ -1,5 +1,6 @@
 export interface IguestInterface {
   hotel_code: number;
+  country_id?: number;
   first_name: string;
   last_name: string;
   email?: string;
@@ -10,6 +11,7 @@ export interface IguestInterface {
   nationality?: string;
   passport_no?: string;
   nid_no?: string;
+  type?: "adult" | "child" | "infant";
 }
 
 export interface IuserTypeInterface {

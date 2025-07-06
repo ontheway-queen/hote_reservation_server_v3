@@ -248,6 +248,17 @@ AND (
   public async insertBookingRoom(payload: IbookingRooms[]) {
     return await this.db("booking_rooms")
       .withSchema(this.RESERVATION_SCHEMA)
+      .insert(payload, "id");
+  }
+
+  public async insertBookingRoomGuest(payload: {
+    hotel_code: number;
+    is_lead_guest: boolean;
+    booking_room_id: number;
+    guest_id: number;
+  }) {
+    return await this.db("booking_room_guest")
+      .withSchema(this.RESERVATION_SCHEMA)
       .insert(payload);
   }
 
@@ -310,6 +321,7 @@ AND (
         "g.first_name",
         "g.last_name",
         "g.email as guest_email",
+        "g.phone as guest_phone",
         this.db.raw(
           `(
             SELECT JSON_AGG(JSON_BUILD_OBJECT(
@@ -805,6 +817,7 @@ AND (
         )
         .leftJoin("sources as src", "b.source_id", "src.id")
         .leftJoin("guests as g", "b.guest_id", "g.id")
+        .where("b.hotel_code", hotel_code)
         .andWhere(function () {
           this.where("b.check_out", ">", current_date).andWhere(
             "b.check_in",

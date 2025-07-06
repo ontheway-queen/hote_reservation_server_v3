@@ -173,7 +173,9 @@ class SettingModel extends schema_1.default {
                     this.andWhere("rtc.name", "like", `%${search}%`);
                 }
                 if (exact_match) {
-                    this.andWhereRaw("LOWER(rtc.name) = ?", [exact_match.toLowerCase()]);
+                    this.andWhereRaw("LOWER(rtc.name) = ?", [
+                        exact_match.toLowerCase(),
+                    ]);
                 }
                 if (status) {
                     this.andWhere("rtc.status", status);
@@ -767,16 +769,18 @@ class SettingModel extends schema_1.default {
             }
             const data = yield dtbs
                 .withSchema(this.RESERVATION_SCHEMA)
-                .select("de.id", "de.hotel_code", "de.name as designation_name", "de.status")
+                .select("de.id", "de.hotel_code", "de.name as designation_name", "de.status", "de.is_deleted", "de.created_by as created_by_id", "ua.name as created_by_name")
+                .leftJoin("user_admin as ua", "de.created_by", "ua.id")
                 .where(function () {
                 this.whereNull("de.hotel_code").orWhere("de.hotel_code", hotel_code);
             })
+                .andWhere("de.is_deleted", false)
                 .andWhere(function () {
                 if (name) {
-                    this.andWhere("de.name", "like", `%${name}%`);
+                    this.andWhere("de.name", "ilike", `%${name}%`);
                 }
                 if (status) {
-                    this.andWhere("de.status", "like", `%${status}%`);
+                    this.andWhere("de.status", status);
                 }
                 if (excludeId) {
                     this.andWhere("de.id", "!=", excludeId);
@@ -789,12 +793,13 @@ class SettingModel extends schema_1.default {
                 .where(function () {
                 this.whereNull("de.hotel_code").orWhere("de.hotel_code", hotel_code);
             })
+                .andWhere("de.is_deleted", false)
                 .andWhere(function () {
                 if (name) {
-                    this.andWhere("de.name", "like", `%${name}%`);
+                    this.andWhere("de.name", "ilike", `%${name}%`);
                 }
                 if (status) {
-                    this.andWhere("de.status", "like", `%${status}%`);
+                    this.andWhere("de.status", status);
                 }
                 if (excludeId) {
                     this.andWhere("de.id", "!=", excludeId);
@@ -818,7 +823,7 @@ class SettingModel extends schema_1.default {
             return yield this.db("designation")
                 .withSchema(this.RESERVATION_SCHEMA)
                 .where({ id, hotel_code })
-                .del();
+                .update({ is_deleted: true });
         });
     }
     //=================== Department Model  ======================//
@@ -841,16 +846,18 @@ class SettingModel extends schema_1.default {
             }
             const data = yield dtbs
                 .withSchema(this.RESERVATION_SCHEMA)
-                .select("d.id", "d.hotel_code", "d.name as department_name", "d.status")
+                .select("d.id", "d.hotel_code", "d.name as department_name", "d.status", "d.is_deleted", "d.created_by as created_by_id", "ua.name as created_by_name")
+                .leftJoin("user_admin as ua", "d.created_by", "ua.id")
                 .where(function () {
                 this.whereNull("d.hotel_code").orWhere("d.hotel_code", hotel_code);
             })
+                .andWhere("d.is_deleted", false)
                 .andWhere(function () {
                 if (name) {
-                    this.andWhere("d.name", "like", `%${name}%`);
+                    this.andWhere("d.name", "ilike", `%${name}%`);
                 }
                 if (status) {
-                    this.andWhere("d.status", "like", `%${status}%`);
+                    this.andWhere("d.status", status);
                 }
                 if (excludeId) {
                     this.andWhere("d.id", "!=", excludeId);
@@ -863,12 +870,13 @@ class SettingModel extends schema_1.default {
                 .where(function () {
                 this.whereNull("d.hotel_code").orWhere("d.hotel_code", hotel_code);
             })
+                .andWhere("d.is_deleted", false)
                 .andWhere(function () {
                 if (name) {
-                    this.andWhere("d.name", "like", `%${name}%`);
+                    this.andWhere("d.name", "ilike", `%${name}%`);
                 }
                 if (status) {
-                    this.andWhere("d.status", "like", `%${status}%`);
+                    this.andWhere("d.status", status);
                 }
                 if (excludeId) {
                     this.andWhere("d.id", "!=", excludeId);
@@ -892,7 +900,7 @@ class SettingModel extends schema_1.default {
             return yield this.db("department")
                 .withSchema(this.RESERVATION_SCHEMA)
                 .where({ id, hotel_code })
-                .del();
+                .update({ is_deleted: true });
         });
     }
     //=================== Hall Amenities  ======================//

@@ -193,6 +193,13 @@ AND (
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("booking_rooms")
                 .withSchema(this.RESERVATION_SCHEMA)
+                .insert(payload, "id");
+        });
+    }
+    insertBookingRoomGuest(payload) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("booking_room_guest")
+                .withSchema(this.RESERVATION_SCHEMA)
                 .insert(payload);
         });
     }
@@ -209,7 +216,7 @@ AND (
             const offsetNum = skip ? Number(skip) : 0;
             const data = yield this.db("bookings as b")
                 .withSchema(this.RESERVATION_SCHEMA)
-                .select("b.id", "b.booking_reference", this.db.raw(`TO_CHAR(b.check_in, 'YYYY-MM-DD') as check_in`), this.db.raw(`TO_CHAR(b.check_out, 'YYYY-MM-DD') as check_out`), this.db.raw(`TO_CHAR(b.booking_date, 'YYYY-MM-DD') as booking_date`), "b.booking_type", "b.status", "b.is_individual_booking", "b.total_amount", "b.vat", "b.discount_amount", "b.service_charge", "src.name as source_name", "g.id as guest_id", "g.first_name", "g.last_name", "g.email as guest_email", this.db.raw(`(
+                .select("b.id", "b.booking_reference", this.db.raw(`TO_CHAR(b.check_in, 'YYYY-MM-DD') as check_in`), this.db.raw(`TO_CHAR(b.check_out, 'YYYY-MM-DD') as check_out`), this.db.raw(`TO_CHAR(b.booking_date, 'YYYY-MM-DD') as booking_date`), "b.booking_type", "b.status", "b.is_individual_booking", "b.total_amount", "b.vat", "b.discount_amount", "b.service_charge", "src.name as source_name", "g.id as guest_id", "g.first_name", "g.last_name", "g.email as guest_email", "g.phone as guest_phone", this.db.raw(`(
             SELECT JSON_AGG(JSON_BUILD_OBJECT(
               'id', br.id,
               'room_type_id', br.room_type_id,
@@ -551,6 +558,7 @@ AND (
                 ]))
                     .leftJoin("sources as src", "b.source_id", "src.id")
                     .leftJoin("guests as g", "b.guest_id", "g.id")
+                    .where("b.hotel_code", hotel_code)
                     .andWhere(function () {
                     this.where("b.check_out", ">", current_date).andWhere("b.check_in", "<=", current_date);
                 })

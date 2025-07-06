@@ -23,7 +23,7 @@ class DepartmentSettingService extends abstract_service_1.default {
     createDepartment(req) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
-                const { hotel_code } = req.hotel_admin;
+                const { hotel_code, id } = req.hotel_admin;
                 const { name } = req.body;
                 // Department check
                 const settingModel = this.Model.settingModel();
@@ -43,6 +43,7 @@ class DepartmentSettingService extends abstract_service_1.default {
                 yield model.createDepartment({
                     hotel_code,
                     name,
+                    created_by: id,
                 });
                 return {
                     success: true,

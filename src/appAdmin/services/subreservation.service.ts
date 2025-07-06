@@ -4,6 +4,8 @@ import {
   BookingRoom,
   IbookingReqPayment,
   IbookingRooms,
+  IGBookedRoomTypeRequest,
+  IGBookingRequestBody,
   IguestReqBody,
   RoomRequest,
 } from "../utlis/interfaces/reservation.interface";
@@ -31,14 +33,6 @@ export class SubReservationService extends AbstractServices {
     hotel_code: number
   ): Promise<number> {
     const guestModel = this.Model.guestModel(this.trx);
-    // const { data: existingGuests } = await guestModel.getAllGuest({
-    //   // email: guest.email,
-    //   phone: guest.phone,
-    //   hotel_code,
-    // });
-
-    // if (existingGuests.length) return existingGuests[0].id;
-
     const [insertedGuest] = await guestModel.createGuest({
       hotel_code,
       first_name: guest.first_name,
@@ -53,6 +47,25 @@ export class SubReservationService extends AbstractServices {
     return insertedGuest.id;
   }
 
+  // public async findOrCreateGuestForGroupBooking(
+  //   booked_room_types: IGBookedRoomTypeRequest,
+  //   hotel_code: number
+  // ): Promise<number> {
+  //   const guestModel = this.Model.guestModel(this.trx);
+  //   const [insertedGuest] = await guestModel.createGuest({
+  //     hotel_code,
+  //     first_name: guest.first_name,
+  //     last_name: guest.last_name,
+  //     nationality: guest.nationality,
+  //     country: guest.country,
+  //     email: guest.email,
+  //     phone: guest.phone,
+  //     address: guest.address,
+  //   });
+
+  //   return insertedGuest.id;
+  // }
+
   public calculateTotals(
     rooms: RoomRequest[],
     nights: number,
@@ -66,7 +79,34 @@ export class SubReservationService extends AbstractServices {
 
     const total = total_changed_price * nights;
 
-    const total_amount = total + fees.vat + fees.service_charge;
+    const total_amount =
+      total + fees.vat * nights + fees.service_charge * nights;
+
+    return { total_amount };
+  }
+
+  public calculateTotalsForGroupBooking(
+    booked_room_types: IGBookedRoomTypeRequest[],
+    nights: number,
+    fees: { vat: number; service_charge: number }
+  ): { total_amount: number } {
+    let total_changed_price = 0;
+
+    booked_room_types.forEach((rt) => {
+      rt.rooms.forEach((room) => {
+        total_changed_price += room.rate.changed_rate * rt.rooms.length;
+      });
+    });
+
+    console.log({ total_changed_price, nights });
+    const total = total_changed_price * nights;
+    console.log({ total });
+
+    console.log({ fees });
+    const total_amount =
+      total + fees.vat * nights + fees.service_charge * nights;
+
+    console.log({ total_amount });
 
     return { total_amount };
   }
@@ -190,6 +230,148 @@ export class SubReservationService extends AbstractServices {
     await this.Model.reservationModel(this.trx).insertBookingRoom(payload);
   }
 
+  // async insertBookingRoomsForGroupBooking(
+  //   booked_room_types: IGBookedRoomTypeRequest[],
+  //   booking_id: number,
+  //   nights: number,
+  //   hotel_code: number
+  // ) {
+  //   const payload: IbookingRooms[] = [];
+
+  //   booked_room_types.forEach(async (rt) => {
+  //     let adults = 0,
+  //       childs = 0,
+  //       infants = 0;
+
+  //     rt.rooms.forEach((room) => {
+  //       room.guest_info.forEach((guest) => {
+  //         if (guest.type === "adult") {
+  //           adults++;
+  //         } else if (guest.type === "child") {
+  //           childs++;
+  //         } else {
+  //           infants++;
+  //         }
+  //       });
+  //     });
+
+  //     rt.rooms.forEach((room) => {
+  //       payload.push({
+  //         booking_id,
+  //         room_id: room.room_id,
+  //         room_type_id: rt.room_type_id,
+  //         adults: adults,
+  //         children: childs,
+  //         infant: infants,
+  //         base_rate: room.rate.base_rate,
+  //         changed_rate: room.rate.changed_rate,
+  //         unit_base_rate: room.rate.base_rate * nights,
+  //         unit_changed_rate: room.rate.changed_rate * nights,
+  //         cbf: room.cbf,
+  //       });
+  //     });
+
+  //     await Promise.all(
+  //       // first will be insert in booking room
+  //       rt.rooms.map(async (room) => {
+  //         const bookingRoomRes = await this.Model.reservationModel(
+  //           this.trx
+  //         ).insertBookingRoom(payload);
+
+  //         room.guest_info.forEach(async (guest) => {
+  //           // insert in guest
+  //           const guestRes = await this.Model.guestModel(
+  //             this.trx
+  //           ).createGuestForGroupBooking({
+  //             first_name: guest.first_name,
+  //             hotel_code,
+  //             last_name: guest.last_name,
+  //             email: guest.email,
+  //             address: guest.address,
+  //             country_id: guest.country_id,
+  //             phone: guest.phone,
+  //           });
+
+  //           // insert in booking room guest
+  //           await this.Model.reservationModel(this.trx).insertBookingRoomGuest({
+  //             is_lead_guest: guest.is_lead_guest,
+  //             guest_id: guestRes[0].id,
+  //             hotel_code,
+  //             booking_room_id: bookingRoomRes[0].id,
+  //           });
+  //         });
+  //       })
+  //     );
+  //   });
+  // }
+
+  async insertBookingRoomsForGroupBooking(
+    booked_room_types: IGBookedRoomTypeRequest[],
+    booking_id: number,
+    nights: number,
+    hotel_code: number
+  ) {
+    for (const rt of booked_room_types) {
+      // let adults = 0,
+      //   childs = 0,
+      //   infants = 0;
+
+      // Count guests
+      // for (const room of rt.rooms) {
+      //   for (const guest of room.guest_info) {
+      //     if (guest.type === "adult") adults++;
+      //     else if (guest.type === "child") childs++;
+      //     else infants++;
+      //   }
+      // }
+
+      for (const room of rt.rooms) {
+        // Insert booking room
+        const [bookingRoomRes] = await this.Model.reservationModel(
+          this.trx
+        ).insertBookingRoom([
+          {
+            booking_id,
+            room_id: room.room_id,
+            room_type_id: rt.room_type_id,
+            adults: room.adults,
+            children: room.children,
+            infant: room.infant,
+            base_rate: room.rate.base_rate,
+            changed_rate: room.rate.changed_rate,
+            unit_base_rate: room.rate.base_rate * nights,
+            unit_changed_rate: room.rate.changed_rate * nights,
+            cbf: room.cbf,
+          },
+        ]);
+
+        const booking_room_id = bookingRoomRes.id;
+
+        // Insert guests and booking_room_guests
+        for (const guest of room.guest_info) {
+          const [guestRes] = await this.Model.guestModel(
+            this.trx
+          ).createGuestForGroupBooking({
+            first_name: guest.first_name,
+            last_name: guest.last_name,
+            email: guest.email,
+            address: guest.address,
+            country_id: guest.country_id,
+            phone: guest.phone,
+            hotel_code,
+          });
+
+          await this.Model.reservationModel(this.trx).insertBookingRoomGuest({
+            is_lead_guest: guest.is_lead_guest,
+            guest_id: guestRes.id,
+            hotel_code,
+            booking_room_id,
+          });
+        }
+      }
+    }
+  }
+
   async insertInBookingRoomsBySingleBookingRooms(
     rooms: BookingRoom[],
     booking_id: number,
@@ -233,6 +415,43 @@ export class SubReservationService extends AbstractServices {
     const reservedRoom = rooms.map((item) => ({
       room_type_id: item.room_type_id,
       total_room: item.guests.length,
+    }));
+
+    for (const { room_type_id, total_room } of reservedRoom) {
+      for (const date of dates) {
+        if (reservation_type === "booked") {
+          await reservation_model.updateRoomAvailability({
+            type: "booked_room_increase",
+            hotel_code,
+            room_type_id,
+            date,
+            rooms_to_book: total_room,
+          });
+        } else {
+          await reservation_model.updateRoomAvailabilityHold({
+            hotel_code,
+            room_type_id,
+            date,
+            rooms_to_book: total_room,
+            type: "hold_increase",
+          });
+        }
+      }
+    }
+  }
+  async updateAvailabilityWhenGroupRoomBooking(
+    reservation_type: "booked" | "hold",
+    booked_room_types: IGBookedRoomTypeRequest[],
+    checkIn: string,
+    checkOut: string,
+    hotel_code: number
+  ) {
+    const reservation_model = this.Model.reservationModel(this.trx);
+    const dates = HelperFunction.getDatesBetween(checkIn, checkOut);
+
+    const reservedRoom = booked_room_types.map((rt) => ({
+      room_type_id: rt.room_type_id,
+      total_room: rt.rooms.length,
     }));
 
     for (const { room_type_id, total_room } of reservedRoom) {
@@ -573,6 +792,266 @@ export class SubReservationService extends AbstractServices {
     return {
       folio,
       entries: folioEntriesBookingPayload,
+    };
+  }
+
+  // public async createGroupRoomBookingFolioWithEntries({
+  //   body,
+  //   booking_id,
+  //   guest_id,
+  //   req,
+  // }: {
+  //   req: Request;
+  //   body: IGBookingRequestBody;
+  //   booking_id: number;
+  //   guest_id: number;
+  // }) {
+  //   const hotelInvModel = this.Model.hotelInvoiceModel(this.trx);
+
+  //   // 1. Generate Folio Number
+  //   const [lastFolio] = await hotelInvModel.getLasFolioId();
+  //   const folio_number = HelperFunction.generateFolioNumber(lastFolio?.id);
+
+  //   // 2. Insert Folio
+  //   const [folio] = await hotelInvModel.insertInFolio({
+  //     booking_id,
+  //     folio_number,
+  //     guest_id,
+  //     hotel_code: req.hotel_admin.hotel_code,
+  //     name: "Reservation",
+  //     status: "open",
+  //     type: "Primary",
+  //   });
+
+  //   // 3. Generate Folio Entries per night in proper order
+  //   const folioEntriesBookingPayload: IinsertFolioEntriesPayload[] = [];
+
+  //   const checkInDate = new Date(body.check_in);
+  //   const checkOutDate = new Date(body.check_out);
+
+  //   for (
+  //     let currentDate = new Date(checkInDate);
+  //     currentDate < checkOutDate;
+  //     currentDate.setDate(currentDate.getDate() + 1)
+  //   ) {
+  //     const formattedDate = currentDate.toISOString().split("T")[0];
+
+  //     // 1. Room Tariff
+  //     body.booked_room_types.forEach((rt) => {
+  //       rt.rooms.forEach((room) => {
+  //         folioEntriesBookingPayload.push({
+  //           folio_id: folio.id,
+  //           date: formattedDate,
+  //           posting_type: "Charge",
+  //           debit: room.rate.changed_rate,
+  //           room_id: room.room_id,
+  //           description: `Room Tariff`,
+  //           rack_rate: room.rate.base_rate,
+  //         });
+  //       });
+  //     });
+
+  //     // 2. VAT
+  //     if (body.vat && body.vat > 0) {
+  //       folioEntriesBookingPayload.push({
+  //         folio_id: folio.id,
+  //         date: formattedDate,
+  //         posting_type: "Charge",
+  //         debit: body.vat,
+  //         room_id: 0,
+  //         description: `VAT`,
+  //         rack_rate: 0,
+  //       });
+  //     }
+
+  //     // 3. Service Charge
+  //     if (body.service_charge && body.service_charge > 0) {
+  //       folioEntriesBookingPayload.push({
+  //         folio_id: folio.id,
+  //         date: formattedDate,
+  //         posting_type: "Charge",
+  //         debit: body.service_charge,
+  //         room_id: 0,
+  //         description: `Service Charge`,
+  //         rack_rate: 0,
+  //       });
+  //     }
+  //   }
+
+  //   // 4. Payment (if given)
+  //   const today = new Date().toISOString().split("T")[0];
+  //   if (body.is_payment_given && body.payment?.amount > 0) {
+  //     const accountModel = this.Model.accountModel(this.trx);
+
+  //     const [account] = await accountModel.getSingleAccount({
+  //       hotel_code: req.hotel_admin.hotel_code,
+  //       id: body.payment.acc_id,
+  //     });
+
+  //     if (!account) throw new Error("Invalid Account");
+
+  //     const voucher_no = await new HelperFunction().generateVoucherNo();
+
+  //     const [voucher] = await accountModel.insertAccVoucher({
+  //       acc_head_id: account.acc_head_id,
+  //       created_by: req.hotel_admin.id,
+  //       debit: body.payment.amount,
+  //       credit: 0,
+  //       description: `Payment for booking ${booking_id}`,
+  //       voucher_type: "PAYMENT",
+  //       voucher_date: today,
+  //       voucher_no,
+  //     });
+
+  //     folioEntriesBookingPayload.push({
+  //       folio_id: folio.id,
+  //       acc_voucher_id: voucher.id,
+  //       date: today,
+  //       posting_type: "Payment",
+  //       credit: body.payment.amount,
+  //       room_id: 0,
+  //       description: `Payment Received`,
+  //       rack_rate: 0,
+  //     });
+  //   }
+
+  //   // 5. Insert All Entries
+  //   await hotelInvModel.insertInFolioEntries(folioEntriesBookingPayload);
+
+  //   return {
+  //     folio,
+  //     entries: folioEntriesBookingPayload,
+  //   };
+  // }
+
+  public async createGroupRoomBookingFolioWithEntries({
+    body,
+    booking_id,
+    guest_id,
+    req,
+  }: {
+    req: Request;
+    body: IGBookingRequestBody;
+    booking_id: number;
+    guest_id: number;
+  }) {
+    const hotel_code = req.hotel_admin.hotel_code;
+    const created_by = req.hotel_admin.id;
+    const hotelInvModel = this.Model.hotelInvoiceModel(this.trx);
+
+    // 1. Generate Folio Number
+    const [lastFolio] = await hotelInvModel.getLasFolioId();
+    const folio_number = HelperFunction.generateFolioNumber(lastFolio?.id);
+
+    // 2. Insert Folio
+    const [folio] = await hotelInvModel.insertInFolio({
+      booking_id,
+      folio_number,
+      guest_id,
+      hotel_code,
+      name: "Reservation",
+      status: "open",
+      type: "Primary",
+    });
+
+    // 3. Generate Folio Entries
+    const folioEntries: IinsertFolioEntriesPayload[] = [];
+    const checkInDate = new Date(body.check_in);
+    const checkOutDate = new Date(body.check_out);
+    const today = new Date().toISOString().split("T")[0];
+
+    for (
+      let current = new Date(checkInDate);
+      current < checkOutDate;
+      current.setDate(current.getDate() + 1)
+    ) {
+      const formattedDate = current.toISOString().split("T")[0];
+
+      for (const rt of body.booked_room_types) {
+        for (const room of rt.rooms) {
+          folioEntries.push({
+            folio_id: folio.id,
+            date: formattedDate,
+            posting_type: "Charge",
+            debit: room.rate.changed_rate,
+            room_id: room.room_id,
+            description: "Room Tariff",
+            rack_rate: room.rate.base_rate,
+          });
+        }
+      }
+
+      // VAT (posted once per night)
+      if (body.vat && body.vat > 0) {
+        folioEntries.push({
+          folio_id: folio.id,
+          date: formattedDate,
+          posting_type: "Charge",
+          debit: body.vat,
+          room_id: 0,
+          description: "VAT",
+          rack_rate: 0,
+        });
+      }
+
+      // Service Charge
+      if (body.service_charge && body.service_charge > 0) {
+        folioEntries.push({
+          folio_id: folio.id,
+          date: formattedDate,
+          posting_type: "Charge",
+          debit: body.service_charge,
+          room_id: 0,
+          description: "Service Charge",
+          rack_rate: 0,
+        });
+      }
+    }
+
+    // 4. Handle Payment (if given)
+    if (body.is_payment_given && body.payment && body.payment.amount > 0) {
+      const accountModel = this.Model.accountModel(this.trx);
+
+      const [account] = await accountModel.getSingleAccount({
+        hotel_code,
+        id: body.payment.acc_id,
+      });
+
+      if (!account) {
+        throw new Error("Invalid Account");
+      }
+
+      const voucher_no = await new HelperFunction().generateVoucherNo();
+
+      const [voucher] = await accountModel.insertAccVoucher({
+        acc_head_id: account.acc_head_id,
+        created_by,
+        debit: body.payment.amount,
+        credit: 0,
+        description: `Payment for booking ${booking_id}`,
+        voucher_type: "PAYMENT",
+        voucher_date: today,
+        voucher_no,
+      });
+
+      folioEntries.push({
+        folio_id: folio.id,
+        acc_voucher_id: voucher.id,
+        date: today,
+        posting_type: "Payment",
+        credit: body.payment.amount,
+        room_id: 0,
+        description: "Payment Received",
+        rack_rate: 0,
+      });
+    }
+
+    // 5. Insert all folio entries
+    await hotelInvModel.insertInFolioEntries(folioEntries);
+
+    return {
+      folio,
+      entries: folioEntries,
     };
   }
 

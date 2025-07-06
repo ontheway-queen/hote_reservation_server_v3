@@ -284,7 +284,7 @@ class AdministrationService extends abstract_service_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             const { id: role_id } = req.params;
             const { id: admin_id, hotel_code } = req.hotel_admin;
-            const { role_name, update_permissions, deleted, } = req.body;
+            const { role_name, update_permissions, deleted, status, } = req.body;
             const updated_permissions = [...new Set(update_permissions)];
             console.log("firstly", updated_permissions);
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
@@ -366,6 +366,10 @@ class AdministrationService extends abstract_service_1.default {
                             }, Number(item.h_permission_id), Number(role_id), hotel_code);
                         })));
                     }
+                }
+                // update role
+                if (typeof status === "boolean") {
+                    yield model.updateSingleRole(Number(role_id), { status }, hotel_code);
                 }
                 return {
                     success: true,

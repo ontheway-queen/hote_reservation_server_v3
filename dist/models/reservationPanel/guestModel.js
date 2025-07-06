@@ -25,6 +25,13 @@ class GuestModel extends schema_1.default {
                 .insert(payload, "id");
         });
     }
+    createGuestForGroupBooking(payload) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("guests")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .insert(payload, "id");
+        });
+    }
     getAllGuestEmail(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             const { email, hotel_code } = payload;

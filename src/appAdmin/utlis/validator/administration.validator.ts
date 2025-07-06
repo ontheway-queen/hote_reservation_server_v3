@@ -23,7 +23,7 @@ class AdministrationValidator {
   //Update role permissions validator
   public updateRolePermissions = Joi.object({
     role_name: Joi.string().optional(),
-    status: Joi.number().valid(0, 1).optional(),
+    status: Joi.boolean().optional(),
     update_permissions: Joi.array()
       .items({
         h_permission_id: Joi.number().required(),

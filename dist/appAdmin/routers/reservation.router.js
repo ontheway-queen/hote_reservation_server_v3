@@ -30,6 +30,9 @@ class ReservationRouter {
             .post(this.controller.createBooking)
             .get(this.controller.getAllBooking);
         this.router
+            .route("/group-booking")
+            .post(this.controller.createGroupBooking);
+        this.router
             .route("/booking/by/booking-mode")
             .get(this.controller.getArrivalDepStayBookings);
         this.router
