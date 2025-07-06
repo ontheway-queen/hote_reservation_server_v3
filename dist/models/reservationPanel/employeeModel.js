@@ -109,6 +109,7 @@ class EmployeeModel extends schema_1.default {
     // Update Employee
     updateEmployee(id, payload) {
         return __awaiter(this, void 0, void 0, function* () {
+            console.log({ payload });
             return yield this.db("employee")
                 .withSchema(this.RESERVATION_SCHEMA)
                 .where({ id, is_deleted: false })

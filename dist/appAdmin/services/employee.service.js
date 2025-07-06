@@ -99,7 +99,6 @@ class EmployeeService extends abstract_service_1.default {
     updateEmployee(req) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
-                const { hotel_code } = req.hotel_admin;
                 const { id } = req.params;
                 const _a = req.body, { email } = _a, rest = __rest(_a, ["email"]);
                 const files = req.files || [];
@@ -107,8 +106,7 @@ class EmployeeService extends abstract_service_1.default {
                     rest["photo"] = files[0].filename;
                 }
                 const model = this.Model.employeeModel(trx);
-                const res = yield model.updateEmployee(parseInt(id), Object.assign(Object.assign({}, rest), { hotel_code,
-                    email }));
+                const res = yield model.updateEmployee(parseInt(id), Object.assign(Object.assign({}, rest), { email }));
                 if (res === 1) {
                     return {
                         success: true,

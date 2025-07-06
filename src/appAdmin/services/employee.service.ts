@@ -96,7 +96,6 @@ export class EmployeeService extends AbstractServices {
 	// update employee
 	public async updateEmployee(req: Request) {
 		return await this.db.transaction(async (trx) => {
-			const { hotel_code } = req.hotel_admin;
 			const { id } = req.params;
 			const { email, ...rest } = req.body as IupdateEmployee;
 
@@ -109,7 +108,6 @@ export class EmployeeService extends AbstractServices {
 			const model = this.Model.employeeModel(trx);
 			const res = await model.updateEmployee(parseInt(id), {
 				...rest,
-				hotel_code,
 				email,
 			});
 

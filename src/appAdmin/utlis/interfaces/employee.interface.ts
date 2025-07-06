@@ -3,7 +3,6 @@ export interface IcreateEmployee {
 	photo?: string;
 	department_id: number;
 	designation_id: number;
-	res_id: number;
 	blood_group?: string;
 	salary: number;
 	email?: string;
@@ -22,17 +21,14 @@ export interface IupdateEmployee {
 	photo?: string;
 	department_id: number;
 	designation_id: number;
-	res_id: number;
-	blood_group?: string;
 	salary: number;
 	mobile_no: string;
-	birth_date?: string;
-	category: string;
+	dob?: string;
 	appointment_date?: string;
 	joining_date?: string;
-	status?: number;
 	address?: string;
-	hotel_code: number;
+	status?: boolean;
+	blood_group?: string;
 }
 
 export interface IEmployeeListResponse {

@@ -156,6 +156,7 @@ class EmployeeModel extends Schema {
 
 	// Update Employee
 	public async updateEmployee(id: number, payload: IupdateEmployee) {
+		console.log({ payload });
 		return await this.db("employee")
 			.withSchema(this.RESERVATION_SCHEMA)
 			.where({ id, is_deleted: false })

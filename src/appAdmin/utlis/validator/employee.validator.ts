@@ -38,13 +38,10 @@ class EmployeeValidator {
 		designation_id: Joi.number().optional(),
 		blood_group: Joi.number().optional(),
 		salary: Joi.number().optional(),
-		status: Joi.number().optional(),
+		status: Joi.boolean().optional(),
 		mobile_no: Joi.string().allow("").optional(),
 		dob: Joi.string().optional(),
 		appointment_date: Joi.string().optional(),
-		category: Joi.string()
-			.valid("restaurant", "hotel", "management")
-			.optional(),
 		joining_date: Joi.string().optional(),
 		address: Joi.string().allow("").optional(),
 	});
