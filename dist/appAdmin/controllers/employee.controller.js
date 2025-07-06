@@ -24,12 +24,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const abstract_controller_1 = __importDefault(require("../../abstarcts/abstract.controller"));
-const setting_employee_service_1 = __importDefault(require("../services/setting.employee.service"));
+const employee_service_1 = __importDefault(require("../services/employee.service"));
 const employee_validator_1 = __importDefault(require("../utlis/validator/employee.validator"));
-class EmployeeSettingController extends abstract_controller_1.default {
+class EmployeeController extends abstract_controller_1.default {
     constructor() {
         super();
-        this.service = new setting_employee_service_1.default();
+        this.service = new employee_service_1.default();
         this.employeeValidator = new employee_validator_1.default();
         // Create Employee
         this.createEmployee = this.asyncWrapper.wrap({ bodySchema: this.employeeValidator.createEmployeeValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
@@ -68,5 +68,5 @@ class EmployeeSettingController extends abstract_controller_1.default {
         }));
     }
 }
-exports.default = EmployeeSettingController;
-//# sourceMappingURL=setting.employee.controller.js.map
+exports.default = EmployeeController;
+//# sourceMappingURL=employee.controller.js.map

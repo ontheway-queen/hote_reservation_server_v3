@@ -8,7 +8,6 @@ const hotel_router_1 = __importDefault(require("./hotel.router"));
 const setting_bankname_router_1 = __importDefault(require("./setting.bankname.router"));
 const setting_department_router_1 = __importDefault(require("./setting.department.router"));
 const setting_designation_router_1 = __importDefault(require("./setting.designation.router"));
-const setting_employee_router_1 = __importDefault(require("./setting.employee.router"));
 const setting_hall_router_1 = __importDefault(require("./setting.hall.router"));
 const setting_payroll_month_router_1 = __importDefault(require("./setting.payroll-month.router"));
 const setting_room_router_1 = __importDefault(require("./setting.room.router"));
@@ -27,7 +26,6 @@ class SettingRouter extends abstract_router_1.default {
         this.router.use("/bank-name", new setting_bankname_router_1.default().router);
         this.router.use("/department", new setting_department_router_1.default().router);
         this.router.use("/designation", new setting_designation_router_1.default().router);
-        this.router.use("/employee", new setting_employee_router_1.default().router);
         this.router.use("/hall", new setting_hall_router_1.default().router);
         this.router.use("/payroll-month", new setting_payroll_month_router_1.default().router);
     }

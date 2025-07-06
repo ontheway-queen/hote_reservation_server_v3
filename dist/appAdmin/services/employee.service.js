@@ -23,9 +23,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.EmployeeSettingService = void 0;
+exports.EmployeeService = void 0;
 const abstract_service_1 = __importDefault(require("../../abstarcts/abstract.service"));
-class EmployeeSettingService extends abstract_service_1.default {
+const customEror_1 = __importDefault(require("../../utils/lib/customEror"));
+class EmployeeService extends abstract_service_1.default {
     constructor() {
         super();
     }
@@ -84,6 +85,9 @@ class EmployeeSettingService extends abstract_service_1.default {
             const { id } = req.params;
             const { hotel_code } = req.hotel_admin;
             const data = yield this.Model.employeeModel().getSingleEmployee(parseInt(id), hotel_code);
+            if (!data) {
+                throw new customEror_1.default(`The requested employee with ID: ${id} not found.`, this.StatusCode.HTTP_NOT_FOUND);
+            }
             return {
                 success: true,
                 code: this.StatusCode.HTTP_OK,
@@ -161,6 +165,6 @@ class EmployeeSettingService extends abstract_service_1.default {
         });
     }
 }
-exports.EmployeeSettingService = EmployeeSettingService;
-exports.default = EmployeeSettingService;
-//# sourceMappingURL=setting.employee.service.js.map
+exports.EmployeeService = EmployeeService;
+exports.default = EmployeeService;
+//# sourceMappingURL=employee.service.js.map

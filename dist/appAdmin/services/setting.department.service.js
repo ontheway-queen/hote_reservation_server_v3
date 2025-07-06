@@ -14,6 +14,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const abstract_service_1 = __importDefault(require("../../abstarcts/abstract.service"));
 const Setting_Model_1 = __importDefault(require("../../models/reservationPanel/Setting.Model"));
+const customEror_1 = __importDefault(require("../../utils/lib/customEror"));
 class DepartmentSettingService extends abstract_service_1.default {
     constructor() {
         super();
@@ -70,6 +71,22 @@ class DepartmentSettingService extends abstract_service_1.default {
                 success: true,
                 code: this.StatusCode.HTTP_OK,
                 total,
+                data,
+            };
+        });
+    }
+    getSingleDepartment(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { hotel_code } = req.hotel_admin;
+            const id = req.params.id;
+            const model = this.Model.settingModel();
+            const data = yield model.getSingleDepartment(Number(id), hotel_code);
+            if (!data) {
+                throw new customEror_1.default(`The requested department with ID: ${id} does not exist`, this.StatusCode.HTTP_NOT_FOUND);
+            }
+            return {
+                success: true,
+                code: this.StatusCode.HTTP_OK,
                 data,
             };
         });

@@ -65,7 +65,23 @@ class CommonModel extends schema_1.default {
     }
     getAllCountry() {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("country").withSchema(this.PUBLIC_SCHEMA).select("*");
+            return yield this.db("country")
+                .withSchema(this.PUBLIC_SCHEMA)
+                .select("*");
+        });
+    }
+    // insert audit trail
+    // public async insetAuditTrail(payload: IInsertAuditTrailPayload) {
+    //   return await this.db("auditTrail")
+    //     .withSchema(this.ADMINISTRATION_SCHEMA)
+    //     .insert(payload);
+    // }
+    // get all blood group
+    getAllBloodGroup() {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("blood_group")
+                .withSchema(this.DBO_SCHEMA)
+                .orderBy("id", "asc");
         });
     }
 }

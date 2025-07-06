@@ -1232,6 +1232,26 @@ class SettingModel extends Schema {
 		return { total: total[0].total, data };
 	}
 
+	// Get Single Department
+	public async getSingleDepartment(id: number, hotel_code: number) {
+		return await this.db("department as d")
+			.withSchema(this.RESERVATION_SCHEMA)
+			.select(
+				"d.id",
+				"d.hotel_code",
+				"d.name",
+				"d.status",
+				"d.is_deleted",
+				"ua.id as created_by_id",
+				"ua.name as created_by_name"
+			)
+			.leftJoin("user_admin as ua", "d.created_by", "ua.id")
+			.where("d.id", id)
+			.andWhere("d.hotel_code", hotel_code)
+			.andWhere("d.is_deleted", false)
+			.first();
+	}
+
 	// Update Department
 	public async updateDepartment(
 		id: number,

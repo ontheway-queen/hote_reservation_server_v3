@@ -1,5 +1,7 @@
 import {
 	IcreateEmployee,
+	IEmployeeListResponse,
+	IEmployeeResponse,
 	IupdateEmployee,
 } from "../../appAdmin/utlis/interfaces/employee.interface";
 import { TDB } from "../../common/types/commontypes";
@@ -25,14 +27,17 @@ class EmployeeModel extends Schema {
 		limit?: string;
 		skip?: string;
 		key?: string;
-		category?: string;
 		hotel_code: number;
-	}) {
-		const { key, hotel_code, limit, skip } = payload;
+		department?: string;
+		designation?: string;
+	}): Promise<{ data: IEmployeeListResponse[]; total: number }> {
+		const { key, hotel_code, limit, skip, department, designation } =
+			payload;
 		const dtbs = this.db("employee as e");
+
 		if (limit && skip) {
-			dtbs.limit(parseInt(limit as string));
-			dtbs.offset(parseInt(skip as string));
+			dtbs.limit(parseInt(limit));
+			dtbs.offset(parseInt(skip));
 		}
 
 		const data = await dtbs
@@ -51,34 +56,58 @@ class EmployeeModel extends Schema {
 			.leftJoin("department as d", "e.department_id", "d.id")
 			.leftJoin("designation as de", "e.designation_id", "de.id")
 			.where("e.hotel_code", hotel_code)
+			.andWhere("e.is_deleted", false)
 			.andWhere(function () {
 				if (key) {
-					this.andWhere("e.name", "like", `%${key}%`)
+					this.where("e.name", "like", `%${key}%`)
 						.orWhere("e.email", "like", `%${key}%`)
 						.orWhere("d.name", "like", `%${key}%`);
+				}
+			})
+			.andWhere(function () {
+				if (department) {
+					this.where("d.name", "like", `%${department}%`);
+				}
+				if (designation) {
+					this.where("de.name", "like", `%${designation}%`);
 				}
 			})
 			.orderBy("e.id", "desc");
 
 		const total = await this.db("employee as e")
-			.count("e.id as total")
 			.withSchema(this.RESERVATION_SCHEMA)
+			.count("e.id as total")
 			.leftJoin("department as d", "e.department_id", "d.id")
 			.leftJoin("designation as de", "e.designation_id", "de.id")
 			.where("e.hotel_code", hotel_code)
+			.andWhere("e.is_deleted", false)
 			.andWhere(function () {
 				if (key) {
-					this.andWhere("e.name", "like", `%${key}%`)
+					this.where("e.name", "like", `%${key}%`)
 						.orWhere("e.email", "like", `%${key}%`)
 						.orWhere("d.name", "like", `%${key}%`);
 				}
+			})
+			.andWhere(function () {
+				if (department) {
+					this.where("d.name", "like", `%${department}%`);
+				}
+				if (designation) {
+					this.where("de.name", "like", `%${designation}%`);
+				}
 			});
 
-		return { data, total: total[0].total };
+		return {
+			data,
+			total: Number(total[0].total),
+		};
 	}
 
 	// Get Single Employee
-	public async getSingleEmployee(id: number, hotel_code: number) {
+	public async getSingleEmployee(
+		id: number,
+		hotel_code: number
+	): Promise<IEmployeeResponse | null> {
 		const data = await this.db("employee as e")
 			.withSchema(this.RESERVATION_SCHEMA)
 			.select(
@@ -87,7 +116,8 @@ class EmployeeModel extends Schema {
 				"e.email",
 				"e.mobile_no",
 				"e.photo",
-				"e.blood_group",
+				"e.blood_group as blood_group_id",
+				"bg.name as blood_group_name",
 				"dep.id as department_id",
 				"dep.name as department_name",
 				"des.id as designation_id",
@@ -113,17 +143,22 @@ class EmployeeModel extends Schema {
 			.join("department as dep", "e.department_id", "dep.id")
 			.join("designation as des", "des.id", "e.designation_id")
 			.join("user_admin as ua", "ua.id", "e.created_by")
+			.joinRaw(`JOIN ?? as bg ON bg.id = e.blood_group`, [
+				`${this.DBO_SCHEMA}.${this.TABLES.blood_group}`,
+			])
 			.where("e.id", id)
-			.andWhere("e.hotel_code", hotel_code);
+			.andWhere("e.is_deleted", false)
+			.andWhere("e.hotel_code", hotel_code)
+			.first();
 
-		return data.length > 0 ? data[0] : [];
+		return data ? data : null;
 	}
 
 	// Update Employee
 	public async updateEmployee(id: number, payload: IupdateEmployee) {
 		return await this.db("employee")
 			.withSchema(this.RESERVATION_SCHEMA)
-			.where({ id })
+			.where({ id, is_deleted: false })
 			.update(payload);
 	}
 
@@ -131,8 +166,57 @@ class EmployeeModel extends Schema {
 	public async deleteEmployee(id: number) {
 		return await this.db("employee")
 			.withSchema(this.RESERVATION_SCHEMA)
-			.where({ id })
-			.del();
+			.where({ id, is_deleted: false })
+			.update({ is_deleted: true });
+	}
+
+	// get all employee using department id
+	public async getEmployeesByDepartmentId({
+		id,
+		limit,
+		skip,
+	}: {
+		id: number;
+		limit: number;
+		skip: number;
+	}): Promise<{ data: IEmployeeListResponse[]; total: number }> {
+		const dtbs = this.db("employee as e");
+
+		if (limit && skip) {
+			dtbs.limit(limit);
+			dtbs.offset(skip);
+		}
+		const data = await dtbs
+			.select(
+				"e.id",
+				"e.name",
+				"e.email",
+				"e.mobile_no",
+				"d.name as department",
+				"de.name as designation",
+				"e.salary",
+				"e.joining_date",
+				"e.status"
+			)
+			.withSchema(this.RESERVATION_SCHEMA)
+			.leftJoin("department as d", "e.department_id", "d.id")
+			.leftJoin("designation as de", "e.designation_id", "de.id")
+			.where("e.department_id", id)
+			.andWhere("e.is_deleted", false)
+			.orderBy("e.id", "desc");
+
+		const total = await this.db("employee as e")
+			.withSchema(this.RESERVATION_SCHEMA)
+			.count("e.id as total")
+			.leftJoin("department as d", "e.department_id", "d.id")
+			.leftJoin("designation as de", "e.designation_id", "de.id")
+			.where("e.department_id", id)
+			.andWhere("e.is_deleted", false);
+
+		return {
+			total: Number(total[0].total),
+			data,
+		};
 	}
 }
 export default EmployeeModel;

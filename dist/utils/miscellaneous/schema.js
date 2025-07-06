@@ -9,6 +9,9 @@ class Schema {
         this.RESTAURANT_SCHEMA = "hotel_restaurant";
         this.FLEET_SCHEMA = "fleet_management";
         this.ACC_SCHEMA = "acc";
+        this.TABLES = {
+            blood_group: "blood_group",
+        };
     }
 }
 exports.default = Schema;

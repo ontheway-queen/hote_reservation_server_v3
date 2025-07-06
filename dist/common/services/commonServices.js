@@ -236,6 +236,39 @@ class CommonService extends abstract_service_1.default {
             };
         });
     }
+    // create audit trail
+    // public async createAuditTrailService(
+    //   admin_id: number,
+    //   details: string,
+    //   code: number
+    // ) {
+    //   let status = true;
+    //   if (code > 299) {
+    //     status = false;
+    //   }
+    //   const commonModel = this.Model.commonModel();
+    //   const res = await commonModel.insetAuditTrail({
+    //     adminId: admin_id,
+    //     details,
+    //     status,
+    //   });
+    //   if (res.length) {
+    //     return true;
+    //   } else {
+    //     return false;
+    //   }
+    // }
+    // get all blood group
+    getAllBloodGroup() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const data = yield this.Model.commonModel().getAllBloodGroup();
+            return {
+                success: true,
+                code: this.StatusCode.HTTP_OK,
+                data,
+            };
+        });
+    }
 }
 exports.default = CommonService;
 //# sourceMappingURL=commonServices.js.map

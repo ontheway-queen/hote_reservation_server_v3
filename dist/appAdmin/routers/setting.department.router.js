@@ -21,6 +21,7 @@ class DepartmentSettingRouter extends abstract_router_1.default {
         // edit and remove Department
         this.router
             .route("/:id")
+            .get(this.departmentSettingController.getSingleDepartment)
             .patch(this.departmentSettingController.updateDepartment)
             .delete(this.departmentSettingController.deleteDepartment);
     }

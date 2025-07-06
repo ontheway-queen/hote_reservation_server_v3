@@ -3,6 +3,7 @@ import AbstractServices from "../../abstarcts/abstract.service";
 
 import { IUpdatedepartment } from "../utlis/interfaces/setting.interface";
 import SettingModel from "../../models/reservationPanel/Setting.Model";
+import CustomError from "../../utils/lib/customEror";
 
 class DepartmentSettingService extends AbstractServices {
 	constructor() {
@@ -67,6 +68,26 @@ class DepartmentSettingService extends AbstractServices {
 			success: true,
 			code: this.StatusCode.HTTP_OK,
 			total,
+			data,
+		};
+	}
+
+	public async getSingleDepartment(req: Request) {
+		const { hotel_code } = req.hotel_admin;
+		const id = req.params.id;
+
+		const model = this.Model.settingModel();
+
+		const data = await model.getSingleDepartment(Number(id), hotel_code);
+		if (!data) {
+			throw new CustomError(
+				`The requested department with ID: ${id} does not exist`,
+				this.StatusCode.HTTP_NOT_FOUND
+			);
+		}
+		return {
+			success: true,
+			code: this.StatusCode.HTTP_OK,
 			data,
 		};
 	}

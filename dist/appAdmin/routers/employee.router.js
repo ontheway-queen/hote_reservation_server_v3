@@ -4,11 +4,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const abstract_router_1 = __importDefault(require("../../abstarcts/abstract.router"));
-const setting_employee_controller_1 = __importDefault(require("../controllers/setting.employee.controller"));
-class EmployeeSettingRouter extends abstract_router_1.default {
+const employee_controller_1 = __importDefault(require("../controllers/employee.controller"));
+class EmployeeRouter extends abstract_router_1.default {
     constructor() {
         super();
-        this.controller = new setting_employee_controller_1.default();
+        this.controller = new employee_controller_1.default();
         this.callRouter();
     }
     callRouter() {
@@ -29,5 +29,5 @@ class EmployeeSettingRouter extends abstract_router_1.default {
             .get(this.controller.getEmployeesByDepartmentId);
     }
 }
-exports.default = EmployeeSettingRouter;
-//# sourceMappingURL=setting.employee.router.js.map
+exports.default = EmployeeRouter;
+//# sourceMappingURL=employee.router.js.map
