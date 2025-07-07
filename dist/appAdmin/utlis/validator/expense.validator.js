@@ -16,12 +16,12 @@ class ExpenseValidator {
         });
         // create expense validator
         this.createExpenseValidator = joi_1.default.object({
-            name: joi_1.default.string().required(),
             ac_tr_ac_id: joi_1.default.number().required(),
             expense_date: joi_1.default.date().required(),
             remarks: joi_1.default.string().allow("").optional(),
             expense_item: joi_1.default.array()
                 .items(joi_1.default.object({
+                expense_head_id: joi_1.default.number().required(),
                 name: joi_1.default.string().required(),
                 amount: joi_1.default.number().required(),
             }))

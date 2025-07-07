@@ -60,6 +60,7 @@ class ExpenseModel extends Schema {
 			.withSchema(this.RESERVATION_SCHEMA)
 			.count("eh.id as total")
 			.where("eh.hotel_code", hotel_code)
+			.andWhere("eh.is_deleted", false)
 			.andWhere(function () {
 				if (name) {
 					this.andWhere("eh.name", "like", `%${name}%`);
@@ -74,12 +75,11 @@ class ExpenseModel extends Schema {
 		id: number,
 		payload: IUpdateExpenseHeadPayload
 	) {
-		const expenseHeadUpdate = await this.db("expense_head")
+		return await this.db("expense_head")
 			.withSchema(this.RESERVATION_SCHEMA)
 			.where({ id })
+			.andWhere("is_deleted", false)
 			.update(payload);
-
-		return expenseHeadUpdate;
 	}
 
 	// Delete Expense Head Model
@@ -87,14 +87,15 @@ class ExpenseModel extends Schema {
 		return await this.db("expense_head")
 			.withSchema(this.RESERVATION_SCHEMA)
 			.where({ id })
-			.del();
+			.andWhere("is_deleted", false)
+			.update({ is_deleted: true });
 	}
 
 	// Create Expense Model
 	public async createExpense(payload: ICreateExpensePayload) {
 		return await this.db("expense")
 			.withSchema(this.RESERVATION_SCHEMA)
-			.insert(payload);
+			.insert(payload, "id");
 	}
 
 	// create expense item
@@ -105,7 +106,7 @@ class ExpenseModel extends Schema {
 			expense_id: number;
 		}[]
 	) {
-		return await this.db("expense_item")
+		return await this.db("expense_items")
 			.withSchema(this.RESERVATION_SCHEMA)
 			.insert(payload);
 	}

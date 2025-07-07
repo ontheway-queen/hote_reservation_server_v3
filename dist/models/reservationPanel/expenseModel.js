@@ -51,6 +51,7 @@ class ExpenseModel extends schema_1.default {
                 .withSchema(this.RESERVATION_SCHEMA)
                 .count("eh.id as total")
                 .where("eh.hotel_code", hotel_code)
+                .andWhere("eh.is_deleted", false)
                 .andWhere(function () {
                 if (name) {
                     this.andWhere("eh.name", "like", `%${name}%`);
@@ -62,11 +63,11 @@ class ExpenseModel extends schema_1.default {
     // Update Expense Head Model
     updateExpenseHead(id, payload) {
         return __awaiter(this, void 0, void 0, function* () {
-            const expenseHeadUpdate = yield this.db("expense_head")
+            return yield this.db("expense_head")
                 .withSchema(this.RESERVATION_SCHEMA)
                 .where({ id })
+                .andWhere("is_deleted", false)
                 .update(payload);
-            return expenseHeadUpdate;
         });
     }
     // Delete Expense Head Model
@@ -75,7 +76,8 @@ class ExpenseModel extends schema_1.default {
             return yield this.db("expense_head")
                 .withSchema(this.RESERVATION_SCHEMA)
                 .where({ id })
-                .del();
+                .andWhere("is_deleted", false)
+                .update({ is_deleted: true });
         });
     }
     // Create Expense Model
@@ -83,13 +85,13 @@ class ExpenseModel extends schema_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("expense")
                 .withSchema(this.RESERVATION_SCHEMA)
-                .insert(payload);
+                .insert(payload, "id");
         });
     }
     // create expense item
     createExpenseItem(payload) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("expense_item")
+            return yield this.db("expense_items")
                 .withSchema(this.RESERVATION_SCHEMA)
                 .insert(payload);
         });

@@ -173,43 +173,19 @@ export class ExpenseService extends AbstractServices {
 				total: expenseTotal,
 			});
 
+			console.log({ expenseRes });
+
 			const expenseItemPayload = expense_item.map((item: any) => {
 				return {
+					expense_head_id: item.expense_head_id,
 					name: item.name,
 					amount: item.amount,
-					expense_id: expenseRes[0],
+					expense_id: expenseRes[0].id,
 				};
 			});
 
 			//   expense item
 			await model.createExpenseItem(expenseItemPayload);
-
-			//   ====================== account transaction  step =================== //
-			// get last account ledger
-			const lastAL = await accountModel.getLastAccountLedgerId(
-				hotel_code
-			);
-
-			const ledger_id = lastAL.length ? lastAL[0].ledger_id + 1 : 1;
-
-			// Insert account ledger
-			await accountModel.insertAccountLedger({
-				ac_tr_ac_id,
-				hotel_code,
-				transaction_no: `TRX-${year - ledger_id}`,
-				ledger_debit_amount: expenseTotal,
-				ledger_details: `Balance has been debited by expense, Expense id = ${expenseRes[0]}`,
-			});
-
-			const last_balance = checkAccount[0].last_balance;
-
-			if (last_balance < expenseTotal) {
-				return {
-					success: false,
-					code: this.StatusCode.HTTP_BAD_REQUEST,
-					message: "Insufficient balance in this account for expense",
-				};
-			}
 
 			return {
 				success: true,

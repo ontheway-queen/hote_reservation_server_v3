@@ -551,6 +551,7 @@ class RoomModel extends Schema {
 			})
 			.andWhere("bk.check_in", "<=", date)
 			.andWhere("bk.check_out", ">", date)
+			.andWhere("r.is_deleted", false)
 			.orderBy("r.id", "asc");
 
 		const grouped = rows.reduce((acc, row) => {
