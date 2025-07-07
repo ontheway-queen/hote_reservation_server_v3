@@ -92,8 +92,7 @@ class RoomModel extends schema_1.default {
             // Calculate number of nights
             const checkInDate = new Date(check_in);
             const checkOutDate = new Date(check_out);
-            const number_of_nights = Math.ceil((checkOutDate.getTime() - checkInDate.getTime()) /
-                (1000 * 60 * 60 * 24));
+            const number_of_nights = Math.ceil((checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24));
             if (number_of_nights <= 0) {
                 throw new Error("Invalid check-in and check-out date range");
             }
@@ -132,7 +131,6 @@ class RoomModel extends schema_1.default {
         var _a;
         return __awaiter(this, void 0, void 0, function* () {
             const { limit, skip, hotel_code, room_type_id, search, exact_name } = payload;
-            console.log("here");
             const dtbs = this.db("room_types as rt");
             const data = yield dtbs
                 .withSchema(this.RESERVATION_SCHEMA)
@@ -148,6 +146,7 @@ class RoomModel extends schema_1.default {
                 .from("room_types as rt")
                 .leftJoin("rooms as r", "rt.id", "r.room_type_id")
                 .where("rt.is_active", true)
+                .andWhere("rt.is_deleted", false)
                 .andWhere("rt.hotel_code", hotel_code)
                 .groupBy("rt.id", "rt.name")
                 .orderBy("rt.name", "asc");
@@ -157,6 +156,7 @@ class RoomModel extends schema_1.default {
                 .leftJoin("rooms as r", "rt.id", "r.room_type_id")
                 .where("rt.is_active", true)
                 .where("rt.hotel_code", hotel_code)
+                .andWhere("rt.is_deleted", false)
                 .andWhereNot("r.status", "out_of_service")
                 .orderBy("rt.name", "asc")
                 .groupBy("rt.id", "r.room_type_id");
@@ -338,14 +338,7 @@ class RoomModel extends schema_1.default {
       ) AS sorted_rooms
       GROUP BY floor_no
       ORDER BY floor_no ASC
-    `, [
-                current_date,
-                current_date,
-                "B",
-                "confirmed",
-                "checked_in",
-                hotel_code,
-            ]);
+    `, [current_date, current_date, "B", "confirmed", "checked_in", hotel_code]);
             const total = yield this.db("rooms as r")
                 .withSchema(this.RESERVATION_SCHEMA)
                 .count("r.id as total")
@@ -361,7 +354,7 @@ class RoomModel extends schema_1.default {
                 }
             });
             return {
-                data,
+                data: data.rows,
                 total: ((_a = total[0]) === null || _a === void 0 ? void 0 : _a.total) ? parseInt((_b = total[0]) === null || _b === void 0 ? void 0 : _b.total) : 0,
             };
         });

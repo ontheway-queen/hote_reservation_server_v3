@@ -34,8 +34,7 @@ class SubReservationService extends abstract_service_1.default {
                 hotel_code,
                 first_name: guest.first_name,
                 last_name: guest.last_name,
-                nationality: guest.nationality,
-                country: guest.country,
+                country_id: guest.country_id,
                 email: guest.email,
                 phone: guest.phone,
                 address: guest.address,
@@ -43,23 +42,6 @@ class SubReservationService extends abstract_service_1.default {
             return insertedGuest.id;
         });
     }
-    // public async findOrCreateGuestForGroupBooking(
-    //   booked_room_types: IGBookedRoomTypeRequest,
-    //   hotel_code: number
-    // ): Promise<number> {
-    //   const guestModel = this.Model.guestModel(this.trx);
-    //   const [insertedGuest] = await guestModel.createGuest({
-    //     hotel_code,
-    //     first_name: guest.first_name,
-    //     last_name: guest.last_name,
-    //     nationality: guest.nationality,
-    //     country: guest.country,
-    //     email: guest.email,
-    //     phone: guest.phone,
-    //     address: guest.address,
-    //   });
-    //   return insertedGuest.id;
-    // }
     calculateTotals(rooms, nights, fees) {
         let total_changed_price = 0;
         rooms.forEach((room) => {

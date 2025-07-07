@@ -10,6 +10,7 @@ class ReportService extends AbstractServices {
     const { totalRooms } = await this.Model.dashBoardModel().getHotelStatistics(
       req.hotel_admin.hotel_code
     );
+
     const { totalArrivals, totalDepartures, totalStays } =
       await this.Model.dashBoardModel().getHotelStatisticsArrivalDepartureStays(
         {
@@ -17,9 +18,11 @@ class ReportService extends AbstractServices {
           current_date: req.query.current_date as string,
         }
       );
+
     const { totalActiveBookings, totalHoldBookings, totalOccupiedRoomsResult } =
       await this.Model.dashBoardModel().getOccupiedRoomAndBookings({
         hotel_code: req.hotel_admin.hotel_code,
+        current_date: req.query.current_date as string,
       });
 
     return {

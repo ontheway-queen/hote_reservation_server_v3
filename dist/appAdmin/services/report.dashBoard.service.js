@@ -26,6 +26,7 @@ class ReportService extends abstract_service_1.default {
             });
             const { totalActiveBookings, totalHoldBookings, totalOccupiedRoomsResult } = yield this.Model.dashBoardModel().getOccupiedRoomAndBookings({
                 hotel_code: req.hotel_admin.hotel_code,
+                current_date: req.query.current_date,
             });
             return {
                 success: true,

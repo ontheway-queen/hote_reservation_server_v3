@@ -37,8 +37,7 @@ export class SubReservationService extends AbstractServices {
       hotel_code,
       first_name: guest.first_name,
       last_name: guest.last_name,
-      nationality: guest.nationality,
-      country: guest.country,
+      country_id: guest.country_id,
       email: guest.email,
       phone: guest.phone,
       address: guest.address,
@@ -46,25 +45,6 @@ export class SubReservationService extends AbstractServices {
 
     return insertedGuest.id;
   }
-
-  // public async findOrCreateGuestForGroupBooking(
-  //   booked_room_types: IGBookedRoomTypeRequest,
-  //   hotel_code: number
-  // ): Promise<number> {
-  //   const guestModel = this.Model.guestModel(this.trx);
-  //   const [insertedGuest] = await guestModel.createGuest({
-  //     hotel_code,
-  //     first_name: guest.first_name,
-  //     last_name: guest.last_name,
-  //     nationality: guest.nationality,
-  //     country: guest.country,
-  //     email: guest.email,
-  //     phone: guest.phone,
-  //     address: guest.address,
-  //   });
-
-  //   return insertedGuest.id;
-  // }
 
   public calculateTotals(
     rooms: RoomRequest[],

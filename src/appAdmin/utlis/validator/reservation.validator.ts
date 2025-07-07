@@ -190,6 +190,72 @@ export class ReservationValidator {
     search: Joi.string().allow("").optional(),
   });
 
+  public updateSingleBookingValidator = Joi.object({
+    pickup: Joi.boolean().optional(),
+    pickup_from: Joi.when("pickup", {
+      is: true,
+      then: Joi.string().required(),
+      otherwise: Joi.forbidden(),
+    }),
+    pickup_time: Joi.when("pickup", {
+      is: true,
+      then: Joi.string().isoDate().required(), // assuming ISO datetime string
+      otherwise: Joi.forbidden(),
+    }),
+
+    drop: Joi.boolean().optional(),
+    drop_to: Joi.when("drop", {
+      is: true,
+      then: Joi.string().required(),
+      otherwise: Joi.forbidden(),
+    }),
+    drop_time: Joi.when("drop", {
+      is: true,
+      then: Joi.string().isoDate().required(),
+      otherwise: Joi.forbidden(),
+    }),
+
+    // discount_amount: Joi.number().min(0).required(),
+    service_charge: Joi.number().min(0).required(),
+    vat: Joi.number().min(0).required(),
+    add_room_types: Joi.array()
+      .items(
+        Joi.object({
+          room_type_id: Joi.number().required(),
+          rate_plan_id: Joi.number().required(),
+          rate: Joi.object({
+            base_price: Joi.number().required(),
+            changed_price: Joi.number().required(),
+          }).required(),
+          number_of_rooms: Joi.number().min(1).required(),
+
+          guests: Joi.array()
+            .items(
+              Joi.object({
+                room_id: Joi.number().required(),
+                adults: Joi.number().min(1).required(),
+                children: Joi.number().min(0).required(),
+                infant: Joi.number().min(0).required(),
+                cbf: Joi.number().min(0).required(),
+              })
+            )
+            .min(1)
+            .required(),
+
+          meal_plans_ids: Joi.array().items(Joi.number()).optional(),
+        })
+      )
+      .min(1)
+      .required(),
+
+    removed_rooms: Joi.number().optional(),
+    company_name: Joi.string().allow("").optional(),
+    visit_purpose: Joi.string().allow("").optional(),
+    is_company_booked: Joi.boolean().optional(),
+    special_requests: Joi.string().allow("").optional(),
+    source_id: Joi.number().optional(),
+  });
+
   public addPayment = Joi.object({
     folio_id: Joi.number().required(),
     amount: Joi.number().required(),

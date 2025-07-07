@@ -128,8 +128,6 @@ class GuestService extends abstract_service_1.default {
                 email,
                 address,
                 phone,
-                country,
-                nationality,
             });
             return {
                 success: true,
