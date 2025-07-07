@@ -169,7 +169,6 @@ class ExpenseService extends abstract_service_1.default {
                 const expenseRes = yield model.createExpense(Object.assign(Object.assign({}, rest), { voucher_no: `EXP-${year}${voucherNo}`, ac_tr_ac_id,
                     hotel_code,
                     created_by, total: expenseTotal }));
-                console.log({ expenseRes });
                 const expenseItemPayload = expense_item.map((item) => {
                     return {
                         expense_head_id: item.expense_head_id,

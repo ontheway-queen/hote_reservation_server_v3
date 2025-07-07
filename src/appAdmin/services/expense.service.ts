@@ -173,8 +173,6 @@ export class ExpenseService extends AbstractServices {
 				total: expenseTotal,
 			});
 
-			console.log({ expenseRes });
-
 			const expenseItemPayload = expense_item.map((item: any) => {
 				return {
 					expense_head_id: item.expense_head_id,
