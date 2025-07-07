@@ -36,7 +36,7 @@ class DepartmentSettingController extends AbstractController {
 
 	// Get Single Department
 	public getSingleDepartment = this.asyncWrapper.wrap(
-		null,
+		{ paramSchema: this.commonValidator.singleParamValidator() },
 		async (req: Request, res: Response) => {
 			const { code, ...data } =
 				await this.departmentSettingService.getSingleDepartment(req);

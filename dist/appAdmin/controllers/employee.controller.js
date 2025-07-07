@@ -62,7 +62,7 @@ class EmployeeController extends abstract_controller_1.default {
             res.status(code).json(data);
         }));
         // get Employees By Department Id
-        this.getEmployeesByDepartmentId = this.asyncWrapper.wrap(null, (req, res) => __awaiter(this, void 0, void 0, function* () {
+        this.getEmployeesByDepartmentId = this.asyncWrapper.wrap({ paramSchema: this.commonValidator.singleParamValidator() }, (req, res) => __awaiter(this, void 0, void 0, function* () {
             const _f = yield this.service.getEmployeesByDepartmentId(req), { code } = _f, data = __rest(_f, ["code"]);
             res.status(code).json(data);
         }));

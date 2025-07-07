@@ -63,7 +63,7 @@ class EmployeeController extends AbstractController {
 
 	// get Employees By Department Id
 	public getEmployeesByDepartmentId = this.asyncWrapper.wrap(
-		null,
+		{ paramSchema: this.commonValidator.singleParamValidator() },
 		async (req: Request, res: Response) => {
 			const { code, ...data } =
 				await this.service.getEmployeesByDepartmentId(req);
