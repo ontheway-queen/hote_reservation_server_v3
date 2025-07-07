@@ -153,6 +153,9 @@ export interface BookingRequestBody {
   special_requests?: string;
   payment: IbookingReqPayment;
   source_id: number;
+
+  service_charge_percentage: number;
+  vat_percentage: number;
 }
 
 export interface RoomRequest {
@@ -193,6 +196,8 @@ export interface IGBookingRequestBody {
   company_name?: string;
   visit_purpose?: string;
   vat: number;
+  service_charge_percentage: number;
+  vat_percentage: number;
   is_payment_given: boolean;
   booked_room_types: IGBookedRoomTypeRequest[];
   special_requests?: string;
@@ -209,8 +214,6 @@ export interface IbookingReqPayment {
 export interface IGBookedRoomTypeRequest {
   room_type_id: number;
   rate_plan_id: number;
-
-  number_of_rooms: number;
   rooms: IGBRoomGuest[];
   meal_plans_ids?: number[];
 }
@@ -249,7 +252,7 @@ export interface IRoomBooking {
   booking_type: string;
   status: string;
   is_individual_booking: boolean;
-  // sub_total: number;
+  sub_total: number;
   total_amount: number;
   vat: number;
   service_charge: number;
@@ -265,6 +268,8 @@ export interface IRoomBooking {
   is_company_booked: boolean;
   company_name?: string;
   visit_purpose?: string;
+  service_charge_percentage: number;
+  vat_percentage: number;
 }
 export interface IRoomBookingBody {
   name: string;
@@ -347,8 +352,9 @@ export interface IBookingDetails extends BookingGuest {
   status: string;
   source_name: string | null;
   total_amount: number;
+  vat_percentage: number;
+  service_charge_percentage: number;
   vat: number;
-  discount_amount: number;
   service_charge: number;
   payment_status: string;
   comments: string | null;
@@ -387,4 +393,40 @@ export interface IUpdateBookingRequestBody {
   special_requests: string;
   source_id: number;
   removed_rooms: number[];
+}
+
+export interface IUpdateReservationRequestBody {
+  changed_rate_of_booking_rooms?: {
+    room_id: number;
+    unit_base_rate: number;
+    unit_changed_rate: number;
+  }[];
+
+  add_room_types?: {
+    room_type_id: number;
+    rate_plan_id: number;
+    rooms: {
+      room_id: number;
+      cbf: number;
+      adults: number;
+      children: number;
+      infant: number;
+      rate: {
+        base_rate: number;
+        changed_rate: number;
+      };
+      guest_info: {
+        first_name: string;
+        last_name: string;
+        email: string;
+        phone: string;
+        country_id: number;
+        address: string;
+        type: "adult" | "child" | "infant";
+        is_lead_guest: boolean;
+      }[];
+    }[];
+  }[];
+
+  removed_rooms?: number[];
 }

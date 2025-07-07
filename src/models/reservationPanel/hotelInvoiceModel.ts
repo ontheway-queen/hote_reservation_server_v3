@@ -327,15 +327,25 @@ class HotelInvoiceModel extends Schema {
     return result?.maxId || 0;
   }
 
-  public async getFoliosbySingleBooking(
-    hotel_code: number,
-    booking_id: number
-  ): Promise<{ id: number; name: string }[]> {
+  public async getFoliosbySingleBooking({
+    hotel_code,
+    booking_id,
+    type,
+  }: {
+    hotel_code: number;
+    booking_id: number;
+    type?: string;
+  }): Promise<{ id: number; name: string }[]> {
     return await this.db("folios")
       .withSchema(this.RESERVATION_SCHEMA)
       .select("id", "name")
       .where("booking_id", booking_id)
-      .andWhere("hotel_code", hotel_code);
+      .andWhere("hotel_code", hotel_code)
+      .andWhere(function () {
+        if (type) {
+          this.andWhere("type", type);
+        }
+      });
   }
 
   public async getFoliosWithEntriesbySingleBooking({
@@ -417,7 +427,8 @@ class HotelInvoiceModel extends Schema {
         "fe.room_id",
         "r.room_name",
         "fe.debit",
-        "fe.credit"
+        "fe.credit",
+        "fe.is_void"
       )
       .join("folios as f", "fe.folio_id", "f.id")
       .leftJoin("rooms as r", "fe.room_id", "r.id")
@@ -505,6 +516,39 @@ class HotelInvoiceModel extends Schema {
       .withSchema(this.RESERVATION_SCHEMA)
       .update(payload)
       .whereIn("id", entryIDs);
+  }
+
+  public async updateFolioEntriesByFolioId(
+    payload: { is_void?: boolean; invoiced?: boolean },
+    where: { folio_id: number },
+    where_not?: { type: "Payment" }
+  ) {
+    return await this.db("folio_entries")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .update(payload)
+      .where("folio_id", where.folio_id)
+      .andWhere(function () {
+        if (where_not?.type) {
+          this.andWhereNot("posting_type", where_not.type);
+        }
+      });
+  }
+
+  public async updateFolioEntriesByRoom(
+    payload: { is_void?: boolean },
+    room_id: number,
+    booking_id: number
+  ) {
+    console.log(payload, room_id, booking_id);
+    return await this.db("folio_entries as fe")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .where("fe.room_id", room_id)
+      .whereIn("fe.folio_id", function () {
+        this.select("f.id")
+          .from("hotel_reservation.folios as f")
+          .where("f.booking_id", booking_id);
+      })
+      .update(payload);
   }
 
   public async getFolioEntriesCalculation(folioEntryIds: number[]): Promise<{

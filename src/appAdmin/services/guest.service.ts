@@ -96,15 +96,8 @@ export class GuestService extends AbstractServices {
   }
 
   public async updateSingleGuestValidator(req: Request) {
-    const {
-      first_name,
-      last_name,
-      email,
-      address,
-      phone,
-      country,
-      nationality,
-    } = req.body;
+    const { first_name, last_name, email, address, phone, country_id } =
+      req.body;
 
     console.log(req.body);
     const { hotel_code } = req.hotel_admin;
@@ -138,8 +131,7 @@ export class GuestService extends AbstractServices {
         email,
         address,
         phone,
-        country,
-        nationality,
+        country_id,
       }
     );
 

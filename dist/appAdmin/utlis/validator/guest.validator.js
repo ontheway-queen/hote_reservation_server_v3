@@ -44,8 +44,7 @@ class GuestValidator {
                 .optional(),
             address: joi_1.default.string().allow("").optional(),
             phone: joi_1.default.string().allow("").optional(),
-            country: joi_1.default.string().lowercase().allow("").trim().regex(/^\S/).optional(),
-            nationality: joi_1.default.string().allow("").optional(),
+            country_id: joi_1.default.number().optional(),
         });
     }
 }

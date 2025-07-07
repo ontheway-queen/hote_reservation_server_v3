@@ -1,3 +1,4 @@
+import { number } from "joi";
 import {
   CalendarRoomType,
   IAvailableRoomType,
@@ -102,13 +103,7 @@ AND (
     room_type_id?: number;
     exclude_booking_id?: number;
   }): Promise<IAvailableRoomType[]> {
-    const {
-      hotel_code,
-      check_in,
-      check_out,
-      room_type_id,
-      exclude_booking_id,
-    } = payload;
+    const { hotel_code, check_in, check_out, room_type_id } = payload;
 
     return await this.db("room_types as rt")
       .withSchema(this.RESERVATION_SCHEMA)
@@ -143,27 +138,7 @@ AND (
           this.andWhere("rt.id", room_type_id);
         }
       })
-      .modify((qb) => {
-        if (exclude_booking_id) {
-          qb.leftJoin(
-            this.db.raw(
-              `(
-            SELECT br.room_type_id, br.check_in::date + gs.i AS date
-            FROM booking_rooms br
-            JOIN generate_series(0, br.nights - 1) AS gs(i) ON TRUE
-            WHERE br.booking_id = ?
-          ) AS exclude_dates`,
-              [exclude_booking_id]
-            ),
-            function () {
-              this.on("ra.room_type_id", "exclude_dates.room_type_id").andOn(
-                "ra.date",
-                "exclude_dates.date"
-              );
-            }
-          );
-        }
-      })
+
       .groupBy("rt.id")
       .having(this.db.raw("MIN(ra.available_rooms) > 0"));
   }
@@ -274,10 +249,60 @@ AND (
       .insert(payload, "id");
   }
 
+  public async getAllBookingRoomsByBookingId({
+    booking_id,
+    hotel_code,
+  }: {
+    booking_id: number;
+    hotel_code?: number;
+  }): Promise<
+    {
+      id: number;
+      room_id: number;
+      unit_base_rate: number;
+      unit_changed_rate: number;
+      base_rate: number;
+      changed_rate: number;
+    }[]
+  > {
+    return await this.db("booking_rooms")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .select(
+        "id",
+        "room_id",
+        "unit_base_rate",
+        "unit_changed_rate",
+        "base_rate",
+        "changed_rate"
+      )
+      .where({
+        booking_id,
+      });
+  }
+
   public async insertBookingRoom(payload: IbookingRooms[]) {
     return await this.db("booking_rooms")
       .withSchema(this.RESERVATION_SCHEMA)
       .insert(payload, "id");
+  }
+
+  public async updateSingleBookingRoom(
+    payload: {
+      unit_changed_rate: number;
+      unit_base_rate: number;
+      base_rate: number;
+      changed_rate: number;
+    },
+    where: {
+      room_id: number;
+      booking_id: number;
+    }
+  ) {
+    return await this.db("booking_rooms")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .update(payload)
+      .where("room_id", where.room_id)
+      .andWhere("booking_id", where.booking_id);
   }
 
   public async insertBookingRoomGuest(payload: {
@@ -546,6 +571,8 @@ AND (
         "b.vat",
         "b.discount_amount",
         "b.service_charge",
+        "b.service_charge_percentage",
+        "b.vat_percentage",
         "b.payment_status",
         "b.comments",
         "b.pickup",

@@ -125,6 +125,8 @@ export class ReservationValidator {
 
     service_charge: Joi.number().min(0).required(),
     vat: Joi.number().min(0).required(),
+    service_charge_percentage: Joi.number().min(0).default(0),
+    vat_percentage: Joi.number().min(0).default(0),
     booked_room_types: Joi.array()
       .items(
         Joi.object({
@@ -191,52 +193,48 @@ export class ReservationValidator {
   });
 
   public updateSingleBookingValidator = Joi.object({
-    pickup: Joi.boolean().optional(),
-    pickup_from: Joi.when("pickup", {
-      is: true,
-      then: Joi.string().required(),
-      otherwise: Joi.forbidden(),
-    }),
-    pickup_time: Joi.when("pickup", {
-      is: true,
-      then: Joi.string().isoDate().required(), // assuming ISO datetime string
-      otherwise: Joi.forbidden(),
-    }),
+    changed_rate_of_booking_rooms: Joi.array()
+      .items(
+        Joi.object({
+          room_id: Joi.number().required(),
+          unit_base_rate: Joi.number().required(),
+          unit_changed_rate: Joi.number().required(),
+        })
+      )
+      .optional(),
 
-    drop: Joi.boolean().optional(),
-    drop_to: Joi.when("drop", {
-      is: true,
-      then: Joi.string().required(),
-      otherwise: Joi.forbidden(),
-    }),
-    drop_time: Joi.when("drop", {
-      is: true,
-      then: Joi.string().isoDate().required(),
-      otherwise: Joi.forbidden(),
-    }),
-
-    // discount_amount: Joi.number().min(0).required(),
-    service_charge: Joi.number().min(0).required(),
-    vat: Joi.number().min(0).required(),
     add_room_types: Joi.array()
       .items(
         Joi.object({
           room_type_id: Joi.number().required(),
           rate_plan_id: Joi.number().required(),
-          rate: Joi.object({
-            base_price: Joi.number().required(),
-            changed_price: Joi.number().required(),
-          }).required(),
-          number_of_rooms: Joi.number().min(1).required(),
-
-          guests: Joi.array()
+          rooms: Joi.array()
             .items(
               Joi.object({
                 room_id: Joi.number().required(),
+                cbf: Joi.number().required().default(0),
                 adults: Joi.number().min(1).required(),
                 children: Joi.number().min(0).required(),
                 infant: Joi.number().min(0).required(),
-                cbf: Joi.number().min(0).required(),
+                rate: Joi.object({
+                  base_rate: Joi.number().required(),
+                  changed_rate: Joi.number().required(),
+                }).required(),
+
+                guest_info: Joi.array().items(
+                  Joi.object({
+                    first_name: Joi.string().optional(),
+                    last_name: Joi.string().allow("").optional(),
+                    email: Joi.string().allow("").optional(),
+                    phone: Joi.string().allow("").optional(),
+                    country_id: Joi.number().required(),
+                    address: Joi.string().allow("").optional(),
+                    type: Joi.string()
+                      .allow("adult", "child", "infant")
+                      .required(),
+                    is_lead_guest: Joi.boolean().required(),
+                  })
+                ),
               })
             )
             .min(1)
@@ -246,14 +244,9 @@ export class ReservationValidator {
         })
       )
       .min(1)
-      .required(),
+      .optional(),
 
-    removed_rooms: Joi.number().optional(),
-    company_name: Joi.string().allow("").optional(),
-    visit_purpose: Joi.string().allow("").optional(),
-    is_company_booked: Joi.boolean().optional(),
-    special_requests: Joi.string().allow("").optional(),
-    source_id: Joi.number().optional(),
+    removed_rooms: Joi.array().items(Joi.number().required()).optional(),
   });
 
   public addPayment = Joi.object({
