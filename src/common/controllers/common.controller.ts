@@ -51,6 +51,17 @@ class CommonController extends CommonAbstractController {
 			res.status(code).json(data);
 		}
 	);
+
+	// get all months
+
+	public getMonthList = this.asyncWrapper.wrap(
+		{},
+		async (req: Request, res: Response) => {
+			const { code, ...data } = await this.commonService.getMonthList();
+
+			res.status(code).json(data);
+		}
+	);
 }
 
 export default CommonController;

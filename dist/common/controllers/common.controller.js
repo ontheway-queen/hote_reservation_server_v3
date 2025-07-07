@@ -48,6 +48,11 @@ class CommonController extends common_abstract_controller_1.default {
             const _d = yield this.commonService.getAllBloodGroup(), { code } = _d, data = __rest(_d, ["code"]);
             res.status(code).json(data);
         }));
+        // get all months
+        this.getMonthList = this.asyncWrapper.wrap({}, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _e = yield this.commonService.getMonthList(), { code } = _e, data = __rest(_e, ["code"]);
+            res.status(code).json(data);
+        }));
     }
 }
 exports.default = CommonController;

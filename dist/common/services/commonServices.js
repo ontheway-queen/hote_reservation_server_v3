@@ -269,6 +269,17 @@ class CommonService extends abstract_service_1.default {
             };
         });
     }
+    // get all months
+    getMonthList() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const data = yield this.Model.commonModel().getMonthList();
+            return {
+                success: true,
+                code: this.StatusCode.HTTP_OK,
+                data,
+            };
+        });
+    }
 }
 exports.default = CommonService;
 //# sourceMappingURL=commonServices.js.map

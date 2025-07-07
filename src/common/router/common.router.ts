@@ -24,6 +24,9 @@ class CommonRouter extends CommonAbstractRouter {
 
 		// get all blood group
 		this.router.get("/blood-group", this.CommonController.getAllBloodGroup);
+
+		// get all months
+		this.router.get("/months", this.CommonController.getMonthList);
 	}
 }
 

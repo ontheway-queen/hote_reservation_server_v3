@@ -18,6 +18,8 @@ class CommonRouter extends common_abstract_router_1.default {
         this.router.get("/country", this.CommonController.getAllCountry);
         // get all blood group
         this.router.get("/blood-group", this.CommonController.getAllBloodGroup);
+        // get all months
+        this.router.get("/months", this.CommonController.getMonthList);
     }
 }
 exports.default = CommonRouter;

@@ -316,6 +316,17 @@ class CommonService extends AbstractServices {
 			data,
 		};
 	}
+
+	// get all months
+	public async getMonthList() {
+		const data = await this.Model.commonModel().getMonthList();
+
+		return {
+			success: true,
+			code: this.StatusCode.HTTP_OK,
+			data,
+		};
+	}
 }
 
 export default CommonService;

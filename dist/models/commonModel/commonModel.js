@@ -84,6 +84,14 @@ class CommonModel extends schema_1.default {
                 .orderBy("id", "asc");
         });
     }
+    // get all months
+    getMonthList() {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("months")
+                .withSchema(this.DBO_SCHEMA)
+                .orderBy("id", "asc");
+        });
+    }
 }
 exports.default = CommonModel;
 //# sourceMappingURL=commonModel.js.map

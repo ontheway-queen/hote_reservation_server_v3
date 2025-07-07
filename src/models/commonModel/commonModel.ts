@@ -91,5 +91,12 @@ class CommonModel extends Schema {
 			.withSchema(this.DBO_SCHEMA)
 			.orderBy("id", "asc");
 	}
+
+	// get all months
+	public async getMonthList(): Promise<{ id: number; name: string }[]> {
+		return await this.db("months")
+			.withSchema(this.DBO_SCHEMA)
+			.orderBy("id", "asc");
+	}
 }
 export default CommonModel;
