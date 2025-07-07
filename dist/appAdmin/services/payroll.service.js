@@ -24,6 +24,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const abstract_service_1 = __importDefault(require("../../abstarcts/abstract.service"));
+const customEror_1 = __importDefault(require("../../utils/lib/customEror"));
 class PayRollService extends abstract_service_1.default {
     constructor() {
         super();
@@ -65,7 +66,7 @@ class PayRollService extends abstract_service_1.default {
                 const voucherData = yield model.getAllIVoucherForLastId();
                 const voucherNo = voucherData.length ? voucherData[0].id + 1 : 1;
                 const res = yield model.CreatePayRoll(Object.assign(Object.assign({}, rest), { hotel_code, voucher_no: `PR-${year}${voucherNo}`, ac_tr_ac_id: rest.ac_tr_ac_id, gross_salary: rest.gross_salary, total_salary: rest.total_salary }));
-                const payroll_id = res[0];
+                const payroll_id = res[0].id;
                 // Insert payroll deductions
                 const deduction_parse = deductions ? JSON.parse(deductions) : [];
                 if (deduction_parse.length) {
@@ -89,19 +90,22 @@ class PayRollService extends abstract_service_1.default {
                             other_details: addition.other_details,
                         };
                     });
+                    console.log({ additionsPayload });
                     yield model.createPayRoll_additions(additionsPayload);
                 }
                 // get last account ledger
-                const lastAL = yield accountModel.getLastAccountLedgerId(hotel_code);
-                const ledger_id = lastAL.length ? lastAL[0].ledger_id + 1 : 1;
+                // const lastAL = await accountModel.getLastAccountLedgerId(
+                // 	hotel_code
+                // );
+                // const ledger_id = lastAL.length ? lastAL[0].ledger_id + 1 : 1;
                 // Insert account ledger
-                yield accountModel.insertAccountLedger({
-                    ac_tr_ac_id: rest.ac_tr_ac_id,
-                    hotel_code,
-                    transaction_no: `TRX-${year - ledger_id}`,
-                    ledger_debit_amount: rest.total_salary,
-                    ledger_details: `Balance Debited by Employee PayRoll as Salary`,
-                });
+                // await accountModel.insertAccountLedger({
+                // 	ac_tr_ac_id: rest.ac_tr_ac_id,
+                // 	hotel_code,
+                // 	transaction_no: `TRX-${year - ledger_id}`,
+                // 	ledger_debit_amount: rest.total_salary,
+                // 	ledger_details: `Balance Debited by Employee PayRoll as Salary`,
+                // });
                 return {
                     success: true,
                     code: this.StatusCode.HTTP_SUCCESSFUL,
@@ -138,10 +142,13 @@ class PayRollService extends abstract_service_1.default {
             const { id } = req.params;
             const { hotel_code } = req.hotel_admin;
             const data = yield this.Model.payRollModel().getSinglePayRoll(parseInt(id), hotel_code);
+            if (!data) {
+                throw new customEror_1.default(`The requested payroll with ID: ${id} not found.`, this.StatusCode.HTTP_NOT_FOUND);
+            }
             return {
                 success: true,
                 code: this.StatusCode.HTTP_OK,
-                data: data[0],
+                data: data,
             };
         });
     }

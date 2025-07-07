@@ -12,6 +12,7 @@ class Schema {
         this.TABLES = {
             blood_group: "blood_group",
             months: "months",
+            accounts: "accounts",
         };
     }
 }

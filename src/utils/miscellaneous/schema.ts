@@ -9,6 +9,7 @@ class Schema {
 	public readonly TABLES = {
 		blood_group: "blood_group",
 		months: "months",
+		accounts: "accounts",
 	};
 }
 export default Schema;
