@@ -1002,32 +1002,51 @@ class SettingModel extends schema_1.default {
     // Get All PayrollMonths
     getPayrollMonths(payload) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { limit, skip, hotel_code, name } = payload;
-            const dtbs = this.db("payroll_months as pm");
+            const { limit, skip, hotel_code, name, month_id } = payload;
+            let dtbs = this.db("payroll_months as pm").withSchema(this.RESERVATION_SCHEMA);
             if (limit && skip) {
-                dtbs.limit(parseInt(limit));
-                dtbs.offset(parseInt(skip));
+                dtbs = dtbs.limit(parseInt(limit));
+                dtbs = dtbs.offset(parseInt(skip));
             }
             const data = yield dtbs
-                .withSchema(this.RESERVATION_SCHEMA)
-                .select("pm.id", "pm.name as month_name", "pm.days as working_days", "pm.hours")
+                .select("pm.id", "months.name as month_name", "pm.days as working_days", "pm.hours", "pm.is_deleted")
+                .joinRaw(`JOIN ?? as months ON months.id = pm.month_id`, [
+                `${this.DBO_SCHEMA}.${this.TABLES.months}`,
+            ])
                 .where("pm.hotel_code", hotel_code)
+                .andWhere("pm.is_deleted", false)
                 .andWhere(function () {
                 if (name) {
-                    this.andWhere("pm.name", "like", `%${name}%`);
+                    this.andWhereRaw("months.name::text ILIKE ?", [
+                        `%${name}%`,
+                    ]);
+                }
+                if (month_id) {
+                    this.andWhere("months.id", month_id);
                 }
             })
                 .orderBy("pm.id", "asc");
-            const total = yield this.db("payroll_months as pm")
-                .withSchema(this.RESERVATION_SCHEMA)
+            // New query builder for count
+            let countQuery = this.db("payroll_months as pm").withSchema(this.RESERVATION_SCHEMA);
+            const totalResult = yield countQuery
                 .count("pm.id as total")
+                .joinRaw(`JOIN ?? as months ON months.id = pm.month_id`, [
+                `${this.DBO_SCHEMA}.${this.TABLES.months}`,
+            ])
                 .where("pm.hotel_code", hotel_code)
+                .andWhere("pm.is_deleted", false)
                 .andWhere(function () {
                 if (name) {
-                    this.andWhere("pm.name", "like", `%${name}%`);
+                    this.andWhereRaw("months.name::text ILIKE ?", [
+                        `%${name}%`,
+                    ]);
+                }
+                if (month_id) {
+                    this.andWhere("months.id", month_id);
                 }
             });
-            return { total: total[0].total, data };
+            const total = totalResult[0].total;
+            return { total, data };
         });
     }
     // Update Payroll Months
@@ -1036,6 +1055,7 @@ class SettingModel extends schema_1.default {
             return yield this.db("payroll_months")
                 .withSchema(this.RESERVATION_SCHEMA)
                 .where({ id })
+                .andWhere("is_deleted", false)
                 .update(payload);
         });
     }
@@ -1045,7 +1065,8 @@ class SettingModel extends schema_1.default {
             return yield this.db("payroll_months")
                 .withSchema(this.RESERVATION_SCHEMA)
                 .where({ id })
-                .del();
+                .andWhere("is_deleted", false)
+                .update({ is_deleted: true });
         });
     }
     // =================== floor Model ======================//

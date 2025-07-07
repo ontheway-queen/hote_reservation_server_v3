@@ -224,9 +224,9 @@ class SettingValidator {
         //=================== PayRoll Months validation ======================//
         // create PayRoll Months validation
         this.createPayRollMonthsValidator = joi_1.default.object({
-            name: joi_1.default.string().allow("").required(),
-            days: joi_1.default.number().optional(),
-            hours: joi_1.default.number().allow("").required(),
+            month_id: joi_1.default.number().min(1).max(12).required(),
+            days: joi_1.default.number().min(1).max(31).required(),
+            hours: joi_1.default.number().required(),
         });
         // get all PayRoll Months query validation
         this.getAllPayrollMonthsQueryValidator = joi_1.default.object({
@@ -236,9 +236,9 @@ class SettingValidator {
         });
         // update PayRoll Months validation
         this.UpdatePayrollMonthsValidator = joi_1.default.object({
-            name: joi_1.default.string().allow("").optional(),
-            days: joi_1.default.number().optional(),
-            hours: joi_1.default.number().allow("").optional(),
+            month_id: joi_1.default.number().min(1).max(12).optional(),
+            days: joi_1.default.number().min(1).max(31).optional(),
+            hours: joi_1.default.number().optional(),
         });
         //=================== Common Module validation ======================//
         // create Common validation
@@ -299,8 +299,12 @@ class SettingValidator {
             rules: joi_1.default.array()
                 .items(joi_1.default.object({
                 days_before: joi_1.default.number().required(),
-                rule_type: joi_1.default.string().allow("free", "charge", "no_show").required(),
-                fee_type: joi_1.default.string().allow("fixed", "percentage").optional(),
+                rule_type: joi_1.default.string()
+                    .allow("free", "charge", "no_show")
+                    .required(),
+                fee_type: joi_1.default.string()
+                    .allow("fixed", "percentage")
+                    .optional(),
                 fee_value: joi_1.default.number().optional(),
             }))
                 .required(),
@@ -325,7 +329,9 @@ class SettingValidator {
         this.createRoomRateValidator = joi_1.default.object({
             name: joi_1.default.string().required(),
             cancellation_policy_id: joi_1.default.number().integer().required(),
-            sources: joi_1.default.array().items(joi_1.default.number().integer().required()).optional(),
+            sources: joi_1.default.array()
+                .items(joi_1.default.number().integer().required())
+                .optional(),
             meal_plan_items: joi_1.default.array()
                 .items(joi_1.default.number().integer().required())
                 .optional(),
@@ -339,7 +345,9 @@ class SettingValidator {
         this.updateRoomRateValidator = joi_1.default.object({
             name: joi_1.default.string().required(),
             cancellation_policy_id: joi_1.default.number().integer().required(),
-            sources: joi_1.default.array().items(joi_1.default.number().integer().required()).optional(),
+            sources: joi_1.default.array()
+                .items(joi_1.default.number().integer().required())
+                .optional(),
             meal_plan_items: joi_1.default.array()
                 .items(joi_1.default.number().integer().required())
                 .optional(),
@@ -366,7 +374,9 @@ class SettingValidator {
                 vat: joi_1.default.number().required(),
             }))
                 .optional(),
-            remove_meal_items: joi_1.default.array().items(joi_1.default.number().required()).optional(),
+            remove_meal_items: joi_1.default.array()
+                .items(joi_1.default.number().required())
+                .optional(),
         });
         this.updateRoomBookingMealOption = joi_1.default.object({
             is_possible_book_meal_opt_with_room: joi_1.default.string().optional(),
@@ -377,7 +387,9 @@ class SettingValidator {
                 vat: joi_1.default.number().required(),
             }))
                 .optional(),
-            remove_meal_items: joi_1.default.array().items(joi_1.default.number().required()).optional(),
+            remove_meal_items: joi_1.default.array()
+                .items(joi_1.default.number().required())
+                .optional(),
         });
         //==================== Floor Setup validation ======================//
         this.createFloorSetupValidator = joi_1.default.object({

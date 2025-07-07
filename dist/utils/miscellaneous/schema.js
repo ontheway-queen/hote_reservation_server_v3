@@ -11,6 +11,7 @@ class Schema {
         this.ACC_SCHEMA = "acc";
         this.TABLES = {
             blood_group: "blood_group",
+            months: "months",
         };
     }
 }

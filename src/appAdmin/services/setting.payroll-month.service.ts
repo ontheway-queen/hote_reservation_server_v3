@@ -5,124 +5,124 @@ import { IUpdatePayrollMonths } from "../utlis/interfaces/setting.interface";
 import SettingModel from "../../models/reservationPanel/Setting.Model";
 
 class PayrollMonthsSettingService extends AbstractServices {
-  constructor() {
-    super();
-  }
+	constructor() {
+		super();
+	}
 
-  //=================== Payroll Months service ======================//
+	//=================== Payroll Months service ======================//
 
-  // create Payroll Months
-  public async createPayrollMonths(req: Request) {
-    return await this.db.transaction(async (trx) => {
-      const { hotel_code } = req.hotel_admin;
-      const { name, days, hours } = req.body;
+	// create Payroll Months
+	public async createPayrollMonths(req: Request) {
+		return await this.db.transaction(async (trx) => {
+			const { hotel_code } = req.hotel_admin;
+			const { name, days, hours, month_id } = req.body;
 
-      // Payroll Months
-      const settingModel = this.Model.settingModel();
+			// Payroll Months
+			const settingModel = this.Model.settingModel();
 
-      const { data } = await settingModel.getPayrollMonths({
-        name,
-        hotel_code,
-      });
+			const { data } = await settingModel.getPayrollMonths({
+				month_id,
+				hotel_code,
+			});
 
-      if (data.length) {
-        return {
-          success: false,
-          code: this.StatusCode.HTTP_CONFLICT,
-          message: "Month name already exists, give another unique Month name",
-        };
-      }
-      // model
-      const model = new SettingModel(trx);
+			if (data.length) {
+				return {
+					success: false,
+					code: this.StatusCode.HTTP_CONFLICT,
+					message:
+						"Month name already exists, give another unique Month name",
+				};
+			}
+			// model
+			const model = new SettingModel(trx);
 
-      const res = await model.createPayrollMonths({
-        hotel_code,
-        name,
-        days,
-        hours,
-      });
+			const res = await model.createPayrollMonths({
+				hotel_code,
+				month_id,
+				days,
+				hours: Math.round(hours),
+			});
 
-      return {
-        success: true,
-        code: this.StatusCode.HTTP_SUCCESSFUL,
-        message: "Payroll Months created successfully.",
-      };
-    });
-  }
+			return {
+				success: true,
+				code: this.StatusCode.HTTP_SUCCESSFUL,
+				message: "Payroll Months created successfully.",
+			};
+		});
+	}
 
-  // Get all Payroll Months
-  public async getAllPayrollMonths(req: Request) {
-    const { hotel_code } = req.hotel_admin;
-    const { limit, skip, name } = req.query;
+	// Get all Payroll Months
+	public async getAllPayrollMonths(req: Request) {
+		const { hotel_code } = req.hotel_admin;
+		const { limit, skip, name } = req.query;
 
-    const model = this.Model.settingModel();
+		const model = this.Model.settingModel();
 
-    const { data, total } = await model.getPayrollMonths({
-      limit: limit as string,
-      skip: skip as string,
-      name: name as string,
-      hotel_code,
-    });
-    return {
-      success: true,
-      code: this.StatusCode.HTTP_OK,
-      total,
-      data,
-    };
-  }
+		const { data, total } = await model.getPayrollMonths({
+			limit: limit as string,
+			skip: skip as string,
+			name: name as string,
+			hotel_code,
+		});
+		return {
+			success: true,
+			code: this.StatusCode.HTTP_OK,
+			total,
+			data,
+		};
+	}
 
-  // Update Payroll Months
-  public async updatePayrollMonths(req: Request) {
-    return await this.db.transaction(async (trx) => {
-      const { id } = req.params;
+	// Update Payroll Months
+	public async updatePayrollMonths(req: Request) {
+		return await this.db.transaction(async (trx) => {
+			const { id } = req.params;
 
-      const updatePayload = req.body as IUpdatePayrollMonths;
+			const updatePayload = req.body as IUpdatePayrollMonths;
 
-      const model = this.Model.settingModel(trx);
-      const res = await model.updatePayrollMonths(parseInt(id), {
-        name: updatePayload.name,
-        days: updatePayload.days,
-        hours: updatePayload.hours,
-      });
+			const model = this.Model.settingModel(trx);
+			const res = await model.updatePayrollMonths(parseInt(id), {
+				month_id: updatePayload.month_id,
+				days: updatePayload.days,
+				hours: updatePayload.hours,
+			});
+			if (res === 1) {
+				return {
+					success: true,
+					code: this.StatusCode.HTTP_OK,
+					message: "Month name updated successfully",
+				};
+			} else {
+				return {
+					success: false,
+					code: this.StatusCode.HTTP_NOT_FOUND,
+					message: "Month name didn't find  from this ID",
+				};
+			}
+		});
+	}
 
-      if (res === 1) {
-        return {
-          success: true,
-          code: this.StatusCode.HTTP_OK,
-          message: "Month name updated successfully",
-        };
-      } else {
-        return {
-          success: false,
-          code: this.StatusCode.HTTP_NOT_FOUND,
-          message: "Month name didn't find  from this ID",
-        };
-      }
-    });
-  }
+	// Delete Payroll Months
+	public async deletePayrollMonths(req: Request) {
+		return await this.db.transaction(async (trx) => {
+			const { id } = req.params;
 
-  // Delete Payroll Months
-  public async deletePayrollMonths(req: Request) {
-    return await this.db.transaction(async (trx) => {
-      const { id } = req.params;
+			const model = this.Model.settingModel(trx);
+			const res = await model.deletePayrollMonths(parseInt(id));
 
-      const model = this.Model.settingModel(trx);
-      const res = await model.deletePayrollMonths(parseInt(id));
-
-      if (res === 1) {
-        return {
-          success: true,
-          code: this.StatusCode.HTTP_OK,
-          message: "Payroll Month deleted successfully",
-        };
-      } else {
-        return {
-          success: false,
-          code: this.StatusCode.HTTP_NOT_FOUND,
-          message: "Payroll Month didn't find from this ID",
-        };
-      }
-    });
-  }
+			if (res === 1) {
+				return {
+					success: true,
+					code: this.StatusCode.HTTP_OK,
+					message: "Payroll Month deleted successfully",
+				};
+			} else {
+				return {
+					success: false,
+					code: this.StatusCode.HTTP_NOT_FOUND,
+					message: "Payroll Month didn't find from this ID",
+				};
+			}
+		});
+	}
 }
 export default PayrollMonthsSettingService;

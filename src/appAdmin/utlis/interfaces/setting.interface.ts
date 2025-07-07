@@ -117,13 +117,13 @@ export interface IUpdateHallAmenitiesPayload {
 
 export interface ICreatePayrollMonths {
 	hotel_code: number;
-	name: string;
+	month_id: number;
 	days: number;
 	hours: number;
 }
 
 export interface IUpdatePayrollMonths {
-	name: string;
+	month_id: number;
 	days: number;
 	hours: number;
 }

@@ -24,11 +24,11 @@ class PayrollMonthsSettingService extends abstract_service_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
                 const { hotel_code } = req.hotel_admin;
-                const { name, days, hours } = req.body;
+                const { name, days, hours, month_id } = req.body;
                 // Payroll Months
                 const settingModel = this.Model.settingModel();
                 const { data } = yield settingModel.getPayrollMonths({
-                    name,
+                    month_id,
                     hotel_code,
                 });
                 if (data.length) {
@@ -42,9 +42,9 @@ class PayrollMonthsSettingService extends abstract_service_1.default {
                 const model = new Setting_Model_1.default(trx);
                 const res = yield model.createPayrollMonths({
                     hotel_code,
-                    name,
+                    month_id,
                     days,
-                    hours,
+                    hours: Math.round(hours),
                 });
                 return {
                     success: true,
@@ -82,7 +82,7 @@ class PayrollMonthsSettingService extends abstract_service_1.default {
                 const updatePayload = req.body;
                 const model = this.Model.settingModel(trx);
                 const res = yield model.updatePayrollMonths(parseInt(id), {
-                    name: updatePayload.name,
+                    month_id: updatePayload.month_id,
                     days: updatePayload.days,
                     hours: updatePayload.hours,
                 });
