@@ -34,7 +34,7 @@ class ExpenseService extends abstract_service_1.default {
     createExpenseHead(req) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
-                const { hotel_code } = req.hotel_admin;
+                const { hotel_code, id } = req.hotel_admin;
                 const { name } = req.body;
                 // expense head check
                 const expenseModel = this.Model.expenseModel();
@@ -54,6 +54,7 @@ class ExpenseService extends abstract_service_1.default {
                 const res = yield model.createExpenseHead({
                     hotel_code,
                     name,
+                    created_by: id,
                 });
                 return {
                     success: true,

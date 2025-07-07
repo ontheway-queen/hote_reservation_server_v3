@@ -58,28 +58,25 @@ export interface IupdateRoomBody {
 		| "under_maintenance";
 }
 
-export interface IOccupiedRoom {
+export interface IOccupiedRoomList {
 	id: number;
-	adults: number;
-	children: number;
-	infant: number;
-	booking_id: number;
-	total_nights: number;
+	hotel_code: number;
+	room_no: string;
+	floor_no: number;
+	room_type_id: number;
+	room_type_name: string;
 	status: string;
+	bookings: Booking[];
+}
+
+export interface Booking {
+	booking_id: number;
+	booking_reference: string;
 	check_in: string;
 	check_out: string;
-	booking_date: string;
-	room_id: number;
-	room_name: string;
-	floor_no: number;
-	guest: {
-		id: number;
-		name: string;
-		email: string;
-		phone: string;
-	};
-	room_type: {
-		id: number;
-		name: string;
-	};
+	booking_type: string;
+	booking_status: string;
+	guest_first_name: string;
+	guest_last_name: string;
+	guest_id: number;
 }

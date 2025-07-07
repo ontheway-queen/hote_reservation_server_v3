@@ -92,7 +92,8 @@ class RoomModel extends schema_1.default {
             // Calculate number of nights
             const checkInDate = new Date(check_in);
             const checkOutDate = new Date(check_out);
-            const number_of_nights = Math.ceil((checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24));
+            const number_of_nights = Math.ceil((checkOutDate.getTime() - checkInDate.getTime()) /
+                (1000 * 60 * 60 * 24));
             if (number_of_nights <= 0) {
                 throw new Error("Invalid check-in and check-out date range");
             }
@@ -338,7 +339,14 @@ class RoomModel extends schema_1.default {
       ) AS sorted_rooms
       GROUP BY floor_no
       ORDER BY floor_no ASC
-    `, [current_date, current_date, "B", "confirmed", "checked_in", hotel_code]);
+    `, [
+                current_date,
+                current_date,
+                "B",
+                "confirmed",
+                "checked_in",
+                hotel_code,
+            ]);
             const total = yield this.db("rooms as r")
                 .withSchema(this.RESERVATION_SCHEMA)
                 .count("r.id as total")
@@ -363,7 +371,6 @@ class RoomModel extends schema_1.default {
     getAllRoomByRoomType(hotel_code, id) {
         var _a, _b;
         return __awaiter(this, void 0, void 0, function* () {
-            console.log({ hotel_code });
             const data = yield this.db("rooms as r")
                 .withSchema(this.RESERVATION_SCHEMA)
                 .select("r.id", "r.room_name", "r.floor_no", "r.status", "ua.id as created_by_id", "ua.name as created_by_name")
@@ -385,19 +392,10 @@ class RoomModel extends schema_1.default {
     }
     // Get all occupied rooms using a specific date
     getAllOccupiedRooms(date) {
-        var _a;
         return __awaiter(this, void 0, void 0, function* () {
-            const data = yield this.db("booking_rooms as br")
+            const rows = yield this.db("booking_rooms as br")
                 .withSchema(this.RESERVATION_SCHEMA)
-                .select("br.id", "br.adults", "br.children", "br.infant", "br.booking_id", "bk.total_nights", "bk.status", this.db.raw(`TO_CHAR(bk.check_in, 'YYYY-MM-DD') as check_in`), this.db.raw(`TO_CHAR(bk.check_out, 'YYYY-MM-DD') as check_out`), this.db.raw(`TO_CHAR(bk.booking_date, 'YYYY-MM-DD') as booking_date`), "r.id as room_id", "r.room_name", "r.floor_no", this.db.raw(`json_build_object(
-				'id', g.id,
-				'name', g.first_name,
-				'email', g.email,
-				'phone', g.phone
-			) as guest`), this.db.raw(`json_build_object(
-				'id', rt.id,
-				'name', rt.name
-			) as room_type`))
+                .select("r.id as room_id", "r.hotel_code", "r.room_name as room_no", "r.floor_no", "r.status", "rt.id as room_type_id", "rt.name as room_type_name", "bk.id as booking_id", "bk.booking_reference", "bk.check_in", "bk.check_out", "bk.booking_type", "bk.status as booking_status", "g.first_name as guest_first_name", "g.last_name as guest_last_name", "g.id as guest_id")
                 .join("bookings as bk", "bk.id", "br.booking_id")
                 .leftJoin("rooms as r", "r.id", "br.room_id")
                 .leftJoin("guests as g", "g.id", "bk.guest_id")
@@ -406,19 +404,39 @@ class RoomModel extends schema_1.default {
                 qb.where("bk.status", "checked_in").orWhere("bk.status", "confirmed");
             })
                 .andWhere("bk.check_in", "<=", date)
-                .andWhere("bk.check_out", ">", date);
-            const totalResult = yield this.db("booking_rooms as br")
-                .withSchema(this.RESERVATION_SCHEMA)
-                .join("bookings as bk", "bk.id", "br.booking_id")
-                .where((qb) => {
-                qb.where("bk.status", "checked_in").orWhere("bk.status", "confirmed");
-            })
-                .andWhere("bk.check_in", "<=", date)
                 .andWhere("bk.check_out", ">", date)
-                .count("br.id as total");
+                .orderBy("r.id", "asc");
+            const grouped = rows.reduce((acc, row) => {
+                let room = acc.find((r) => r.id === row.room_id);
+                if (!room) {
+                    room = {
+                        id: row.room_id,
+                        hotel_code: row.hotel_code,
+                        room_no: row.room_no,
+                        floor_no: row.floor_no,
+                        room_type_id: row.room_type_id,
+                        room_type_name: row.room_type_name,
+                        status: row.status,
+                        bookings: [],
+                    };
+                    acc.push(room);
+                }
+                room.bookings.push({
+                    booking_id: row.booking_id,
+                    booking_reference: row.booking_reference,
+                    check_in: row.check_in,
+                    check_out: row.check_out,
+                    booking_type: row.booking_type,
+                    booking_status: row.booking_status,
+                    guest_first_name: row.guest_first_name,
+                    guest_last_name: row.guest_last_name,
+                    guest_id: row.guest_id,
+                });
+                return acc;
+            }, []);
             return {
-                total: parseInt((_a = totalResult === null || totalResult === void 0 ? void 0 : totalResult[0]) === null || _a === void 0 ? void 0 : _a.total) || 0,
-                data,
+                total: grouped.length,
+                data: grouped,
             };
         });
     }

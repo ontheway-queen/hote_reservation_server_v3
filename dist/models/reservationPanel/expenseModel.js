@@ -37,8 +37,10 @@ class ExpenseModel extends schema_1.default {
             }
             const data = yield dtbs
                 .withSchema(this.RESERVATION_SCHEMA)
-                .select("eh.id", "eh.name")
-                .where("hotel_code", hotel_code)
+                .select("eh.id", "eh.name", "ua.id as created_by_id", "ua.name as created_by_name", "eh.is_deleted")
+                .leftJoin("user_admin as ua", "ua.id", "eh.created_by")
+                .where("eh.hotel_code", hotel_code)
+                .andWhere("eh.is_deleted", false)
                 .andWhere(function () {
                 if (name) {
                     this.andWhere("eh.name", "like", `%${name}%`);
@@ -120,7 +122,10 @@ class ExpenseModel extends schema_1.default {
                 .leftJoin("account as a", "ev.ac_tr_ac_id", "a.id")
                 .andWhere(function () {
                 if (from_date && to_date) {
-                    this.andWhereBetween("ev.expense_date", [from_date, endDate]);
+                    this.andWhereBetween("ev.expense_date", [
+                        from_date,
+                        endDate,
+                    ]);
                 }
                 if (key) {
                     this.andWhere((builder) => {
@@ -139,7 +144,10 @@ class ExpenseModel extends schema_1.default {
                 .where("ev.hotel_code", hotel_code)
                 .andWhere(function () {
                 if (from_date && to_date) {
-                    this.andWhereBetween("ev.expense_date", [from_date, endDate]);
+                    this.andWhereBetween("ev.expense_date", [
+                        from_date,
+                        endDate,
+                    ]);
                 }
                 if (key) {
                     this.andWhere((builder) => {
