@@ -293,7 +293,7 @@ class CommonInventoryModel extends schema_1.default {
             }
             const data = yield dtbs
                 .withSchema(this.RESERVATION_SCHEMA)
-                .select("sp.id", "sp.total_paid_amount", "p.voucher_no", "ac.name as account_name", "ac.ac_type", "sp.created_at", "s.name as supplier_name")
+                .select("sp.id", "sp.total_paid_amount", "p.voucher_no", "ac.name as account_name", "ac.acc_type", "sp.created_at", "s.name as supplier_name")
                 .leftJoin("purchase as p", "sp.purchase_id", "p.id")
                 .leftJoin("account as ac", "sp.ac_tr_ac_id", "ac.id")
                 .leftJoin("supplier as s", "sp.supplier_id", "s.id")

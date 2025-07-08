@@ -57,7 +57,7 @@ class PayRollModel extends schema_1.default {
             }
             const data = yield dtbs
                 .withSchema(this.RESERVATION_SCHEMA)
-                .select("p.id", "p.voucher_no", "e.name as employee_name", "de.name as designation", "a.ac_type as pay_method", "a.name as account_name", "e.salary as base_salary", "p.attendance_days", "p.working_hours", "p.gross_salary", "p.total_salary", "p.salary_date")
+                .select("p.id", "p.voucher_no", "e.name as employee_name", "de.name as designation", "a.acc_type as pay_method", "a.name as account_name", "e.salary as base_salary", "p.attendance_days", "p.working_hours", "p.gross_salary", "p.total_salary", "p.salary_date")
                 .leftJoin("employee as e", "e.id", "p.employee_id")
                 .leftJoin("designation as de", "de.id", "e.designation_id")
                 .joinRaw(`JOIN ?? as a ON a.id = p.ac_tr_ac_id`, [
@@ -114,7 +114,7 @@ class PayRollModel extends schema_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             const payroll = yield this.db("payroll as p")
                 .withSchema(this.RESERVATION_SCHEMA)
-                .select("p.id", "p.voucher_no", "acc.ac_type", "acc.name as account_name", "acc.branch as branch_name", "h.name as hotel_name", "h.address as hotel_address", "h.country_code", "h.city_code", "h.postal_code", "e.name as employee_name", "des.name as employee_designation", "e.mobile_no as employee_phone", "p.attendance_days", "p.working_hours", "p.advance_salary", "p.gross_salary", "p.provident_fund", "p.mobile_bill", "p.feed_allowance", "p.perform_bonus", "p.festival_bonus", "p.travel_allowance", "p.health_allowance", "p.incentive", "p.salary_date", "p.house_rent", "p.total_salary")
+                .select("p.id", "p.voucher_no", "acc.acc_type", "acc.name as account_name", "acc.branch as branch_name", "h.name as hotel_name", "h.address as hotel_address", "h.country_code", "h.city_code", "h.postal_code", "e.name as employee_name", "des.name as employee_designation", "e.mobile_no as employee_phone", "p.attendance_days", "p.working_hours", "p.advance_salary", "p.gross_salary", "p.provident_fund", "p.mobile_bill", "p.feed_allowance", "p.perform_bonus", "p.festival_bonus", "p.travel_allowance", "p.health_allowance", "p.incentive", "p.salary_date", "p.house_rent", "p.total_salary")
                 .join("hotels as h", "h.hotel_code", "p.hotel_code")
                 .joinRaw(`JOIN ?? as acc ON acc.id = p.ac_tr_ac_id`, [
                 `${this.ACC_SCHEMA}.${this.TABLES.accounts}`,

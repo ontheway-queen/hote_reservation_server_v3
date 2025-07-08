@@ -66,7 +66,7 @@ class PayRollModel extends Schema {
 				"p.voucher_no",
 				"e.name as employee_name",
 				"de.name as designation",
-				"a.ac_type as pay_method",
+				"a.acc_type as pay_method",
 				"a.name as account_name",
 				"e.salary as base_salary",
 				"p.attendance_days",
@@ -137,7 +137,7 @@ class PayRollModel extends Schema {
 			.select(
 				"p.id",
 				"p.voucher_no",
-				"acc.ac_type",
+				"acc.acc_type",
 				"acc.name as account_name",
 				"acc.branch as branch_name",
 				"h.name as hotel_name",

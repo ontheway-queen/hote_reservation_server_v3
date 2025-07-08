@@ -131,35 +131,45 @@ class ExpenseModel extends Schema {
 	}) {
 		const { limit, skip, hotel_code, from_date, to_date, key } = payload;
 
-		const endDate = new Date(to_date as string);
+		const endDate = new Date(to_date);
 		endDate.setDate(endDate.getDate() + 1);
 
-		const dtbs = this.db("expense_view as ev");
-
-		if (limit && skip) {
-			dtbs.limit(parseInt(limit as string));
-			dtbs.offset(parseInt(skip as string));
-		}
-
-		const data = await dtbs
+		const dataQuery = this.db("expense as e")
 			.withSchema(this.RESERVATION_SCHEMA)
 			.select(
-				"ev.id",
-				"ev.voucher_no",
-				"ev.ac_tr_ac_id as account_id",
-				"ev.expense_date as expense_date",
-				"ev.name as expense_name",
+				"e.id",
+				"e.voucher_no",
+				this.db.raw(
+					`TO_CHAR(e.expense_date, 'YYYY-MM-DD') as expense_date`
+				),
+				"e.name as expense_name",
+				this.db.raw(
+					`(
+                    SELECT COALESCE(
+                        json_agg(DISTINCT eh.name),
+                        '[]'
+                    )
+                    FROM ?? ei
+                    JOIN ?? eh ON eh.id = ei.expense_head_id
+                    WHERE ei.expense_id = e.id
+                    ) as expense_head_names`,
+					[
+						`${this.RESERVATION_SCHEMA}.expense_items`,
+						`${this.RESERVATION_SCHEMA}.expense_head`,
+					]
+				),
 				"a.name as account_name",
-				"a.ac_type",
-				"ev.total as expense_amount",
-				"ev.created_at",
-				"ev.expense_items"
+				"ua.name as expense_by",
+				"e.total as expense_amount"
 			)
-			.where("ev.hotel_code", hotel_code)
-			.leftJoin("account as a", "ev.ac_tr_ac_id", "a.id")
+			.joinRaw(`JOIN ?? a ON a.id = e.ac_tr_ac_id`, [
+				`${this.ACC_SCHEMA}.${this.TABLES.accounts}`,
+			])
+			.join("user_admin as ua", "ua.id", "e.created_by")
+			.where("e.hotel_code", hotel_code)
 			.andWhere(function () {
 				if (from_date && to_date) {
-					this.andWhereBetween("ev.expense_date", [
+					this.andWhereBetween("e.expense_date", [
 						from_date,
 						endDate,
 					]);
@@ -167,22 +177,30 @@ class ExpenseModel extends Schema {
 				if (key) {
 					this.andWhere((builder) => {
 						builder
-							.orWhere("ev.name", "like", `%${key}%`)
+							.orWhere("e.name", "like", `%${key}%`)
 							.orWhere("a.name", "like", `%${key}%`);
 					});
 				}
 			})
-			.groupBy("ev.id")
-			.orderBy("ev.id", "desc");
+			.orderBy("e.id", "desc");
 
-		const total = await this.db("expense_view as ev")
+		if (limit && skip) {
+			dataQuery.limit(parseInt(limit));
+			dataQuery.offset(parseInt(skip));
+		}
+
+		const data = await dataQuery;
+
+		const totalResult = await this.db("expense as e")
 			.withSchema(this.RESERVATION_SCHEMA)
-			.countDistinct("ev.id as total")
-			.leftJoin("account as a", "ev.ac_tr_ac_id", "a.id")
-			.where("ev.hotel_code", hotel_code)
+			.countDistinct("e.id as total")
+			.joinRaw(`JOIN ?? a ON a.id = e.ac_tr_ac_id`, [
+				`${this.ACC_SCHEMA}.${this.TABLES.accounts}`,
+			])
+			.where("e.hotel_code", hotel_code)
 			.andWhere(function () {
 				if (from_date && to_date) {
-					this.andWhereBetween("ev.expense_date", [
+					this.andWhereBetween("e.expense_date", [
 						from_date,
 						endDate,
 					]);
@@ -190,48 +208,65 @@ class ExpenseModel extends Schema {
 				if (key) {
 					this.andWhere((builder) => {
 						builder
-							.orWhere("ev.name", "like", `%${key}%`)
+							.orWhere("e.name", "like", `%${key}%`)
 							.orWhere("a.name", "like", `%${key}%`);
 					});
 				}
 			})
 			.first();
 
-		return { data, total: total ? total.total : 0 };
+		return { data, total: totalResult?.total || 0 };
 	}
 
 	// get single Expense Model
 	public async getSingleExpense(id: number, hotel_code: number) {
-		const dtbs = this.db("expense_view as ev");
+		const dtbs = this.db("expense as e");
 		return await dtbs
 			.withSchema(this.RESERVATION_SCHEMA)
 			.select(
-				"ev.id",
-				"ev.hotel_code",
-				"ev.voucher_no",
-				"h.name as hotel_name",
-				"h.address as hotel_address",
-				"h.email as hotel_email",
-				"h.phone as hotel_phone",
-				"h.website as hotel_website",
-				"h.logo as hotel_logo",
-				"ev.name as expense_name",
-				"a.name as account_name",
-				"a.account_number",
-				"a.ac_type",
-				"ev.expense_date",
-				"a.bank as bank_name",
-				"a.branch",
-				"ev.total as total_cost",
-				"ev.remarks as expense_details",
-				"ev.created_at as expense_created_at",
-				"ev.expense_items"
+				"e.id",
+				"e.hotel_code",
+				"e.voucher_no",
+				"e.name as expense_name",
+				"e.remarks as expense_details",
+				this.db.raw(
+					`TO_CHAR(e.expense_date, 'YYYY-MM-DD') as expense_date`
+				),
+				"e.total as expense_amount",
+				"a.name as acc_name",
+				"a.acc_type",
+				"a.branch as acc_branch",
+				"a.acc_number",
+				"e.created_at as expense_created_at",
+				this.db.raw(
+					`(
+                        SELECT COALESCE(
+                        json_agg(
+                            json_build_object(
+                            'id', ei.id,
+                            'item_name', ei.name,
+                            'amount', ei.amount,
+                            'expense_head_name', eh.name
+                            )
+                        ), '[]'
+                        )
+                        FROM ?? ei
+                        JOIN ?? eh ON eh.id = ei.expense_head_id
+                        WHERE ei.expense_id = e.id
+                    ) as expense_items`,
+					[
+						`${this.RESERVATION_SCHEMA}.expense_items`,
+						`${this.RESERVATION_SCHEMA}.expense_head`,
+					]
+				)
 			)
 
-			.leftJoin("hotel as h", "ev.hotel_code", "h.id")
-			.leftJoin("account as a", "ev.ac_tr_ac_id", "a.id")
-			.where("ev.id", id)
-			.andWhere("ev.hotel_code", hotel_code);
+			.leftJoin("hotels as h", "e.hotel_code", "h.hotel_code")
+			.joinRaw(`JOIN ?? a ON a.id = e.ac_tr_ac_id`, [
+				`${this.ACC_SCHEMA}.${this.TABLES.accounts}`,
+			])
+			.where("e.id", id)
+			.andWhere("e.hotel_code", hotel_code);
 	}
 }
 export default ExpenseModel;

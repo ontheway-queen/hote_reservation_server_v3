@@ -75,7 +75,7 @@ class DashBoardModel extends schema_1.default {
                 }
                 this.andWhere("al.hotel_code", hotel_code);
                 if (ac_type) {
-                    this.andWhere("ac.ac_type", ac_type);
+                    this.andWhere("ac.acc_type", ac_type);
                 }
             });
             // total debit amount
@@ -89,7 +89,7 @@ class DashBoardModel extends schema_1.default {
                 }
                 this.andWhere("al.hotel_code", hotel_code);
                 if (ac_type) {
-                    this.andWhere("ac.ac_type", ac_type);
+                    this.andWhere("ac.acc_type", ac_type);
                 }
             });
             // total credit amount
@@ -103,7 +103,7 @@ class DashBoardModel extends schema_1.default {
                 }
                 this.andWhere("al.hotel_code", hotel_code);
                 if (ac_type) {
-                    this.andWhere("ac.ac_type", ac_type);
+                    this.andWhere("ac.acc_type", ac_type);
                 }
             });
             // total total Remainig balance
@@ -117,7 +117,7 @@ class DashBoardModel extends schema_1.default {
                 }
                 this.andWhere("al.hotel_code", hotel_code);
                 if (ac_type) {
-                    this.andWhere("ac.ac_type", ac_type);
+                    this.andWhere("ac.acc_type", ac_type);
                 }
             });
             return {
@@ -136,7 +136,9 @@ class DashBoardModel extends schema_1.default {
                 .where({ hotel_code })
                 .first();
             return {
-                totalRooms: (roomCount === null || roomCount === void 0 ? void 0 : roomCount.total) ? parseInt(roomCount.total) : 0,
+                totalRooms: (roomCount === null || roomCount === void 0 ? void 0 : roomCount.total)
+                    ? parseInt(roomCount.total)
+                    : 0,
             };
         });
     }
@@ -169,7 +171,9 @@ class DashBoardModel extends schema_1.default {
                 .first();
             return {
                 totalStays: totalStays ? Number(totalStays.total) : 0,
-                totalDepartures: totalDepartures ? Number(totalDepartures.total) : 0,
+                totalDepartures: totalDepartures
+                    ? Number(totalDepartures.total)
+                    : 0,
                 totalArrivals: totalArrivals ? Number(totalArrivals.total) : 0,
             };
         });

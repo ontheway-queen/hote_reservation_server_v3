@@ -44,7 +44,7 @@ class StockInventoryModel extends schema_1.default {
             }
             const data = yield dtbs
                 .withSchema(this.RESERVATION_SCHEMA)
-                .select("sv.id", "sv.created_at as date", "a.name as account_name", "a.ac_type as account_type", "sv.status", "sv.paid_amount", "sv.note")
+                .select("sv.id", "sv.created_at as date", "a.name as account_name", "a.acc_type as account_type", "sv.status", "sv.paid_amount", "sv.note")
                 .where("sv.hotel_code", hotel_code)
                 .leftJoin("account as a", "sv.ac_tr_ac_id", "a.id")
                 .andWhere(function () {
@@ -78,7 +78,7 @@ class StockInventoryModel extends schema_1.default {
             const dtbs = this.db("stock_view as sv");
             const data = yield dtbs
                 .withSchema(this.RESERVATION_SCHEMA)
-                .select("sv.*", "a.name as account_name", "a.ac_type as account_type")
+                .select("sv.*", "a.name as account_name", "a.acc_type as account_type")
                 .leftJoin("account as a", "sv.ac_tr_ac_id", "a.id")
                 .where("sv.id", id)
                 .andWhere("sv.hotel_code", hotel_code);

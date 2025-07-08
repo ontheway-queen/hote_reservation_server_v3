@@ -1,435 +1,453 @@
 import {
-  ICreateCommonInvPayload,
-  ICreateInvSupplierPayload,
-  IUpdateCommonInvPayload,
-  IUpdateInvSupplierPayload,
+	ICreateCommonInvPayload,
+	ICreateInvSupplierPayload,
+	IUpdateCommonInvPayload,
+	IUpdateInvSupplierPayload,
 } from "../../../appInventory/utils/interfaces/common.inv.interface";
 import { TDB } from "../../../common/types/commontypes";
 import Schema from "../../../utils/miscellaneous/schema";
 
 class CommonInventoryModel extends Schema {
-  private db: TDB;
+	private db: TDB;
 
-  constructor(db: TDB) {
-    super();
-    this.db = db;
-  }
+	constructor(db: TDB) {
+		super();
+		this.db = db;
+	}
 
-  //=================== Category  ======================//
+	//=================== Category  ======================//
 
-  // create Category
-  public async createCategory(payload: ICreateCommonInvPayload) {
-    return await this.db("category")
-      .withSchema(this.RESERVATION_SCHEMA)
-      .insert(payload);
-  }
+	// create Category
+	public async createCategory(payload: ICreateCommonInvPayload) {
+		return await this.db("category")
+			.withSchema(this.RESERVATION_SCHEMA)
+			.insert(payload);
+	}
 
-  // Get All Category
-  public async getAllCategory(payload: {
-    limit?: string;
-    skip?: string;
-    name: string;
-    status?: string;
-    hotel_code: number;
-    excludeId?: number;
-  }) {
-    const { limit, skip, name, status, hotel_code, excludeId } = payload;
+	// Get All Category
+	public async getAllCategory(payload: {
+		limit?: string;
+		skip?: string;
+		name: string;
+		status?: string;
+		hotel_code: number;
+		excludeId?: number;
+	}) {
+		const { limit, skip, name, status, hotel_code, excludeId } = payload;
 
-    const dtbs = this.db("category as c");
+		const dtbs = this.db("category as c");
 
-    if (limit && skip) {
-      dtbs.limit(parseInt(limit as string));
-      dtbs.offset(parseInt(skip as string));
-    }
+		if (limit && skip) {
+			dtbs.limit(parseInt(limit as string));
+			dtbs.offset(parseInt(skip as string));
+		}
 
-    const data = await dtbs
-      .withSchema(this.RESERVATION_SCHEMA)
-      .select("c.id", "c.hotel_code", "c.name", "c.status")
-      .where(function () {
-        this.whereNull("c.hotel_code").orWhere("c.hotel_code", hotel_code);
-      })
-      .andWhere(function () {
-        if (name) {
-          this.andWhere("c.name", "like", `%${name}%`);
-        }
-        if (status) {
-          this.andWhere("c.status", "like", `%${status}%`);
-        }
-        if (excludeId) {
-          this.andWhere("c.id", "!=", excludeId);
-        }
-      })
-      .orderBy("c.id", "desc");
+		const data = await dtbs
+			.withSchema(this.RESERVATION_SCHEMA)
+			.select("c.id", "c.hotel_code", "c.name", "c.status")
+			.where(function () {
+				this.whereNull("c.hotel_code").orWhere(
+					"c.hotel_code",
+					hotel_code
+				);
+			})
+			.andWhere(function () {
+				if (name) {
+					this.andWhere("c.name", "like", `%${name}%`);
+				}
+				if (status) {
+					this.andWhere("c.status", "like", `%${status}%`);
+				}
+				if (excludeId) {
+					this.andWhere("c.id", "!=", excludeId);
+				}
+			})
+			.orderBy("c.id", "desc");
 
-    const total = await this.db("category as c")
-      .withSchema(this.RESERVATION_SCHEMA)
-      .count("c.id as total")
-      .where(function () {
-        this.whereNull("c.hotel_code").orWhere("c.hotel_code", hotel_code);
-      })
-      .andWhere(function () {
-        if (name) {
-          this.andWhere("c.name", "like", `%${name}%`);
-        }
-        if (status) {
-          this.andWhere("c.status", "like", `%${status}%`);
-        }
-        if (excludeId) {
-          this.andWhere("c.id", "!=", excludeId);
-        }
-      });
+		const total = await this.db("category as c")
+			.withSchema(this.RESERVATION_SCHEMA)
+			.count("c.id as total")
+			.where(function () {
+				this.whereNull("c.hotel_code").orWhere(
+					"c.hotel_code",
+					hotel_code
+				);
+			})
+			.andWhere(function () {
+				if (name) {
+					this.andWhere("c.name", "like", `%${name}%`);
+				}
+				if (status) {
+					this.andWhere("c.status", "like", `%${status}%`);
+				}
+				if (excludeId) {
+					this.andWhere("c.id", "!=", excludeId);
+				}
+			});
 
-    return { total: total[0].total, data };
-  }
+		return { total: total[0].total, data };
+	}
 
-  // Update Category
-  public async updateCategory(id: number, payload: IUpdateCommonInvPayload) {
-    return await this.db("category")
-      .withSchema(this.RESERVATION_SCHEMA)
-      .where({ id })
-      .update(payload);
-  }
+	// Update Category
+	public async updateCategory(id: number, payload: IUpdateCommonInvPayload) {
+		return await this.db("category")
+			.withSchema(this.RESERVATION_SCHEMA)
+			.where({ id })
+			.update(payload);
+	}
 
-  //=================== Unit  ======================//
+	//=================== Unit  ======================//
 
-  // create Unit
-  public async createUnit(payload: ICreateCommonInvPayload) {
-    return await this.db("unit")
-      .withSchema(this.RESERVATION_SCHEMA)
-      .insert(payload);
-  }
+	// create Unit
+	public async createUnit(payload: ICreateCommonInvPayload) {
+		return await this.db("unit")
+			.withSchema(this.RESERVATION_SCHEMA)
+			.insert(payload);
+	}
 
-  // Get All Unit
-  public async getAllUnit(payload: {
-    limit?: string;
-    skip?: string;
-    name: string;
-    status?: string;
-    hotel_code: number;
-    excludeId?: number;
-  }) {
-    const { limit, skip, name, status, hotel_code, excludeId } = payload;
+	// Get All Unit
+	public async getAllUnit(payload: {
+		limit?: string;
+		skip?: string;
+		name: string;
+		status?: string;
+		hotel_code: number;
+		excludeId?: number;
+	}) {
+		const { limit, skip, name, status, hotel_code, excludeId } = payload;
 
-    const dtbs = this.db("unit as u");
+		const dtbs = this.db("unit as u");
 
-    if (limit && skip) {
-      dtbs.limit(parseInt(limit as string));
-      dtbs.offset(parseInt(skip as string));
-    }
+		if (limit && skip) {
+			dtbs.limit(parseInt(limit as string));
+			dtbs.offset(parseInt(skip as string));
+		}
 
-    const data = await dtbs
-      .withSchema(this.RESERVATION_SCHEMA)
-      .select("u.id", "u.hotel_code", "u.name", "u.status")
-      .where(function () {
-        this.whereNull("u.hotel_code").orWhere("u.hotel_code", hotel_code);
-      })
-      .andWhere(function () {
-        if (name) {
-          this.andWhere("u.name", "like", `%${name}%`);
-        }
-        if (status) {
-          this.andWhere("u.status", "like", `%${status}%`);
-        }
-        if (excludeId) {
-          this.andWhere("u.id", "!=", excludeId);
-        }
-      })
-      .orderBy("u.id", "desc");
+		const data = await dtbs
+			.withSchema(this.RESERVATION_SCHEMA)
+			.select("u.id", "u.hotel_code", "u.name", "u.status")
+			.where(function () {
+				this.whereNull("u.hotel_code").orWhere(
+					"u.hotel_code",
+					hotel_code
+				);
+			})
+			.andWhere(function () {
+				if (name) {
+					this.andWhere("u.name", "like", `%${name}%`);
+				}
+				if (status) {
+					this.andWhere("u.status", "like", `%${status}%`);
+				}
+				if (excludeId) {
+					this.andWhere("u.id", "!=", excludeId);
+				}
+			})
+			.orderBy("u.id", "desc");
 
-    const total = await this.db("unit as u")
-      .withSchema(this.RESERVATION_SCHEMA)
-      .count("u.id as total")
-      .where(function () {
-        this.whereNull("u.hotel_code").orWhere("u.hotel_code", hotel_code);
-      })
-      .andWhere(function () {
-        if (name) {
-          this.andWhere("u.name", "like", `%${name}%`);
-        }
-        if (status) {
-          this.andWhere("u.status", "like", `%${status}%`);
-        }
-        if (excludeId) {
-          this.andWhere("u.id", "!=", excludeId);
-        }
-      });
+		const total = await this.db("unit as u")
+			.withSchema(this.RESERVATION_SCHEMA)
+			.count("u.id as total")
+			.where(function () {
+				this.whereNull("u.hotel_code").orWhere(
+					"u.hotel_code",
+					hotel_code
+				);
+			})
+			.andWhere(function () {
+				if (name) {
+					this.andWhere("u.name", "like", `%${name}%`);
+				}
+				if (status) {
+					this.andWhere("u.status", "like", `%${status}%`);
+				}
+				if (excludeId) {
+					this.andWhere("u.id", "!=", excludeId);
+				}
+			});
 
-    return { total: total[0].total, data };
-  }
+		return { total: total[0].total, data };
+	}
 
-  // Update Unit
-  public async updateUnit(
-    id: number,
-    hotel_code: number,
-    payload: IUpdateCommonInvPayload
-  ) {
-    return await this.db("unit")
-      .withSchema(this.RESERVATION_SCHEMA)
-      .where({ id, hotel_code })
-      .update(payload);
-  }
+	// Update Unit
+	public async updateUnit(
+		id: number,
+		hotel_code: number,
+		payload: IUpdateCommonInvPayload
+	) {
+		return await this.db("unit")
+			.withSchema(this.RESERVATION_SCHEMA)
+			.where({ id, hotel_code })
+			.update(payload);
+	}
 
-  //=================== Brand  ======================//
+	//=================== Brand  ======================//
 
-  // create Brand
-  public async createBrand(payload: ICreateCommonInvPayload) {
-    return await this.db("brand")
-      .withSchema(this.RESERVATION_SCHEMA)
-      .insert(payload);
-  }
+	// create Brand
+	public async createBrand(payload: ICreateCommonInvPayload) {
+		return await this.db("brand")
+			.withSchema(this.RESERVATION_SCHEMA)
+			.insert(payload);
+	}
 
-  // Get All Brand
-  public async getAllBrand(payload: {
-    limit?: string;
-    skip?: string;
-    name: string;
-    status?: string;
-    hotel_code: number;
-    excludeId?: number;
-  }) {
-    const { limit, skip, name, status, hotel_code, excludeId } = payload;
+	// Get All Brand
+	public async getAllBrand(payload: {
+		limit?: string;
+		skip?: string;
+		name: string;
+		status?: string;
+		hotel_code: number;
+		excludeId?: number;
+	}) {
+		const { limit, skip, name, status, hotel_code, excludeId } = payload;
 
-    const dtbs = this.db("brand as b");
+		const dtbs = this.db("brand as b");
 
-    if (limit && skip) {
-      dtbs.limit(parseInt(limit as string));
-      dtbs.offset(parseInt(skip as string));
-    }
+		if (limit && skip) {
+			dtbs.limit(parseInt(limit as string));
+			dtbs.offset(parseInt(skip as string));
+		}
 
-    const data = await dtbs
-      .withSchema(this.RESERVATION_SCHEMA)
-      .select("b.id", "b.hotel_code", "b.name", "b.status")
-      .where(function () {
-        this.whereNull("b.hotel_code").orWhere("b.hotel_code", hotel_code);
-      })
-      .andWhere(function () {
-        if (name) {
-          this.andWhere("b.name", "like", `%${name}%`);
-        }
-        if (status) {
-          this.andWhere("b.status", "like", `%${status}%`);
-        }
-        if (excludeId) {
-          this.andWhere("b.id", "!=", excludeId);
-        }
-      })
-      .orderBy("b.id", "desc");
+		const data = await dtbs
+			.withSchema(this.RESERVATION_SCHEMA)
+			.select("b.id", "b.hotel_code", "b.name", "b.status")
+			.where(function () {
+				this.whereNull("b.hotel_code").orWhere(
+					"b.hotel_code",
+					hotel_code
+				);
+			})
+			.andWhere(function () {
+				if (name) {
+					this.andWhere("b.name", "like", `%${name}%`);
+				}
+				if (status) {
+					this.andWhere("b.status", "like", `%${status}%`);
+				}
+				if (excludeId) {
+					this.andWhere("b.id", "!=", excludeId);
+				}
+			})
+			.orderBy("b.id", "desc");
 
-    const total = await this.db("brand as b")
-      .withSchema(this.RESERVATION_SCHEMA)
-      .count("b.id as total")
-      .where(function () {
-        this.whereNull("b.hotel_code").orWhere("b.hotel_code", hotel_code);
-      })
-      .andWhere(function () {
-        if (name) {
-          this.andWhere("b.name", "like", `%${name}%`);
-        }
-        if (status) {
-          this.andWhere("b.status", "like", `%${status}%`);
-        }
-        if (excludeId) {
-          this.andWhere("b.id", "!=", excludeId);
-        }
-      });
+		const total = await this.db("brand as b")
+			.withSchema(this.RESERVATION_SCHEMA)
+			.count("b.id as total")
+			.where(function () {
+				this.whereNull("b.hotel_code").orWhere(
+					"b.hotel_code",
+					hotel_code
+				);
+			})
+			.andWhere(function () {
+				if (name) {
+					this.andWhere("b.name", "like", `%${name}%`);
+				}
+				if (status) {
+					this.andWhere("b.status", "like", `%${status}%`);
+				}
+				if (excludeId) {
+					this.andWhere("b.id", "!=", excludeId);
+				}
+			});
 
-    return { total: total[0].total, data };
-  }
+		return { total: total[0].total, data };
+	}
 
-  // Update Brand
-  public async updateBrand(
-    id: number,
-    hotel_code: number,
-    payload: IUpdateCommonInvPayload
-  ) {
-    return await this.db("brand")
-      .withSchema(this.RESERVATION_SCHEMA)
-      .where({ id, hotel_code })
-      .update(payload);
-  }
+	// Update Brand
+	public async updateBrand(
+		id: number,
+		hotel_code: number,
+		payload: IUpdateCommonInvPayload
+	) {
+		return await this.db("brand")
+			.withSchema(this.RESERVATION_SCHEMA)
+			.where({ id, hotel_code })
+			.update(payload);
+	}
 
-  //=================== Supplier  ======================//
+	//=================== Supplier  ======================//
 
-  // create Supplier
-  public async createSupplier(payload: ICreateInvSupplierPayload) {
-    return await this.db("supplier")
-      .withSchema(this.RESERVATION_SCHEMA)
-      .insert(payload);
-  }
+	// create Supplier
+	public async createSupplier(payload: ICreateInvSupplierPayload) {
+		return await this.db("supplier")
+			.withSchema(this.RESERVATION_SCHEMA)
+			.insert(payload);
+	}
 
-  // Get All Supplier
-  public async getAllSupplier(payload: {
-    excludeId?: number;
-    limit?: string;
-    skip?: string;
-    name?: string;
-    status?: string;
-    hotel_code: number;
-    res_id?: number;
-  }) {
-    const { excludeId, limit, skip, hotel_code, name, status, res_id } =
-      payload;
+	// Get All Supplier
+	public async getAllSupplier(payload: {
+		excludeId?: number;
+		limit?: string;
+		skip?: string;
+		name?: string;
+		status?: string;
+		hotel_code: number;
+		res_id?: number;
+	}) {
+		const { excludeId, limit, skip, hotel_code, name, status, res_id } =
+			payload;
 
-    const dtbs = this.db("supplier as s");
+		const dtbs = this.db("supplier as s");
 
-    if (limit && skip) {
-      dtbs.limit(parseInt(limit as string));
-      dtbs.offset(parseInt(skip as string));
-    }
+		if (limit && skip) {
+			dtbs.limit(parseInt(limit as string));
+			dtbs.offset(parseInt(skip as string));
+		}
 
-    const data = await dtbs
-      .withSchema(this.RESERVATION_SCHEMA)
-      .select("s.id", "s.name", "s.phone", "s.status", "s.last_balance")
-      .where("s.hotel_code", hotel_code)
-      .andWhere(function () {
-        if (name) {
-          this.andWhere("s.name", "like", `%${name}%`);
-        }
-        if (status) {
-          this.andWhere("s.status", "like", `%${status}%`);
-        }
-        if (excludeId) {
-          this.andWhere("s.id", "!=", excludeId);
-        }
-        if (res_id) {
-          this.andWhere("s.res_id", res_id);
-        }
-      })
-      .orderBy("s.id", "desc");
+		const data = await dtbs
+			.withSchema(this.RESERVATION_SCHEMA)
+			.select("s.id", "s.name", "s.phone", "s.status", "s.last_balance")
+			.where("s.hotel_code", hotel_code)
+			.andWhere(function () {
+				if (name) {
+					this.andWhere("s.name", "like", `%${name}%`);
+				}
+				if (status) {
+					this.andWhere("s.status", "like", `%${status}%`);
+				}
+				if (excludeId) {
+					this.andWhere("s.id", "!=", excludeId);
+				}
+				if (res_id) {
+					this.andWhere("s.res_id", res_id);
+				}
+			})
+			.orderBy("s.id", "desc");
 
-    const total = await this.db("supplier as s")
-      .withSchema(this.RESERVATION_SCHEMA)
-      .count("s.id as total")
-      .where("s.hotel_code", hotel_code)
-      .andWhere(function () {
-        if (name) {
-          this.andWhere("s.name", "like", `%${name}%`);
-        }
-        if (status) {
-          this.andWhere("s.status", "like", `%${status}%`);
-        }
-        if (res_id) {
-          this.andWhere("s.res_id", res_id);
-        }
-        if (excludeId) {
-          this.andWhere("s.id", "!=", excludeId);
-        }
-      });
+		const total = await this.db("supplier as s")
+			.withSchema(this.RESERVATION_SCHEMA)
+			.count("s.id as total")
+			.where("s.hotel_code", hotel_code)
+			.andWhere(function () {
+				if (name) {
+					this.andWhere("s.name", "like", `%${name}%`);
+				}
+				if (status) {
+					this.andWhere("s.status", "like", `%${status}%`);
+				}
+				if (res_id) {
+					this.andWhere("s.res_id", res_id);
+				}
+				if (excludeId) {
+					this.andWhere("s.id", "!=", excludeId);
+				}
+			});
 
-    return { total: total[0].total, data };
-  }
+		return { total: total[0].total, data };
+	}
 
-  // get single supplier
-  public async getSingleSupplier(id: number, hotel_code: number) {
-    return await this.db("supplier as s")
-      .withSchema(this.RESERVATION_SCHEMA)
-      .select("*")
-      .where("s.id", id)
-      .andWhere("s.hotel_code", hotel_code);
-  }
+	// get single supplier
+	public async getSingleSupplier(id: number, hotel_code: number) {
+		return await this.db("supplier as s")
+			.withSchema(this.RESERVATION_SCHEMA)
+			.select("*")
+			.where("s.id", id)
+			.andWhere("s.hotel_code", hotel_code);
+	}
 
-  // Supplier payment report
-  public async getSupplierPayment({
-    from_date,
-    to_date,
-    limit,
-    skip,
-    key,
-    hotel_code,
-  }: {
-    hotel_code: number;
-    limit: string;
-    skip: string;
-    key: string;
-    from_date: string;
-    to_date: string;
-  }) {
-    const endDate = new Date(to_date);
-    endDate.setDate(endDate.getDate() + 1);
-    const dtbs = this.db("supplier_payment as sp");
+	// Supplier payment report
+	public async getSupplierPayment({
+		from_date,
+		to_date,
+		limit,
+		skip,
+		key,
+		hotel_code,
+	}: {
+		hotel_code: number;
+		limit: string;
+		skip: string;
+		key: string;
+		from_date: string;
+		to_date: string;
+	}) {
+		const endDate = new Date(to_date);
+		endDate.setDate(endDate.getDate() + 1);
+		const dtbs = this.db("supplier_payment as sp");
 
-    if (limit && skip) {
-      dtbs.limit(parseInt(limit as string));
-      dtbs.offset(parseInt(skip as string));
-    }
+		if (limit && skip) {
+			dtbs.limit(parseInt(limit as string));
+			dtbs.offset(parseInt(skip as string));
+		}
 
-    const data = await dtbs
-      .withSchema(this.RESERVATION_SCHEMA)
-      .select(
-        "sp.id",
-        "sp.total_paid_amount",
-        "p.voucher_no",
-        "ac.name as account_name",
-        "ac.ac_type",
-        "sp.created_at",
-        "s.name as supplier_name"
-      )
-      .leftJoin("purchase as p", "sp.purchase_id", "p.id")
-      .leftJoin("account as ac", "sp.ac_tr_ac_id", "ac.id")
-      .leftJoin("supplier as s", "sp.supplier_id", "s.id")
-      .where(function () {
-        this.andWhere("sp.hotel_code", hotel_code);
+		const data = await dtbs
+			.withSchema(this.RESERVATION_SCHEMA)
+			.select(
+				"sp.id",
+				"sp.total_paid_amount",
+				"p.voucher_no",
+				"ac.name as account_name",
+				"ac.acc_type",
+				"sp.created_at",
+				"s.name as supplier_name"
+			)
+			.leftJoin("purchase as p", "sp.purchase_id", "p.id")
+			.leftJoin("account as ac", "sp.ac_tr_ac_id", "ac.id")
+			.leftJoin("supplier as s", "sp.supplier_id", "s.id")
+			.where(function () {
+				this.andWhere("sp.hotel_code", hotel_code);
 
-        if (from_date && endDate) {
-          this.andWhereBetween("sp.created_at", [from_date, endDate]);
-        }
+				if (from_date && endDate) {
+					this.andWhereBetween("sp.created_at", [from_date, endDate]);
+				}
 
-        if (key) {
-          this.andWhere("p.voucher_no", "like", `%${key}%`)
-            .orWhere("s.name", "like", `%${key}%`)
-            .orWhere("ac.name", "like", `%${key}%`);
-        }
+				if (key) {
+					this.andWhere("p.voucher_no", "like", `%${key}%`)
+						.orWhere("s.name", "like", `%${key}%`)
+						.orWhere("ac.name", "like", `%${key}%`);
+				}
 
-        this.andWhereRaw("sp.res_id IS NULL");
-      });
+				this.andWhereRaw("sp.res_id IS NULL");
+			});
 
-    const total = await this.db("supplier_payment as sp")
-      .withSchema(this.RESERVATION_SCHEMA)
-      .count("sp.id as total")
-      .leftJoin("account as ac", "sp.ac_tr_ac_id", "ac.id")
-      .leftJoin("purchase as p", "sp.purchase_id", "p.id")
-      .leftJoin("supplier as s", "sp.supplier_id", "s.id")
-      .where(function () {
-        this.andWhere("sp.hotel_code", hotel_code);
+		const total = await this.db("supplier_payment as sp")
+			.withSchema(this.RESERVATION_SCHEMA)
+			.count("sp.id as total")
+			.leftJoin("account as ac", "sp.ac_tr_ac_id", "ac.id")
+			.leftJoin("purchase as p", "sp.purchase_id", "p.id")
+			.leftJoin("supplier as s", "sp.supplier_id", "s.id")
+			.where(function () {
+				this.andWhere("sp.hotel_code", hotel_code);
 
-        if (from_date && endDate) {
-          this.andWhereBetween("sp.created_at", [from_date, endDate]);
-        }
+				if (from_date && endDate) {
+					this.andWhereBetween("sp.created_at", [from_date, endDate]);
+				}
 
-        if (key) {
-          this.andWhere("p.voucher_no", "like", `%${key}%`)
-            .orWhere("s.name", "like", `%${key}%`)
-            .orWhere("ac.name", "like", `%${key}%`);
-        }
-        this.andWhereRaw("sp.res_id IS NULL");
-      });
+				if (key) {
+					this.andWhere("p.voucher_no", "like", `%${key}%`)
+						.orWhere("s.name", "like", `%${key}%`)
+						.orWhere("ac.name", "like", `%${key}%`);
+				}
+				this.andWhereRaw("sp.res_id IS NULL");
+			});
 
-    return { data, total: total[0].total };
-  }
+		return { data, total: total[0].total };
+	}
 
-  // Supplier ledger report
-  public async getSupplierLedgerReport({
-    id,
-    from_date,
-    to_date,
-    limit,
-    skip,
-  }: {
-    id: number;
-    limit: string;
-    skip: string;
-    from_date: string;
-    to_date: string;
-  }) {
-    const endDate = new Date(to_date);
-    endDate.setDate(endDate.getDate() + 1);
-    return await this.db("supplier as s")
-      .withSchema(this.RESERVATION_SCHEMA)
-      .select(
-        "s.name as supplier_name",
-        "s.phone as supplier_phone",
-        this.db.raw(
-          `
+	// Supplier ledger report
+	public async getSupplierLedgerReport({
+		id,
+		from_date,
+		to_date,
+		limit,
+		skip,
+	}: {
+		id: number;
+		limit: string;
+		skip: string;
+		from_date: string;
+		to_date: string;
+	}) {
+		const endDate = new Date(to_date);
+		endDate.setDate(endDate.getDate() + 1);
+		return await this.db("supplier as s")
+			.withSchema(this.RESERVATION_SCHEMA)
+			.select(
+				"s.name as supplier_name",
+				"s.phone as supplier_phone",
+				this.db.raw(
+					`
           (SELECT JSON_ARRAYAGG(
               JSON_OBJECT(
                 'id', sl.id,
@@ -448,40 +466,40 @@ class CommonInventoryModel extends Schema {
            order by sl.id  ASC
           ) as supplier_ledger
         `,
-          from_date !== undefined && to_date !== undefined
-            ? [from_date, endDate]
-            : []
-        )
-      )
-      .where("s.id", id)
-      .groupBy("s.id");
-  }
+					from_date !== undefined && to_date !== undefined
+						? [from_date, endDate]
+						: []
+				)
+			)
+			.where("s.id", id)
+			.groupBy("s.id");
+	}
 
-  // Update supplier
-  public async updateSupplier(
-    id: number,
-    hotel_code: number,
-    payload: IUpdateInvSupplierPayload
-  ) {
-    return await this.db("supplier")
-      .withSchema(this.RESERVATION_SCHEMA)
-      .where({ id, hotel_code })
-      .update(payload);
-  }
+	// Update supplier
+	public async updateSupplier(
+		id: number,
+		hotel_code: number,
+		payload: IUpdateInvSupplierPayload
+	) {
+		return await this.db("supplier")
+			.withSchema(this.RESERVATION_SCHEMA)
+			.where({ id, hotel_code })
+			.update(payload);
+	}
 
-  // insert supplier payment
-  public async insertSupplierPayment(payload: {
-    hotel_code: number;
-    purchase_id: number;
-    ac_tr_ac_id: number;
-    res_id?: number;
-    total_paid_amount: number;
-    created_by: number;
-    supplier_id: number;
-  }) {
-    return await this.db("supplier_payment")
-      .withSchema(this.RESERVATION_SCHEMA)
-      .insert(payload);
-  }
+	// insert supplier payment
+	public async insertSupplierPayment(payload: {
+		hotel_code: number;
+		purchase_id: number;
+		ac_tr_ac_id: number;
+		res_id?: number;
+		total_paid_amount: number;
+		created_by: number;
+		supplier_id: number;
+	}) {
+		return await this.db("supplier_payment")
+			.withSchema(this.RESERVATION_SCHEMA)
+			.insert(payload);
+	}
 }
 export default CommonInventoryModel;
