@@ -154,12 +154,16 @@ class CommonInvService extends AbstractServices {
 	public async createUnit(req: Request) {
 		return await this.db.transaction(async (trx) => {
 			const { hotel_code, id: admin_id } = req.hotel_admin;
-			const { name } = req.body as ICreateCommonInvPayload;
+			const { name, short_code } = req.body as ICreateCommonInvPayload;
 
 			// Category name check
 			const Model = this.Model.CommonInventoryModel(trx);
 
-			const { data } = await Model.getAllUnit({ name, hotel_code });
+			const { data } = await Model.getAllUnit({
+				name,
+				hotel_code,
+				short_code,
+			});
 
 			if (data.length) {
 				return {
@@ -172,6 +176,7 @@ class CommonInvService extends AbstractServices {
 			await Model.createUnit({
 				hotel_code,
 				name,
+				short_code,
 				created_by: admin_id,
 			});
 
@@ -232,6 +237,7 @@ class CommonInvService extends AbstractServices {
 
 			const res = await model.updateUnit(parseInt(id), hotel_code, {
 				name: updatePayload.name,
+				short_code: updatePayload.short_code,
 				status: updatePayload.status,
 			});
 

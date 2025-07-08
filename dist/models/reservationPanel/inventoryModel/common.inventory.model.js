@@ -76,7 +76,7 @@ class CommonInventoryModel extends schema_1.default {
                     this.andWhere("c.id", "!=", excludeId);
                 }
             });
-            return { total: total[0].total, data };
+            return { total: Number(total[0].total), data };
         });
     }
     // Update Category
@@ -104,44 +104,32 @@ class CommonInventoryModel extends schema_1.default {
     createUnit(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("unit")
-                .withSchema(this.RESERVATION_SCHEMA)
+                .withSchema(this.HOTEL_INVENTORY_SCHEMA)
                 .insert(payload);
         });
     }
     // Get All Unit
     getAllUnit(payload) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { limit, skip, name, status, hotel_code, excludeId } = payload;
+            const { limit, skip, name, status, hotel_code, excludeId, short_code } = payload;
             const dtbs = this.db("unit as u");
             if (limit && skip) {
                 dtbs.limit(parseInt(limit));
                 dtbs.offset(parseInt(skip));
             }
-            const data = yield dtbs
-                .withSchema(this.RESERVATION_SCHEMA)
-                .select("u.id", "u.hotel_code", "u.name", "u.status")
+            dtbs.withSchema(this.HOTEL_INVENTORY_SCHEMA)
+                .select("u.id", "u.hotel_code", "u.name", "u.short_code", "u.status", "ua.id as created_by_id", "ua.name as created_by_name", "u.is_deleted")
+                .joinRaw(`LEFT JOIN ?? as ua ON ua.id = u.created_by`, [
+                `${this.RESERVATION_SCHEMA}.user_admin`,
+            ])
                 .where(function () {
                 this.whereNull("u.hotel_code").orWhere("u.hotel_code", hotel_code);
-            })
-                .andWhere(function () {
-                if (name) {
-                    this.andWhere("u.name", "like", `%${name}%`);
-                }
-                if (status) {
-                    this.andWhere("u.status", "like", `%${status}%`);
-                }
-                if (excludeId) {
-                    this.andWhere("u.id", "!=", excludeId);
-                }
-            })
-                .orderBy("u.id", "desc");
-            const total = yield this.db("unit as u")
-                .withSchema(this.RESERVATION_SCHEMA)
-                .count("u.id as total")
-                .where(function () {
-                this.whereNull("u.hotel_code").orWhere("u.hotel_code", hotel_code);
-            })
-                .andWhere(function () {
+            });
+            if (short_code) {
+                dtbs.andWhere("u.short_code", short_code);
+            }
+            dtbs.andWhere("u.is_deleted", false);
+            dtbs.andWhere(function () {
                 if (name) {
                     this.andWhere("u.name", "like", `%${name}%`);
                 }
@@ -152,14 +140,41 @@ class CommonInventoryModel extends schema_1.default {
                     this.andWhere("u.id", "!=", excludeId);
                 }
             });
+            const data = yield dtbs.orderBy("u.id", "desc");
+            const totalQuery = this.db("unit as u")
+                .withSchema(this.HOTEL_INVENTORY_SCHEMA)
+                .count("u.id as total")
+                .joinRaw(`LEFT JOIN ?? as ua ON ua.id = u.created_by`, [
+                `${this.RESERVATION_SCHEMA}.user_admin`,
+            ])
+                .where(function () {
+                this.whereNull("u.hotel_code").orWhere("u.hotel_code", hotel_code);
+            });
+            if (short_code) {
+                totalQuery.andWhere("u.short_code", short_code);
+            }
+            totalQuery.andWhere("u.is_deleted", false);
+            totalQuery.andWhere(function () {
+                if (name) {
+                    this.andWhere("u.name", "like", `%${name}%`);
+                }
+                if (status) {
+                    this.andWhere("u.status", "like", `%${status}%`);
+                }
+                if (excludeId) {
+                    this.andWhere("u.id", "!=", excludeId);
+                }
+            });
+            const total = yield totalQuery;
             return { total: total[0].total, data };
         });
     }
     // Update Unit
     updateUnit(id, hotel_code, payload) {
         return __awaiter(this, void 0, void 0, function* () {
+            console.log({ payload });
             return yield this.db("unit")
-                .withSchema(this.RESERVATION_SCHEMA)
+                .withSchema(this.HOTEL_INVENTORY_SCHEMA)
                 .where({ id, hotel_code })
                 .update(payload);
         });

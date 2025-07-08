@@ -6,6 +6,7 @@ class CommonInvValidator {
 	// create Common validation
 	public createCommonModuleValidator = Joi.object({
 		name: Joi.string().required(),
+		short_code: Joi.string().optional(),
 	});
 
 	// get all Common query validator
@@ -20,6 +21,7 @@ class CommonInvValidator {
 	public UpdateCommonModuleValidator = Joi.object({
 		name: Joi.string().allow("").optional(),
 		status: Joi.boolean().optional(),
+		short_code: Joi.string().optional(),
 	});
 
 	//=================== Supplier ======================//

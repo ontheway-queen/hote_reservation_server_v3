@@ -147,10 +147,14 @@ class CommonInvService extends abstract_service_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
                 const { hotel_code, id: admin_id } = req.hotel_admin;
-                const { name } = req.body;
+                const { name, short_code } = req.body;
                 // Category name check
                 const Model = this.Model.CommonInventoryModel(trx);
-                const { data } = yield Model.getAllUnit({ name, hotel_code });
+                const { data } = yield Model.getAllUnit({
+                    name,
+                    hotel_code,
+                    short_code,
+                });
                 if (data.length) {
                     return {
                         success: false,
@@ -161,6 +165,7 @@ class CommonInvService extends abstract_service_1.default {
                 yield Model.createUnit({
                     hotel_code,
                     name,
+                    short_code,
                     created_by: admin_id,
                 });
                 return {
@@ -214,6 +219,7 @@ class CommonInvService extends abstract_service_1.default {
                 }
                 const res = yield model.updateUnit(parseInt(id), hotel_code, {
                     name: updatePayload.name,
+                    short_code: updatePayload.short_code,
                     status: updatePayload.status,
                 });
                 if (res === 1) {

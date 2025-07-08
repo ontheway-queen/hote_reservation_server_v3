@@ -10,6 +10,7 @@ class CommonInvValidator {
         // create Common validation
         this.createCommonModuleValidator = joi_1.default.object({
             name: joi_1.default.string().required(),
+            short_code: joi_1.default.string().optional(),
         });
         // get all Common query validator
         this.getAllCommonModuleQueryValidator = joi_1.default.object({
@@ -22,6 +23,7 @@ class CommonInvValidator {
         this.UpdateCommonModuleValidator = joi_1.default.object({
             name: joi_1.default.string().allow("").optional(),
             status: joi_1.default.boolean().optional(),
+            short_code: joi_1.default.string().optional(),
         });
         //=================== Supplier ======================//
         // create Supplier validation
