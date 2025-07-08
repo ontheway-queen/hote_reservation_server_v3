@@ -31,7 +31,19 @@ class RoomModel extends Schema {
 		limit?: string;
 		skip?: string;
 		exact_name?: string;
-	}) {
+		room_ids?: number[];
+	}): Promise<{
+		data: {
+			id: number;
+			hotel_code: number;
+			room_name: number;
+			floor_nor: string;
+			room_type_id: number;
+			status: string;
+			room_type_name: string;
+		}[];
+		total: number;
+	}> {
 		const {
 			limit,
 			skip,
@@ -40,6 +52,7 @@ class RoomModel extends Schema {
 			search,
 			exact_name,
 			status,
+			room_ids,
 		} = payload;
 
 		const dtbs = this.db("rooms as r");
@@ -79,6 +92,10 @@ class RoomModel extends Schema {
 				if (status) {
 					this.andWhere("r.status", status);
 				}
+
+				if (room_ids?.length) {
+					this.whereIn("r.id", room_ids);
+				}
 			})
 			.orderBy("r.room_name", "asc");
 
@@ -103,6 +120,9 @@ class RoomModel extends Schema {
 
 				if (status) {
 					this.andWhere("r.status", status);
+				}
+				if (room_ids?.length) {
+					this.whereIn("r.id", room_ids);
 				}
 			});
 

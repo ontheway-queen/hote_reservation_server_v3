@@ -42,8 +42,7 @@ class GuestValidator {
       .optional(),
     address: Joi.string().allow("").optional(),
     phone: Joi.string().allow("").optional(),
-    country: Joi.string().lowercase().allow("").trim().regex(/^\S/).optional(),
-    nationality: Joi.string().allow("").optional(),
+    country_id: Joi.number().optional(),
   });
 }
 export default GuestValidator;

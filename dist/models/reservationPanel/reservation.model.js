@@ -85,7 +85,7 @@ AND (
     }
     getAllAvailableRoomsTypeWithAvailableRoomCount(payload) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { hotel_code, check_in, check_out, room_type_id, exclude_booking_id, } = payload;
+            const { hotel_code, check_in, check_out, room_type_id } = payload;
             return yield this.db("room_types as rt")
                 .withSchema(this.RESERVATION_SCHEMA)
                 .select("rt.id", "rt.name", "rt.description", "rt.hotel_code", this.db.raw(`MIN(ra.available_rooms) AS available_rooms`), this.db.raw(`
@@ -110,18 +110,6 @@ AND (
                 .andWhere(function () {
                 if (room_type_id) {
                     this.andWhere("rt.id", room_type_id);
-                }
-            })
-                .modify((qb) => {
-                if (exclude_booking_id) {
-                    qb.leftJoin(this.db.raw(`(
-            SELECT br.room_type_id, br.check_in::date + gs.i AS date
-            FROM booking_rooms br
-            JOIN generate_series(0, br.nights - 1) AS gs(i) ON TRUE
-            WHERE br.booking_id = ?
-          ) AS exclude_dates`, [exclude_booking_id]), function () {
-                        this.on("ra.room_type_id", "exclude_dates.room_type_id").andOn("ra.date", "exclude_dates.date");
-                    });
                 }
             })
                 .groupBy("rt.id")
@@ -202,11 +190,30 @@ AND (
                 .insert(payload, "id");
         });
     }
+    getAllBookingRoomsByBookingId({ booking_id, hotel_code, }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("booking_rooms")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .select("id", "room_id", "unit_base_rate", "unit_changed_rate", "base_rate", "changed_rate")
+                .where({
+                booking_id,
+            });
+        });
+    }
     insertBookingRoom(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("booking_rooms")
                 .withSchema(this.RESERVATION_SCHEMA)
                 .insert(payload, "id");
+        });
+    }
+    updateSingleBookingRoom(payload, where) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("booking_rooms")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .update(payload)
+                .where("room_id", where.room_id)
+                .andWhere("booking_id", where.booking_id);
         });
     }
     insertBookingRoomGuest(payload) {
@@ -395,7 +402,7 @@ AND (
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("bookings as b")
                 .withSchema(this.RESERVATION_SCHEMA)
-                .select("b.id", "b.booking_reference", this.db.raw(`TO_CHAR(b.check_in, 'YYYY-MM-DD') as check_in`), this.db.raw(`TO_CHAR(b.check_out, 'YYYY-MM-DD') as check_out`), this.db.raw(`TO_CHAR(b.booking_date, 'YYYY-MM-DD') as booking_date`), "b.booking_type", "b.status", "b.is_individual_booking", "src.name as source_name", "b.total_amount", "b.vat", "b.discount_amount", "b.service_charge", "b.payment_status", "b.comments", "b.pickup", "b.pickup_from", "b.pickup_time", "b.drop", "b.drop_time", "b.drop_to", "g.id as guest_id", "g.first_name", "g.last_name", "g.email as guest_email", "g.phone", "g.address", "c.country_name", "g.passport_number", "c.nationality", this.db.raw(`(
+                .select("b.id", "b.booking_reference", this.db.raw(`TO_CHAR(b.check_in, 'YYYY-MM-DD') as check_in`), this.db.raw(`TO_CHAR(b.check_out, 'YYYY-MM-DD') as check_out`), this.db.raw(`TO_CHAR(b.booking_date, 'YYYY-MM-DD') as booking_date`), "b.booking_type", "b.status", "b.is_individual_booking", "src.name as source_name", "b.total_amount", "b.vat", "b.discount_amount", "b.service_charge", "b.service_charge_percentage", "b.vat_percentage", "b.payment_status", "b.comments", "b.pickup", "b.pickup_from", "b.pickup_time", "b.drop", "b.drop_time", "b.drop_to", "g.id as guest_id", "g.first_name", "g.last_name", "g.email as guest_email", "g.phone", "g.address", "c.country_name", "g.passport_number", "c.nationality", this.db.raw(`(
             SELECT json_agg(
               json_build_object(
                 'id', br.id,

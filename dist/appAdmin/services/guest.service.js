@@ -101,7 +101,7 @@ class GuestService extends abstract_service_1.default {
     }
     updateSingleGuestValidator(req) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { first_name, last_name, email, address, phone, country, nationality, } = req.body;
+            const { first_name, last_name, email, address, phone, country_id } = req.body;
             console.log(req.body);
             const { hotel_code } = req.hotel_admin;
             // Model
@@ -128,6 +128,7 @@ class GuestService extends abstract_service_1.default {
                 email,
                 address,
                 phone,
+                country_id,
             });
             return {
                 success: true,

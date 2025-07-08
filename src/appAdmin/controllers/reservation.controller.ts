@@ -114,7 +114,9 @@ export class ReservationController extends AbstractController {
       bodySchema: this.validator.updateSingleBookingValidator,
     },
     async (req: Request, res: Response) => {
-      const { code, ...data } = await this.service.updateSingleBooking(req);
+      const { code, ...data } = await this.service.updatePartialReservation(
+        req
+      );
       res.status(code).json(data);
     }
   );

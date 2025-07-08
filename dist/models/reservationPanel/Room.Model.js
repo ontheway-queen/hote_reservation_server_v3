@@ -29,7 +29,7 @@ class RoomModel extends schema_1.default {
     getAllRoom(payload) {
         var _a, _b;
         return __awaiter(this, void 0, void 0, function* () {
-            const { limit, skip, hotel_code, room_type_id, search, exact_name, status, } = payload;
+            const { limit, skip, hotel_code, room_type_id, search, exact_name, status, room_ids, } = payload;
             const dtbs = this.db("rooms as r");
             if (limit && skip) {
                 dtbs.limit(parseInt(limit));
@@ -56,6 +56,9 @@ class RoomModel extends schema_1.default {
                 if (status) {
                     this.andWhere("r.status", status);
                 }
+                if (room_ids === null || room_ids === void 0 ? void 0 : room_ids.length) {
+                    this.whereIn("r.id", room_ids);
+                }
             })
                 .orderBy("r.room_name", "asc");
             const total = yield this.db("rooms as r")
@@ -77,6 +80,9 @@ class RoomModel extends schema_1.default {
                 }
                 if (status) {
                     this.andWhere("r.status", status);
+                }
+                if (room_ids === null || room_ids === void 0 ? void 0 : room_ids.length) {
+                    this.whereIn("r.id", room_ids);
                 }
             });
             return {
