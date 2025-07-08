@@ -21,7 +21,7 @@ class CommonInvValidator {
         // update Common validation
         this.UpdateCommonModuleValidator = joi_1.default.object({
             name: joi_1.default.string().allow("").optional(),
-            status: joi_1.default.number().valid(0, 1).optional(),
+            status: joi_1.default.boolean().optional(),
         });
         //=================== Supplier ======================//
         // create Supplier validation

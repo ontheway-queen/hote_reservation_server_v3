@@ -23,7 +23,7 @@ class CommonInventoryModel extends schema_1.default {
     createCategory(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("category")
-                .withSchema(this.RESERVATION_SCHEMA)
+                .withSchema(this.HOTEL_INVENTORY_SCHEMA)
                 .insert(payload);
         });
     }
@@ -37,11 +37,15 @@ class CommonInventoryModel extends schema_1.default {
                 dtbs.offset(parseInt(skip));
             }
             const data = yield dtbs
-                .withSchema(this.RESERVATION_SCHEMA)
-                .select("c.id", "c.hotel_code", "c.name", "c.status")
+                .withSchema(this.HOTEL_INVENTORY_SCHEMA)
+                .select("c.id", "c.hotel_code", "c.name", "c.status", "ua.id as created_by_id", "ua.name as created_by_name", "c.is_deleted")
+                .joinRaw(`LEFT JOIN ?? as ua ON ua.id = c.created_by`, [
+                `${this.RESERVATION_SCHEMA}.user_admin`,
+            ])
                 .where(function () {
                 this.whereNull("c.hotel_code").orWhere("c.hotel_code", hotel_code);
             })
+                .andWhere("c.is_deleted", false)
                 .andWhere(function () {
                 if (name) {
                     this.andWhere("c.name", "like", `%${name}%`);
@@ -55,11 +59,12 @@ class CommonInventoryModel extends schema_1.default {
             })
                 .orderBy("c.id", "desc");
             const total = yield this.db("category as c")
-                .withSchema(this.RESERVATION_SCHEMA)
+                .withSchema(this.HOTEL_INVENTORY_SCHEMA)
                 .count("c.id as total")
                 .where(function () {
                 this.whereNull("c.hotel_code").orWhere("c.hotel_code", hotel_code);
             })
+                .andWhere("c.is_deleted", false)
                 .andWhere(function () {
                 if (name) {
                     this.andWhere("c.name", "like", `%${name}%`);
@@ -78,9 +83,20 @@ class CommonInventoryModel extends schema_1.default {
     updateCategory(id, payload) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("category")
-                .withSchema(this.RESERVATION_SCHEMA)
+                .withSchema(this.HOTEL_INVENTORY_SCHEMA)
                 .where({ id })
                 .update(payload);
+        });
+    }
+    // Delete Category
+    deleteCategory(id, hotel_code) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("category")
+                .withSchema(this.HOTEL_INVENTORY_SCHEMA)
+                .where({ id })
+                .andWhere({ hotel_code })
+                .andWhere({ is_deleted: false })
+                .update({ is_deleted: true });
         });
     }
     //=================== Unit  ======================//

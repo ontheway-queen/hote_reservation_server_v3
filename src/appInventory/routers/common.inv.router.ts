@@ -2,67 +2,72 @@ import AbstractRouter from "../../abstarcts/abstract.router";
 import CommonInvController from "../controllers/common.inv.controller";
 
 class CommonInvRouter extends AbstractRouter {
-  private controller = new CommonInvController();
+	private controller = new CommonInvController();
 
-  constructor() {
-    super();
-    this.callRouter();
-  }
+	constructor() {
+		super();
+		this.callRouter();
+	}
 
-  private callRouter() {
-    //=================== Category ======================//
+	private callRouter() {
+		//=================== Category ======================//
 
-    // Category
-    this.router
-      .route("/category")
-      .post(this.controller.createCategory)
-      .get(this.controller.getAllCategory);
+		// Category
+		this.router
+			.route("/category")
+			.post(this.controller.createCategory)
+			.get(this.controller.getAllCategory);
 
-    // edit Category
-    this.router.route("/category/:id").patch(this.controller.updateCategory);
+		// edit Category
+		this.router
+			.route("/category/:id")
+			.patch(this.controller.updateCategory)
+			.delete(this.controller.deleteCategory);
 
-    //=================== Unit ======================//
+		//=================== Unit ======================//
 
-    // Unit
-    this.router
-      .route("/unit")
-      .post(this.controller.createUnit)
-      .get(this.controller.getAllUnit);
+		// Unit
+		this.router
+			.route("/unit")
+			.post(this.controller.createUnit)
+			.get(this.controller.getAllUnit);
 
-    // edit Category
-    this.router.route("/unit/:id").patch(this.controller.updateUnit);
+		// edit Category
+		this.router.route("/unit/:id").patch(this.controller.updateUnit);
 
-    //=================== Brand ======================//
+		//=================== Brand ======================//
 
-    // Brand
-    this.router
-      .route("/brand")
-      .post(this.controller.createBrand)
-      .get(this.controller.getAllBrand);
+		// Brand
+		this.router
+			.route("/brand")
+			.post(this.controller.createBrand)
+			.get(this.controller.getAllBrand);
 
-    // edit Brand
-    this.router.route("/brand/:id").patch(this.controller.updateBrand);
+		// edit Brand
+		this.router.route("/brand/:id").patch(this.controller.updateBrand);
 
-    //=================== Supplier Router ======================//
+		//=================== Supplier Router ======================//
 
-    // Supplier
-    this.router
-      .route("/supplier")
-      .post(this.controller.createSupplier)
-      .get(this.controller.getAllSupplier);
+		// Supplier
+		this.router
+			.route("/supplier")
+			.post(this.controller.createSupplier)
+			.get(this.controller.getAllSupplier);
 
-    // Supplier
-    this.router
-      .route("/supplier/payment")
-      .get(this.controller.getAllSupplierPayment);
+		// Supplier
+		this.router
+			.route("/supplier/payment")
+			.get(this.controller.getAllSupplierPayment);
 
-    // Supplier ledger report
-    this.router
-      .route("/supplier-ledger-report/by-sup-id/:id")
-      .get(this.controller.getSupplierLedgerReport);
+		// Supplier ledger report
+		this.router
+			.route("/supplier-ledger-report/by-sup-id/:id")
+			.get(this.controller.getSupplierLedgerReport);
 
-    // edit Supplier
-    this.router.route("/supplier/:id").patch(this.controller.updateSupplier);
-  }
+		// edit Supplier
+		this.router
+			.route("/supplier/:id")
+			.patch(this.controller.updateSupplier);
+	}
 }
 export default CommonInvRouter;

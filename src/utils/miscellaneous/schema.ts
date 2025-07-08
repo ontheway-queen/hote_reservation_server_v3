@@ -6,6 +6,7 @@ class Schema {
 	public readonly RESTAURANT_SCHEMA = "hotel_restaurant";
 	public readonly FLEET_SCHEMA = "fleet_management";
 	public readonly ACC_SCHEMA = "acc";
+	public readonly HOTEL_INVENTORY_SCHEMA = "hotel_inventory";
 	public readonly TABLES = {
 		blood_group: "blood_group",
 		months: "months",

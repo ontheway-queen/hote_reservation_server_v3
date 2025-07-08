@@ -19,7 +19,10 @@ class CommonInvRouter extends abstract_router_1.default {
             .post(this.controller.createCategory)
             .get(this.controller.getAllCategory);
         // edit Category
-        this.router.route("/category/:id").patch(this.controller.updateCategory);
+        this.router
+            .route("/category/:id")
+            .patch(this.controller.updateCategory)
+            .delete(this.controller.deleteCategory);
         //=================== Unit ======================//
         // Unit
         this.router
@@ -51,7 +54,9 @@ class CommonInvRouter extends abstract_router_1.default {
             .route("/supplier-ledger-report/by-sup-id/:id")
             .get(this.controller.getSupplierLedgerReport);
         // edit Supplier
-        this.router.route("/supplier/:id").patch(this.controller.updateSupplier);
+        this.router
+            .route("/supplier/:id")
+            .patch(this.controller.updateSupplier);
     }
 }
 exports.default = CommonInvRouter;

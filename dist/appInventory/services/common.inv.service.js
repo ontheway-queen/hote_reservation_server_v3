@@ -93,7 +93,6 @@ class CommonInvService extends abstract_service_1.default {
                 const res = yield model.updateCategory(parseInt(id), {
                     name: updatePayload.name,
                     status: updatePayload.status,
-                    updated_by: admin_id,
                 });
                 if (res === 1) {
                     return {
@@ -109,6 +108,36 @@ class CommonInvService extends abstract_service_1.default {
                         message: "Category didn't find  from this ID",
                     };
                 }
+            }));
+        });
+    }
+    // Delete Category
+    deleteCategory(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
+                const { id } = req.params;
+                const { hotel_code } = req.hotel_admin;
+                const model = this.Model.CommonInventoryModel(trx);
+                const { data } = yield model.getAllCategory({
+                    hotel_code,
+                    excludeId: undefined,
+                    name: "",
+                });
+                const category = data.find((item) => item.id === Number(id));
+                if (!category) {
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_NOT_FOUND,
+                        message: "Category not found from this ID",
+                    };
+                }
+                // ✅ Soft delete
+                yield model.deleteCategory(Number(id), hotel_code);
+                return {
+                    success: true,
+                    code: this.StatusCode.HTTP_OK,
+                    message: "Category deleted successfully",
+                };
             }));
         });
     }
@@ -186,7 +215,6 @@ class CommonInvService extends abstract_service_1.default {
                 const res = yield model.updateUnit(parseInt(id), hotel_code, {
                     name: updatePayload.name,
                     status: updatePayload.status,
-                    updated_by: admin_id,
                 });
                 if (res === 1) {
                     return {
@@ -279,7 +307,6 @@ class CommonInvService extends abstract_service_1.default {
                 const res = yield model.updateBrand(parseInt(id), hotel_code, {
                     name: updatePayload.name,
                     status: updatePayload.status,
-                    updated_by: admin_id,
                 });
                 if (res === 1) {
                     return {

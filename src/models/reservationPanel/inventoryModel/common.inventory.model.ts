@@ -20,7 +20,7 @@ class CommonInventoryModel extends Schema {
 	// create Category
 	public async createCategory(payload: ICreateCommonInvPayload) {
 		return await this.db("category")
-			.withSchema(this.RESERVATION_SCHEMA)
+			.withSchema(this.HOTEL_INVENTORY_SCHEMA)
 			.insert(payload);
 	}
 
@@ -28,7 +28,7 @@ class CommonInventoryModel extends Schema {
 	public async getAllCategory(payload: {
 		limit?: string;
 		skip?: string;
-		name: string;
+		name?: string;
 		status?: string;
 		hotel_code: number;
 		excludeId?: number;
@@ -43,14 +43,26 @@ class CommonInventoryModel extends Schema {
 		}
 
 		const data = await dtbs
-			.withSchema(this.RESERVATION_SCHEMA)
-			.select("c.id", "c.hotel_code", "c.name", "c.status")
+			.withSchema(this.HOTEL_INVENTORY_SCHEMA)
+			.select(
+				"c.id",
+				"c.hotel_code",
+				"c.name",
+				"c.status",
+				"ua.id as created_by_id",
+				"ua.name as created_by_name",
+				"c.is_deleted"
+			)
+			.joinRaw(`LEFT JOIN ?? as ua ON ua.id = c.created_by`, [
+				`${this.RESERVATION_SCHEMA}.user_admin`,
+			])
 			.where(function () {
 				this.whereNull("c.hotel_code").orWhere(
 					"c.hotel_code",
 					hotel_code
 				);
 			})
+			.andWhere("c.is_deleted", false)
 			.andWhere(function () {
 				if (name) {
 					this.andWhere("c.name", "like", `%${name}%`);
@@ -65,7 +77,7 @@ class CommonInventoryModel extends Schema {
 			.orderBy("c.id", "desc");
 
 		const total = await this.db("category as c")
-			.withSchema(this.RESERVATION_SCHEMA)
+			.withSchema(this.HOTEL_INVENTORY_SCHEMA)
 			.count("c.id as total")
 			.where(function () {
 				this.whereNull("c.hotel_code").orWhere(
@@ -73,6 +85,7 @@ class CommonInventoryModel extends Schema {
 					hotel_code
 				);
 			})
+			.andWhere("c.is_deleted", false)
 			.andWhere(function () {
 				if (name) {
 					this.andWhere("c.name", "like", `%${name}%`);
@@ -91,9 +104,19 @@ class CommonInventoryModel extends Schema {
 	// Update Category
 	public async updateCategory(id: number, payload: IUpdateCommonInvPayload) {
 		return await this.db("category")
-			.withSchema(this.RESERVATION_SCHEMA)
+			.withSchema(this.HOTEL_INVENTORY_SCHEMA)
 			.where({ id })
 			.update(payload);
+	}
+
+	// Delete Category
+	public async deleteCategory(id: number, hotel_code: number) {
+		return await this.db("category")
+			.withSchema(this.HOTEL_INVENTORY_SCHEMA)
+			.where({ id })
+			.andWhere({ hotel_code })
+			.andWhere({ is_deleted: false })
+			.update({ is_deleted: true });
 	}
 
 	//=================== Unit  ======================//
