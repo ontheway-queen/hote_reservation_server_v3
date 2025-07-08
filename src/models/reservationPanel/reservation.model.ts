@@ -200,7 +200,7 @@ AND (
           .whereRaw("br.room_id = r.id")
           .andWhere(function () {
             this.where(function () {
-              this.where("b.booking_type", "B").whereNotIn("b.status", [
+              this.where("b.booking_type", "B").whereNotIn("br.status", [
                 "checked_out",
                 "pending",
                 "canceled",
@@ -208,14 +208,14 @@ AND (
               ]);
             }).orWhere(function () {
               this.where("b.booking_type", "H").where(
-                "b.status",
+                "br.status",
                 "!=",
                 "canceled"
               );
             });
           })
-          .andWhere("b.check_in", "<", check_out)
-          .andWhere("b.check_out", ">", check_in);
+          .andWhere("br.check_in", "<", check_out)
+          .andWhere("br.check_out", ">", check_in);
       });
   }
 
@@ -263,6 +263,8 @@ AND (
       unit_changed_rate: number;
       base_rate: number;
       changed_rate: number;
+      check_in: string;
+      check_out: string;
     }[]
   > {
     return await this.db("booking_rooms")
@@ -273,7 +275,9 @@ AND (
         "unit_base_rate",
         "unit_changed_rate",
         "base_rate",
-        "changed_rate"
+        "changed_rate",
+        "check_in",
+        "check_out"
       )
       .where({
         booking_id,
@@ -286,12 +290,50 @@ AND (
       .insert(payload, "id");
   }
 
+  public async getSingleBookingRoom({
+    booking_id,
+    room_id,
+  }: {
+    booking_id: number;
+    room_id: number;
+  }): Promise<{
+    id: number;
+    room_id: number;
+    unit_base_rate: number;
+    unit_changed_rate: number;
+    base_rate: number;
+    changed_rate: number;
+    check_in: string;
+    check_out: string;
+  }> {
+    return await this.db("booking_rooms")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .select(
+        "id",
+        "room_id",
+        "unit_base_rate",
+        "unit_changed_rate",
+        "base_rate",
+        "changed_rate",
+        "check_in",
+        "check_out"
+      )
+      .where({
+        booking_id,
+        room_id,
+      })
+      .first();
+  }
+
   public async updateSingleBookingRoom(
     payload: {
-      unit_changed_rate: number;
-      unit_base_rate: number;
-      base_rate: number;
-      changed_rate: number;
+      unit_changed_rate?: number;
+      unit_base_rate?: number;
+      base_rate?: number;
+      changed_rate?: number;
+      status?: "checked_in" | "checked_out" | "confirmed";
+      checked_out_at?: string;
+      checked_in_at?: string;
     },
     where: {
       room_id: number;
@@ -303,6 +345,26 @@ AND (
       .update(payload)
       .where("room_id", where.room_id)
       .andWhere("booking_id", where.booking_id);
+  }
+
+  public async updateAllBookingRoomsByBookingID(
+    payload: {
+      unit_changed_rate?: number;
+      unit_base_rate?: number;
+      base_rate?: number;
+      changed_rate?: number;
+      status?: "checked_in" | "checked_out" | "confirmed";
+      checked_out_at?: string;
+      checked_in_at?: string;
+    },
+    where: {
+      booking_id: number;
+    }
+  ) {
+    return await this.db("booking_rooms")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .update(payload)
+      .where("booking_id", where.booking_id);
   }
 
   public async insertBookingRoomGuest(payload: {
@@ -471,85 +533,319 @@ AND (
     };
   }
 
-  // public async getSingleBooking(
-  //   hotel_code: number,
-  //   booking_id: number
-  // ): Promise<IBookingDetails | undefined> {
-  //   return await this.db("bookings as b")
-  //     .withSchema(this.RESERVATION_SCHEMA)
-  //     .select(
-  //       "b.id",
-  //       "b.booking_reference",
-  //       this.db.raw(`TO_CHAR(b.check_in, 'YYYY-MM-DD') as check_in`),
-  //       this.db.raw(`TO_CHAR(b.check_out, 'YYYY-MM-DD') as check_out`),
-  //       this.db.raw(`TO_CHAR(b.booking_date, 'YYYY-MM-DD') as booking_date`),
-  //       "b.booking_type",
-  //       "b.status",
-  //       "b.is_individual_booking",
-  //       "src.name as source_name",
-  //       "b.total_amount",
-  //       "b.vat",
-  //       "b.discount_amount",
-  //       "b.service_charge",
-  //       "b.payment_status",
-  //       "b.comments",
-  //       "b.pickup",
-  //       "b.pickup_from",
-  //       "b.pickup_time",
-  //       "b.drop",
-  //       "b.drop_time",
-  //       "b.drop_to",
-  //       "g.id as guest_id",
-  //       "g.first_name",
-  //       "g.last_name",
-  //       "g.email as guest_email",
-  //       "g.phone",
-  //       "g.address",
-  //       "g.country",
-  //       "g.passport_number",
-  //       "g.nationality",
-  //       this.db.raw(
-  //         `(
-  //         SELECT json_agg(
-  //           json_build_object(
-  //             'id', br.id,
-  //             'room_type_id', br.room_type_id,
-  //             'room_type_name', rt.name,
-  //             'room_id', br.room_id,
-  //             'room_name', r.room_name,
-  //             'adults', br.adults,
-  //             'children', br.children,
-  //             'infant', br.infant,
-  //             'base_rate', br.base_rate,
-  //             'changed_rate', br.changed_rate,
-  //             'unit_base_rate', br.unit_base_rate,
-  //             'unit_changed_rate', br.unit_changed_rate,
-  //             (SELECT json_agg(json_build_object('guest_id',g.id,'first_name',g.first_name,'last_name',g.last_name,'email',g.email,'phone',g.phone,'address',g.address,'country',c.country_name,'nationality',c.nationality,)) from hotel_reservation.booking_room_guest brg
-  //             join guest as g  on brg.guest_id = g.id
-  //                 left join public.country as c  on g.country_id = c.id
+  public async getAllIndividualBooking({
+    hotel_code,
+    checkin_from,
+    checkin_to,
+    checkout_from,
+    checkout_to,
+    booked_from,
+    booked_to,
+    limit,
+    search,
+    skip,
+    booking_type,
+    status,
+  }: {
+    hotel_code: number;
+    limit?: string;
+    skip?: string;
+    checkin_from?: string;
+    checkin_to?: string;
+    checkout_from?: string;
+    checkout_to?: string;
+    booked_from?: string;
+    booked_to?: string;
+    search?: string;
+    status?: string;
+    booking_type?: string;
+  }) {
+    const endCheckInDate = checkin_to ? new Date(checkin_to) : null;
+    // if (endCheckInDate) endCheckInDate.setDate(endCheckInDate.getDate() + 1);
 
-  //             ) as guest_info
+    const endCheckOutDate = checkout_to ? new Date(checkout_to) : null;
+    // if (endCheckOutDate) endCheckOutDate.setDate(endCheckOutDate.getDate() + 1);
 
-  //           )
-  //         )
-  //         FROM ?? AS br
-  //         LEFT JOIN ?? AS rt ON br.room_type_id = rt.id
-  //         LEFT JOIN ?? AS r ON br.room_id = r.id
-  //         WHERE br.booking_id = b.id
-  //       ) AS booking_rooms`,
-  //         [
-  //           `${this.RESERVATION_SCHEMA}.booking_rooms`,
-  //           `${this.RESERVATION_SCHEMA}.room_types`,
-  //           `${this.RESERVATION_SCHEMA}.rooms`,
-  //         ]
-  //       )
-  //     )
-  //     .leftJoin("sources as src", "b.source_id", "src.id")
-  //     .leftJoin("guests as g", "b.guest_id", "g.id")
-  //     .where("b.hotel_code", hotel_code)
-  //     .andWhere("b.id", booking_id)
-  //     .first();
-  // }
+    const endBookedDate = booked_to ? new Date(booked_to) : null;
+    // if (endBookedDate) endBookedDate.setDate(endBookedDate.getDate() + 1);
+
+    const limitNum = limit ? Number(limit) : 50;
+    const offsetNum = skip ? Number(skip) : 0;
+
+    const data = await this.db("bookings as b")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .select(
+        "b.id",
+        "b.booking_reference",
+        this.db.raw(`TO_CHAR(b.check_in, 'YYYY-MM-DD') as check_in`),
+        this.db.raw(`TO_CHAR(b.check_out, 'YYYY-MM-DD') as check_out`),
+        this.db.raw(`TO_CHAR(b.booking_date, 'YYYY-MM-DD') as booking_date`),
+        "b.booking_type",
+        "b.status",
+        "b.is_individual_booking",
+        "b.total_amount",
+        "b.vat",
+        "b.discount_amount",
+        "b.service_charge",
+        "src.name as source_name",
+        "g.id as guest_id",
+        "g.first_name",
+        "g.last_name",
+        "g.email as guest_email",
+        "g.phone as guest_phone",
+        this.db.raw(
+          `(
+            SELECT JSON_AGG(JSON_BUILD_OBJECT(
+              'id', br.id,
+              'room_type_id', br.room_type_id,
+              'room_type_name', rt.name,
+              'room_id', br.room_id,
+              'room_name', r.room_name,
+              'adults', br.adults,
+              'children', br.children,
+              'infant', br.infant
+             
+            ))
+            FROM ?? AS br
+            LEFT JOIN ?? AS rt ON br.room_type_id = rt.id
+            LEFT JOIN ?? AS r ON br.room_id = r.id
+            WHERE br.booking_id = b.id
+          ) AS booking_rooms`,
+          [
+            "hotel_reservation.booking_rooms",
+            "hotel_reservation.room_types",
+            "hotel_reservation.rooms",
+          ]
+        )
+      )
+      .leftJoin("sources as src", "b.source_id", "src.id")
+      .leftJoin("guests as g", "b.guest_id", "g.id")
+      .where("b.hotel_code", hotel_code)
+      .andWhere("b.is_individual_booking", true)
+      .andWhere(function () {
+        if (checkin_from && checkin_to) {
+          this.andWhereBetween("b.check_in", [checkin_from, endCheckInDate]);
+        }
+        if (checkout_from && checkout_to) {
+          this.andWhereBetween("b.check_out", [checkout_from, endCheckOutDate]);
+        }
+        if (booked_from && booked_to) {
+          this.andWhereBetween("b.booking_date", [booked_from, endBookedDate]);
+        }
+        if (search) {
+          this.andWhere(function () {
+            this.where("b.booking_reference", "ilike", `%${search}%`)
+              .orWhere("g.first_name", "ilike", `%${search}%`)
+              .orWhere("g.email", "ilike", `%${search}%`);
+          });
+        }
+        if (status) {
+          this.andWhere("b.status", status);
+        }
+        if (booking_type) {
+          this.andWhere("b.booking_type", booking_type);
+        }
+      })
+      .orderBy("b.id", "desc")
+      .limit(limitNum)
+      .offset(offsetNum);
+
+    const total = await this.db("bookings as b")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .count("b.id as total")
+      .leftJoin("sources as src", "b.source_id", "src.id")
+      .leftJoin("guests as g", "b.guest_id", "g.id")
+      .where("b.hotel_code", hotel_code)
+      .andWhere("b.is_individual_booking", true)
+      .andWhere(function () {
+        if (checkin_from && checkin_to) {
+          this.andWhereBetween("b.check_in", [checkin_from, endCheckInDate]);
+        }
+        if (checkout_from && checkout_to) {
+          this.andWhereBetween("b.check_out", [checkout_from, endCheckOutDate]);
+        }
+
+        if (booked_from && booked_to) {
+          this.andWhereBetween("b.booking_date", [booked_from, endBookedDate]);
+        }
+
+        if (search) {
+          this.andWhere("b.booking_reference", "ilike", `%${search}%`)
+            .orWhere("g.first_name", "ilike", `%${search}%`)
+            .orWhere("g.email", "ilike", `%${search}%`);
+        }
+
+        if (status) {
+          this.andWhere("b.status", status);
+        }
+
+        if (booking_type) {
+          this.andWhere("b.booking_type", booking_type);
+        }
+      });
+
+    return {
+      data,
+      total: total[0]?.total ? parseInt(total[0]?.total as string) : 0,
+    };
+  }
+
+  public async getAllGroupBooking({
+    hotel_code,
+    checkin_from,
+    checkin_to,
+    checkout_from,
+    checkout_to,
+    booked_from,
+    booked_to,
+    limit,
+    search,
+    skip,
+    booking_type,
+    status,
+  }: {
+    hotel_code: number;
+    limit?: string;
+    skip?: string;
+    checkin_from?: string;
+    checkin_to?: string;
+    checkout_from?: string;
+    checkout_to?: string;
+    booked_from?: string;
+    booked_to?: string;
+    search?: string;
+    status?: string;
+    booking_type?: string;
+  }) {
+    const endCheckInDate = checkin_to ? new Date(checkin_to) : null;
+    // if (endCheckInDate) endCheckInDate.setDate(endCheckInDate.getDate() + 1);
+
+    const endCheckOutDate = checkout_to ? new Date(checkout_to) : null;
+    // if (endCheckOutDate) endCheckOutDate.setDate(endCheckOutDate.getDate() + 1);
+
+    const endBookedDate = booked_to ? new Date(booked_to) : null;
+    // if (endBookedDate) endBookedDate.setDate(endBookedDate.getDate() + 1);
+
+    const limitNum = limit ? Number(limit) : 50;
+    const offsetNum = skip ? Number(skip) : 0;
+
+    const data = await this.db("bookings as b")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .select(
+        "b.id",
+        "b.booking_reference",
+        this.db.raw(`TO_CHAR(b.check_in, 'YYYY-MM-DD') as check_in`),
+        this.db.raw(`TO_CHAR(b.check_out, 'YYYY-MM-DD') as check_out`),
+        this.db.raw(`TO_CHAR(b.booking_date, 'YYYY-MM-DD') as booking_date`),
+        "b.booking_type",
+        "b.status",
+        "b.is_individual_booking",
+        "b.total_amount",
+        "b.vat",
+        "b.discount_amount",
+        "b.service_charge",
+        "src.name as source_name",
+        "g.id as guest_id",
+        "g.first_name",
+        "g.last_name",
+        "g.email as guest_email",
+        "g.phone as guest_phone",
+        this.db.raw(
+          `(
+            SELECT JSON_AGG(JSON_BUILD_OBJECT(
+              'id', br.id,
+              'room_type_id', br.room_type_id,
+              'room_type_name', rt.name,
+              'room_id', br.room_id,
+              'room_name', r.room_name,
+              'adults', br.adults,
+              'children', br.children,
+              'infant', br.infant
+             
+            ))
+            FROM ?? AS br
+            LEFT JOIN ?? AS rt ON br.room_type_id = rt.id
+            LEFT JOIN ?? AS r ON br.room_id = r.id
+            WHERE br.booking_id = b.id
+          ) AS booking_rooms`,
+          [
+            "hotel_reservation.booking_rooms",
+            "hotel_reservation.room_types",
+            "hotel_reservation.rooms",
+          ]
+        )
+      )
+      .leftJoin("sources as src", "b.source_id", "src.id")
+      .leftJoin("guests as g", "b.guest_id", "g.id")
+      .where("b.hotel_code", hotel_code)
+      .andWhere("b.is_individual_booking", false)
+      .andWhere(function () {
+        if (checkin_from && checkin_to) {
+          this.andWhereBetween("b.check_in", [checkin_from, endCheckInDate]);
+        }
+        if (checkout_from && checkout_to) {
+          this.andWhereBetween("b.check_out", [checkout_from, endCheckOutDate]);
+        }
+        if (booked_from && booked_to) {
+          this.andWhereBetween("b.booking_date", [booked_from, endBookedDate]);
+        }
+        if (search) {
+          this.andWhere(function () {
+            this.where("b.booking_reference", "ilike", `%${search}%`)
+              .orWhere("g.first_name", "ilike", `%${search}%`)
+              .orWhere("g.email", "ilike", `%${search}%`);
+          });
+        }
+        if (status) {
+          this.andWhere("b.status", status);
+        }
+        if (booking_type) {
+          this.andWhere("b.booking_type", booking_type);
+        }
+      })
+      .orderBy("b.id", "desc")
+      .limit(limitNum)
+      .offset(offsetNum);
+
+    const total = await this.db("bookings as b")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .count("b.id as total")
+      .leftJoin("sources as src", "b.source_id", "src.id")
+      .leftJoin("guests as g", "b.guest_id", "g.id")
+      .where("b.hotel_code", hotel_code)
+      .andWhere("b.is_individual_booking", false)
+      .andWhere(function () {
+        if (checkin_from && checkin_to) {
+          this.andWhereBetween("b.check_in", [checkin_from, endCheckInDate]);
+        }
+        if (checkout_from && checkout_to) {
+          this.andWhereBetween("b.check_out", [checkout_from, endCheckOutDate]);
+        }
+
+        if (booked_from && booked_to) {
+          this.andWhereBetween("b.booking_date", [booked_from, endBookedDate]);
+        }
+
+        if (search) {
+          this.andWhere("b.booking_reference", "ilike", `%${search}%`)
+            .orWhere("g.first_name", "ilike", `%${search}%`)
+            .orWhere("g.email", "ilike", `%${search}%`);
+        }
+
+        if (status) {
+          this.andWhere("b.status", status);
+        }
+
+        if (booking_type) {
+          this.andWhere("b.booking_type", booking_type);
+        }
+      });
+
+    return {
+      data,
+      total: total[0]?.total ? parseInt(total[0]?.total as string) : 0,
+    };
+  }
 
   public async getSingleBooking(
     hotel_code: number,
@@ -594,6 +890,7 @@ AND (
           `(
             SELECT json_agg(
               json_build_object(
+
                 'id', br.id,
                 'room_type_id', br.room_type_id,
                 'room_type_name', rt.name,
@@ -606,6 +903,9 @@ AND (
                 'changed_rate', br.changed_rate,
                 'unit_base_rate', br.unit_base_rate,
                 'unit_changed_rate', br.unit_changed_rate,
+                'check_in',br.check_in,
+                'check_out',br.check_out,
+                'status',br.status,
                 'room_guests', (
                   SELECT COALESCE(
                     json_agg(

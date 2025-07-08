@@ -27,9 +27,15 @@ class ReservationRouter {
             .get(this.controller.getAllAvailableRoomsByRoomType);
         this.router
             .route("/booking")
-            // .post(this.controller.createBooking)
+            .post(this.controller.createBooking)
             .get(this.controller.getAllBooking);
-        this.router.route("/booking").post(this.controller.createGroupBooking);
+        this.router
+            .route("/group-booking")
+            .post(this.controller.createGroupBooking)
+            .get(this.controller.getAllGroupBooking);
+        this.router
+            .route("/individual-booking")
+            .get(this.controller.getAllIndividualBooking);
         this.router
             .route("/booking/by/booking-mode")
             .get(this.controller.getArrivalDepStayBookings);
@@ -57,10 +63,18 @@ class ReservationRouter {
             .route("/adjust-balance")
             .post(this.controller.adjustAmountByFolioID);
         this.router.route("/add-item").post(this.controller.addItemByFolioID);
-        this.router.route("/checkin/by/booking/:id").patch(this.controller.checkIn);
+        this.router
+            .route("/checkin/by/booking/:id")
+            .patch(this.controller.individualCheckIn);
+        this.router
+            .route("/individual-checkin/by/booking-id/:id/room-id/:room_id")
+            .patch(this.controller.individualCheckIn);
         this.router
             .route("/checkout/by/booking/:id")
             .patch(this.controller.checkOut);
+        this.router
+            .route("/individual-checkout/by/booking-id/:id/room-id/:room_id")
+            .patch(this.controller.individualCheckOut);
         this.router
             .route("/reservation-type/by/booking/:id")
             .patch(this.controller.updateReservationHoldStatus);

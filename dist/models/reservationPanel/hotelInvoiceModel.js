@@ -294,7 +294,7 @@ class HotelInvoiceModel extends schema_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("folio_entries as fe")
                 .withSchema(this.RESERVATION_SCHEMA)
-                .select("fe.id", "fe.description", "fe.posting_type", "fe.rack_rate", "fe.date", "fe.room_id", "r.room_name", "fe.debit", "fe.credit", "fe.is_void")
+                .select("fe.id", "fe.description", "fe.posting_type", "fe.rack_rate", this.db.raw(`TO_CHAR(fe.date, 'YYYY-MM-DD') as date`), "fe.room_id", "r.room_name", "fe.debit", "fe.credit", "fe.is_void")
                 .join("folios as f", "fe.folio_id", "f.id")
                 .leftJoin("rooms as r", "fe.room_id", "r.id")
                 .where("fe.folio_id", folio_id)

@@ -8,6 +8,16 @@ class CommonValidator {
     return Joi.object(schemaObject);
   };
 
+  public doubleParamValidator = (
+    idFieldName: string = "id",
+    secondFieldName: string
+  ) => {
+    const schemaObject: any = {};
+    schemaObject[idFieldName] = Joi.number().required();
+    schemaObject[secondFieldName] = Joi.number().required();
+    return Joi.object(schemaObject);
+  };
+
   // single param string validator
   public singleParamStringValidator = (idFieldName: string = "id") => {
     const schemaObject: any = {};

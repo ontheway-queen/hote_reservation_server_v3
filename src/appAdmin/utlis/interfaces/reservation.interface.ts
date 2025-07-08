@@ -180,9 +180,9 @@ export interface RoomGuest {
 export interface IGBookingRequestBody {
   reservation_type: "hold" | "booked";
   check_in: string;
+  check_out: string;
   is_checked_in: boolean;
   is_individual_booking: boolean;
-  check_out: string;
   guest: IguestReqBody;
   pickup: boolean;
   pickup_from?: string;
@@ -205,12 +205,6 @@ export interface IGBookingRequestBody {
   source_id: number;
 }
 
-export interface IbookingReqPayment {
-  method: "MOBILE_BANKING" | "BANK" | "CASH";
-  acc_id: number;
-  amount: number;
-}
-
 export interface IGBookedRoomTypeRequest {
   room_type_id: number;
   rate_plan_id: number;
@@ -219,6 +213,8 @@ export interface IGBookedRoomTypeRequest {
 }
 
 export interface IGBRoomGuest {
+  check_in: string;
+  check_out: string;
   room_id: number;
   adults: number;
   children: number;
@@ -240,6 +236,12 @@ export interface IGBRoomGuest {
   }[];
 }
 
+export interface IbookingReqPayment {
+  method: "MOBILE_BANKING" | "BANK" | "CASH";
+  acc_id: number;
+  amount: number;
+}
+
 export interface IRoomBooking {
   hotel_code: number;
   booking_reference: string;
@@ -252,8 +254,8 @@ export interface IRoomBooking {
   booking_type: string;
   status: string;
   is_individual_booking: boolean;
-  sub_total: number;
-  total_amount: number;
+  sub_total?: number;
+  total_amount?: number;
   vat: number;
   service_charge: number;
   discount_amount: number;
@@ -302,6 +304,11 @@ export interface IbookingRooms {
   booking_id: number;
   room_id: number;
   room_type_id: number;
+  check_in: string;
+  check_out: string;
+  status?: "checked_in" | "confirmed" | "checked_out";
+  checked_in_at?: string;
+  checked_out_at?: string;
   adults: number;
   children: number;
   infant: number;
@@ -327,6 +334,9 @@ export interface BookingRoom {
   changed_rate: number;
   unit_base_rate: number;
   unit_changed_rate: number;
+  check_in: string;
+  check_out: string;
+  status: "confirmed" | "checked_in" | "checked_out";
 }
 
 interface BookingGuest {
@@ -407,6 +417,8 @@ export interface IUpdateReservationRequestBody {
     rate_plan_id: number;
     rooms: {
       room_id: number;
+      check_in: string;
+      check_out: string;
       cbf: number;
       adults: number;
       children: number;

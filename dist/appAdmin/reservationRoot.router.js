@@ -41,8 +41,8 @@ class ReservationRootRouter {
         this.router.use("/room-guest", this.authChecker.hotelAdminAuthChecker, new room_guest_router_1.default().router);
         this.router.use("/payroll", this.authChecker.hotelAdminAuthChecker, new payRoll_router_1.default().router);
         this.router.use("/inventory", this.authChecker.hotelAdminAuthChecker, new inventory_app_router_1.default().router);
-        this.router.use("/", this.authChecker.hotelAdminAuthChecker, new reservation_router_1.ReservationRouter().router);
         this.router.use("/employee", this.authChecker.hotelAdminAuthChecker, new employee_router_1.default().router);
+        this.router.use("/", this.authChecker.hotelAdminAuthChecker, new reservation_router_1.ReservationRouter().router);
     }
 }
 exports.ReservationRootRouter = ReservationRootRouter;
