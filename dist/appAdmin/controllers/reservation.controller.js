@@ -109,8 +109,8 @@ class ReservationController extends abstract_controller_1.default {
             const _p = yield this.service.checkIn(req), { code } = _p, data = __rest(_p, ["code"]);
             res.status(code).json(data);
         }));
-        this.individualCheckIn = this.asyncWrapper.wrap({ paramSchema: this.commonValidator.doubleParamValidator("id", "room_id") }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _q = yield this.service.individualCheckIn(req), { code } = _q, data = __rest(_q, ["code"]);
+        this.individualRoomCheckIn = this.asyncWrapper.wrap({ paramSchema: this.commonValidator.doubleParamValidator("id", "room_id") }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _q = yield this.service.individualRoomCheckIn(req), { code } = _q, data = __rest(_q, ["code"]);
             res.status(code).json(data);
         }));
         this.checkOut = this.asyncWrapper.wrap({ paramSchema: this.commonValidator.singleParamValidator() }, (req, res) => __awaiter(this, void 0, void 0, function* () {

@@ -156,10 +156,10 @@ export class ReservationController extends AbstractController {
     }
   );
 
-  public individualCheckIn = this.asyncWrapper.wrap(
+  public individualRoomCheckIn = this.asyncWrapper.wrap(
     { paramSchema: this.commonValidator.doubleParamValidator("id", "room_id") },
     async (req: Request, res: Response) => {
-      const { code, ...data } = await this.service.individualCheckIn(req);
+      const { code, ...data } = await this.service.individualRoomCheckIn(req);
       res.status(code).json(data);
     }
   );

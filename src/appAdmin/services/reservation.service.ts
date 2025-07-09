@@ -98,124 +98,6 @@ export class ReservationService extends AbstractServices {
     };
   }
 
-  // public async createBooking(req: Request) {
-  //   return await this.db.transaction(async (trx) => {
-  //     const { hotel_code } = req.hotel_admin;
-  //     const body = req.body as BookingRequestBody;
-
-  //     const sub = new SubReservationService(trx);
-
-  //     const total_nights = sub.calculateNights(body.check_in, body.check_out);
-  //     if (total_nights <= 0) {
-  //       return {
-  //         success: false,
-  //         code: this.StatusCode.HTTP_BAD_REQUEST,
-  //         message: "Check-in date must be before check-out date",
-  //       };
-  //     }
-
-  //     // check room type available or not
-  //     body.rooms.forEach(async (room) => {
-  //       const getAllAvailableRoomsWithType = await this.Model.reservationModel(
-  //         trx
-  //       ).getAllAvailableRoomsTypeWithAvailableRoomCount({
-  //         hotel_code,
-  //         check_in: body.check_in,
-  //         check_out: body.check_out,
-  //         room_type_id: room.room_type_id,
-  //       });
-
-  //       if (
-  //         room.guests.length > getAllAvailableRoomsWithType[0].available_rooms
-  //       ) {
-  //         return {
-  //           success: false,
-  //           code: this.StatusCode.HTTP_NOT_FOUND,
-  //           message: "Room Assigned is more than available rooms",
-  //         };
-  //       }
-  //     });
-
-  //     // Guest
-  //     const guest_id = await sub.findOrCreateGuest(body.guest, hotel_code);
-
-  //     // Totals
-  //     const { total_amount, sub_total } = sub.calculateTotals(
-  //       body.rooms,
-  //       total_nights,
-  //       {
-  //         vat: body.vat,
-  //         service_charge: body.service_charge,
-  //       }
-  //     );
-
-  //     // Booking
-  //     const booking = await sub.createMainBooking({
-  //       payload: {
-  //         is_individual_booking: body.is_individual_booking,
-  //         check_in: body.check_in,
-  //         check_out: body.check_out,
-  //         created_by: req.hotel_admin.id,
-  //         discount_amount: body.discount_amount,
-  //         drop: body.drop,
-  //         booking_type: body.reservation_type == "booked" ? "B" : "H",
-  //         drop_time: body.drop_time,
-  //         pickup_from: body.pickup_from,
-  //         pickup: body.pickup,
-  //         source_id: body.source_id,
-  //         drop_to: body.drop_to,
-  //         special_requests: body.special_requests,
-  //         vat: body.vat,
-  //         pickup_time: body.pickup_time,
-  //         service_charge: body.service_charge,
-  //         is_company_booked: body.is_company_booked,
-  //         company_name: body.company_name,
-  //         visit_purpose: body.visit_purpose,
-  //         service_charge_percentage: body.service_charge_percentage,
-  //         vat_percentage: body.vat_percentage,
-  //       },
-  //       hotel_code,
-  //       guest_id,
-  //       sub_total,
-  //       total_amount,
-  //       is_checked_in: body.is_checked_in,
-  //       total_nights,
-  //     });
-
-  //     // Rooms
-  //     await sub.insertBookingRooms({
-  //       rooms: body.rooms,
-  //       booking_id: booking.id,
-  //       nights: total_nights,
-  //       check_in: body.check_in,
-  //       check_out: body.check_out,
-  //       is_checked_in: body.is_checked_in,
-  //     });
-
-  //     // Availability
-  //     await sub.updateAvailabilityWhenRoomBooking(
-  //       body.reservation_type,
-  //       body.rooms,
-  //       body.check_in,
-  //       body.check_out,
-  //       hotel_code
-  //     );
-
-  //     await sub.createRoomBookingFolioWithEntries({
-  //       body,
-  //       guest_id,
-  //       booking_id: booking.id,
-  //       req,
-  //     });
-
-  //     return {
-  //       success: true,
-  //       code: this.StatusCode.HTTP_SUCCESSFUL,
-  //       message: "Booking created successfully",
-  //     };
-  //   });
-  // }
-
   public async createBooking(req: Request) {
     return await this.db.transaction(async (trx) => {
       const { hotel_code } = req.hotel_admin;
@@ -293,19 +175,18 @@ export class ReservationService extends AbstractServices {
           });
 
         console.log({ availableRoomList });
-        for (const rt of booked_room_types) {
-          for (const room of rt.rooms) {
-            const isRoomAvailable = availableRoomList.some(
-              (avr) => avr.room_id === room.room_id
-            );
 
-            if (!isRoomAvailable) {
-              return {
-                success: false,
-                code: this.StatusCode.HTTP_BAD_REQUEST,
-                message: `Room ID ${room.room_id} not available`,
-              };
-            }
+        for (const room of rt.rooms) {
+          const isRoomAvailable = availableRoomList.some((avr) => {
+            return avr.room_id === room.room_id;
+          });
+
+          if (!isRoomAvailable) {
+            return {
+              success: false,
+              code: this.StatusCode.HTTP_BAD_REQUEST,
+              message: `Room ID ${room.room_id} not available`,
+            };
           }
         }
       }
@@ -361,9 +242,7 @@ export class ReservationService extends AbstractServices {
           vat_percentage,
         },
         hotel_code,
-        // sub_total,
         guest_id,
-        // total_amount,
         is_checked_in,
         total_nights,
       });
@@ -1144,7 +1023,7 @@ export class ReservationService extends AbstractServices {
     };
   }
 
-  public async individualCheckIn(req: Request) {
+  public async individualRoomCheckIn(req: Request) {
     const hotel_code = req.hotel_admin.hotel_code;
     const booking_id = parseInt(req.params.id);
     const model = this.Model.reservationModel();

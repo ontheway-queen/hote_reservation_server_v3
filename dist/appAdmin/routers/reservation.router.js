@@ -66,7 +66,7 @@ class ReservationRouter {
         this.router.route("/checkin/by/booking/:id").patch(this.controller.checkIn);
         this.router
             .route("/individual-checkin/by/booking-id/:id/room-id/:room_id")
-            .patch(this.controller.individualCheckIn);
+            .patch(this.controller.individualRoomCheckIn);
         this.router
             .route("/checkout/by/booking/:id")
             .patch(this.controller.checkOut);
