@@ -25,6 +25,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const lib_1 = __importDefault(require("../../utils/lib/lib"));
 const abstract_service_1 = __importDefault(require("../../abstarcts/abstract.service"));
+const adminCredsTemplate_1 = require("../../templates/adminCredsTemplate");
 class AdministrationService extends abstract_service_1.default {
     constructor() {
         super();
@@ -37,6 +38,7 @@ class AdministrationService extends abstract_service_1.default {
             const check = yield administrationModel.getSingleAdmin({
                 email: req.body.email,
             });
+            console.log(req.body, { check });
             if (check.length) {
                 return {
                     success: false,
@@ -62,6 +64,8 @@ class AdministrationService extends abstract_service_1.default {
                 };
             }
             const res = yield administrationModel.createAdmin(Object.assign(Object.assign({}, rest), { hotel_code }));
+            // send email
+            yield lib_1.default.sendEmail(req.body.email, "Your panel access has been successfully created", (0, adminCredsTemplate_1.newAdminUserAccountTemp)(req.body.email, req.body.password, req.body.name));
             return {
                 success: true,
                 code: this.StatusCode.HTTP_SUCCESSFUL,
@@ -131,8 +135,8 @@ class AdministrationService extends abstract_service_1.default {
             });
             return {
                 success: true,
-                code: this.StatusCode.HTTP_SUCCESSFUL,
-                message: this.ResMsg.HTTP_SUCCESSFUL,
+                code: this.StatusCode.HTTP_OK,
+                message: "Successfully Updated",
             };
         });
     }

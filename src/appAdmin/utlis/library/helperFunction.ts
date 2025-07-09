@@ -72,6 +72,13 @@ export class HelperFunction extends AbstractServices {
     return dates;
   }
 
+  public static calculateNights(checkIn: string, checkOut: string): number {
+    const from = new Date(checkIn);
+    const to = new Date(checkOut);
+    const diffTime = Math.abs(to.getTime() - from.getTime());
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  }
+
   public static generateFolioNumber(lastFolioId: number): string {
     const now = moment();
     const prefix = `FOLIO-${now.format("YYYYMM")}`;

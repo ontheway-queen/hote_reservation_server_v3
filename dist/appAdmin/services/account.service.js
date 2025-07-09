@@ -243,7 +243,6 @@ class AccountService extends abstract_service_1.default {
             }));
         });
     }
-    // get all accounts
     getAllAccount(req) {
         return __awaiter(this, void 0, void 0, function* () {
             const { hotel_code } = req.hotel_admin;
@@ -264,7 +263,6 @@ class AccountService extends abstract_service_1.default {
             };
         });
     }
-    // update account
     updateAccount(req) {
         return __awaiter(this, void 0, void 0, function* () {
             const { hotel_code } = req.hotel_admin;
@@ -280,7 +278,6 @@ class AccountService extends abstract_service_1.default {
             };
         });
     }
-    // balance transfer
     balanceTransfer(req) {
         return __awaiter(this, void 0, void 0, function* () {
             const { id, hotel_code } = req.hotel_admin;

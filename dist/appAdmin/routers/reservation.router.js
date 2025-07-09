@@ -63,9 +63,7 @@ class ReservationRouter {
             .route("/adjust-balance")
             .post(this.controller.adjustAmountByFolioID);
         this.router.route("/add-item").post(this.controller.addItemByFolioID);
-        this.router
-            .route("/checkin/by/booking/:id")
-            .patch(this.controller.individualCheckIn);
+        this.router.route("/checkin/by/booking/:id").patch(this.controller.checkIn);
         this.router
             .route("/individual-checkin/by/booking-id/:id/room-id/:room_id")
             .patch(this.controller.individualCheckIn);

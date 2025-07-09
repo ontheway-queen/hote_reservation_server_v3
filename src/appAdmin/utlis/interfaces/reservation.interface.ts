@@ -359,7 +359,7 @@ export interface IBookingDetails extends BookingGuest {
   is_individual_booking: boolean;
   check_out: string;
   booking_type: string;
-  status: string;
+  status: "confirmed" | "checked_in" | "checked_out";
   source_name: string | null;
   total_amount: number;
   vat_percentage: number;

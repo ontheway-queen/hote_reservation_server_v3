@@ -271,6 +271,8 @@ class ReservationValidator {
                 rate_plan_id: joi_1.default.number().required(),
                 rooms: joi_1.default.array()
                     .items(joi_1.default.object({
+                    check_in: joi_1.default.date().iso().required(),
+                    check_out: joi_1.default.date().iso().required(),
                     room_id: joi_1.default.number().required(),
                     cbf: joi_1.default.number().required().default(0),
                     adults: joi_1.default.number().min(1).required(),

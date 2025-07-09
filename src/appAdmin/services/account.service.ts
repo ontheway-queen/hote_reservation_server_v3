@@ -263,7 +263,7 @@ export class AccountService extends AbstractServices {
     });
   }
 
-  // get all accounts
+  
   public async getAllAccount(req: Request) {
     const { hotel_code } = req.hotel_admin;
 
@@ -286,7 +286,7 @@ export class AccountService extends AbstractServices {
     };
   }
 
-  // update account
+
   public async updateAccount(req: Request) {
     const { hotel_code } = req.hotel_admin;
     const id = parseInt(req.params.id);
@@ -310,7 +310,7 @@ export class AccountService extends AbstractServices {
     };
   }
 
-  // balance transfer
+
   public async balanceTransfer(req: Request) {
     const { id, hotel_code } = req.hotel_admin;
 

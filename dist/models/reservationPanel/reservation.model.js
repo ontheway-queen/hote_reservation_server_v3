@@ -194,7 +194,7 @@ AND (
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("booking_rooms")
                 .withSchema(this.RESERVATION_SCHEMA)
-                .select("id", "room_id", "unit_base_rate", "unit_changed_rate", "base_rate", "changed_rate", "check_in", "check_out")
+                .select("id", "room_id", "unit_base_rate", "unit_changed_rate", "base_rate", "changed_rate", this.db.raw(`TO_CHAR(check_in, 'YYYY-MM-DD') as check_in`), this.db.raw(`TO_CHAR(check_out, 'YYYY-MM-DD') as check_out`))
                 .where({
                 booking_id,
             });

@@ -306,6 +306,8 @@ export class ReservationValidator {
           rooms: Joi.array()
             .items(
               Joi.object({
+                check_in: Joi.date().iso().required(),
+                check_out: Joi.date().iso().required(),
                 room_id: Joi.number().required(),
                 cbf: Joi.number().required().default(0),
                 adults: Joi.number().min(1).required(),

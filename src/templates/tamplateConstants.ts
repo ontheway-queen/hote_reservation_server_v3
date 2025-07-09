@@ -1,6 +1,10 @@
-export const projectLogo = "logo link";
-export const projectName = "Reservation";
-export const projectURL = "https://www.reservation.online";
+export const projectLogo =
+  "https://v3.hotel360.world/assets/reservation-DkKP_ooj.png";
+export const projectName = "Reservation360";
+export const projectURL = "https://v3.hotel360.world";
+
+export const companyName = "M360ICT";
+export const companyURL = "https://m360ict.com";
 
 // restaurant
 export const rProjectLogo = "logo link";

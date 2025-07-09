@@ -273,7 +273,7 @@ class AccountModel extends schema_1.default {
                 dtbs.offset(parseInt(skip));
             }
             const data = yield dtbs
-                .select("id", "hotel_code", "name", "ac_type", "branch", "acc_number", "details", "is_active")
+                .select("id", "hotel_code", "name", "acc_type", "branch", "acc_number", "details", "is_active")
                 .withSchema(this.ACC_SCHEMA)
                 .where("hotel_code", hotel_code)
                 .andWhere(function () {
@@ -322,7 +322,7 @@ class AccountModel extends schema_1.default {
             const { id, type, hotel_code } = payload;
             return yield this.db("accounts")
                 .withSchema(this.ACC_SCHEMA)
-                .select("id", "acc_head_id", "ac_type", "name", "branch", "acc_number", "is_active", "acc_routing_no", "details")
+                .select("id", "acc_head_id", "acc_type", "name", "branch", "acc_number", "is_active", "acc_routing_no", "details")
                 .where("hotel_code", hotel_code)
                 .andWhere(function () {
                 if (id) {

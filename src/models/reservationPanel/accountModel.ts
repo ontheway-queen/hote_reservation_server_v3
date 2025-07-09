@@ -322,7 +322,7 @@ class AccountModel extends Schema {
         "id",
         "hotel_code",
         "name",
-        "ac_type",
+        "acc_type",
         "branch",
         "acc_number",
         "details",
@@ -397,7 +397,7 @@ class AccountModel extends Schema {
       .select(
         "id",
         "acc_head_id",
-        "ac_type",
+        "acc_type",
         "name",
         "branch",
         "acc_number",

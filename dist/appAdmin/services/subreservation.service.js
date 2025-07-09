@@ -206,10 +206,12 @@ class SubReservationService extends abstract_service_1.default {
             }
         });
     }
-    insertBookingRoomsForGroupBooking({ booked_room_types, booking_id, nights, hotel_code, is_checked_in, }) {
+    insertBookingRoomsForGroupBooking({ booked_room_types, booking_id, hotel_code, is_checked_in, }) {
         return __awaiter(this, void 0, void 0, function* () {
             for (const rt of booked_room_types) {
                 for (const room of rt.rooms) {
+                    const nights = helperFunction_1.HelperFunction.calculateNights(room.check_in, room.check_out);
+                    console.log({ nights });
                     // Insert booking room
                     const [bookingRoomRes] = yield this.Model.reservationModel(this.trx).insertBookingRoom([
                         {
@@ -667,9 +669,9 @@ class SubReservationService extends abstract_service_1.default {
                 status: "open",
                 type: "Primary",
             });
-            // 3. Build Room Charges & Daily Totals
+            // 3. Build Folio Entries
             const folioEntries = [];
-            const dailyRateMap = {};
+            const dailyMap = {};
             for (const rt of body.booked_room_types) {
                 for (const room of rt.rooms) {
                     const from = new Date(room.check_in);
@@ -678,9 +680,7 @@ class SubReservationService extends abstract_service_1.default {
                     const rackRate = room.rate.base_rate;
                     for (let d = new Date(from); d < to; d.setDate(d.getDate() + 1)) {
                         const date = d.toISOString().split("T")[0];
-                        // Add daily rate to daily map
-                        dailyRateMap[date] = (dailyRateMap[date] || 0) + ratePerNight;
-                        // Add room charge folio entry
+                        // Push Room Tariff first
                         folioEntries.push({
                             folio_id: folio.id,
                             date,
@@ -690,12 +690,14 @@ class SubReservationService extends abstract_service_1.default {
                             description: "Room Tariff",
                             rack_rate: rackRate,
                         });
+                        // Track for VAT/Service Charge
+                        dailyMap[date] = (dailyMap[date] || 0) + ratePerNight;
                     }
                 }
             }
-            // 4. Add daily VAT and Service Charges (once per date)
-            for (const date in dailyRateMap) {
-                const totalRate = dailyRateMap[date];
+            // 4. Add VAT and Service Charge after Room Tariff for each date
+            for (const date in dailyMap) {
+                const totalRate = dailyMap[date];
                 const vatAmount = (totalRate * body.vat_percentage) / 100;
                 const scAmount = (totalRate * body.service_charge_percentage) / 100;
                 if (vatAmount > 0) {
@@ -721,7 +723,7 @@ class SubReservationService extends abstract_service_1.default {
                     });
                 }
             }
-            // 5. Handle Payment (optional)
+            // 5. Handle optional payment
             const today = new Date().toISOString().split("T")[0];
             if (body.is_payment_given && body.payment && body.payment.amount > 0) {
                 const accountModel = this.Model.accountModel(this.trx);
@@ -754,8 +756,16 @@ class SubReservationService extends abstract_service_1.default {
                     rack_rate: 0,
                 });
             }
-            // 6. Insert all folio entries
+            // 6. Insert entries
             yield hotelInvModel.insertInFolioEntries(folioEntries);
+            // 7. Calculate total debit and update booking
+            const totalDebit = folioEntries.reduce((sum, entry) => {
+                var _a;
+                return sum + ((_a = entry.debit) !== null && _a !== void 0 ? _a : 0);
+            }, 0);
+            yield this.Model.reservationModel(this.trx).updateRoomBooking({
+                total_amount: totalDebit,
+            }, hotel_code, booking_id);
             return {
                 folio,
                 entries: folioEntries,
@@ -859,6 +869,14 @@ class SubReservationService extends abstract_service_1.default {
             }
             // 5. Insert all folio entries
             yield hotelInvModel.insertInFolioEntries(folioEntries);
+            // 7. Calculate total debit and update booking
+            const totalDebit = folioEntries.reduce((sum, entry) => {
+                var _a;
+                return sum + ((_a = entry.debit) !== null && _a !== void 0 ? _a : 0);
+            }, 0);
+            yield this.Model.reservationModel(this.trx).updateRoomBooking({
+                total_amount: totalDebit,
+            }, hotel_code, booking_id);
             return {
                 folio,
                 entries: folioEntries,

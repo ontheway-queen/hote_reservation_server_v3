@@ -148,7 +148,15 @@ AND (
     check_out: string;
     hotel_code: number;
     room_type_id: number;
-  }) {
+  }): Promise<
+    {
+      hotel_code: number;
+      room_id: number;
+      room_name: string;
+      room_type_id: number;
+      room_type_name: string;
+    }[]
+  > {
     const { hotel_code, check_in, check_out, room_type_id } = payload;
     const schema = this.RESERVATION_SCHEMA;
 
@@ -276,8 +284,8 @@ AND (
         "unit_changed_rate",
         "base_rate",
         "changed_rate",
-        "check_in",
-        "check_out"
+        this.db.raw(`TO_CHAR(check_in, 'YYYY-MM-DD') as check_in`),
+        this.db.raw(`TO_CHAR(check_out, 'YYYY-MM-DD') as check_out`)
       )
       .where({
         booking_id,
