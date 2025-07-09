@@ -423,7 +423,8 @@ class HotelInvoiceModel extends Schema {
         "fe.description",
         "fe.posting_type",
         "fe.rack_rate",
-        "fe.date",
+
+        this.db.raw(`TO_CHAR(fe.date, 'YYYY-MM-DD') as date`),
         "fe.room_id",
         "r.room_name",
         "fe.debit",

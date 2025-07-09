@@ -67,7 +67,7 @@ class CommonModel extends schema_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("country")
                 .withSchema(this.PUBLIC_SCHEMA)
-                .select("*");
+                .select("id", "country_code_2_letter", "country_code_3_letter", "country_name", "nationality");
         });
     }
     // insert audit trail

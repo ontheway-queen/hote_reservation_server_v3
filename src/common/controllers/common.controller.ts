@@ -4,64 +4,63 @@ import { Request, Response } from "express";
 import CommonService from "../services/commonServices";
 
 class CommonController extends CommonAbstractController {
-	private commonService = new CommonService();
-	constructor() {
-		super();
-	}
+  private commonService = new CommonService();
+  constructor() {
+    super();
+  }
 
-	// send email otp
-	public sendEmailOtpController = this.asyncWrapper.wrap(
-		{ bodySchema: this.commonValidator.sendEmailOtpValidator },
-		async (req: Request, res: Response) => {
-			const { code, ...rest } =
-				await this.commonService.sendOtpToEmailService(req);
-			res.status(code).json(rest);
-		}
-	);
+  // send email otp
+  public sendEmailOtpController = this.asyncWrapper.wrap(
+    { bodySchema: this.commonValidator.sendEmailOtpValidator },
+    async (req: Request, res: Response) => {
+      const { code, ...rest } = await this.commonService.sendOtpToEmailService(
+        req
+      );
+      res.status(code).json(rest);
+    }
+  );
 
-	// match email otp
-	public matchEmailOtpController = this.asyncWrapper.wrap(
-		{ bodySchema: this.commonValidator.matchEmailOtpValidator },
-		async (req: Request, res: Response) => {
-			const { code, ...data } =
-				await this.commonService.matchEmailOtpService(req);
+  // match email otp
+  public matchEmailOtpController = this.asyncWrapper.wrap(
+    { bodySchema: this.commonValidator.matchEmailOtpValidator },
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.commonService.matchEmailOtpService(
+        req
+      );
 
-			res.status(code).json(data);
-		}
-	);
+      res.status(code).json(data);
+    }
+  );
 
-	public getAllCountry = this.asyncWrapper.wrap(
-		{},
-		async (req: Request, res: Response) => {
-			const { code, ...data } = await this.commonService.getAllCountry(
-				req
-			);
+  public getAllCountry = this.asyncWrapper.wrap(
+    {},
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.commonService.getAllCountry(req);
 
-			res.status(code).json(data);
-		}
-	);
+      res.status(code).json(data);
+    }
+  );
 
-	// get all blood group
-	public getAllBloodGroup = this.asyncWrapper.wrap(
-		{},
-		async (req: Request, res: Response) => {
-			const { code, ...data } =
-				await this.commonService.getAllBloodGroup();
+  // get all blood group
+  public getAllBloodGroup = this.asyncWrapper.wrap(
+    {},
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.commonService.getAllBloodGroup();
 
-			res.status(code).json(data);
-		}
-	);
+      res.status(code).json(data);
+    }
+  );
 
-	// get all months
+  // get all months
 
-	public getMonthList = this.asyncWrapper.wrap(
-		{},
-		async (req: Request, res: Response) => {
-			const { code, ...data } = await this.commonService.getMonthList();
+  public getMonthList = this.asyncWrapper.wrap(
+    {},
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.commonService.getMonthList();
 
-			res.status(code).json(data);
-		}
-	);
+      res.status(code).json(data);
+    }
+  );
 }
 
 export default CommonController;

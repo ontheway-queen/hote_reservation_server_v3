@@ -11,21 +11,91 @@ class ReservationValidator {
             check_in: joi_1.default.date().required(),
             check_out: joi_1.default.date().required(),
         });
+        // public createBookingValidator = Joi.object({
+        //   reservation_type: Joi.string().valid("hold", "booked").required(),
+        //   is_checked_in: Joi.bool().required(),
+        //   is_individual_booking: Joi.bool().required(),
+        //   check_in: Joi.date().iso().required(),
+        //   check_out: Joi.date().iso().required(),
+        //   guest: Joi.object({
+        //     first_name: Joi.string().required(),
+        //     last_name: Joi.string().required(),
+        //     email: Joi.string().email().allow("").optional(),
+        //     address: Joi.string().allow("").optional(),
+        //     phone: Joi.string().required(),
+        //     nationality: Joi.string().required(),
+        //     country: Joi.string().required(),
+        //   }).required(),
+        //   pickup: Joi.boolean().required(),
+        //   pickup_from: Joi.when("pickup", {
+        //     is: true,
+        //     then: Joi.string().required(),
+        //     otherwise: Joi.forbidden(),
+        //   }),
+        //   pickup_time: Joi.when("pickup", {
+        //     is: true,
+        //     then: Joi.string().isoDate().required(), // assuming ISO datetime string
+        //     otherwise: Joi.forbidden(),
+        //   }),
+        //   drop: Joi.boolean().required(),
+        //   drop_to: Joi.when("drop", {
+        //     is: true,
+        //     then: Joi.string().required(),
+        //     otherwise: Joi.forbidden(),
+        //   }),
+        //   drop_time: Joi.when("drop", {
+        //     is: true,
+        //     then: Joi.string().isoDate().required(),
+        //     otherwise: Joi.forbidden(),
+        //   }),
+        //   // discount_amount: Joi.number().min(0).required(),
+        //   service_charge: Joi.number().min(0).required(),
+        //   vat: Joi.number().min(0).required(),
+        //   rooms: Joi.array()
+        //     .items(
+        //       Joi.object({
+        //         room_type_id: Joi.number().required(),
+        //         rate_plan_id: Joi.number().required(),
+        //         rate: Joi.object({
+        //           base_price: Joi.number().required(),
+        //           changed_price: Joi.number().required(),
+        //         }).required(),
+        //         number_of_rooms: Joi.number().min(1).required(),
+        //         guests: Joi.array()
+        //           .items(
+        //             Joi.object({
+        //               room_id: Joi.number().required(),
+        //               adults: Joi.number().min(1).required(),
+        //               children: Joi.number().min(0).required(),
+        //               infant: Joi.number().min(0).required(),
+        //               cbf: Joi.number().min(0).required(),
+        //             })
+        //           )
+        //           .min(1)
+        //           .required(),
+        //         meal_plans_ids: Joi.array().items(Joi.number()).optional(),
+        //       })
+        //     )
+        //     .min(1)
+        //     .required(),
+        //   company_name: Joi.string().allow("").optional(),
+        //   visit_purpose: Joi.string().allow("").optional(),
+        //   is_company_booked: Joi.boolean().optional().default(false),
+        //   special_requests: Joi.string().allow("").optional(),
+        //   is_payment_given: Joi.bool().required(),
+        //   payment: Joi.object({
+        //     method: Joi.string().valid("MOBILE_BANKING", "BANK", "CASH").required(),
+        //     acc_id: Joi.number().required(),
+        //     amount: Joi.number().required(),
+        //   }).optional(),
+        //   source_id: Joi.number().required(),
+        // });
         this.createBookingValidator = joi_1.default.object({
+            is_individual_booking: joi_1.default.bool().required(),
             reservation_type: joi_1.default.string().valid("hold", "booked").required(),
             is_checked_in: joi_1.default.bool().required(),
-            is_individual_booking: joi_1.default.bool().required(),
             check_in: joi_1.default.date().iso().required(),
             check_out: joi_1.default.date().iso().required(),
-            guest: joi_1.default.object({
-                first_name: joi_1.default.string().required(),
-                last_name: joi_1.default.string().required(),
-                email: joi_1.default.string().email().allow("").optional(),
-                address: joi_1.default.string().allow("").optional(),
-                phone: joi_1.default.string().required(),
-                nationality: joi_1.default.string().required(),
-                country: joi_1.default.string().required(),
-            }).required(),
             pickup: joi_1.default.boolean().required(),
             pickup_from: joi_1.default.when("pickup", {
                 is: true,
@@ -48,25 +118,39 @@ class ReservationValidator {
                 then: joi_1.default.string().isoDate().required(),
                 otherwise: joi_1.default.forbidden(),
             }),
-            // discount_amount: Joi.number().min(0).required(),
             service_charge: joi_1.default.number().min(0).required(),
             vat: joi_1.default.number().min(0).required(),
-            rooms: joi_1.default.array()
+            service_charge_percentage: joi_1.default.number().min(0).default(0),
+            vat_percentage: joi_1.default.number().min(0).default(0),
+            booked_room_types: joi_1.default.array()
                 .items(joi_1.default.object({
                 room_type_id: joi_1.default.number().required(),
                 rate_plan_id: joi_1.default.number().required(),
-                rate: joi_1.default.object({
-                    base_price: joi_1.default.number().required(),
-                    changed_price: joi_1.default.number().required(),
-                }).required(),
-                number_of_rooms: joi_1.default.number().min(1).required(),
-                guests: joi_1.default.array()
+                rooms: joi_1.default.array()
                     .items(joi_1.default.object({
+                    check_in: joi_1.default.date().iso().required(),
+                    check_out: joi_1.default.date().iso().required(),
                     room_id: joi_1.default.number().required(),
+                    cbf: joi_1.default.number().required().default(0),
                     adults: joi_1.default.number().min(1).required(),
                     children: joi_1.default.number().min(0).required(),
                     infant: joi_1.default.number().min(0).required(),
-                    cbf: joi_1.default.number().min(0).required(),
+                    rate: joi_1.default.object({
+                        base_rate: joi_1.default.number().required(),
+                        changed_rate: joi_1.default.number().required(),
+                    }).required(),
+                    guest_info: joi_1.default.array().items(joi_1.default.object({
+                        first_name: joi_1.default.string().optional(),
+                        last_name: joi_1.default.string().allow("").optional(),
+                        email: joi_1.default.string().allow("").optional(),
+                        phone: joi_1.default.string().allow("").optional(),
+                        country_id: joi_1.default.number().required(),
+                        address: joi_1.default.string().allow("").optional(),
+                        type: joi_1.default.string()
+                            .allow("adult", "child", "infant")
+                            .required(),
+                        is_lead_guest: joi_1.default.boolean().required(),
+                    })),
                 }))
                     .min(1)
                     .required(),
@@ -124,6 +208,8 @@ class ReservationValidator {
                 rate_plan_id: joi_1.default.number().required(),
                 rooms: joi_1.default.array()
                     .items(joi_1.default.object({
+                    check_in: joi_1.default.date().iso().required(),
+                    check_out: joi_1.default.date().iso().required(),
                     room_id: joi_1.default.number().required(),
                     cbf: joi_1.default.number().required().default(0),
                     adults: joi_1.default.number().min(1).required(),

@@ -88,6 +88,22 @@ export class ReservationController extends AbstractController {
     }
   );
 
+  public getAllIndividualBooking = this.asyncWrapper.wrap(
+    {},
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.getAllIndividualBooking(req);
+      res.status(code).json(data);
+    }
+  );
+
+  public getAllGroupBooking = this.asyncWrapper.wrap(
+    {},
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.getAllGroupBooking(req);
+      res.status(code).json(data);
+    }
+  );
+
   public getArrivalDepStayBookings = this.asyncWrapper.wrap(
     {
       querySchema: this.validator.getAllBookingByBookingModeValidator,
@@ -140,10 +156,26 @@ export class ReservationController extends AbstractController {
     }
   );
 
+  public individualCheckIn = this.asyncWrapper.wrap(
+    { paramSchema: this.commonValidator.doubleParamValidator("id", "room_id") },
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.individualCheckIn(req);
+      res.status(code).json(data);
+    }
+  );
+
   public checkOut = this.asyncWrapper.wrap(
     { paramSchema: this.commonValidator.singleParamValidator() },
     async (req: Request, res: Response) => {
       const { code, ...data } = await this.service.checkOut(req);
+      res.status(code).json(data);
+    }
+  );
+
+  public individualCheckOut = this.asyncWrapper.wrap(
+    { paramSchema: this.commonValidator.doubleParamValidator("id", "room_id") },
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.individualCheckOut(req);
       res.status(code).json(data);
     }
   );

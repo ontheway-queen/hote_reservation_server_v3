@@ -12,6 +12,12 @@ class CommonValidator {
             schemaObject[idFieldName] = joi_1.default.number().required();
             return joi_1.default.object(schemaObject);
         };
+        this.doubleParamValidator = (idFieldName = "id", secondFieldName) => {
+            const schemaObject = {};
+            schemaObject[idFieldName] = joi_1.default.number().required();
+            schemaObject[secondFieldName] = joi_1.default.number().required();
+            return joi_1.default.object(schemaObject);
+        };
         // single param string validator
         this.singleParamStringValidator = (idFieldName = "id") => {
             const schemaObject = {};
