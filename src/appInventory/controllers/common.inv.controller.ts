@@ -82,6 +82,15 @@ class CommonInvController extends AbstractController {
 		}
 	);
 
+	// Delete Unit
+	public deleteUnit = this.asyncWrapper.wrap(
+		{ paramSchema: this.commonValidator.singleParamValidator("id") },
+		async (req: Request, res: Response) => {
+			const { code, ...data } = await this.service.deleteUnit(req);
+			res.status(code).json(data);
+		}
+	);
+
 	//=================== Brand ======================//
 
 	// Create Brand
@@ -109,6 +118,16 @@ class CommonInvController extends AbstractController {
 		{ bodySchema: this.validator.UpdateCommonModuleValidator },
 		async (req: Request, res: Response) => {
 			const { code, ...data } = await this.service.updateBrand(req);
+
+			res.status(code).json(data);
+		}
+	);
+
+	// Delete Brand
+	public deleteBrand = this.asyncWrapper.wrap(
+		{ paramSchema: this.commonValidator.singleParamValidator("id") },
+		async (req: Request, res: Response) => {
+			const { code, ...data } = await this.service.deleteBrand(req);
 
 			res.status(code).json(data);
 		}
@@ -153,6 +172,16 @@ class CommonInvController extends AbstractController {
 		{ bodySchema: this.validator.UpdateSupplierValidator },
 		async (req: Request, res: Response) => {
 			const { code, ...data } = await this.service.updateSupplier(req);
+
+			res.status(code).json(data);
+		}
+	);
+
+	// Delete Brand
+	public deleteSupplier = this.asyncWrapper.wrap(
+		{ paramSchema: this.commonValidator.singleParamValidator("id") },
+		async (req: Request, res: Response) => {
+			const { code, ...data } = await this.service.deleteSupplier(req);
 
 			res.status(code).json(data);
 		}

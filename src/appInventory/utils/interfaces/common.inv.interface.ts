@@ -13,9 +13,9 @@ export interface IUpdateCommonInvPayload {
 
 export interface ICreateInvSupplierPayload {
 	hotel_code?: number;
-	res_id?: number;
 	name: string;
 	phone: string;
+	last_balance: number;
 	created_by: number;
 }
 
@@ -23,7 +23,6 @@ export interface IUpdateInvSupplierPayload {
 	name?: string;
 	phone?: string;
 	status?: number;
-	updated_by?: number;
 	last_balance?: number;
 }
 

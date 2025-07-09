@@ -29,7 +29,8 @@ class CommonInvValidator {
         // create Supplier validation
         this.createSupplierValidatorValidator = joi_1.default.object({
             name: joi_1.default.string().uppercase().required(),
-            phone: joi_1.default.number().allow("").optional(),
+            phone: joi_1.default.number().allow("").required(),
+            last_balance: joi_1.default.number().required(),
         });
         // get all Supplier query validator
         this.getAllSupplierQueryValidator = joi_1.default.object({

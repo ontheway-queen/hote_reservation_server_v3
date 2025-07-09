@@ -29,7 +29,8 @@ class CommonInvValidator {
 	// create Supplier validation
 	public createSupplierValidatorValidator = Joi.object({
 		name: Joi.string().uppercase().required(),
-		phone: Joi.number().allow("").optional(),
+		phone: Joi.number().allow("").required(),
+		last_balance: Joi.number().required(),
 	});
 
 	// get all Supplier query validator

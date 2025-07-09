@@ -257,6 +257,48 @@ class CommonInvService extends AbstractServices {
 		});
 	}
 
+	// Delete Unit
+	public async deleteUnit(req: Request) {
+		return await this.db.transaction(async (trx) => {
+			const { hotel_code } = req.hotel_admin;
+			const { id } = req.params;
+
+			const model = this.Model.CommonInventoryModel(trx);
+
+			const { data } = await model.getAllUnit({
+				hotel_code,
+				excludeId: undefined,
+				name: "",
+			});
+
+			const unit = data.find((item) => item.id === Number(id));
+
+			if (!unit) {
+				return {
+					success: false,
+					code: this.StatusCode.HTTP_NOT_FOUND,
+					message: "Unit not found from this ID",
+				};
+			}
+
+			const res = await model.deleteUnit(Number(id), hotel_code);
+
+			if (res === 1) {
+				return {
+					success: true,
+					code: this.StatusCode.HTTP_OK,
+					message: "Unit deleted successfully",
+				};
+			} else {
+				return {
+					success: false,
+					code: this.StatusCode.HTTP_NOT_FOUND,
+					message: "Unit not found from this ID",
+				};
+			}
+		});
+	}
+
 	//=================== Brand ======================//
 
 	// create Unit
@@ -359,13 +401,45 @@ class CommonInvService extends AbstractServices {
 		});
 	}
 
+	// Delete Brand
+	public async deleteBrand(req: Request) {
+		return await this.db.transaction(async (trx) => {
+			const { hotel_code } = req.hotel_admin;
+			const { id } = req.params;
+
+			const model = this.Model.CommonInventoryModel(trx);
+
+			const { data } = await model.getAllBrand({
+				name: "",
+				hotel_code,
+			});
+
+			const brand = data.find((item) => item.id === Number(id));
+
+			if (!brand) {
+				return {
+					success: false,
+					code: this.StatusCode.HTTP_NOT_FOUND,
+					message: "Brand not found from this ID",
+				};
+			}
+
+			await model.deleteBrand(Number(id), hotel_code);
+
+			return {
+				success: true,
+				code: this.StatusCode.HTTP_OK,
+				message: "Brand deleted successfully",
+			};
+		});
+	}
 	//=================== Supplier service ======================//
 
 	// create Supplier
 	public async createSupplier(req: Request) {
 		return await this.db.transaction(async (trx) => {
 			const { hotel_code, id: admin_id } = req.hotel_admin;
-			const { name, phone } = req.body;
+			const { name, phone, last_balance } = req.body;
 
 			// Supplier name check
 			const Model = this.Model.CommonInventoryModel(trx);
@@ -384,6 +458,7 @@ class CommonInvService extends AbstractServices {
 				hotel_code,
 				name,
 				phone,
+				last_balance,
 				created_by: admin_id,
 			});
 
@@ -463,46 +538,68 @@ class CommonInvService extends AbstractServices {
 	// Update Supplier
 	public async updateSupplier(req: Request) {
 		return await this.db.transaction(async (trx) => {
-			const { hotel_code, id: admin_id } = req.hotel_admin;
+			const { hotel_code } = req.hotel_admin;
 			const { id } = req.params;
 			const updatePayload = req.body as IUpdateInvSupplierPayload;
 
 			const model = this.Model.CommonInventoryModel(trx);
 
-			const { data } = await model.getAllSupplier({
-				name: updatePayload.name,
-				hotel_code,
-				excludeId: parseInt(req.params.id),
-			});
+			const supplier = await model.getSingleSupplier(
+				parseInt(id),
+				hotel_code
+			);
 
-			if (data.length) {
-				return {
-					success: false,
-					code: this.StatusCode.HTTP_CONFLICT,
-					message: "Supplier name already exists",
-				};
-			}
-
-			const res = await model.updateSupplier(parseInt(id), hotel_code, {
-				name: updatePayload.name,
-				phone: updatePayload.phone,
-				status: updatePayload.status,
-				updated_by: admin_id,
-			});
-
-			if (res === 1) {
-				return {
-					success: true,
-					code: this.StatusCode.HTTP_OK,
-					message: "Supplier updated successfully",
-				};
-			} else {
+			if (!supplier) {
 				return {
 					success: false,
 					code: this.StatusCode.HTTP_NOT_FOUND,
-					message: "Supplier not found with this ID",
+					message: "Supplier not found from this ID",
 				};
 			}
+
+			await model.updateSupplier(parseInt(id), hotel_code, {
+				name: updatePayload.name,
+				phone: updatePayload.phone,
+				status: updatePayload.status,
+				last_balance: updatePayload.last_balance,
+			});
+
+			return {
+				success: true,
+				code: this.StatusCode.HTTP_OK,
+				message: "Supplier updated successfully",
+			};
+		});
+	}
+
+	// Delete Supplier
+	public async deleteSupplier(req: Request) {
+		return await this.db.transaction(async (trx) => {
+			const { hotel_code } = req.hotel_admin;
+			const { id } = req.params;
+
+			const model = this.Model.CommonInventoryModel(trx);
+
+			const supplier = await model.getSingleSupplier(
+				parseInt(id),
+				hotel_code
+			);
+
+			if (!supplier) {
+				return {
+					success: false,
+					code: this.StatusCode.HTTP_NOT_FOUND,
+					message: "Supplier not found from this ID",
+				};
+			}
+
+			await model.deleteSupplier(parseInt(id), hotel_code);
+
+			return {
+				success: true,
+				code: this.StatusCode.HTTP_OK,
+				message: "Supplier deleted successfully",
+			};
 		});
 	}
 }

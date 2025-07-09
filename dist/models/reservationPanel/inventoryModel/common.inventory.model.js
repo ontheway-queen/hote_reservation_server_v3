@@ -172,11 +172,19 @@ class CommonInventoryModel extends schema_1.default {
     // Update Unit
     updateUnit(id, hotel_code, payload) {
         return __awaiter(this, void 0, void 0, function* () {
-            console.log({ payload });
             return yield this.db("unit")
                 .withSchema(this.HOTEL_INVENTORY_SCHEMA)
-                .where({ id, hotel_code })
+                .where({ id, hotel_code, is_deleted: false })
                 .update(payload);
+        });
+    }
+    // delete unit
+    deleteUnit(id, hotel_code) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("unit")
+                .withSchema(this.HOTEL_INVENTORY_SCHEMA)
+                .where({ id, hotel_code, is_deleted: false })
+                .update({ is_deleted: true });
         });
     }
     //=================== Brand  ======================//
@@ -184,7 +192,7 @@ class CommonInventoryModel extends schema_1.default {
     createBrand(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("brand")
-                .withSchema(this.RESERVATION_SCHEMA)
+                .withSchema(this.HOTEL_INVENTORY_SCHEMA)
                 .insert(payload);
         });
     }
@@ -198,11 +206,15 @@ class CommonInventoryModel extends schema_1.default {
                 dtbs.offset(parseInt(skip));
             }
             const data = yield dtbs
-                .withSchema(this.RESERVATION_SCHEMA)
-                .select("b.id", "b.hotel_code", "b.name", "b.status")
+                .withSchema(this.HOTEL_INVENTORY_SCHEMA)
+                .select("b.id", "b.hotel_code", "b.name", "b.status", "ua.id as created_by_id", "ua.name as created_by_name", "b.is_deleted")
+                .joinRaw(`LEFT JOIN ?? as ua ON ua.id = b.created_by`, [
+                `${this.RESERVATION_SCHEMA}.user_admin`,
+            ])
                 .where(function () {
                 this.whereNull("b.hotel_code").orWhere("b.hotel_code", hotel_code);
             })
+                .andWhere("b.is_deleted", false)
                 .andWhere(function () {
                 if (name) {
                     this.andWhere("b.name", "like", `%${name}%`);
@@ -216,11 +228,15 @@ class CommonInventoryModel extends schema_1.default {
             })
                 .orderBy("b.id", "desc");
             const total = yield this.db("brand as b")
-                .withSchema(this.RESERVATION_SCHEMA)
+                .withSchema(this.HOTEL_INVENTORY_SCHEMA)
                 .count("b.id as total")
+                .joinRaw(`LEFT JOIN ?? as ua ON ua.id = b.created_by`, [
+                `${this.RESERVATION_SCHEMA}.user_admin`,
+            ])
                 .where(function () {
                 this.whereNull("b.hotel_code").orWhere("b.hotel_code", hotel_code);
             })
+                .andWhere("b.is_deleted", false)
                 .andWhere(function () {
                 if (name) {
                     this.andWhere("b.name", "like", `%${name}%`);
@@ -239,9 +255,18 @@ class CommonInventoryModel extends schema_1.default {
     updateBrand(id, hotel_code, payload) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("brand")
-                .withSchema(this.RESERVATION_SCHEMA)
-                .where({ id, hotel_code })
+                .withSchema(this.HOTEL_INVENTORY_SCHEMA)
+                .where({ id, hotel_code, is_deleted: false })
                 .update(payload);
+        });
+    }
+    // Delete Brand
+    deleteBrand(id, hotel_code) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("brand")
+                .withSchema(this.HOTEL_INVENTORY_SCHEMA)
+                .where({ id, hotel_code, is_deleted: false })
+                .update({ is_deleted: true });
         });
     }
     //=================== Supplier  ======================//
@@ -249,51 +274,53 @@ class CommonInventoryModel extends schema_1.default {
     createSupplier(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("supplier")
-                .withSchema(this.RESERVATION_SCHEMA)
+                .withSchema(this.HOTEL_INVENTORY_SCHEMA)
                 .insert(payload);
         });
     }
     // Get All Supplier
     getAllSupplier(payload) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { excludeId, limit, skip, hotel_code, name, status, res_id } = payload;
+            const { excludeId, limit, skip, hotel_code, name, status } = payload;
             const dtbs = this.db("supplier as s");
             if (limit && skip) {
                 dtbs.limit(parseInt(limit));
                 dtbs.offset(parseInt(skip));
             }
             const data = yield dtbs
-                .withSchema(this.RESERVATION_SCHEMA)
+                .withSchema(this.HOTEL_INVENTORY_SCHEMA)
                 .select("s.id", "s.name", "s.phone", "s.status", "s.last_balance")
+                .joinRaw(`LEFT JOIN ?? as ua ON ua.id = s.created_by`, [
+                `${this.RESERVATION_SCHEMA}.user_admin`,
+            ])
                 .where("s.hotel_code", hotel_code)
+                .andWhere("s.is_deleted", false)
                 .andWhere(function () {
                 if (name) {
-                    this.andWhere("s.name", "like", `%${name}%`);
+                    this.andWhere("s.name", "ilike", `%${name}%`);
                 }
                 if (status) {
-                    this.andWhere("s.status", "like", `%${status}%`);
+                    this.andWhere("s.status", status);
                 }
                 if (excludeId) {
                     this.andWhere("s.id", "!=", excludeId);
                 }
-                if (res_id) {
-                    this.andWhere("s.res_id", res_id);
-                }
             })
                 .orderBy("s.id", "desc");
             const total = yield this.db("supplier as s")
-                .withSchema(this.RESERVATION_SCHEMA)
+                .withSchema(this.HOTEL_INVENTORY_SCHEMA)
                 .count("s.id as total")
+                .joinRaw(`LEFT JOIN ?? as ua ON ua.id = s.created_by`, [
+                `${this.RESERVATION_SCHEMA}.user_admin`,
+            ])
                 .where("s.hotel_code", hotel_code)
+                .andWhere("s.is_deleted", false)
                 .andWhere(function () {
                 if (name) {
-                    this.andWhere("s.name", "like", `%${name}%`);
+                    this.andWhere("s.name", "ilike", `%${name}%`);
                 }
                 if (status) {
-                    this.andWhere("s.status", "like", `%${status}%`);
-                }
-                if (res_id) {
-                    this.andWhere("s.res_id", res_id);
+                    this.andWhere("s.status", status);
                 }
                 if (excludeId) {
                     this.andWhere("s.id", "!=", excludeId);
@@ -306,10 +333,12 @@ class CommonInventoryModel extends schema_1.default {
     getSingleSupplier(id, hotel_code) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("supplier as s")
-                .withSchema(this.RESERVATION_SCHEMA)
+                .withSchema(this.HOTEL_INVENTORY_SCHEMA)
                 .select("*")
                 .where("s.id", id)
-                .andWhere("s.hotel_code", hotel_code);
+                .andWhere("s.hotel_code", hotel_code)
+                .andWhere("s.is_deleted", false)
+                .first();
         });
     }
     // Supplier payment report
@@ -397,9 +426,20 @@ class CommonInventoryModel extends schema_1.default {
     updateSupplier(id, hotel_code, payload) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("supplier")
-                .withSchema(this.RESERVATION_SCHEMA)
-                .where({ id, hotel_code })
+                .withSchema(this.HOTEL_INVENTORY_SCHEMA)
+                .where({ id, hotel_code, is_deleted: false })
                 .update(payload);
+        });
+    }
+    // Delete Supplier
+    deleteSupplier(id, hotel_code) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("supplier as s")
+                .withSchema(this.HOTEL_INVENTORY_SCHEMA)
+                .where("s.id", id)
+                .andWhere("s.hotel_code", hotel_code)
+                .andWhere("s.is_deleted", false)
+                .update({ is_deleted: true });
         });
     }
     // insert supplier payment

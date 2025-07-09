@@ -33,7 +33,10 @@ class CommonInvRouter extends AbstractRouter {
 			.get(this.controller.getAllUnit);
 
 		// edit Category
-		this.router.route("/unit/:id").patch(this.controller.updateUnit);
+		this.router
+			.route("/unit/:id")
+			.patch(this.controller.updateUnit)
+			.delete(this.controller.deleteUnit);
 
 		//=================== Brand ======================//
 
@@ -44,7 +47,10 @@ class CommonInvRouter extends AbstractRouter {
 			.get(this.controller.getAllBrand);
 
 		// edit Brand
-		this.router.route("/brand/:id").patch(this.controller.updateBrand);
+		this.router
+			.route("/brand/:id")
+			.patch(this.controller.updateBrand)
+			.delete(this.controller.deleteBrand);
 
 		//=================== Supplier Router ======================//
 
@@ -67,7 +73,8 @@ class CommonInvRouter extends AbstractRouter {
 		// edit Supplier
 		this.router
 			.route("/supplier/:id")
-			.patch(this.controller.updateSupplier);
+			.patch(this.controller.updateSupplier)
+			.delete(this.controller.deleteSupplier);
 	}
 }
 export default CommonInvRouter;
