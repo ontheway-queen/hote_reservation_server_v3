@@ -332,7 +332,7 @@ class CommonInventoryModel extends schema_1.default {
     // get single supplier
     getSingleSupplier(id, hotel_code) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("supplier as s")
+            return yield this.db("suppliers as s")
                 .withSchema(this.HOTEL_INVENTORY_SCHEMA)
                 .select("*")
                 .where("s.id", id)
@@ -446,7 +446,7 @@ class CommonInventoryModel extends schema_1.default {
     insertSupplierPayment(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("supplier_payment")
-                .withSchema(this.RESERVATION_SCHEMA)
+                .withSchema(this.HOTEL_INVENTORY_SCHEMA)
                 .insert(payload);
         });
     }

@@ -21,6 +21,7 @@ class PurchaseInvService extends abstract_service_1.default {
     createPurchase(req) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
+                var _a, _b;
                 const { hotel_code, id: admin_id } = req.hotel_admin;
                 const { purchase_date, supplier_id, ac_tr_ac_id, discount_amount, vat, shipping_cost, paid_amount, purchase_items, payment_type, } = req.body;
                 // Check supplier
@@ -31,7 +32,7 @@ class PurchaseInvService extends abstract_service_1.default {
                 const pInvModel = this.Model.purchaseInventoryModel(trx);
                 const pdModel = this.Model.productInventoryModel(trx);
                 const checkSupplier = yield cmnInvModel.getSingleSupplier(supplier_id, hotel_code);
-                if (!checkSupplier.length) {
+                if (!checkSupplier) {
                     throw new Error("Invalid Supplier Information");
                 }
                 const checkAccount = yield accModel.getSingleAccount({
@@ -43,10 +44,12 @@ class PurchaseInvService extends abstract_service_1.default {
                 }
                 // check purchase item exist or not
                 const pdIds = purchase_items.map((item) => item.product_id);
+                console.log({ pdIds });
                 const { data: checkPd } = yield pdModel.getAllProduct({
                     pd_ids: pdIds,
                     hotel_code,
                 });
+                console.log({ checkPd });
                 if (pdIds.length != checkPd.length) {
                     return {
                         success: false,
@@ -56,7 +59,11 @@ class PurchaseInvService extends abstract_service_1.default {
                 }
                 const last_balance = checkAccount[0].last_balance;
                 const sub_total = purchase_items.reduce((acc, curr) => acc + curr.quantity * curr.price, 0);
-                const grand_total = parseFloat(Number.parseFloat((sub_total + vat + shipping_cost - discount_amount).toString()).toFixed(2));
+                console.log({ sub_total });
+                const grand_total = parseFloat(Number.parseFloat((sub_total +
+                    vat +
+                    shipping_cost -
+                    discount_amount).toString()).toFixed(2));
                 const due = grand_total - paid_amount;
                 console.log({ checkAccount, grand_total });
                 if (paid_amount > grand_total) {
@@ -71,7 +78,7 @@ class PurchaseInvService extends abstract_service_1.default {
                 const year = new Date().getFullYear();
                 // get last voucher ID
                 const purchaseData = yield pInvModel.getAllPurchaseForLastId();
-                const purchase_no = purchaseData.length ? purchaseData[0].id + 1 : 1;
+                const payment_no = purchaseData.length ? purchaseData[0].id + 1 : 1;
                 // Insert purchase
                 const createdPurchase = yield pInvModel.createPurchase({
                     hotel_code,
@@ -84,8 +91,9 @@ class PurchaseInvService extends abstract_service_1.default {
                     vat,
                     shipping_cost,
                     due,
-                    voucher_no: `PUR-${year}${purchase_no}`,
+                    voucher_no: `PUR-${year}${payment_no}`,
                 });
+                console.log({ createdPurchase });
                 // product name include in purchase items
                 for (let i = 0; i < checkPd.length; i++) {
                     for (let j = 0; j < purchase_items.length; j++) {
@@ -105,7 +113,7 @@ class PurchaseInvService extends abstract_service_1.default {
                     else {
                         purchaseItemsPayload.push({
                             product_id: item.product_id,
-                            purchase_id: createdPurchase[0],
+                            purchase_id: (_a = createdPurchase[0]) === null || _a === void 0 ? void 0 : _a.id,
                             price: item.price * item.quantity,
                             quantity: item.quantity,
                             product_name: item.product_name,
@@ -148,40 +156,46 @@ class PurchaseInvService extends abstract_service_1.default {
                     })));
                 }
                 // Insert supplier ledger
-                yield pInvModel.insertInvSupplierLedger({
-                    supplier_id,
-                    hotel_code,
-                    ledger_debit_amount: grand_total,
-                    ledger_details: `Balance will be debited from hotel for sell something from supplier`,
-                });
+                // await pInvModel.insertInvSupplierLedger({
+                // 	supplier_id,
+                // 	hotel_code,
+                // 	ledger_debit_amount: grand_total,
+                // 	ledger_details: `Balance will be debited from hotel for sell something from supplier`,
+                // });
                 if (paid_amount > 0) {
-                    yield cmnInvModel.insertSupplierPayment({
+                    console.log({ ac_tr_ac_id });
+                    const a = yield cmnInvModel.insertSupplierPayment({
                         created_by: admin_id,
                         hotel_code: hotel_code,
-                        purchase_id: createdPurchase[0],
+                        purchase_id: (_b = createdPurchase[0]) === null || _b === void 0 ? void 0 : _b.id,
                         total_paid_amount: paid_amount,
                         ac_tr_ac_id,
+                        payment_no,
                         supplier_id,
+                        payment_type,
                     });
+                    console.log({ a });
                     // get last account ledger
-                    const lastAL = yield accModel.getLastAccountLedgerId(hotel_code);
-                    const ledger_id = lastAL.length ? lastAL[0].ledger_id + 1 : 1;
+                    // const lastAL = await accModel.getLastAccountLedgerId(
+                    // 	hotel_code
+                    // );
+                    // const ledger_id = lastAL.length ? lastAL[0].ledger_id + 1 : 1;
                     // Insert account ledger
-                    yield accModel.insertAccountLedger({
-                        ac_tr_ac_id,
-                        hotel_code,
-                        transaction_no: `PUR-${year}${purchase_no}`,
-                        ledger_debit_amount: paid_amount,
-                        ledger_details: `Balance Debited by Purchase`,
-                    });
+                    // await accModel.insertAccountLedger({
+                    // 	ac_tr_ac_id,
+                    // 	hotel_code,
+                    // 	transaction_no: `PUR-${year}${payment_no}`,
+                    // 	ledger_debit_amount: paid_amount,
+                    // 	ledger_details: `Balance Debited by Purchase`,
+                    // });
                     // Insert supplier ledger
-                    yield pInvModel.insertInvSupplierLedger({
-                        ac_tr_ac_id,
-                        supplier_id,
-                        hotel_code,
-                        ledger_credit_amount: paid_amount,
-                        ledger_details: `Balance credited for sell something`,
-                    });
+                    // await pInvModel.insertInvSupplierLedger({
+                    // 	ac_tr_ac_id,
+                    // 	supplier_id,
+                    // 	hotel_code,
+                    // 	ledger_credit_amount: paid_amount,
+                    // 	ledger_details: `Balance credited for sell something`,
+                    // });
                 }
                 return {
                     success: true,
@@ -312,6 +326,10 @@ class PurchaseInvService extends abstract_service_1.default {
                     yield pInvModel.updatePurchase({
                         due: remainingBalance,
                     }, { id: purchase_id });
+                    const purchaseData = yield pInvModel.getAllPurchaseForLastId();
+                    const payment_no = purchaseData.length
+                        ? purchaseData[0].id + 1
+                        : 1;
                     // insert in payment supplier
                     yield cmnInvModel.insertSupplierPayment({
                         ac_tr_ac_id,
@@ -320,6 +338,8 @@ class PurchaseInvService extends abstract_service_1.default {
                         purchase_id,
                         total_paid_amount: paid_amount,
                         supplier_id,
+                        payment_no,
+                        payment_type: "bank",
                     });
                 }
                 else {
@@ -353,7 +373,8 @@ class PurchaseInvService extends abstract_service_1.default {
                     for (let i = 0; i < unpaidInvoice.length; i++) {
                         if (remainingPaidAmount > 0) {
                             if (paid_amount >= unpaidInvoice[i].due) {
-                                remainingPaidAmount = paid_amount - unpaidInvoice[i].due;
+                                remainingPaidAmount =
+                                    paid_amount - unpaidInvoice[i].due;
                                 paidingInvoice.push({
                                     id: unpaidInvoice[i].id,
                                     due: unpaidInvoice[i].due - unpaidInvoice[i].due,
@@ -362,7 +383,8 @@ class PurchaseInvService extends abstract_service_1.default {
                                 });
                             }
                             else {
-                                remainingPaidAmount = paid_amount - unpaidInvoice[i].due;
+                                remainingPaidAmount =
+                                    paid_amount - unpaidInvoice[i].due;
                                 paidingInvoice.push({
                                     id: unpaidInvoice[i].id,
                                     due: unpaidInvoice[i].due - paid_amount,
@@ -396,6 +418,10 @@ class PurchaseInvService extends abstract_service_1.default {
                         ledger_credit_amount: paid_amount,
                         ledger_details: `Balance credited by purchase Money Reciept`,
                     });
+                    const purchaseData = yield pInvModel.getAllPurchaseForLastId();
+                    const payment_no = purchaseData.length
+                        ? purchaseData[0].id + 1
+                        : 1;
                     // money recipet item
                     yield Promise.all(paidingInvoice.map((item) => __awaiter(this, void 0, void 0, function* () {
                         yield cmnInvModel.insertSupplierPayment({
@@ -405,6 +431,8 @@ class PurchaseInvService extends abstract_service_1.default {
                             total_paid_amount: item.total_paid_amount,
                             ac_tr_ac_id,
                             supplier_id,
+                            payment_no,
+                            payment_type: "bank",
                         });
                     })));
                 }

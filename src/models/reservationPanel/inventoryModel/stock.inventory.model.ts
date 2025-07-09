@@ -16,14 +16,14 @@ class StockInventoryModel extends Schema {
 
 	// create stock
 	public async createStockIn(payload: ICreateStockInBody) {
-		return await this.db("stock")
-			.withSchema(this.RESERVATION_SCHEMA)
-			.insert(payload);
+		return await this.db("stocks")
+			.withSchema(this.HOTEL_INVENTORY_SCHEMA)
+			.insert(payload, "id");
 	}
 
 	public async createStockOut(payload: ICreateStockOutBody) {
-		return await this.db("stock")
-			.withSchema(this.RESERVATION_SCHEMA)
+		return await this.db("stocks")
+			.withSchema(this.HOTEL_INVENTORY_SCHEMA)
 			.insert(payload);
 	}
 
@@ -37,7 +37,7 @@ class StockInventoryModel extends Schema {
 	}) {
 		const { limit, skip, hotel_code, key, status } = payload;
 
-		const dtbs = this.db("stock_view as sv");
+		const dtbs = this.db("stocks as s");
 
 		if (limit && skip) {
 			dtbs.limit(parseInt(limit as string));
@@ -45,39 +45,43 @@ class StockInventoryModel extends Schema {
 		}
 
 		const data = await dtbs
-			.withSchema(this.RESERVATION_SCHEMA)
+			.withSchema(this.HOTEL_INVENTORY_SCHEMA)
 			.select(
-				"sv.id",
-				"sv.created_at as date",
+				"s.id",
+				"s.created_at as date",
 				"a.name as account_name",
 				"a.acc_type as account_type",
-				"sv.status",
-				"sv.paid_amount",
-				"sv.note"
+				"s.status",
+				"s.paid_amount",
+				"s.note"
 			)
-			.where("sv.hotel_code", hotel_code)
-			.leftJoin("account as a", "sv.ac_tr_ac_id", "a.id")
+			.where("s.hotel_code", hotel_code)
+			.joinRaw(`LEFT JOIN ?? a ON a.id = s.ac_tr_ac_id`, [
+				`${this.ACC_SCHEMA}.${this.TABLES.accounts}`,
+			])
 			.andWhere(function () {
 				if (key) {
 					this.andWhere("a.name", "like", `%${key}%`);
 				}
 				if (status) {
-					this.andWhere("sv.status", "like", `%${status}%`);
+					this.andWhere("s.status", "like", `%${status}%`);
 				}
 			})
-			.orderBy("sv.id", "desc");
+			.orderBy("s.id", "desc");
 
-		const total = await this.db("stock_view as sv")
-			.withSchema(this.RESERVATION_SCHEMA)
-			.count("sv.id as total")
-			.where("sv.hotel_code", hotel_code)
-			.leftJoin("account as a", "sv.ac_tr_ac_id", "a.id")
+		const total = await this.db("stocks as s")
+			.withSchema(this.HOTEL_INVENTORY_SCHEMA)
+			.count("s.id as total")
+			.where("s.hotel_code", hotel_code)
+			.joinRaw(`LEFT JOIN ?? a ON a.id = s.ac_tr_ac_id`, [
+				`${this.ACC_SCHEMA}.${this.TABLES.accounts}`,
+			])
 			.andWhere(function () {
 				if (key) {
 					this.andWhere("a.name", "like", `%${key}%`);
 				}
 				if (status) {
-					this.andWhere("sv.status", "like", `%${status}%`);
+					this.andWhere("s.status", "like", `%${status}%`);
 				}
 			});
 		return { total: total[0].total, data };
@@ -85,25 +89,44 @@ class StockInventoryModel extends Schema {
 
 	// get single stock
 	public async getSingleStock(id: number, hotel_code: number) {
-		const dtbs = this.db("stock_view as sv");
-		const data = await dtbs
-			.withSchema(this.RESERVATION_SCHEMA)
+		const stock = await this.db("stocks as s")
+			.withSchema(this.HOTEL_INVENTORY_SCHEMA)
 			.select(
-				"sv.*",
+				"s.*",
 				"a.name as account_name",
-				"a.acc_type as account_type"
+				"a.acc_type as account_type",
+				"ua.id as created_by_id",
+				"ua.name as created_by_name"
 			)
-			.leftJoin("account as a", "sv.ac_tr_ac_id", "a.id")
-			.where("sv.id", id)
-			.andWhere("sv.hotel_code", hotel_code);
+			.joinRaw(`LEFT JOIN ?? ua ON ua.id = s.created_by`, [
+				`${this.RESERVATION_SCHEMA}.user_admin`,
+			])
+			.joinRaw(`LEFT JOIN ?? a ON a.id = s.ac_tr_ac_id`, [
+				`${this.ACC_SCHEMA}.${this.TABLES.accounts}`,
+			])
+			.where("s.id", id)
+			.andWhere("s.hotel_code", hotel_code)
+			.first();
 
-		return data.length > 0 ? data[0] : [];
+		const stockItems = await this.db("stock_items")
+			.withSchema(this.HOTEL_INVENTORY_SCHEMA)
+			.select("product_id")
+			.sum("quantity as quantity")
+			.where("stock_id", id)
+			.groupBy("product_id");
+
+		const { created_by, ...cleanStock } = stock;
+
+		return {
+			...cleanStock,
+			items: stockItems,
+		};
 	}
 
 	// create stock item
 	public async createStockItem(payload: ICreateStockItemBody[]) {
-		return await this.db("stock_item")
-			.withSchema(this.RESERVATION_SCHEMA)
+		return await this.db("stock_items")
+			.withSchema(this.HOTEL_INVENTORY_SCHEMA)
 			.insert(payload);
 	}
 
@@ -116,7 +139,7 @@ class StockInventoryModel extends Schema {
 		}[]
 	) {
 		return await this.db("inventory")
-			.withSchema(this.RESERVATION_SCHEMA)
+			.withSchema(this.HOTEL_INVENTORY_SCHEMA)
 			.insert(payload);
 	}
 
@@ -129,7 +152,7 @@ class StockInventoryModel extends Schema {
 		where: { id: number }
 	) {
 		return await this.db("inventory")
-			.withSchema(this.RESERVATION_SCHEMA)
+			.withSchema(this.HOTEL_INVENTORY_SCHEMA)
 			.update(payload)
 			.where("id", where.id);
 	}
@@ -141,7 +164,7 @@ class StockInventoryModel extends Schema {
 	}) {
 		const { product_id, hotel_code } = where;
 		return await this.db("inventory")
-			.withSchema(this.RESERVATION_SCHEMA)
+			.withSchema(this.HOTEL_INVENTORY_SCHEMA)
 			.select("*")
 			.where("hotel_code", hotel_code)
 			.andWhere(function () {
@@ -168,7 +191,7 @@ class StockInventoryModel extends Schema {
 		}
 
 		const data = await dtbs
-			.withSchema(this.RESERVATION_SCHEMA)
+			.withSchema(this.HOTEL_INVENTORY_SCHEMA)
 			.select(
 				"inv.id",
 				"inv.product_id",

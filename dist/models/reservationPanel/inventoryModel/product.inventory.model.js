@@ -23,7 +23,7 @@ class ProductInventoryModel extends schema_1.default {
     createProduct(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("products")
-                .withSchema(this.RESERVATION_SCHEMA)
+                .withSchema(this.HOTEL_INVENTORY_SCHEMA)
                 .insert(payload);
         });
     }
@@ -37,13 +37,16 @@ class ProductInventoryModel extends schema_1.default {
                 dtbs.offset(parseInt(skip));
             }
             const data = yield dtbs
-                .withSchema(this.RESERVATION_SCHEMA)
-                .select("p.id", "p.product_code", "p.name", "p.model", "c.name as category", "u.name as unit", "b.name as brand", "i.available_quantity as in_stock", "p.status as status", "p.details", "p.image")
+                .withSchema(this.HOTEL_INVENTORY_SCHEMA)
+                .select("p.id", "p.product_code", "p.name", "p.model", "c.name as category", "u.name as unit", "b.name as brand", 
+            // "i.available_quantity as in_stock",
+            "p.status as status", "p.details", "p.image", "p.is_deleted")
                 .where("p.hotel_code", hotel_code)
-                .leftJoin("category as c", "p.category_id", "c.id")
-                .leftJoin("inventory as i", "p.id", "i.product_id")
-                .leftJoin("unit as u", "p.unit_id", "u.id")
-                .leftJoin("brand as b", "p.brand_id", "b.id")
+                .andWhere("p.is_deleted", false)
+                .leftJoin("categories as c", "p.category_id", "c.id")
+                // .leftJoin("inventory as i", "p.id", "i.product_id")
+                .leftJoin("units as u", "p.unit_id", "u.id")
+                .leftJoin("brands as b", "p.brand_id", "b.id")
                 .andWhere(function () {
                 if (key) {
                     this.andWhere("p.name", "like", `%${key}%`).orWhere("p.model", "like", `%${key}%`);
@@ -66,13 +69,14 @@ class ProductInventoryModel extends schema_1.default {
             })
                 .orderBy("p.id", "desc");
             const total = yield this.db("products as p")
-                .withSchema(this.RESERVATION_SCHEMA)
+                .withSchema(this.HOTEL_INVENTORY_SCHEMA)
                 .count("p.id as total")
+                .andWhere("p.is_deleted", false)
                 .where("p.hotel_code", hotel_code)
-                .leftJoin("category as c", "p.category_id", "c.id")
-                .leftJoin("inventory as i", "p.id", "i.product_id")
-                .leftJoin("unit as u", "p.unit_id", "u.id")
-                .leftJoin("brand as b", "p.brand_id", "b.id")
+                .leftJoin("categories as c", "p.category_id", "c.id")
+                // .leftJoin("inventory as i", "p.id", "i.product_id")
+                .leftJoin("units as u", "p.unit_id", "u.id")
+                .leftJoin("brands as b", "p.brand_id", "b.id")
                 .andWhere(function () {
                 if (key) {
                     this.andWhere("p.name", "like", `%${key}%`).orWhere("p.model", "like", `%${key}%`);
@@ -101,7 +105,7 @@ class ProductInventoryModel extends schema_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("products")
                 .select("id")
-                .withSchema(this.RESERVATION_SCHEMA)
+                .withSchema(this.HOTEL_INVENTORY_SCHEMA)
                 .orderBy("id", "desc")
                 .limit(1);
         });
@@ -110,7 +114,7 @@ class ProductInventoryModel extends schema_1.default {
     updateProduct(id, payload) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("products")
-                .withSchema(this.RESERVATION_SCHEMA)
+                .withSchema(this.HOTEL_INVENTORY_SCHEMA)
                 .where({ id })
                 .update(payload);
         });
@@ -120,7 +124,7 @@ class ProductInventoryModel extends schema_1.default {
     createDamagedProduct(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("damaged_product")
-                .withSchema(this.RESERVATION_SCHEMA)
+                .withSchema(this.HOTEL_INVENTORY_SCHEMA)
                 .insert(payload);
         });
     }
@@ -134,12 +138,12 @@ class ProductInventoryModel extends schema_1.default {
                 dtbs.offset(parseInt(skip));
             }
             const data = yield dtbs
-                .withSchema(this.RESERVATION_SCHEMA)
+                .withSchema(this.HOTEL_INVENTORY_SCHEMA)
                 .select("*")
                 .where("dv.hotel_code", hotel_code)
                 .orderBy("dv.dmp_id", "desc");
             const total = yield this.db("damaged_product_view as dv")
-                .withSchema(this.RESERVATION_SCHEMA)
+                .withSchema(this.HOTEL_INVENTORY_SCHEMA)
                 .count("dv.dmp_id as total")
                 .where("dv.hotel_code", hotel_code);
             return { total: total[0].total, data };
@@ -149,7 +153,7 @@ class ProductInventoryModel extends schema_1.default {
     getSingleDamagedProduct(id, hotel_code) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("damaged_product_view as dv")
-                .withSchema(this.RESERVATION_SCHEMA)
+                .withSchema(this.HOTEL_INVENTORY_SCHEMA)
                 .select("dv.*")
                 .where("dv.id", id)
                 .andWhere("dv.hotel_code", hotel_code);

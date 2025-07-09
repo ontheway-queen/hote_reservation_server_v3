@@ -8,6 +8,7 @@ class ProductInvValidator {
     constructor() {
         // create product
         this.createProductInvValidator = joi_1.default.object({
+            product_code: joi_1.default.string().required(),
             name: joi_1.default.string().required(),
             model: joi_1.default.string().allow("").optional(),
             category_id: joi_1.default.number().required(),

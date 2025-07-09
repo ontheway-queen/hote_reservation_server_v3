@@ -281,7 +281,9 @@ class AccountModel extends schema_1.default {
                     this.where("is_active", status);
                 }
                 if (ac_type) {
-                    this.andWhereRaw("LOWER(ac_type) = ?", [ac_type.toLowerCase()]);
+                    this.andWhereRaw("LOWER(ac_type) = ?", [
+                        ac_type.toLowerCase(),
+                    ]);
                 }
                 if (acc_ids) {
                     this.whereIn("id", acc_ids);
@@ -322,7 +324,7 @@ class AccountModel extends schema_1.default {
             const { id, type, hotel_code } = payload;
             return yield this.db("accounts")
                 .withSchema(this.ACC_SCHEMA)
-                .select("id", "acc_head_id", "ac_type", "name", "branch", "acc_number", "is_active", "acc_routing_no", "details")
+                .select("id", "acc_head_id", "acc_type", "name", "branch", "acc_number", "is_active", "acc_routing_no", "details")
                 .where("hotel_code", hotel_code)
                 .andWhere(function () {
                 if (id) {

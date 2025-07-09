@@ -13,6 +13,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const abstract_service_1 = __importDefault(require("../../abstarcts/abstract.service"));
+const constants_1 = require("../../utils/miscellaneous/constants");
 class StockInvService extends abstract_service_1.default {
     constructor() {
         super();
@@ -21,7 +22,8 @@ class StockInvService extends abstract_service_1.default {
     createStock(req) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
-                const { hotel_code } = req.hotel_admin;
+                var _a;
+                const { hotel_code, id: hotel_admin } = req.hotel_admin;
                 const { stock_in, stock_out, note, stock_items } = req.body;
                 // Check purchase
                 const PModel = this.Model.stockInventoryModel(trx);
@@ -47,27 +49,28 @@ class StockInvService extends abstract_service_1.default {
                             message: "Insufficient balance in this account for payment",
                         };
                     }
-                    // get last account ledger
-                    const lastAL = yield Model.getLastAccountLedgerId(hotel_code);
-                    const ledger_id = lastAL.length ? lastAL[0].ledger_id + 1 : 1;
-                    const year = new Date().getFullYear();
-                    // Insert account ledger
-                    yield Model.insertAccountLedger({
-                        ac_tr_ac_id: req.body.ac_tr_ac_id,
-                        hotel_code,
-                        transaction_no: `TRX-${year - ledger_id}`,
-                        ledger_debit_amount: req.body.paid_amount,
-                        ledger_details: `Balance Debited by Update Stock`,
-                    });
+                    // // get last account ledger
+                    // const lastAL = await Model.getLastAccountLedgerId(hotel_code);
+                    // const ledger_id = lastAL.length ? lastAL[0].ledger_id + 1 : 1;
+                    // const year = new Date().getFullYear();
+                    // // Insert account ledger
+                    // await Model.insertAccountLedger({
+                    //   ac_tr_ac_id: req.body.ac_tr_ac_id,
+                    //   hotel_code,
+                    //   transaction_no: `TRX-${year - ledger_id}`,
+                    //   ledger_debit_amount: req.body.paid_amount,
+                    //   ledger_details: `Balance Debited by Update Stock`,
+                    // });
                     // Insert purchase
                     const createdStock = yield PModel.createStockIn({
                         hotel_code,
+                        created_by: hotel_admin,
                         ac_tr_ac_id: req.body.ac_tr_ac_id,
-                        status: "in",
+                        status: constants_1.STOCK_STATUS.IN,
                         note,
                         paid_amount: req.body.paid_amount,
                     });
-                    console.log(req.body);
+                    console.log({ createdStock });
                     // Insert purchase item
                     const stockItemsPayload = [];
                     for (const item of stock_items) {
@@ -78,7 +81,7 @@ class StockInvService extends abstract_service_1.default {
                         else {
                             stockItemsPayload.push({
                                 product_id: item.product_id,
-                                stock_id: createdStock[0],
+                                stock_id: (_a = createdStock[0]) === null || _a === void 0 ? void 0 : _a.id,
                                 quantity: item.quantity,
                             });
                         }
@@ -158,7 +161,8 @@ class StockInvService extends abstract_service_1.default {
                             modifyInventoryProduct.push({
                                 available_quantity: parseFloat(inventoryItem.available_quantity) -
                                     payloadItem.quantity,
-                                quantity_used: parseFloat(inventoryItem.quantity_used) + payloadItem.quantity,
+                                quantity_used: parseFloat(inventoryItem.quantity_used) +
+                                    payloadItem.quantity,
                                 id: inventoryItem.id,
                             });
                         }

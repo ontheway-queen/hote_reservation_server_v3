@@ -428,7 +428,7 @@ class CommonInventoryModel extends Schema {
 
 	// get single supplier
 	public async getSingleSupplier(id: number, hotel_code: number) {
-		return await this.db("supplier as s")
+		return await this.db("suppliers as s")
 			.withSchema(this.HOTEL_INVENTORY_SCHEMA)
 			.select("*")
 			.where("s.id", id)
@@ -593,13 +593,14 @@ class CommonInventoryModel extends Schema {
 		hotel_code: number;
 		purchase_id: number;
 		ac_tr_ac_id: number;
-		res_id?: number;
+		payment_no: number;
 		total_paid_amount: number;
 		created_by: number;
 		supplier_id: number;
+		payment_type: string;
 	}) {
 		return await this.db("supplier_payment")
-			.withSchema(this.RESERVATION_SCHEMA)
+			.withSchema(this.HOTEL_INVENTORY_SCHEMA)
 			.insert(payload);
 	}
 }
