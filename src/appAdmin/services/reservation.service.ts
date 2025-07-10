@@ -155,8 +155,6 @@ export class ReservationService extends AbstractServices {
             }
           );
 
-        console.log({ availableRooms });
-
         if (rt.rooms.length > (availableRooms[0]?.available_rooms || 0)) {
           return {
             success: false,
@@ -173,8 +171,6 @@ export class ReservationService extends AbstractServices {
             check_out,
             room_type_id: rt.room_type_id,
           });
-
-        console.log({ availableRoomList });
 
         for (const room of rt.rooms) {
           const isRoomAvailable = availableRoomList.some((avr) => {
@@ -248,7 +244,7 @@ export class ReservationService extends AbstractServices {
       });
 
       // Insert booking rooms
-      await sub.insertBookingRoomsV2({
+      await sub.insertBookingRooms({
         booked_room_types,
         booking_id: booking.id,
         nights: total_nights,
@@ -257,7 +253,7 @@ export class ReservationService extends AbstractServices {
       });
 
       // Update availability
-      await sub.updateAvailabilityWhenRoomBookingV2(
+      await sub.updateAvailabilityWhenRoomBooking(
         reservation_type,
         booked_room_types,
         check_in,
@@ -266,7 +262,7 @@ export class ReservationService extends AbstractServices {
       );
 
       // Create folio and ledger entries
-      await sub.createRoomBookingFolioWithEntriesV2({
+      await sub.createRoomBookingFolioWithEntries({
         body,
         guest_id,
         booking_id: booking.id,
@@ -338,8 +334,6 @@ export class ReservationService extends AbstractServices {
             }
           );
 
-        console.log({ availableRooms });
-
         if (rt.rooms.length > (availableRooms[0]?.available_rooms || 0)) {
           return {
             success: false,
@@ -423,9 +417,7 @@ export class ReservationService extends AbstractServices {
           vat_percentage,
         },
         hotel_code,
-        // sub_total,
         guest_id,
-        // total_amount,
         is_checked_in,
         total_nights,
       });
@@ -439,14 +431,14 @@ export class ReservationService extends AbstractServices {
       });
 
       // Update availability
-      await sub.updateAvailabilityWhenGroupRoomBookingV2(
+      await sub.updateAvailabilityWhenGroupRoomBooking(
         reservation_type,
         booked_room_types,
         hotel_code
       );
 
       // Create folio and ledger entries
-      await sub.createGroupRoomBookingFolioWithEntriesV2({
+      await sub.createGroupRoomBookingFolioWithEntries({
         body,
         guest_id,
         booking_id: booking.id,
@@ -646,14 +638,14 @@ export class ReservationService extends AbstractServices {
       await hotelInvModel.updateFolioEntriesByFolioId(
         { is_void: true },
         { folio_id: primaryFolio.id },
-        { type: "Payment" }
+        { exlclude: "Payment" }
       );
 
       const dailyFolioMap: Record<string, IinsertFolioEntriesPayload[]> = {};
-      const vatScDates: Record<string, number> = {}; // date => total changed rate
+      const vatScDates: Record<string, number> = {};
 
       // Step 1: Update rates if provided
-      if (body.changed_rate_of_booking_rooms) {
+      if (body?.changed_rate_of_booking_rooms) {
         for (const change of body.changed_rate_of_booking_rooms) {
           const room = await model.getSingleBookingRoom({
             booking_id,
@@ -677,7 +669,7 @@ export class ReservationService extends AbstractServices {
       }
 
       // Step 2: Remove rooms if needed
-      if (body.removed_rooms) {
+      if (body?.removed_rooms) {
         await model.deleteBookingRooms(body.removed_rooms);
         //
         await sub.updateRoomAvailabilityServiceByRoomIds(
@@ -690,7 +682,7 @@ export class ReservationService extends AbstractServices {
       }
 
       // Step 3: Add new rooms if any
-      if (body.add_room_types) {
+      if (body?.add_room_types) {
         await sub.insertBookingRoomsForGroupBooking({
           booked_room_types: body.add_room_types,
           booking_id: booking.id,
@@ -701,8 +693,6 @@ export class ReservationService extends AbstractServices {
         await sub.updateAvailabilityWhenGroupRoomBooking(
           "booked",
           body.add_room_types,
-          booking.check_in,
-          booking.check_out,
           hotel_code
         );
       }

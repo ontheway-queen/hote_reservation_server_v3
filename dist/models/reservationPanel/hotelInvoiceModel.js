@@ -337,15 +337,15 @@ class HotelInvoiceModel extends schema_1.default {
                 .whereIn("id", entryIDs);
         });
     }
-    updateFolioEntriesByFolioId(payload, where, where_not) {
+    updateFolioEntriesByFolioId(payload, where, exlclude_type) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("folio_entries")
                 .withSchema(this.RESERVATION_SCHEMA)
                 .update(payload)
                 .where("folio_id", where.folio_id)
                 .andWhere(function () {
-                if (where_not === null || where_not === void 0 ? void 0 : where_not.type) {
-                    this.andWhereNot("posting_type", where_not.type);
+                if (exlclude_type === null || exlclude_type === void 0 ? void 0 : exlclude_type.exlclude) {
+                    this.andWhereNot("posting_type", exlclude_type.exlclude);
                 }
             });
         });

@@ -521,15 +521,15 @@ class HotelInvoiceModel extends Schema {
   public async updateFolioEntriesByFolioId(
     payload: { is_void?: boolean; invoiced?: boolean },
     where: { folio_id: number },
-    where_not?: { type: "Payment" }
+    exlclude_type?: { exlclude: "Payment" }
   ) {
     return await this.db("folio_entries")
       .withSchema(this.RESERVATION_SCHEMA)
       .update(payload)
       .where("folio_id", where.folio_id)
       .andWhere(function () {
-        if (where_not?.type) {
-          this.andWhereNot("posting_type", where_not.type);
+        if (exlclude_type?.exlclude) {
+          this.andWhereNot("posting_type", exlclude_type.exlclude);
         }
       });
   }

@@ -111,7 +111,6 @@ class ReservationService extends abstract_service_1.default {
                         check_out,
                         room_type_id: rt.room_type_id,
                     });
-                    console.log({ availableRooms });
                     if (rt.rooms.length > (((_a = availableRooms[0]) === null || _a === void 0 ? void 0 : _a.available_rooms) || 0)) {
                         return {
                             success: false,
@@ -126,7 +125,6 @@ class ReservationService extends abstract_service_1.default {
                         check_out,
                         room_type_id: rt.room_type_id,
                     });
-                    console.log({ availableRoomList });
                     for (const room of rt.rooms) {
                         const isRoomAvailable = availableRoomList.some((avr) => {
                             return avr.room_id === room.room_id;
@@ -192,7 +190,7 @@ class ReservationService extends abstract_service_1.default {
                     total_nights,
                 });
                 // Insert booking rooms
-                yield sub.insertBookingRoomsV2({
+                yield sub.insertBookingRooms({
                     booked_room_types,
                     booking_id: booking.id,
                     nights: total_nights,
@@ -200,9 +198,9 @@ class ReservationService extends abstract_service_1.default {
                     is_checked_in,
                 });
                 // Update availability
-                yield sub.updateAvailabilityWhenRoomBookingV2(reservation_type, booked_room_types, check_in, check_out, hotel_code);
+                yield sub.updateAvailabilityWhenRoomBooking(reservation_type, booked_room_types, check_in, check_out, hotel_code);
                 // Create folio and ledger entries
-                yield sub.createRoomBookingFolioWithEntriesV2({
+                yield sub.createRoomBookingFolioWithEntries({
                     body,
                     guest_id,
                     booking_id: booking.id,
@@ -245,7 +243,6 @@ class ReservationService extends abstract_service_1.default {
                         check_out,
                         room_type_id: rt.room_type_id,
                     });
-                    console.log({ availableRooms });
                     if (rt.rooms.length > (((_a = availableRooms[0]) === null || _a === void 0 ? void 0 : _a.available_rooms) || 0)) {
                         return {
                             success: false,
@@ -320,9 +317,7 @@ class ReservationService extends abstract_service_1.default {
                         vat_percentage,
                     },
                     hotel_code,
-                    // sub_total,
                     guest_id,
-                    // total_amount,
                     is_checked_in,
                     total_nights,
                 });
@@ -334,9 +329,9 @@ class ReservationService extends abstract_service_1.default {
                     is_checked_in,
                 });
                 // Update availability
-                yield sub.updateAvailabilityWhenGroupRoomBookingV2(reservation_type, booked_room_types, hotel_code);
+                yield sub.updateAvailabilityWhenGroupRoomBooking(reservation_type, booked_room_types, hotel_code);
                 // Create folio and ledger entries
-                yield sub.createGroupRoomBookingFolioWithEntriesV2({
+                yield sub.createGroupRoomBookingFolioWithEntries({
                     body,
                     guest_id,
                     booking_id: booking.id,
@@ -482,11 +477,11 @@ class ReservationService extends abstract_service_1.default {
                 if (!primaryFolio) {
                     throw new Error("Primary folio not found for booking");
                 }
-                yield hotelInvModel.updateFolioEntriesByFolioId({ is_void: true }, { folio_id: primaryFolio.id }, { type: "Payment" });
+                yield hotelInvModel.updateFolioEntriesByFolioId({ is_void: true }, { folio_id: primaryFolio.id }, { exlclude: "Payment" });
                 const dailyFolioMap = {};
-                const vatScDates = {}; // date => total changed rate
+                const vatScDates = {};
                 // Step 1: Update rates if provided
-                if (body.changed_rate_of_booking_rooms) {
+                if (body === null || body === void 0 ? void 0 : body.changed_rate_of_booking_rooms) {
                     for (const change of body.changed_rate_of_booking_rooms) {
                         const room = yield model.getSingleBookingRoom({
                             booking_id,
@@ -504,20 +499,20 @@ class ReservationService extends abstract_service_1.default {
                     }
                 }
                 // Step 2: Remove rooms if needed
-                if (body.removed_rooms) {
+                if (body === null || body === void 0 ? void 0 : body.removed_rooms) {
                     yield model.deleteBookingRooms(body.removed_rooms);
                     //
                     yield sub.updateRoomAvailabilityServiceByRoomIds("booked_room_decrease", body.removed_rooms, booking.check_in, booking.check_out, hotel_code);
                 }
                 // Step 3: Add new rooms if any
-                if (body.add_room_types) {
+                if (body === null || body === void 0 ? void 0 : body.add_room_types) {
                     yield sub.insertBookingRoomsForGroupBooking({
                         booked_room_types: body.add_room_types,
                         booking_id: booking.id,
                         hotel_code,
                         is_checked_in: false,
                     });
-                    yield sub.updateAvailabilityWhenGroupRoomBooking("booked", body.add_room_types, booking.check_in, booking.check_out, hotel_code);
+                    yield sub.updateAvailabilityWhenGroupRoomBooking("booked", body.add_room_types, hotel_code);
                 }
                 // Step 4: Fetch all active rooms and construct folio entries per date
                 const allRooms = yield model.getAllBookingRoomsByBookingId({
