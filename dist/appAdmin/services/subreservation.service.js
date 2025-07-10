@@ -233,22 +233,24 @@ class SubReservationService extends abstract_service_1.default {
                     ]);
                     const booking_room_id = bookingRoomRes.id;
                     // Insert guests and booking_room_guests
-                    for (const guest of room.guest_info) {
-                        const [guestRes] = yield this.Model.guestModel(this.trx).createGuestForGroupBooking({
-                            first_name: guest.first_name,
-                            last_name: guest.last_name,
-                            email: guest.email,
-                            address: guest.address,
-                            country_id: guest.country_id,
-                            phone: guest.phone,
-                            hotel_code,
-                        });
-                        yield this.Model.reservationModel(this.trx).insertBookingRoomGuest({
-                            is_lead_guest: guest.is_lead_guest,
-                            guest_id: guestRes.id,
-                            hotel_code,
-                            booking_room_id,
-                        });
+                    if (room === null || room === void 0 ? void 0 : room.guest_info) {
+                        for (const guest of room.guest_info) {
+                            const [guestRes] = yield this.Model.guestModel(this.trx).createGuestForGroupBooking({
+                                first_name: guest.first_name,
+                                last_name: guest.last_name,
+                                email: guest.email,
+                                address: guest.address,
+                                country_id: guest.country_id,
+                                phone: guest.phone,
+                                hotel_code,
+                            });
+                            yield this.Model.reservationModel(this.trx).insertBookingRoomGuest({
+                                is_lead_guest: guest.is_lead_guest,
+                                guest_id: guestRes.id,
+                                hotel_code,
+                                booking_room_id,
+                            });
+                        }
                     }
                 }
             }
@@ -340,6 +342,37 @@ class SubReservationService extends abstract_service_1.default {
                             type: "hold_increase",
                         });
                     }
+                }
+            }
+        });
+    }
+    updateAvailabilityWhenGroupRoomBookingV2(reservation_type, booked_room_types, hotel_code) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const reservation_model = this.Model.reservationModel(this.trx);
+            for (const { rooms, room_type_id } of booked_room_types) {
+                for (const { check_in, check_out } of rooms) {
+                    const dates = helperFunction_1.HelperFunction.getDatesBetween(check_in, check_out);
+                    const updatePromises = dates.map((date) => {
+                        if (reservation_type === "booked") {
+                            return reservation_model.updateRoomAvailability({
+                                type: "booked_room_increase",
+                                hotel_code,
+                                room_type_id,
+                                date,
+                                rooms_to_book: 1,
+                            });
+                        }
+                        else {
+                            return reservation_model.updateRoomAvailabilityHold({
+                                hotel_code,
+                                room_type_id,
+                                date,
+                                rooms_to_book: 1,
+                                type: "hold_increase",
+                            });
+                        }
+                    });
+                    yield Promise.all(updatePromises);
                 }
             }
         });
@@ -518,7 +551,140 @@ class SubReservationService extends abstract_service_1.default {
             }
         });
     }
+    // public async createRoomBookingFolioWithEntriesV2({
+    //   body,
+    //   booking_id,
+    //   guest_id,
+    //   req,
+    // }: {
+    //   req: Request;
+    //   body: IGBookingRequestBody;
+    //   booking_id: number;
+    //   guest_id: number;
+    // }) {
+    //   const hotel_code = req.hotel_admin.hotel_code;
+    //   const created_by = req.hotel_admin.id;
+    //   const hotelInvModel = this.Model.hotelInvoiceModel(this.trx);
+    //   // 1. Generate Folio Number
+    //   const [lastFolio] = await hotelInvModel.getLasFolioId();
+    //   const folio_number = HelperFunction.generateFolioNumber(lastFolio?.id);
+    //   // 2. Insert Folio
+    //   const [folio] = await hotelInvModel.insertInFolio({
+    //     booking_id,
+    //     folio_number,
+    //     guest_id,
+    //     hotel_code,
+    //     name: "Reservation",
+    //     status: "open",
+    //     type: "Primary",
+    //   });
+    //   // 3. Build Folio Entries
+    //   const folioEntries: IinsertFolioEntriesPayload[] = [];
+    //   const dailyMap: Record<string, number> = {};
+    //   for (const rt of body.booked_room_types) {
+    //     for (const room of rt.rooms) {
+    //       const from = new Date(room.check_in);
+    //       const to = new Date(room.check_out);
+    //       const ratePerNight = room.rate.changed_rate;
+    //       const rackRate = room.rate.base_rate;
+    //       for (let d = new Date(from); d < to; d.setDate(d.getDate() + 1)) {
+    //         const date = d.toISOString().split("T")[0];
+    //         // Push Room Tariff first
+    //         folioEntries.push({
+    //           folio_id: folio.id,
+    //           date,
+    //           posting_type: "Charge",
+    //           debit: ratePerNight,
+    //           room_id: room.room_id,
+    //           description: "Room Tariff",
+    //           rack_rate: rackRate,
+    //         });
+    //         // Track for VAT/Service Charge
+    //         dailyMap[date] = (dailyMap[date] || 0) + ratePerNight;
+    //       }
+    //     }
+    //   }
+    //   // 4. Add VAT and Service Charge after Room Tariff for each date
+    //   for (const date in dailyMap) {
+    //     const totalRate = dailyMap[date];
+    //     const vatAmount = (totalRate * body.vat_percentage) / 100;
+    //     const scAmount = (totalRate * body.service_charge_percentage) / 100;
+    //     if (vatAmount > 0) {
+    //       folioEntries.push({
+    //         folio_id: folio.id,
+    //         date,
+    //         posting_type: "Charge",
+    //         debit: vatAmount,
+    //         room_id: 0,
+    //         description: "VAT",
+    //         rack_rate: 0,
+    //       });
+    //     }
+    //     if (scAmount > 0) {
+    //       folioEntries.push({
+    //         folio_id: folio.id,
+    //         date,
+    //         posting_type: "Charge",
+    //         debit: scAmount,
+    //         room_id: 0,
+    //         description: "Service Charge",
+    //         rack_rate: 0,
+    //       });
+    //     }
+    //   }
+    //   // 5. Handle optional payment
+    //   const today = new Date().toISOString().split("T")[0];
+    //   if (body.is_payment_given && body.payment && body.payment.amount > 0) {
+    //     const accountModel = this.Model.accountModel(this.trx);
+    //     const [account] = await accountModel.getSingleAccount({
+    //       hotel_code,
+    //       id: body.payment.acc_id,
+    //     });
+    //     if (!account) {
+    //       throw new Error("Invalid Account");
+    //     }
+    //     const voucher_no = await new HelperFunction().generateVoucherNo();
+    //     const [voucher] = await accountModel.insertAccVoucher({
+    //       acc_head_id: account.acc_head_id,
+    //       created_by,
+    //       debit: body.payment.amount,
+    //       credit: 0,
+    //       description: `Payment for booking ${booking_id}`,
+    //       voucher_type: "PAYMENT",
+    //       voucher_date: today,
+    //       voucher_no,
+    //     });
+    //     folioEntries.push({
+    //       folio_id: folio.id,
+    //       acc_voucher_id: voucher.id,
+    //       date: today,
+    //       posting_type: "Payment",
+    //       credit: body.payment.amount,
+    //       room_id: 0,
+    //       description: "Payment Received",
+    //       rack_rate: 0,
+    //     });
+    //   }
+    //   // 6. Insert entries
+    //   await hotelInvModel.insertInFolioEntries(folioEntries);
+    //   // 7. Calculate total debit and update booking
+    //   const totalDebit = folioEntries.reduce((sum, entry) => {
+    //     return sum + (entry.debit ?? 0);
+    //   }, 0);
+    //   await this.Model.reservationModel(this.trx).updateRoomBooking(
+    //     {
+    //       total_amount: totalDebit,
+    //     },
+    //     hotel_code,
+    //     booking_id
+    //   );
+    //   return {
+    //     folio,
+    //     entries: folioEntries,
+    //   };
+    // }
     createRoomBookingFolioWithEntriesV2({ body, booking_id, guest_id, req, }) {
+        var _a;
         return __awaiter(this, void 0, void 0, function* () {
             const hotel_code = req.hotel_admin.hotel_code;
             const created_by = req.hotel_admin.id;
@@ -536,71 +702,81 @@ class SubReservationService extends abstract_service_1.default {
                 status: "open",
                 type: "Primary",
             });
-            // 3. Build Folio Entries
-            const folioEntries = [];
-            const dailyMap = {};
+            // 3. Aggregate room tariffs per date
+            const chargesPerDate = new Map();
             for (const rt of body.booked_room_types) {
                 for (const room of rt.rooms) {
-                    const from = new Date(room.check_in);
-                    const to = new Date(room.check_out);
-                    const ratePerNight = room.rate.changed_rate;
-                    const rackRate = room.rate.base_rate;
-                    for (let d = new Date(from); d < to; d.setDate(d.getDate() + 1)) {
+                    const rate = room.rate.changed_rate;
+                    const rack = room.rate.base_rate;
+                    for (let d = new Date(room.check_in); d < new Date(room.check_out); d.setDate(d.getDate() + 1)) {
                         const date = d.toISOString().split("T")[0];
-                        // Push Room Tariff first
-                        folioEntries.push({
+                        const entry = {
                             folio_id: folio.id,
                             date,
                             posting_type: "Charge",
-                            debit: ratePerNight,
+                            debit: rate,
+                            credit: 0,
                             room_id: room.room_id,
                             description: "Room Tariff",
-                            rack_rate: rackRate,
-                        });
-                        // Track for VAT/Service Charge
-                        dailyMap[date] = (dailyMap[date] || 0) + ratePerNight;
+                            rack_rate: rack,
+                        };
+                        if (!chargesPerDate.has(date)) {
+                            chargesPerDate.set(date, { tariffs: [entry], totalRate: rate });
+                        }
+                        else {
+                            const rec = chargesPerDate.get(date);
+                            rec.tariffs.push(entry);
+                            rec.totalRate += rate;
+                        }
                     }
                 }
             }
-            // 4. Add VAT and Service Charge after Room Tariff for each date
-            for (const date in dailyMap) {
-                const totalRate = dailyMap[date];
-                const vatAmount = (totalRate * body.vat_percentage) / 100;
-                const scAmount = (totalRate * body.service_charge_percentage) / 100;
-                if (vatAmount > 0) {
+            // 4. Build folio entries in ascending date order
+            const folioEntries = [];
+            const sortedDates = [...chargesPerDate.keys()].sort();
+            for (const date of sortedDates) {
+                const { tariffs, totalRate } = chargesPerDate.get(date);
+                // Push all room tariffs first
+                folioEntries.push(...tariffs);
+                // Then VAT
+                const vatAmt = (totalRate * body.vat_percentage) / 100;
+                if (vatAmt > 0) {
                     folioEntries.push({
                         folio_id: folio.id,
                         date,
                         posting_type: "Charge",
-                        debit: vatAmount,
+                        debit: vatAmt,
+                        credit: 0,
                         room_id: 0,
                         description: "VAT",
                         rack_rate: 0,
                     });
                 }
-                if (scAmount > 0) {
+                // Then Service Charge
+                const scAmt = (totalRate * body.service_charge_percentage) / 100;
+                if (scAmt > 0) {
                     folioEntries.push({
                         folio_id: folio.id,
                         date,
                         posting_type: "Charge",
-                        debit: scAmount,
+                        debit: scAmt,
+                        credit: 0,
                         room_id: 0,
                         description: "Service Charge",
                         rack_rate: 0,
                     });
                 }
             }
-            // 5. Handle optional payment
+            // 5. Handle payment if given
             const today = new Date().toISOString().split("T")[0];
-            if (body.is_payment_given && body.payment && body.payment.amount > 0) {
+            if (body.is_payment_given && ((_a = body.payment) === null || _a === void 0 ? void 0 : _a.amount) > 0) {
                 const accountModel = this.Model.accountModel(this.trx);
                 const [account] = yield accountModel.getSingleAccount({
                     hotel_code,
                     id: body.payment.acc_id,
                 });
-                if (!account) {
+                if (!account)
                     throw new Error("Invalid Account");
-                }
                 const voucher_no = yield new helperFunction_1.HelperFunction().generateVoucherNo();
                 const [voucher] = yield accountModel.insertAccVoucher({
                     acc_head_id: account.acc_head_id,
@@ -617,26 +793,18 @@ class SubReservationService extends abstract_service_1.default {
                     acc_voucher_id: voucher.id,
                     date: today,
                     posting_type: "Payment",
+                    debit: 0,
                     credit: body.payment.amount,
                     room_id: 0,
                     description: "Payment Received",
                     rack_rate: 0,
                 });
             }
-            // 6. Insert entries
+            // 6. Insert entries and update booking
             yield hotelInvModel.insertInFolioEntries(folioEntries);
-            // 7. Calculate total debit and update booking
-            const totalDebit = folioEntries.reduce((sum, entry) => {
-                var _a;
-                return sum + ((_a = entry.debit) !== null && _a !== void 0 ? _a : 0);
-            }, 0);
-            yield this.Model.reservationModel(this.trx).updateRoomBooking({
-                total_amount: totalDebit,
-            }, hotel_code, booking_id);
-            return {
-                folio,
-                entries: folioEntries,
-            };
+            const totalDebit = folioEntries.reduce((sum, e) => { var _a; return sum + ((_a = e.debit) !== null && _a !== void 0 ? _a : 0); }, 0);
+            yield this.Model.reservationModel(this.trx).updateRoomBooking({ total_amount: totalDebit }, hotel_code, booking_id);
+            return { folio, entries: folioEntries };
         });
     }
     createGroupRoomBookingFolioWithEntries({ body, booking_id, guest_id, req, }) {
@@ -741,6 +909,137 @@ class SubReservationService extends abstract_service_1.default {
                 var _a;
                 return sum + ((_a = entry.debit) !== null && _a !== void 0 ? _a : 0);
             }, 0);
+            yield this.Model.reservationModel(this.trx).updateRoomBooking({
+                total_amount: totalDebit,
+            }, hotel_code, booking_id);
+            return {
+                folio,
+                entries: folioEntries,
+            };
+        });
+    }
+    createGroupRoomBookingFolioWithEntriesV2({ body, booking_id, guest_id, req, }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const hotel_code = req.hotel_admin.hotel_code;
+            const created_by = req.hotel_admin.id;
+            const hotelInvModel = this.Model.hotelInvoiceModel(this.trx);
+            const today = new Date().toISOString().split("T")[0];
+            // 1. Generate Folio Number
+            const [lastFolio] = yield hotelInvModel.getLasFolioId();
+            const folio_number = helperFunction_1.HelperFunction.generateFolioNumber(lastFolio === null || lastFolio === void 0 ? void 0 : lastFolio.id);
+            // 2. Insert Folio
+            const [folio] = yield hotelInvModel.insertInFolio({
+                booking_id,
+                folio_number,
+                guest_id,
+                hotel_code,
+                name: "Reservation",
+                status: "open",
+                type: "Primary",
+            });
+            // 3. Generate Folio Entries (in correct order per date)
+            const folioEntries = [];
+            const dailyChargesMap = new Map();
+            for (const { rooms } of body.booked_room_types) {
+                for (const room of rooms) {
+                    const checkInDate = new Date(room.check_in);
+                    const checkOutDate = new Date(room.check_out);
+                    for (let d = new Date(checkInDate); d < checkOutDate; d = new Date(d.getTime() + 86400000)) {
+                        const date = d.toISOString().split("T")[0];
+                        const entry = {
+                            folio_id: folio.id,
+                            date,
+                            posting_type: "Charge",
+                            debit: room.rate.changed_rate,
+                            credit: 0,
+                            room_id: room.room_id,
+                            description: "Room Tariff",
+                            rack_rate: room.rate.base_rate,
+                        };
+                        if (!dailyChargesMap.has(date)) {
+                            dailyChargesMap.set(date, {
+                                roomCharges: [entry],
+                                totalRate: room.rate.changed_rate,
+                            });
+                        }
+                        else {
+                            const existing = dailyChargesMap.get(date);
+                            existing.roomCharges.push(entry);
+                            existing.totalRate += room.rate.changed_rate;
+                        }
+                    }
+                }
+            }
+            // Push entries in ASC date order
+            const sortedDates = [...dailyChargesMap.keys()].sort();
+            for (const date of sortedDates) {
+                const { roomCharges, totalRate } = dailyChargesMap.get(date);
+                // 1. Push all room charges for this date
+                folioEntries.push(...roomCharges);
+                // 2. Push VAT (if applicable)
+                if (body.vat && body.vat > 0) {
+                    folioEntries.push({
+                        folio_id: folio.id,
+                        date,
+                        posting_type: "Charge",
+                        debit: (body.vat_percentage * totalRate) / 100,
+                        credit: 0,
+                        room_id: 0,
+                        description: "VAT",
+                        rack_rate: 0,
+                    });
+                }
+                // 3. Push Service Charge (if applicable)
+                if (body.service_charge && body.service_charge > 0) {
+                    folioEntries.push({
+                        folio_id: folio.id,
+                        date,
+                        posting_type: "Charge",
+                        debit: (body.service_charge_percentage * totalRate) / 100,
+                        credit: 0,
+                        room_id: 0,
+                        description: "Service Charge",
+                        rack_rate: 0,
+                    });
+                }
+            }
+            // 4. Handle Payment (optional)
+            if (body.is_payment_given && body.payment && body.payment.amount > 0) {
+                const accountModel = this.Model.accountModel(this.trx);
+                const [account] = yield accountModel.getSingleAccount({
+                    hotel_code,
+                    id: body.payment.acc_id,
+                });
+                if (!account) {
+                    throw new Error("Invalid Account");
+                }
+                const voucher_no = yield new helperFunction_1.HelperFunction().generateVoucherNo();
+                const [voucher] = yield accountModel.insertAccVoucher({
+                    acc_head_id: account.acc_head_id,
+                    created_by,
+                    debit: body.payment.amount,
+                    credit: 0,
+                    description: `Payment for booking ${booking_id}`,
+                    voucher_type: "PAYMENT",
+                    voucher_date: today,
+                    voucher_no,
+                });
+                folioEntries.push({
+                    folio_id: folio.id,
+                    acc_voucher_id: voucher.id,
+                    date: today,
+                    posting_type: "Payment",
+                    debit: 0,
+                    credit: body.payment.amount,
+                    room_id: 0,
+                    description: "Payment Received",
+                    rack_rate: 0,
+                });
+            }
+            // 5. Insert all folio entries
+            yield hotelInvModel.insertInFolioEntries(folioEntries);
+            // 6. Update total amount on booking
+            const totalDebit = folioEntries.reduce((sum, entry) => { var _a; return sum + ((_a = entry.debit) !== null && _a !== void 0 ? _a : 0); }, 0);
             yield this.Model.reservationModel(this.trx).updateRoomBooking({
                 total_amount: totalDebit,
             }, hotel_code, booking_id);

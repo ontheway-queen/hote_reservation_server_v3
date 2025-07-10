@@ -337,7 +337,7 @@ class AccountModel extends Schema {
         }
 
         if (ac_type) {
-          this.andWhereRaw("LOWER(ac_type) = ?", [ac_type.toLowerCase()]);
+          this.andWhereRaw("LOWER(acc_type) = ?", [ac_type.toLowerCase()]);
         }
 
         if (acc_ids) {
@@ -365,7 +365,7 @@ class AccountModel extends Schema {
         }
 
         if (ac_type) {
-          this.andWhere("ac_type", ac_type.toUpperCase());
+          this.andWhere("acc_type", ac_type.toUpperCase());
         }
 
         if (acc_ids) {

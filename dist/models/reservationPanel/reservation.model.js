@@ -92,7 +92,7 @@ AND (
       COALESCE(
         json_agg(
           DISTINCT jsonb_build_object(
-            'rate_plan_id', rpd.id,
+            'rate_plan_id', rp.id,
             'name', rp.name,
             'base_rate', rpd.base_rate
           )
@@ -118,7 +118,7 @@ AND (
     }
     getAllAvailableRoomsByRoomType(payload) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { hotel_code, check_in, check_out, room_type_id } = payload;
+            const { hotel_code, check_in, check_out, room_type_id, exclude_booking_id, } = payload;
             const schema = this.RESERVATION_SCHEMA;
             const availableRoomTypes = () => this.db(`${schema}.room_availability as ra`)
                 .joinRaw(`
@@ -152,6 +152,11 @@ AND (
                     .from(`${schema}.bookings as b`)
                     .join(`${schema}.booking_rooms as br`, "br.booking_id", "b.id")
                     .whereRaw("br.room_id = r.id")
+                    .andWhere(function () {
+                    if (exclude_booking_id) {
+                        this.andWhere("br.booking_id", "!=", exclude_booking_id);
+                    }
+                })
                     .andWhere(function () {
                     this.where(function () {
                         this.where("b.booking_type", "B").whereNotIn("br.status", [
@@ -233,7 +238,12 @@ AND (
             return yield this.db("booking_rooms")
                 .withSchema(this.RESERVATION_SCHEMA)
                 .update(payload)
-                .where("booking_id", where.booking_id);
+                .where("booking_id", where.booking_id)
+                .andWhere(function () {
+                if (where.exclude_checkout) {
+                    this.andWhereNot("status", "checked_out");
+                }
+            });
         });
     }
     insertBookingRoomGuest(payload) {
