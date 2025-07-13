@@ -363,11 +363,11 @@ class HotelInvoiceModel extends Schema {
         "f.id",
         "f.name",
         this.db.raw(
-          `(SELECT JSON_AGG(JSON_BUILD_OBJECT('entries_id',fe.id,'description',fe.description,'posting_type',fe.posting_type,'debit',fe.debit,'credit',fe.credit,'created_at',fe.created_at,'is_void',fe.is_void,'invoiced',fe.invoiced,'date',fe.date)) as folio_entries)`
+          `(SELECT JSON_AGG(JSON_BUILD_OBJECT('entries_id',fe.id,'description',fe.description,'posting_type',fe.posting_type,'debit',fe.debit,'credit',fe.credit,'created_at',fe.created_at,'is_void',fe.is_void,'invoiced',fe.invoiced,'date',fe.date,'room_id',fe.room_id,'room_name',r.room_name)) as folio_entries)`
         )
       )
       .leftJoin("folio_entries as fe", "f.id", "fe.folio_id")
-
+      .leftJoin("rooms as r", "fe.room_id", "r.id")
       .where("f.booking_id", booking_id)
       .andWhere("fe.is_void", false)
       .andWhere("fe.invoiced", false)
