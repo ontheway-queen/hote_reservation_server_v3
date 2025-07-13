@@ -231,6 +231,7 @@ export class ReservationController extends AbstractController {
       res.status(code).json(data);
     }
   );
+
   public adjustAmountByFolioID = this.asyncWrapper.wrap(
     {
       bodySchema: this.validator.adjustBalance,

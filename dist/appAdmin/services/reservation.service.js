@@ -87,7 +87,7 @@ class ReservationService extends abstract_service_1.default {
     createBooking(req) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
-                var _a;
+                var _a, _b;
                 const { hotel_code } = req.hotel_admin;
                 const body = req.body;
                 const { check_in, check_out, booked_room_types, vat, service_charge, is_individual_booking, reservation_type, discount_amount, pickup, drop, drop_time, pickup_time, pickup_from, drop_to, source_id, special_requests, is_company_booked, company_name, visit_purpose, is_checked_in, service_charge_percentage, vat_percentage, } = body;
@@ -130,10 +130,12 @@ class ReservationService extends abstract_service_1.default {
                             return avr.room_id === room.room_id;
                         });
                         if (!isRoomAvailable) {
+                            // get single room which is not available
+                            const getSingleRoom = yield this.Model.RoomModel().getSingleRoom(hotel_code, room.room_id);
                             return {
                                 success: false,
                                 code: this.StatusCode.HTTP_BAD_REQUEST,
-                                message: `Room ID ${room.room_id} not available`,
+                                message: `Room No ${(_b = getSingleRoom[0]) === null || _b === void 0 ? void 0 : _b.room_name} not available`,
                             };
                         }
                     }
@@ -198,7 +200,7 @@ class ReservationService extends abstract_service_1.default {
                     is_checked_in,
                 });
                 // Update availability
-                yield sub.updateAvailabilityWhenRoomBooking(reservation_type, booked_room_types, check_in, check_out, hotel_code);
+                yield sub.updateAvailabilityWhenRoomBooking(reservation_type, booked_room_types, hotel_code);
                 // Create folio and ledger entries
                 yield sub.createRoomBookingFolioWithEntries({
                     body,
@@ -220,7 +222,7 @@ class ReservationService extends abstract_service_1.default {
     createGroupBooking(req) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
-                var _a;
+                var _a, _b;
                 const { hotel_code } = req.hotel_admin;
                 const body = req.body;
                 const { check_in, check_out, booked_room_types, vat, service_charge, is_individual_booking, reservation_type, discount_amount, pickup, drop, drop_time, pickup_time, pickup_from, drop_to, source_id, special_requests, is_company_booked, company_name, visit_purpose, is_checked_in, service_charge_percentage, vat_percentage, } = body;
@@ -261,11 +263,13 @@ class ReservationService extends abstract_service_1.default {
                         const isRoomAvailable = availableRoomList.some((avr) => {
                             return avr.room_id === room.room_id;
                         });
+                        // get single room which is not available
+                        const getSingleRoom = yield this.Model.RoomModel().getSingleRoom(hotel_code, room.room_id);
                         if (!isRoomAvailable) {
                             return {
                                 success: false,
                                 code: this.StatusCode.HTTP_BAD_REQUEST,
-                                message: `Room ID ${room.room_id} not available`,
+                                message: `Room No ${(_b = getSingleRoom[0]) === null || _b === void 0 ? void 0 : _b.room_name} not available`,
                             };
                         }
                     }
@@ -329,9 +333,9 @@ class ReservationService extends abstract_service_1.default {
                     is_checked_in,
                 });
                 // Update availability
-                yield sub.updateAvailabilityWhenGroupRoomBooking(reservation_type, booked_room_types, hotel_code);
+                yield sub.updateAvailabilityWhenRoomBooking(reservation_type, booked_room_types, hotel_code);
                 // Create folio and ledger entries
-                yield sub.createGroupRoomBookingFolioWithEntries({
+                yield sub.createGroupRoomBookingFoliosV2({
                     body,
                     guest_id,
                     booking_id: booking.id,
@@ -468,7 +472,7 @@ class ReservationService extends abstract_service_1.default {
                         message: this.ResMsg.HTTP_NOT_FOUND,
                     };
                 }
-                const { vat_percentage, service_charge_percentage } = booking;
+                const { vat_percentage, service_charge_percentage, booking_rooms } = booking;
                 const [primaryFolio] = yield hotelInvModel.getFoliosbySingleBooking({
                     booking_id,
                     hotel_code,
@@ -499,10 +503,15 @@ class ReservationService extends abstract_service_1.default {
                     }
                 }
                 // Step 2: Remove rooms if needed
-                if (body === null || body === void 0 ? void 0 : body.removed_rooms) {
+                if (Array.isArray(body === null || body === void 0 ? void 0 : body.removed_rooms) && body.removed_rooms.length) {
+                    const removedSet = new Set(body.removed_rooms);
+                    const filteredRemovedRooms = booking_rooms.filter((br) => removedSet.has(br.room_id));
                     yield model.deleteBookingRooms(body.removed_rooms);
-                    //
-                    yield sub.updateRoomAvailabilityServiceByRoomIds("booked_room_decrease", body.removed_rooms, booking.check_in, booking.check_out, hotel_code);
+                    yield sub.updateRoomAvailabilityService({
+                        reservation_type: "booked_room_decrease",
+                        rooms: filteredRemovedRooms,
+                        hotel_code,
+                    });
                 }
                 // Step 3: Add new rooms if any
                 if (body === null || body === void 0 ? void 0 : body.add_room_types) {
@@ -512,7 +521,7 @@ class ReservationService extends abstract_service_1.default {
                         hotel_code,
                         is_checked_in: false,
                     });
-                    yield sub.updateAvailabilityWhenGroupRoomBooking("booked", body.add_room_types, hotel_code);
+                    yield sub.updateAvailabilityWhenRoomBooking("booked", body.add_room_types, hotel_code);
                 }
                 // Step 4: Fetch all active rooms and construct folio entries per date
                 const allRooms = yield model.getAllBookingRoomsByBookingId({
@@ -747,8 +756,16 @@ class ReservationService extends abstract_service_1.default {
                 yield reservationModel.deleteBookingRooms(roomIDs);
                 yield sub.insertInBookingRoomsBySingleBookingRooms(booking_rooms, booking_id, total_nights);
                 // 6. Update availability
-                yield sub.updateRoomAvailabilityService("booked_room_decrease", booking_rooms, prev_checkin, prev_checkout, hotel_code);
-                yield sub.updateRoomAvailabilityService("booked_room_increase", booking_rooms, check_in, check_out, hotel_code);
+                yield sub.updateRoomAvailabilityService({
+                    reservation_type: "booked_room_decrease",
+                    rooms: booking_rooms,
+                    hotel_code,
+                });
+                yield sub.updateRoomAvailabilityService({
+                    reservation_type: "booked_room_increase",
+                    rooms: booking_rooms,
+                    hotel_code,
+                });
                 // 7. Update booking main row
                 const totalAmount = folioEntries.reduce((sum, e) => { var _a; return sum + ((_a = e.debit) !== null && _a !== void 0 ? _a : 0); }, 0);
                 yield reservationModel.updateRoomBooking({ total_amount: totalAmount, total_nights, check_in, check_out }, hotel_code, booking_id);
@@ -862,7 +879,11 @@ class ReservationService extends abstract_service_1.default {
                 // }
                 const remainCheckOutRooms = booking_rooms === null || booking_rooms === void 0 ? void 0 : booking_rooms.filter((room) => room.status !== "checked_out");
                 if (remainCheckOutRooms === null || remainCheckOutRooms === void 0 ? void 0 : remainCheckOutRooms.length) {
-                    yield sub.updateRoomAvailabilityService("booked_room_decrease", remainCheckOutRooms, check_in, check_out, hotel_code);
+                    yield sub.updateRoomAvailabilityService({
+                        reservation_type: "booked_room_decrease",
+                        rooms: remainCheckOutRooms,
+                        hotel_code,
+                    });
                 }
                 // update reservation
                 yield reservationModel.updateRoomBooking({
@@ -916,7 +937,6 @@ class ReservationService extends abstract_service_1.default {
                 //   };
                 // }
                 const checkoutRoom = booking_rooms.find((room) => room.room_id == roomID);
-                console.log({ checkoutRoom, booking_id, roomID });
                 if (!checkoutRoom) {
                     return {
                         success: false,
@@ -925,7 +945,11 @@ class ReservationService extends abstract_service_1.default {
                     };
                 }
                 // room avaibility decrease
-                yield sub.updateRoomAvailabilityService("booked_room_decrease", [checkoutRoom], check_in, check_out, hotel_code);
+                yield sub.updateRoomAvailabilityService({
+                    reservation_type: "booked_room_decrease",
+                    rooms: [checkoutRoom],
+                    hotel_code,
+                });
                 // update booking rooms status
                 yield reservationModel.updateSingleBookingRoom({ status: "checked_out", checked_out_at: new Date().toISOString() }, { booking_id, room_id: checkoutRoom.room_id });
                 return {
@@ -942,7 +966,6 @@ class ReservationService extends abstract_service_1.default {
                 const hotel_code = req.hotel_admin.hotel_code;
                 const booking_id = parseInt(req.params.id);
                 const { status: reservation_type_status } = req.body;
-                console.log(req.body, "hold body");
                 const sub = new subreservation_service_1.SubReservationService(trx);
                 const data = yield this.Model.reservationModel().getSingleBooking(hotel_code, booking_id);
                 if (!data) {
@@ -967,8 +990,16 @@ class ReservationService extends abstract_service_1.default {
                         status: "confirmed",
                     }, hotel_code, booking_id);
                     // Availability
-                    yield sub.updateRoomAvailabilityForHoldService("hold_decrease", booking_rooms, check_in, check_out, hotel_code);
-                    yield sub.updateRoomAvailabilityService("booked_room_increase", booking_rooms, check_in, check_out, hotel_code);
+                    yield sub.updateRoomAvailabilityService({
+                        reservation_type: "hold_decrease",
+                        rooms: booking_rooms,
+                        hotel_code,
+                    });
+                    yield sub.updateRoomAvailabilityService({
+                        reservation_type: "booked_room_increase",
+                        rooms: booking_rooms,
+                        hotel_code,
+                    });
                     // update room availability
                 }
                 else if (reservation_type_status == "canceled") {
@@ -978,7 +1009,11 @@ class ReservationService extends abstract_service_1.default {
                         status: "canceled",
                     }, hotel_code, booking_id);
                     // Availability
-                    yield sub.updateRoomAvailabilityForHoldService("hold_decrease", booking_rooms, check_in, check_out, hotel_code);
+                    yield sub.updateRoomAvailabilityService({
+                        reservation_type: "hold_decrease",
+                        rooms: booking_rooms,
+                        hotel_code,
+                    });
                 }
                 return {
                     success: true,

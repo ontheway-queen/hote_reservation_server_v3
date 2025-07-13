@@ -133,3 +133,25 @@ export const ACC_HEAD_CONFIG = {
   BANK_HEAD_ID: "BANK_HEAD_ID",
   MFS_HEAD_ID: "MFS_HEAD_ID",
 };
+
+// -----------------------------------------------------------------------------
+// ENUMS – keep type‑jungle tame
+// -----------------------------------------------------------------------------
+export enum FolioType {
+  GROUP_MASTER = "group_master",
+  ROOM_PRIMARY = "room_primary",
+}
+
+export enum PostingType {
+  CHARGE = "Charge",
+  PAYMENT = "Payment",
+}
+
+export const WindowBucket = {
+  ROOM_CHARGES: 1, // default bucket
+  INCIDENTALS: 2,
+  COMPANY_PAY: 3,
+  GUEST_PAY: 4,
+} as const;
+
+export type WindowNo = (typeof WindowBucket)[keyof typeof WindowBucket];

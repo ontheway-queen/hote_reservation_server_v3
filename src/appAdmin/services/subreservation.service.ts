@@ -15,6 +15,11 @@ import Lib from "../../utils/lib/lib";
 import { HelperFunction } from "../utlis/library/helperFunction";
 import { Request } from "express";
 import { IinsertFolioEntriesPayload } from "../utlis/interfaces/invoice.interface";
+import {
+  FolioType,
+  PostingType,
+  WindowBucket,
+} from "../../utils/miscellaneous/constants";
 
 export class SubReservationService extends AbstractServices {
   constructor(private trx: Knex.Transaction) {
@@ -377,44 +382,6 @@ export class SubReservationService extends AbstractServices {
   async updateAvailabilityWhenRoomBooking(
     reservation_type: "booked" | "hold",
     booked_room_types: IGBookedRoomTypeRequest[],
-    checkIn: string,
-    checkOut: string,
-    hotel_code: number
-  ) {
-    const reservation_model = this.Model.reservationModel(this.trx);
-    const dates = HelperFunction.getDatesBetween(checkIn, checkOut);
-
-    const reservedRoom = booked_room_types.map((rt) => ({
-      room_type_id: rt.room_type_id,
-      total_room: rt.rooms.length,
-    }));
-
-    for (const { room_type_id, total_room } of reservedRoom) {
-      for (const date of dates) {
-        if (reservation_type === "booked") {
-          await reservation_model.updateRoomAvailability({
-            type: "booked_room_increase",
-            hotel_code,
-            room_type_id,
-            date,
-            rooms_to_book: total_room,
-          });
-        } else {
-          await reservation_model.updateRoomAvailabilityHold({
-            hotel_code,
-            room_type_id,
-            date,
-            rooms_to_book: total_room,
-            type: "hold_increase",
-          });
-        }
-      }
-    }
-  }
-
-  async updateAvailabilityWhenGroupRoomBooking(
-    reservation_type: "booked" | "hold",
-    booked_room_types: IGBookedRoomTypeRequest[],
     hotel_code: number
   ) {
     const reservation_model = this.Model.reservationModel(this.trx);
@@ -448,124 +415,61 @@ export class SubReservationService extends AbstractServices {
     }
   }
 
-  async updateRoomAvailabilityService(
-    type: "booked_room_increase" | "booked_room_decrease",
-    rooms: BookingRoom[],
-    checkIn: string,
-    checkOut: string,
-    hotel_code: number
-  ) {
+  async updateRoomAvailabilityService({
+    reservation_type,
+    rooms,
+    hotel_code,
+  }: {
+    reservation_type:
+      | "booked_room_increase"
+      | "booked_room_decrease"
+      | "hold_increase"
+      | "hold_decrease";
+    rooms: BookingRoom[];
+    hotel_code: number;
+  }) {
     const reservation_model = this.Model.reservationModel(this.trx);
-    const dates = HelperFunction.getDatesBetween(checkIn, checkOut);
 
-    const uniqueRooms = Object.values(
-      rooms.reduce((acc, curr) => {
-        if (!acc[curr.room_type_id]) {
-          acc[curr.room_type_id] = {
-            room_type_id: curr.room_type_id,
-            total_room: 1,
-          };
+    for (const { check_in, check_out, room_type_id } of rooms) {
+      const dates = HelperFunction.getDatesBetween(check_in, check_out);
+
+      const updatePromises = dates.map((date) => {
+        if (reservation_type === "booked_room_increase") {
+          return reservation_model.updateRoomAvailability({
+            type: "booked_room_increase",
+            hotel_code,
+            room_type_id,
+            date,
+            rooms_to_book: 1,
+          });
+        } else if (reservation_type === "booked_room_decrease") {
+          return reservation_model.updateRoomAvailability({
+            type: "booked_room_decrease",
+            hotel_code,
+            room_type_id,
+            date,
+            rooms_to_book: 1,
+          });
+        } else if (reservation_type == "hold_increase") {
+          return reservation_model.updateRoomAvailabilityHold({
+            hotel_code,
+            room_type_id,
+            date,
+            rooms_to_book: 1,
+            type: "hold_increase",
+          });
         } else {
-          acc[curr.room_type_id].total_room += 1;
+          return reservation_model.updateRoomAvailabilityHold({
+            hotel_code,
+            room_type_id,
+            date,
+            rooms_to_book: 1,
+            type: "hold_decrease",
+          });
         }
-        return acc;
-      }, {} as Record<number, { room_type_id: number; total_room: number }>)
-    );
+      });
 
-    for (const { room_type_id, total_room } of uniqueRooms) {
-      for (const date of dates) {
-        await reservation_model.updateRoomAvailability({
-          type,
-          hotel_code,
-          room_type_id,
-          date,
-          rooms_to_book: total_room,
-        });
-      }
-    }
-  }
-
-  async updateRoomAvailabilityServiceByRoomIds(
-    type: "booked_room_increase" | "booked_room_decrease",
-    rooms: number[],
-    checkIn: string,
-    checkOut: string,
-    hotel_code: number
-  ) {
-    const reservation_model = this.Model.reservationModel(this.trx);
-    const roomModel = this.Model.RoomModel(this.trx);
-    const dates = HelperFunction.getDatesBetween(checkIn, checkOut);
-
-    // get all rooms
-    const { data: getAllRooms } = await roomModel.getAllRoom({
-      room_ids: rooms,
-      hotel_code,
-    });
-
-    // Initialize count map: room_type_id => count
-    const totalhaveToUpdate: Record<number, number> = {};
-
-    for (const room of getAllRooms) {
-      if (totalhaveToUpdate[room.room_type_id]) {
-        totalhaveToUpdate[room.room_type_id]++;
-      } else {
-        totalhaveToUpdate[room.room_type_id] = 1;
-      }
-    }
-
-    for (const [room_type_id, total_room] of Object.entries(
-      totalhaveToUpdate
-    )) {
-      const roomTypeIdNum = Number(room_type_id);
-
-      for (const date of dates) {
-        const res = await reservation_model.updateRoomAvailability({
-          type,
-          hotel_code,
-          room_type_id: roomTypeIdNum,
-          date,
-          rooms_to_book: total_room,
-        });
-        console.log({ res });
-      }
-    }
-  }
-
-  async updateRoomAvailabilityForHoldService(
-    hold_type: "hold_increase" | "hold_decrease",
-    rooms: BookingRoom[],
-    checkIn: string,
-    checkOut: string,
-    hotel_code: number
-  ) {
-    const reservation_model = this.Model.reservationModel(this.trx);
-    const dates = HelperFunction.getDatesBetween(checkIn, checkOut);
-
-    const uniqueRooms = Object.values(
-      rooms.reduce((acc, curr) => {
-        if (!acc[curr.room_type_id]) {
-          acc[curr.room_type_id] = {
-            room_type_id: curr.room_type_id,
-            total_room: 1,
-          };
-        } else {
-          acc[curr.room_type_id].total_room += 1;
-        }
-        return acc;
-      }, {} as Record<number, { room_type_id: number; total_room: number }>)
-    );
-    console.log({ dates, uniqueRooms });
-
-    for (const { room_type_id, total_room } of uniqueRooms) {
-      for (const date of dates) {
-        await reservation_model.updateRoomAvailabilityHold({
-          hotel_code,
-          room_type_id,
-          date,
-          rooms_to_book: total_room,
-          type: hold_type,
-        });
-      }
+      await Promise.all(updatePromises);
     }
   }
 
@@ -684,160 +588,6 @@ export class SubReservationService extends AbstractServices {
   }
 
   public async createRoomBookingFolioWithEntries({
-    body,
-    booking_id,
-    guest_id,
-    req,
-  }: {
-    req: Request;
-    body: IGBookingRequestBody;
-    booking_id: number;
-    guest_id: number;
-  }) {
-    const hotel_code = req.hotel_admin.hotel_code;
-    const created_by = req.hotel_admin.id;
-    const hotelInvModel = this.Model.hotelInvoiceModel(this.trx);
-
-    // 1. Generate Folio Number
-    const [lastFolio] = await hotelInvModel.getLasFolioId();
-    const folio_number = HelperFunction.generateFolioNumber(lastFolio?.id);
-
-    // 2. Insert Folio
-    const [folio] = await hotelInvModel.insertInFolio({
-      booking_id,
-      folio_number,
-      guest_id,
-      hotel_code,
-      name: "Reservation",
-      status: "open",
-      type: "Primary",
-    });
-
-    // 3. Aggregate room tariffs per date
-    const chargesPerDate = new Map<
-      string,
-      { tariffs: IinsertFolioEntriesPayload[]; totalRate: number }
-    >();
-
-    for (const rt of body.booked_room_types) {
-      for (const room of rt.rooms) {
-        const rate = room.rate.changed_rate;
-        const rack = room.rate.base_rate;
-        for (
-          let d = new Date(room.check_in);
-          d < new Date(room.check_out);
-          d.setDate(d.getDate() + 1)
-        ) {
-          const date = d.toISOString().split("T")[0];
-          const entry: IinsertFolioEntriesPayload = {
-            folio_id: folio.id,
-            date,
-            posting_type: "Charge",
-            debit: rate,
-            credit: 0,
-            room_id: room.room_id,
-            description: "Room Tariff",
-            rack_rate: rack,
-          };
-
-          if (!chargesPerDate.has(date)) {
-            chargesPerDate.set(date, { tariffs: [entry], totalRate: rate });
-          } else {
-            const rec = chargesPerDate.get(date)!;
-            rec.tariffs.push(entry);
-            rec.totalRate += rate;
-          }
-        }
-      }
-    }
-
-    // 4. Build folio entries in ascending date order
-    const folioEntries: IinsertFolioEntriesPayload[] = [];
-    const sortedDates = [...chargesPerDate.keys()].sort();
-
-    for (const date of sortedDates) {
-      const { tariffs, totalRate } = chargesPerDate.get(date)!;
-      // Push all room tariffs first
-      folioEntries.push(...tariffs);
-
-      // Then VAT
-      const vatAmt = (totalRate * body.vat_percentage) / 100;
-      if (vatAmt > 0) {
-        folioEntries.push({
-          folio_id: folio.id,
-          date,
-          posting_type: "Charge",
-          debit: vatAmt,
-          credit: 0,
-          room_id: 0,
-          description: "VAT",
-          rack_rate: 0,
-        });
-      }
-
-      // Then Service Charge
-      const scAmt = (totalRate * body.service_charge_percentage) / 100;
-      if (scAmt > 0) {
-        folioEntries.push({
-          folio_id: folio.id,
-          date,
-          posting_type: "Charge",
-          debit: scAmt,
-          credit: 0,
-          room_id: 0,
-          description: "Service Charge",
-          rack_rate: 0,
-        });
-      }
-    }
-
-    // 5. Handle payment if given
-    const today = new Date().toISOString().split("T")[0];
-    if (body.is_payment_given && body.payment?.amount > 0) {
-      const accountModel = this.Model.accountModel(this.trx);
-      const [account] = await accountModel.getSingleAccount({
-        hotel_code,
-        id: body.payment.acc_id,
-      });
-      if (!account) throw new Error("Invalid Account");
-      const voucher_no = await new HelperFunction().generateVoucherNo();
-      const [voucher] = await accountModel.insertAccVoucher({
-        acc_head_id: account.acc_head_id,
-        created_by,
-        debit: body.payment.amount,
-        credit: 0,
-        description: `Payment for booking ${booking_id}`,
-        voucher_type: "PAYMENT",
-        voucher_date: today,
-        voucher_no,
-      });
-      folioEntries.push({
-        folio_id: folio.id,
-        acc_voucher_id: voucher.id,
-        date: today,
-        posting_type: "Payment",
-        debit: 0,
-        credit: body.payment.amount,
-        room_id: 0,
-        description: "Payment Received",
-        rack_rate: 0,
-      });
-    }
-
-    // 6. Insert entries and update booking
-    await hotelInvModel.insertInFolioEntries(folioEntries);
-    const totalDebit = folioEntries.reduce((sum, e) => sum + (e.debit ?? 0), 0);
-
-    await this.Model.reservationModel(this.trx).updateRoomBooking(
-      { total_amount: totalDebit },
-      hotel_code,
-      booking_id
-    );
-
-    return { folio, entries: folioEntries };
-  }
-
-  public async createGroupRoomBookingFolioWithEntries({
     body,
     booking_id,
     guest_id,
@@ -1012,6 +762,212 @@ export class SubReservationService extends AbstractServices {
     };
   }
 
+  public async createGroupRoomBookingFoliosV2({
+    body,
+    booking_id,
+    guest_id,
+    req,
+  }: {
+    req: Request;
+    body: IGBookingRequestBody;
+    booking_id: number;
+    guest_id: number;
+  }) {
+    // --- Context & Models ------------------------------------
+    const hotel_code = req.hotel_admin.hotel_code;
+    const created_by = req.hotel_admin.id;
+    const hotelInvModel = this.Model.hotelInvoiceModel(this.trx);
+    const accountModel = this.Model.accountModel(this.trx);
+    const reservationModel = this.Model.reservationModel(this.trx);
+    const roomModel = this.Model.RoomModel(this.trx);
+    const today = new Date().toISOString().split("T")[0];
+
+    // --- 1) Master Folio -------------------------------------
+    const [lastFolio] = await hotelInvModel.getLasFolioId();
+    const masterFolioNumber = HelperFunction.generateFolioNumber(lastFolio?.id);
+
+    const [masterFolio] = await hotelInvModel.insertInFolio({
+      booking_id,
+      folio_number: masterFolioNumber,
+      guest_id,
+      hotel_code,
+      name: `Group Folio #${booking_id}`,
+      status: "open",
+      type: FolioType.GROUP_MASTER,
+    });
+
+    // --- 2) Child Folios + Entries ---------------------------
+    interface ChildCtx {
+      folioId: number;
+      folioNumber: string;
+      roomId: number;
+      entries: IinsertFolioEntriesPayload[];
+      totalDebit: number;
+    }
+    const childList: ChildCtx[] = [];
+
+    const push = (ctx: ChildCtx, e: IinsertFolioEntriesPayload) => {
+      ctx.entries.push(e);
+      ctx.totalDebit += e.debit ?? 0;
+    };
+
+    for (const { rooms } of body.booked_room_types) {
+      for (const room of rooms) {
+        // (a) create room folio
+        const [singleRoom] = await roomModel.getSingleRoom(
+          hotel_code,
+          room.room_id
+        );
+        const childFolioNumber = `${masterFolioNumber}-R${
+          singleRoom?.room_name ?? room.room_id
+        }`;
+        const [childFolio] = await hotelInvModel.insertInFolio({
+          booking_id,
+          folio_number: childFolioNumber,
+          guest_id,
+          hotel_code,
+          name: `Room ${singleRoom.room_name} Folio`,
+          status: "open",
+          type: FolioType.ROOM_PRIMARY,
+          parent_folio_id: masterFolio.id,
+          room_id: room.room_id,
+          window_no: WindowBucket.ROOM_CHARGES,
+        });
+
+        const ctx: ChildCtx = {
+          folioId: childFolio.id,
+          folioNumber: childFolioNumber,
+          roomId: room.room_id,
+          entries: [],
+          totalDebit: 0,
+        };
+
+        // (b) build daily rates map
+        const dailyRate: Record<string, number> = {};
+        for (
+          let d = new Date(room.check_in);
+          d < new Date(room.check_out);
+          d.setDate(d.getDate() + 1)
+        ) {
+          dailyRate[d.toISOString().split("T")[0]] = room.rate.changed_rate;
+        }
+
+        // (c) push entries date ASC  – Tariff ➜ VAT ➜ SC
+        const orderedDates = Object.keys(dailyRate).sort(); // ASC
+        for (const date of orderedDates) {
+          const rate = dailyRate[date];
+
+          // Room Tariff
+          push(ctx, {
+            folio_id: ctx.folioId,
+            date,
+            posting_type: PostingType.CHARGE,
+            debit: rate,
+            credit: 0,
+            room_id: room.room_id,
+            description: "Room Tariff",
+            rack_rate: room.rate.base_rate,
+            window_no: WindowBucket.ROOM_CHARGES,
+          });
+
+          // VAT
+          if (body.vat_percentage > 0) {
+            push(ctx, {
+              folio_id: ctx.folioId,
+              date,
+              posting_type: PostingType.CHARGE,
+              debit: +((rate * body.vat_percentage) / 100).toFixed(2),
+              credit: 0,
+              room_id: room.room_id,
+              description: "VAT",
+              rack_rate: 0,
+              window_no: WindowBucket.ROOM_CHARGES,
+            });
+          }
+
+          // Service Charge
+          if (body.service_charge_percentage > 0) {
+            push(ctx, {
+              folio_id: ctx.folioId,
+              date,
+              posting_type: PostingType.CHARGE,
+              debit: +((rate * body.service_charge_percentage) / 100).toFixed(
+                2
+              ),
+              credit: 0,
+              room_id: room.room_id,
+              description: "Service Charge",
+              rack_rate: 0,
+              window_no: WindowBucket.ROOM_CHARGES,
+            });
+          }
+        }
+
+        childList.push(ctx);
+      }
+    }
+
+    // --- 3) Payment on Master (optional) ---------------------
+    const masterEntries: IinsertFolioEntriesPayload[] = [];
+    if (body.is_payment_given && body.payment?.amount > 0) {
+      const [account] = await accountModel.getSingleAccount({
+        hotel_code,
+        id: body.payment.acc_id,
+      });
+      if (!account) throw new Error("Invalid Account");
+
+      const voucher_no = await new HelperFunction().generateVoucherNo();
+      const [voucher] = await accountModel.insertAccVoucher({
+        acc_head_id: account.acc_head_id,
+        created_by,
+        debit: body.payment.amount,
+        credit: 0,
+        description: `Payment for group booking ${booking_id}`,
+        voucher_type: "PAYMENT",
+        voucher_date: today,
+        voucher_no,
+      });
+
+      masterEntries.push({
+        folio_id: masterFolio.id,
+        acc_voucher_id: voucher.id,
+        date: today,
+        posting_type: PostingType.PAYMENT,
+        debit: 0,
+        credit: body.payment.amount,
+        room_id: 0,
+        description: "Payment Received",
+        rack_rate: 0,
+        window_no: WindowBucket.ROOM_CHARGES,
+      });
+    }
+
+    // --- 4) Persist all entries ------------------------------
+    const allEntries = [
+      ...masterEntries,
+      ...childList.flatMap((c) => c.entries),
+    ];
+    await hotelInvModel.insertInFolioEntries(allEntries);
+
+    // --- 5) Update booking total -----------------------------
+    const totalDebit = childList.reduce((sum, c) => sum + c.totalDebit, 0);
+    await reservationModel.updateRoomBooking(
+      { total_amount: totalDebit },
+      hotel_code,
+      booking_id
+    );
+
+    // --- 6) Return ------------------------------------------
+    return {
+      masterFolio,
+      childFolios: childList.map((c) => ({
+        id: c.folioId,
+        folio_number: c.folioNumber,
+        room_id: c.roomId,
+      })),
+      entries: allEntries,
+    };
+  }
   public async handlePaymentAndFolioForAddPayment({
     acc_id,
     amount,

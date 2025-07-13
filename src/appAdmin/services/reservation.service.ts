@@ -5,6 +5,7 @@ import {
   addPaymentReqBody,
   BookingRequestBody,
   BookingRoom,
+  IbookingRooms,
   IGBookingRequestBody,
   IguestReqBody,
   IUpdateReservationRequestBody,
@@ -178,10 +179,16 @@ export class ReservationService extends AbstractServices {
           });
 
           if (!isRoomAvailable) {
+            // get single room which is not available
+            const getSingleRoom = await this.Model.RoomModel().getSingleRoom(
+              hotel_code,
+              room.room_id
+            );
+
             return {
               success: false,
               code: this.StatusCode.HTTP_BAD_REQUEST,
-              message: `Room ID ${room.room_id} not available`,
+              message: `Room No ${getSingleRoom[0]?.room_name} not available`,
             };
           }
         }
@@ -256,8 +263,6 @@ export class ReservationService extends AbstractServices {
       await sub.updateAvailabilityWhenRoomBooking(
         reservation_type,
         booked_room_types,
-        check_in,
-        check_out,
         hotel_code
       );
 
@@ -356,11 +361,17 @@ export class ReservationService extends AbstractServices {
             return avr.room_id === room.room_id;
           });
 
+          // get single room which is not available
+          const getSingleRoom = await this.Model.RoomModel().getSingleRoom(
+            hotel_code,
+            room.room_id
+          );
+
           if (!isRoomAvailable) {
             return {
               success: false,
               code: this.StatusCode.HTTP_BAD_REQUEST,
-              message: `Room ID ${room.room_id} not available`,
+              message: `Room No ${getSingleRoom[0]?.room_name} not available`,
             };
           }
         }
@@ -431,14 +442,14 @@ export class ReservationService extends AbstractServices {
       });
 
       // Update availability
-      await sub.updateAvailabilityWhenGroupRoomBooking(
+      await sub.updateAvailabilityWhenRoomBooking(
         reservation_type,
         booked_room_types,
         hotel_code
       );
 
       // Create folio and ledger entries
-      await sub.createGroupRoomBookingFolioWithEntries({
+      await sub.createGroupRoomBookingFoliosV2({
         body,
         guest_id,
         booking_id: booking.id,
@@ -623,7 +634,8 @@ export class ReservationService extends AbstractServices {
         };
       }
 
-      const { vat_percentage, service_charge_percentage } = booking;
+      const { vat_percentage, service_charge_percentage, booking_rooms } =
+        booking;
 
       const [primaryFolio] = await hotelInvModel.getFoliosbySingleBooking({
         booking_id,
@@ -669,16 +681,20 @@ export class ReservationService extends AbstractServices {
       }
 
       // Step 2: Remove rooms if needed
-      if (body?.removed_rooms) {
-        await model.deleteBookingRooms(body.removed_rooms);
-        //
-        await sub.updateRoomAvailabilityServiceByRoomIds(
-          "booked_room_decrease",
-          body.removed_rooms,
-          booking.check_in,
-          booking.check_out,
-          hotel_code
+      if (Array.isArray(body?.removed_rooms) && body.removed_rooms.length) {
+        const removedSet = new Set<number>(body.removed_rooms);
+
+        const filteredRemovedRooms = booking_rooms.filter((br) =>
+          removedSet.has(br.room_id)
         );
+
+        await model.deleteBookingRooms(body.removed_rooms);
+
+        await sub.updateRoomAvailabilityService({
+          reservation_type: "booked_room_decrease",
+          rooms: filteredRemovedRooms,
+          hotel_code,
+        });
       }
 
       // Step 3: Add new rooms if any
@@ -690,7 +706,7 @@ export class ReservationService extends AbstractServices {
           is_checked_in: false,
         });
 
-        await sub.updateAvailabilityWhenGroupRoomBooking(
+        await sub.updateAvailabilityWhenRoomBooking(
           "booked",
           body.add_room_types,
           hotel_code
@@ -1000,20 +1016,17 @@ export class ReservationService extends AbstractServices {
       );
 
       // 6. Update availability
-      await sub.updateRoomAvailabilityService(
-        "booked_room_decrease",
-        booking_rooms,
-        prev_checkin,
-        prev_checkout,
-        hotel_code
-      );
-      await sub.updateRoomAvailabilityService(
-        "booked_room_increase",
-        booking_rooms,
-        check_in,
-        check_out,
-        hotel_code
-      );
+      await sub.updateRoomAvailabilityService({
+        reservation_type: "booked_room_decrease",
+        rooms: booking_rooms,
+        hotel_code,
+      });
+
+      await sub.updateRoomAvailabilityService({
+        reservation_type: "booked_room_increase",
+        rooms: booking_rooms,
+        hotel_code,
+      });
 
       // 7. Update booking main row
       const totalAmount = folioEntries.reduce(
@@ -1170,13 +1183,11 @@ export class ReservationService extends AbstractServices {
       );
 
       if (remainCheckOutRooms?.length) {
-        await sub.updateRoomAvailabilityService(
-          "booked_room_decrease",
-          remainCheckOutRooms,
-          check_in,
-          check_out,
-          hotel_code
-        );
+        await sub.updateRoomAvailabilityService({
+          reservation_type: "booked_room_decrease",
+          rooms: remainCheckOutRooms,
+          hotel_code,
+        });
       }
 
       // update reservation
@@ -1251,7 +1262,7 @@ export class ReservationService extends AbstractServices {
       // }
 
       const checkoutRoom = booking_rooms.find((room) => room.room_id == roomID);
-      console.log({ checkoutRoom, booking_id, roomID });
+
       if (!checkoutRoom) {
         return {
           success: false,
@@ -1260,13 +1271,11 @@ export class ReservationService extends AbstractServices {
         };
       }
       // room avaibility decrease
-      await sub.updateRoomAvailabilityService(
-        "booked_room_decrease",
-        [checkoutRoom],
-        check_in,
-        check_out,
-        hotel_code
-      );
+      await sub.updateRoomAvailabilityService({
+        reservation_type: "booked_room_decrease",
+        rooms: [checkoutRoom],
+        hotel_code,
+      });
 
       // update booking rooms status
       await reservationModel.updateSingleBookingRoom(
@@ -1289,7 +1298,6 @@ export class ReservationService extends AbstractServices {
 
       const { status: reservation_type_status } = req.body;
 
-      console.log(req.body, "hold body");
       const sub = new SubReservationService(trx);
 
       const data = await this.Model.reservationModel().getSingleBooking(
@@ -1326,21 +1334,17 @@ export class ReservationService extends AbstractServices {
           booking_id
         );
         // Availability
-        await sub.updateRoomAvailabilityForHoldService(
-          "hold_decrease",
-          booking_rooms,
-          check_in,
-          check_out,
-          hotel_code
-        );
+        await sub.updateRoomAvailabilityService({
+          reservation_type: "hold_decrease",
+          rooms: booking_rooms,
+          hotel_code,
+        });
 
-        await sub.updateRoomAvailabilityService(
-          "booked_room_increase",
-          booking_rooms,
-          check_in,
-          check_out,
-          hotel_code
-        );
+        await sub.updateRoomAvailabilityService({
+          reservation_type: "booked_room_increase",
+          rooms: booking_rooms,
+          hotel_code,
+        });
 
         // update room availability
       } else if (reservation_type_status == "canceled") {
@@ -1355,13 +1359,11 @@ export class ReservationService extends AbstractServices {
         );
 
         // Availability
-        await sub.updateRoomAvailabilityForHoldService(
-          "hold_decrease",
-          booking_rooms,
-          check_in,
-          check_out,
-          hotel_code
-        );
+        await sub.updateRoomAvailabilityService({
+          reservation_type: "hold_decrease",
+          rooms: booking_rooms,
+          hotel_code,
+        });
       }
 
       return {

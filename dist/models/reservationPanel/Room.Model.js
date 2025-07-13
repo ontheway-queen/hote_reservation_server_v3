@@ -98,8 +98,7 @@ class RoomModel extends schema_1.default {
             // Calculate number of nights
             const checkInDate = new Date(check_in);
             const checkOutDate = new Date(check_out);
-            const number_of_nights = Math.ceil((checkOutDate.getTime() - checkInDate.getTime()) /
-                (1000 * 60 * 60 * 24));
+            const number_of_nights = Math.ceil((checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24));
             if (number_of_nights <= 0) {
                 throw new Error("Invalid check-in and check-out date range");
             }
@@ -345,14 +344,7 @@ class RoomModel extends schema_1.default {
       ) AS sorted_rooms
       GROUP BY floor_no
       ORDER BY floor_no ASC
-    `, [
-                current_date,
-                current_date,
-                "B",
-                "confirmed",
-                "checked_in",
-                hotel_code,
-            ]);
+    `, [current_date, current_date, "B", "confirmed", "checked_in", hotel_code]);
             const total = yield this.db("rooms as r")
                 .withSchema(this.RESERVATION_SCHEMA)
                 .count("r.id as total")

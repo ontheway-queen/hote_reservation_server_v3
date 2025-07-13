@@ -1,10 +1,22 @@
 export interface IinsertFolioPayload {
   hotel_code: number;
   guest_id?: number;
+  parent_folio_id?: number;
+  room_id?: number;
+  window_no?: number;
   name: string;
   booking_id: number;
   folio_number: string;
-  type: "Primary" | "Split" | "Company" | "Custom";
+  type:
+    | "Primary"
+    | "Split"
+    | "Company"
+    | "Custom"
+    | "group_master"
+    | "room_primary"
+    | "company_pay"
+    | "guest_pay"
+    | "incidentals";
   status: "open" | "closed";
 }
 
@@ -15,6 +27,7 @@ export interface IinsertFolioEntriesPayload {
   credit?: number;
   description?: string;
   room_id?: number;
+  window_no?: number;
   date?: string;
   rack_rate?: number;
   posting_type:
