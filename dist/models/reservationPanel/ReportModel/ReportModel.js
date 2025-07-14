@@ -85,7 +85,7 @@ class ReportModel extends schema_1.default {
             }
             const data = yield dtbs
                 .withSchema(this.RESERVATION_SCHEMA)
-                .select("br.id", "b.id as booking_id", "b.check_in", "b.check_out", "b.booking_type", "b.is_individual_booking", "b.status", "b.comments", "b.company_name", "b.visit_purpose", "r.room_name as room_no", "r.floor_no", "b.check_in", "b.check_out", "b.booking_date", "br.cbf", "br.adults", "br.children as child_count", "br.infant", "b.guest_id", "g.first_name", "g.last_name", "g.country", "g.nationality", "g.address", "g.email AS guest_email", "g.phone AS guest_phone")
+                .select("br.id", "b.id as booking_id", this.db.raw(`TO_CHAR(check_in, 'YYYY-MM-DD') as check_in`), this.db.raw(`TO_CHAR(check_out, 'YYYY-MM-DD') as check_out`), "b.booking_type", "b.is_individual_booking", "b.status", "b.comments", "b.company_name", "b.visit_purpose", "r.room_name as room_no", "r.floor_no", "b.check_in", "b.check_out", "b.booking_date", "br.cbf", "br.adults", "br.children as child_count", "br.infant", "b.guest_id", "g.first_name", "g.last_name", "g.country", "g.nationality", "g.address", "g.email AS guest_email", "g.phone AS guest_phone")
                 .leftJoin("bookings AS b", "br.booking_id", "b.id")
                 .leftJoin("guests AS g", "b.guest_id", "g.id")
                 .leftJoin("rooms AS r", "br.room_id", "r.id")
@@ -105,10 +105,10 @@ class ReportModel extends schema_1.default {
                     });
                 }
                 if (room_id) {
-                    qb.andWhere("br.room_id", room_id);
+                    qb.andWhere("r.room_no", room_id);
                 }
             })
-                .orderBy("br.room_id", "asc");
+                .orderByRaw("CAST(r.room_no AS INTEGER) ASC");
             const total = yield this.db("booking_rooms AS br")
                 .withSchema(this.RESERVATION_SCHEMA)
                 .count("br.id as total")

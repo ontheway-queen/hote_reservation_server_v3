@@ -142,8 +142,8 @@ class ReportModel extends Schema {
       .select(
         "br.id",
         "b.id as booking_id",
-        "b.check_in",
-        "b.check_out",
+        this.db.raw(`TO_CHAR(check_in, 'YYYY-MM-DD') as check_in`),
+        this.db.raw(`TO_CHAR(check_out, 'YYYY-MM-DD') as check_out`),
         "b.booking_type",
         "b.is_individual_booking",
         "b.status",
@@ -193,10 +193,10 @@ class ReportModel extends Schema {
         }
 
         if (room_id) {
-          qb.andWhere("br.room_id", room_id);
+          qb.andWhere("r.room_no", room_id);
         }
       })
-      .orderBy("br.room_id", "asc");
+      .orderByRaw("CAST(r.room_no AS INTEGER) ASC");
 
     const total = await this.db("booking_rooms AS br")
       .withSchema(this.RESERVATION_SCHEMA)
