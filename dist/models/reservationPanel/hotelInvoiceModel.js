@@ -42,6 +42,24 @@ class HotelInvoiceModel extends schema_1.default {
                 .orderBy("id", "desc");
         });
     }
+    updateSingleFolio(payload, conditions) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { hotel_code, booking_id, folio_id, folioIds } = conditions;
+            return yield this.db("folios")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .update(payload)
+                .where({ hotel_code })
+                .andWhere({ booking_id })
+                .andWhere(function () {
+                if (folio_id) {
+                    this.andWhere({ id: folio_id });
+                }
+                if (folioIds) {
+                    this.whereIn("id", folioIds);
+                }
+            });
+        });
+    }
     insertInFolioEntries(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("folio_entries")
@@ -252,9 +270,10 @@ class HotelInvoiceModel extends schema_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("folios")
                 .withSchema(this.RESERVATION_SCHEMA)
-                .select("id", "name")
+                .select("id", "name", "is_void")
                 .where("booking_id", booking_id)
                 .andWhere("hotel_code", hotel_code)
+                .andWhere("is_void", false)
                 .andWhere(function () {
                 if (type) {
                     this.andWhere("type", type);
@@ -277,6 +296,22 @@ class HotelInvoiceModel extends schema_1.default {
                 if (entry_ids === null || entry_ids === void 0 ? void 0 : entry_ids.length) {
                     this.whereIn("fe.id", entry_ids);
                 }
+            })
+                .groupBy("f.id", "f.name");
+        });
+    }
+    getFolioWithEntriesbySingleBookingAndRoomID({ hotel_code, booking_id, room_ids, }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("folios as f")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .select("f.id", "f.name", "f.is_void", this.db.raw(`(SELECT JSON_AGG(JSON_BUILD_OBJECT('entries_id',fe.id,'description',fe.description,'posting_type',fe.posting_type,'debit',fe.debit,'credit',fe.credit,'created_at',fe.created_at,'is_void',fe.is_void,'invoiced',fe.invoiced,'date',fe.date,'room_id',fe.room_id,'room_name',r.room_name)) as folio_entries)`))
+                .leftJoin("folio_entries as fe", "f.id", "fe.folio_id")
+                .leftJoin("rooms as r", "fe.room_id", "r.id")
+                .where("f.booking_id", booking_id)
+                .andWhere("fe.is_void", false)
+                .andWhere("f.hotel_code", hotel_code)
+                .andWhere(function () {
+                this.whereIn("f.room_id", room_ids);
             })
                 .groupBy("f.id", "f.name");
         });
@@ -377,6 +412,21 @@ class HotelInvoiceModel extends schema_1.default {
           COALESCE(SUM(debit), 0) - COALESCE(SUM(credit), 0) AS due_amount
         `))
                 .first();
+        });
+    }
+    getFolioEntriesCalculationByBookingID({ hotel_code, booking_id, }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const data = yield this.db("folio_entries as fe")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .sum("fe.debit as total_debit")
+                .leftJoin("folios as f", "fe.folio_id", "f.id")
+                .where("fe.is_void", false)
+                .andWhere("f.booking_id", booking_id)
+                .andWhere("f.hotel_code", hotel_code)
+                .first();
+            return {
+                total_debit: Number((data === null || data === void 0 ? void 0 : data.total_debit) || 0),
+            };
         });
     }
 }

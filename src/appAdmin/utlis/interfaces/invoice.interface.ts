@@ -127,3 +127,24 @@ export type ISingleFolioInvoice = {
   notes: string | null;
   inv_items: FolioInvoiceItem[];
 };
+
+export interface IFolioEntry {
+  entries_id: number;
+  description: string | null;
+  posting_type: string;
+  debit: number | null;
+  credit: number | null;
+  created_at: Date;
+  is_void: boolean;
+  invoiced: boolean;
+  date: Date;
+  room_id: number;
+  room_name: string | null;
+}
+
+export interface IFolioWithEntries {
+  id: number;
+  name: string;
+  is_void: boolean;
+  folio_entries: IFolioEntry[]; // comes from JSON_AGG
+}

@@ -360,6 +360,7 @@ AND (
       booking_id: number;
     }
   ) {
+    console.log({ payload, where });
     return await this.db("booking_rooms")
       .withSchema(this.RESERVATION_SCHEMA)
       .update(payload)

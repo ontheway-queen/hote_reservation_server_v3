@@ -226,6 +226,7 @@ AND (
     }
     updateSingleBookingRoom(payload, where) {
         return __awaiter(this, void 0, void 0, function* () {
+            console.log({ payload, where });
             return yield this.db("booking_rooms")
                 .withSchema(this.RESERVATION_SCHEMA)
                 .update(payload)

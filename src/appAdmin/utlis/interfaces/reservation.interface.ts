@@ -411,7 +411,6 @@ export interface IUpdateReservationRequestBody {
     unit_base_rate: number;
     unit_changed_rate: number;
   }[];
-
   add_room_types?: {
     room_type_id: number;
     rate_plan_id: number;
