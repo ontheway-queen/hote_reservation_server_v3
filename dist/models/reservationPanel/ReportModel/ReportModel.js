@@ -105,10 +105,10 @@ class ReportModel extends schema_1.default {
                     });
                 }
                 if (room_id) {
-                    qb.andWhere("r.room_no", room_id);
+                    qb.andWhere("r.id", room_id);
                 }
             })
-                .orderByRaw("CAST(r.room_no AS INTEGER) ASC");
+                .orderByRaw("CAST(r.room_name AS INTEGER) ASC");
             const total = yield this.db("booking_rooms AS br")
                 .withSchema(this.RESERVATION_SCHEMA)
                 .count("br.id as total")

@@ -193,10 +193,10 @@ class ReportModel extends Schema {
         }
 
         if (room_id) {
-          qb.andWhere("r.room_no", room_id);
+          qb.andWhere("r.id", room_id);
         }
       })
-      .orderByRaw("CAST(r.room_no AS INTEGER) ASC");
+      .orderByRaw("CAST(r.room_name AS INTEGER) ASC");
 
     const total = await this.db("booking_rooms AS br")
       .withSchema(this.RESERVATION_SCHEMA)
