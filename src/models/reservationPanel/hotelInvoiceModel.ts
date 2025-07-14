@@ -361,10 +361,10 @@ class HotelInvoiceModel extends Schema {
     hotel_code: number;
     booking_id: number;
     type?: string;
-  }): Promise<{ id: number; name: string }[]> {
+  }): Promise<{ id: number; name: string; room_id: number }[]> {
     return await this.db("folios")
       .withSchema(this.RESERVATION_SCHEMA)
-      .select("id", "name", "is_void")
+      .select("id", "name", "is_void", "room_id")
       .where("booking_id", booking_id)
       .andWhere("hotel_code", hotel_code)
       .andWhere("is_void", false)
@@ -506,7 +506,7 @@ class HotelInvoiceModel extends Schema {
     hotel_code: number;
     booking_id: number;
     posting_type?: string;
-    type?: string;
+    type?: "room_primary" | "group_master";
     entry_ids?: number[];
   }): Promise<
     {

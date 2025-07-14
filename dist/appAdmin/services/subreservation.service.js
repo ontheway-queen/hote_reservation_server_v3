@@ -233,32 +233,34 @@ class SubReservationService extends abstract_service_1.default {
             }
         });
     }
-    insertInBookingRoomsBySingleBookingRooms(rooms, booking_id, nights) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const payload = [];
-            rooms.forEach((room) => {
-                const base_rate = room.unit_base_rate * nights;
-                const changed_rate = room.unit_changed_rate * nights;
-                rooms.forEach((room) => {
-                    payload.push({
-                        check_in: room.check_in,
-                        check_out: room.check_out,
-                        booking_id,
-                        room_id: room.room_id,
-                        room_type_id: room.room_type_id,
-                        adults: room.adults,
-                        children: room.children,
-                        infant: room.infant,
-                        base_rate,
-                        changed_rate,
-                        unit_base_rate: room.unit_base_rate,
-                        unit_changed_rate: room.unit_changed_rate,
-                    });
-                });
-            });
-            yield this.Model.reservationModel(this.trx).insertBookingRoom(payload);
-        });
-    }
+    // async insertInBookingRoomsBySingleBookingRooms(
+    //   rooms: BookingRoom[],
+    //   booking_id: number,
+    //   nights: number
+    // ) {
+    //   const payload: IbookingRooms[] = [];
+    //   rooms.forEach((room) => {
+    //     const base_rate = room.unit_base_rate * nights;
+    //     const changed_rate = room.unit_changed_rate * nights;
+    //     rooms.forEach((room) => {
+    //       payload.push({
+    //         check_in: room.check_in,
+    //         check_out: room.check_out,
+    //         booking_id,
+    //         room_id: room.room_id,
+    //         room_type_id: room.room_type_id,
+    //         adults: room.adults,
+    //         children: room.children,
+    //         infant: room.infant,
+    //         base_rate,
+    //         changed_rate,
+    //         unit_base_rate: room.unit_base_rate,
+    //         unit_changed_rate: room.unit_changed_rate,
+    //       });
+    //     });
+    //   });
+    //   await this.Model.reservationModel(this.trx).insertBookingRoom(payload);
+    // }
     updateAvailabilityWhenRoomBooking(reservation_type, booked_room_types, hotel_code) {
         return __awaiter(this, void 0, void 0, function* () {
             const reservation_model = this.Model.reservationModel(this.trx);

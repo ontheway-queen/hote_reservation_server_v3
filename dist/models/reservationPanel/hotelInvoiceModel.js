@@ -270,7 +270,7 @@ class HotelInvoiceModel extends schema_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("folios")
                 .withSchema(this.RESERVATION_SCHEMA)
-                .select("id", "name", "is_void")
+                .select("id", "name", "is_void", "room_id")
                 .where("booking_id", booking_id)
                 .andWhere("hotel_code", hotel_code)
                 .andWhere("is_void", false)

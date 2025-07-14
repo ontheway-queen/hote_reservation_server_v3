@@ -354,6 +354,9 @@ AND (
       status?: "checked_in" | "checked_out" | "confirmed";
       checked_out_at?: string;
       checked_in_at?: string;
+      check_in?: string;
+      check_out?: string;
+      nights?: number;
     },
     where: {
       room_id: number;
@@ -983,8 +986,8 @@ AND (
       total_amount?: number;
       sub_total?: number;
       total_nights?: number;
-      check_in?: number;
-      check_out?: number;
+      check_in?: string;
+      check_out?: string;
     },
     hotel_code: number,
     booking_id: number
