@@ -179,7 +179,7 @@ class ReportModel extends Schema {
         );
         qb.andWhere("b.booking_type", "B");
 
-        qb.andWhere("b.status", "checked_in");
+        qb.andWhere("br.status", "checked_in");
 
         if (search) {
           qb.andWhere((subQb) => {
@@ -195,7 +195,8 @@ class ReportModel extends Schema {
         if (room_id) {
           qb.andWhere("br.room_id", room_id);
         }
-      });
+      })
+      .orderBy("br.room_id", "asc");
 
     const total = await this.db("booking_rooms AS br")
       .withSchema(this.RESERVATION_SCHEMA)
@@ -210,7 +211,7 @@ class ReportModel extends Schema {
         );
         qb.andWhere("b.booking_type", "B");
 
-        qb.andWhere("b.status", "checked_in");
+        qb.andWhere("br.status", "checked_in");
 
         if (search) {
           qb.andWhere((subQb) => {
@@ -247,7 +248,7 @@ class ReportModel extends Schema {
           [current_date]
         );
         qb.andWhere("b.booking_type", "B");
-        qb.andWhere("b.status", "checked_in");
+        qb.andWhere("br.status", "checked_in");
 
         if (search) {
           qb.andWhere((subQb) => {

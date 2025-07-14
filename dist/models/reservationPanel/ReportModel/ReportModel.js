@@ -93,7 +93,7 @@ class ReportModel extends schema_1.default {
                 .andWhere((qb) => {
                 qb.whereRaw("Date(b.check_in) <= ?", [current_date]).andWhereRaw("Date(b.check_out) >= ?", [current_date]);
                 qb.andWhere("b.booking_type", "B");
-                qb.andWhere("b.status", "checked_in");
+                qb.andWhere("br.status", "checked_in");
                 if (search) {
                     qb.andWhere((subQb) => {
                         subQb
@@ -107,7 +107,8 @@ class ReportModel extends schema_1.default {
                 if (room_id) {
                     qb.andWhere("br.room_id", room_id);
                 }
-            });
+            })
+                .orderBy("br.room_id", "asc");
             const total = yield this.db("booking_rooms AS br")
                 .withSchema(this.RESERVATION_SCHEMA)
                 .count("br.id as total")
@@ -117,7 +118,7 @@ class ReportModel extends schema_1.default {
                 .andWhere((qb) => {
                 qb.whereRaw("Date(b.check_in) <= ?", [current_date]).andWhereRaw("Date(b.check_out) >= ?", [current_date]);
                 qb.andWhere("b.booking_type", "B");
-                qb.andWhere("b.status", "checked_in");
+                qb.andWhere("br.status", "checked_in");
                 if (search) {
                     qb.andWhere((subQb) => {
                         subQb
@@ -142,7 +143,7 @@ class ReportModel extends schema_1.default {
                 .andWhere((qb) => {
                 qb.whereRaw("Date(b.check_in) <= ?", [current_date]).andWhereRaw("Date(b.check_out) >= ?", [current_date]);
                 qb.andWhere("b.booking_type", "B");
-                qb.andWhere("b.status", "checked_in");
+                qb.andWhere("br.status", "checked_in");
                 if (search) {
                     qb.andWhere((subQb) => {
                         subQb
