@@ -142,8 +142,8 @@ class ReportModel extends Schema {
       .select(
         "br.id",
         "b.id as booking_id",
-        this.db.raw(`TO_CHAR(check_in, 'YYYY-MM-DD') as check_in`),
-        this.db.raw(`TO_CHAR(check_out, 'YYYY-MM-DD') as check_out`),
+        this.db.raw(`TO_CHAR(b.check_in, 'YYYY-MM-DD') as check_in`),
+        this.db.raw(`TO_CHAR(b.check_out, 'YYYY-MM-DD') as check_out`),
         "b.booking_type",
         "b.is_individual_booking",
         "b.status",
