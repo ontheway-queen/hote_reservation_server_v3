@@ -142,8 +142,8 @@ class ReportModel extends Schema {
       .select(
         "br.id",
         "b.id as booking_id",
-        "b.check_in",
-        "b.check_out",
+        this.db.raw(`TO_CHAR(b.check_in, 'YYYY-MM-DD') as check_in`),
+        this.db.raw(`TO_CHAR(b.check_out, 'YYYY-MM-DD') as check_out`),
         "b.booking_type",
         "b.is_individual_booking",
         "b.status",
@@ -179,7 +179,7 @@ class ReportModel extends Schema {
         );
         qb.andWhere("b.booking_type", "B");
 
-        qb.andWhere("b.status", "checked_in");
+        qb.andWhere("br.status", "checked_in");
 
         if (search) {
           qb.andWhere((subQb) => {
@@ -193,9 +193,10 @@ class ReportModel extends Schema {
         }
 
         if (room_id) {
-          qb.andWhere("br.room_id", room_id);
+          qb.andWhere("r.id", room_id);
         }
-      });
+      })
+      .orderByRaw("CAST(r.room_name AS INTEGER) ASC");
 
     const total = await this.db("booking_rooms AS br")
       .withSchema(this.RESERVATION_SCHEMA)
@@ -210,7 +211,7 @@ class ReportModel extends Schema {
         );
         qb.andWhere("b.booking_type", "B");
 
-        qb.andWhere("b.status", "checked_in");
+        qb.andWhere("br.status", "checked_in");
 
         if (search) {
           qb.andWhere((subQb) => {
@@ -247,7 +248,7 @@ class ReportModel extends Schema {
           [current_date]
         );
         qb.andWhere("b.booking_type", "B");
-        qb.andWhere("b.status", "checked_in");
+        qb.andWhere("br.status", "checked_in");
 
         if (search) {
           qb.andWhere((subQb) => {
