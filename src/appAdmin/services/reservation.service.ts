@@ -625,7 +625,6 @@ export class ReservationService extends AbstractServices {
       const reservationModel = this.Model.reservationModel(trx);
       const hotelInvModel = this.Model.hotelInvoiceModel(trx);
 
-      console.log(req.body, "body");
       const roomModel = this.Model.RoomModel(trx);
       const sub = new SubReservationService(trx);
 
@@ -640,8 +639,6 @@ export class ReservationService extends AbstractServices {
           message: this.ResMsg.HTTP_NOT_FOUND,
         };
       }
-
-      console.log(JSON.stringify(booking));
 
       const {
         vat_percentage: bookingVatPct = 0,
@@ -874,7 +871,6 @@ export class ReservationService extends AbstractServices {
               debit: vat,
               credit: 0,
               date,
-              room_id: br.room_id,
             },
             {
               folio_id: roomFolio.id,
@@ -883,7 +879,6 @@ export class ReservationService extends AbstractServices {
               debit: sc,
               credit: 0,
               date,
-              room_id: br.room_id,
             }
           );
         }

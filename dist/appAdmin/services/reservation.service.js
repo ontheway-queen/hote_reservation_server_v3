@@ -465,7 +465,6 @@ class ReservationService extends abstract_service_1.default {
                 const body = req.body;
                 const reservationModel = this.Model.reservationModel(trx);
                 const hotelInvModel = this.Model.hotelInvoiceModel(trx);
-                console.log(req.body, "body");
                 const roomModel = this.Model.RoomModel(trx);
                 const sub = new subreservation_service_1.SubReservationService(trx);
                 const booking = yield reservationModel.getSingleBooking(hotel_code, booking_id);
@@ -476,7 +475,6 @@ class ReservationService extends abstract_service_1.default {
                         message: this.ResMsg.HTTP_NOT_FOUND,
                     };
                 }
-                console.log(JSON.stringify(booking));
                 const { vat_percentage: bookingVatPct = 0, service_charge_percentage: bookingScPct = 0, booking_rooms, guest_id, } = booking;
                 if (Array.isArray(body.changed_rate_of_booking_rooms) &&
                     body.changed_rate_of_booking_rooms.length) {
@@ -636,7 +634,6 @@ class ReservationService extends abstract_service_1.default {
                             debit: vat,
                             credit: 0,
                             date,
-                            room_id: br.room_id,
                         }, {
                             folio_id: roomFolio.id,
                             description: "Service Charge",
@@ -644,7 +641,6 @@ class ReservationService extends abstract_service_1.default {
                             debit: sc,
                             credit: 0,
                             date,
-                            room_id: br.room_id,
                         });
                     }
                     yield hotelInvModel.insertInFolioEntries(entries);
