@@ -26,6 +26,13 @@ class DashBoardValidator {
             limit: joi_1.default.string().allow("").optional(),
             skip: joi_1.default.string().allow("").optional(),
         });
+        this.departureRoomListReport = joi_1.default.object({
+            current_date: joi_1.default.string().required(),
+            room_id: joi_1.default.string().allow("").optional(),
+            search: joi_1.default.string().allow("").optional(),
+            limit: joi_1.default.string().allow("").optional(),
+            skip: joi_1.default.string().allow("").optional(),
+        });
         this.getAllRoomsQueryValidator = joi_1.default.object({
             current_date: joi_1.default.string().required(),
         });

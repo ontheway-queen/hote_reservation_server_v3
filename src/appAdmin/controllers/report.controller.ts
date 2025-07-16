@@ -42,6 +42,29 @@ class ReportController extends AbstractController {
     }
   );
 
+  public departureRoomListReport = this.asyncWrapper.wrap(
+    {
+      querySchema: this.dashBoardValidator.departureRoomListReport,
+    },
+    async (req: Request, res: Response) => {
+      const { code, ...data } =
+        await this.reportService.departureRoomListReport(req);
+      res.status(code).json(data);
+    }
+  );
+
+  public arrivalRoomListReport = this.asyncWrapper.wrap(
+    {
+      querySchema: this.dashBoardValidator.departureRoomListReport,
+    },
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.reportService.arrivalRoomListReport(
+        req
+      );
+      res.status(code).json(data);
+    }
+  );
+
   public getSingleGuestLedger = this.asyncWrapper.wrap(
     { paramSchema: this.commonValidator.singleParamValidator() },
     async (req: Request, res: Response) => {

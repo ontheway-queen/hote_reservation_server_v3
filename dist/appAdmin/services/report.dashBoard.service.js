@@ -82,6 +82,50 @@ class ReportService extends abstract_service_1.default {
             };
         });
     }
+    departureRoomListReport(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { data, total, total_cbf, total_person, total_adult, total_children, total_infant, } = yield this.Model.reportModel().departureRoomListReport({
+                search: req.query.search,
+                hotel_code: req.hotel_admin.hotel_code,
+                current_date: req.query.current_date,
+                limit: req.query.limit,
+                skip: req.query.skip,
+            });
+            return {
+                success: true,
+                code: this.StatusCode.HTTP_OK,
+                total,
+                total_cbf,
+                total_adult,
+                total_children,
+                total_infant,
+                total_person,
+                data,
+            };
+        });
+    }
+    arrivalRoomListReport(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { data, total, total_cbf, total_person, total_adult, total_children, total_infant, } = yield this.Model.reportModel().arrivalRoomListReport({
+                search: req.query.search,
+                hotel_code: req.hotel_admin.hotel_code,
+                current_date: req.query.current_date,
+                limit: req.query.limit,
+                skip: req.query.skip,
+            });
+            return {
+                success: true,
+                code: this.StatusCode.HTTP_OK,
+                total,
+                total_cbf,
+                total_adult,
+                total_children,
+                total_infant,
+                total_person,
+                data,
+            };
+        });
+    }
     getSingleGuestLedger(req) {
         return __awaiter(this, void 0, void 0, function* () {
             const { from_date, to_date, limit, skip } = req.query;

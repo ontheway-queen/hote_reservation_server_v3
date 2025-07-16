@@ -45,20 +45,32 @@ class ReportController extends abstract_controller_1.default {
             const _c = yield this.reportService.inhouseGuestListReport(req), { code } = _c, data = __rest(_c, ["code"]);
             res.status(code).json(data);
         }));
+        this.departureRoomListReport = this.asyncWrapper.wrap({
+            querySchema: this.dashBoardValidator.departureRoomListReport,
+        }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _d = yield this.reportService.departureRoomListReport(req), { code } = _d, data = __rest(_d, ["code"]);
+            res.status(code).json(data);
+        }));
+        this.arrivalRoomListReport = this.asyncWrapper.wrap({
+            querySchema: this.dashBoardValidator.departureRoomListReport,
+        }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _e = yield this.reportService.arrivalRoomListReport(req), { code } = _e, data = __rest(_e, ["code"]);
+            res.status(code).json(data);
+        }));
         this.getSingleGuestLedger = this.asyncWrapper.wrap({ paramSchema: this.commonValidator.singleParamValidator() }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _d = yield this.reportService.getSingleGuestLedger(req), { code } = _d, data = __rest(_d, ["code"]);
+            const _f = yield this.reportService.getSingleGuestLedger(req), { code } = _f, data = __rest(_f, ["code"]);
             res.status(code).json(data);
         }));
         this.getGuestDistributionCountryWise = this.asyncWrapper.wrap({}, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _e = yield this.reportService.getGuestDistributionCountryWise(req), { code } = _e, data = __rest(_e, ["code"]);
+            const _g = yield this.reportService.getGuestDistributionCountryWise(req), { code } = _g, data = __rest(_g, ["code"]);
             res.status(code).json(data);
         }));
         this.getAccountReport = this.asyncWrapper.wrap({ querySchema: this.dashBoardValidator.getAllAccountQueryValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _f = yield this.reportService.getAccountReport(req), { code } = _f, data = __rest(_f, ["code"]);
+            const _h = yield this.reportService.getAccountReport(req), { code } = _h, data = __rest(_h, ["code"]);
             res.status(code).json(data);
         }));
         this.getRoomReport = this.asyncWrapper.wrap({ querySchema: this.dashBoardValidator.getAllRoomsQueryValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _g = yield this.reportService.getRoomReport(req), { code } = _g, data = __rest(_g, ["code"]);
+            const _j = yield this.reportService.getRoomReport(req), { code } = _j, data = __rest(_j, ["code"]);
             res.status(code).json(data);
         }));
     }

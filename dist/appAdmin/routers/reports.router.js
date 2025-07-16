@@ -30,6 +30,12 @@ class ReportRouter extends abstract_router_1.default {
             .route("/inhouse-guest")
             .get(this.reportController.inhouseGuestListReport);
         this.router
+            .route("/departure-room")
+            .get(this.reportController.departureRoomListReport);
+        this.router
+            .route("/arrival-room")
+            .get(this.reportController.arrivalRoomListReport);
+        this.router
             .route("/guest-ledger/by-guest/:id")
             .get(this.reportController.getSingleGuestLedger);
         this.router

@@ -25,6 +25,14 @@ class DashBoardValidator {
     skip: Joi.string().allow("").optional(),
   });
 
+  public departureRoomListReport = Joi.object({
+    current_date: Joi.string().required(),
+    room_id: Joi.string().allow("").optional(),
+    search: Joi.string().allow("").optional(),
+    limit: Joi.string().allow("").optional(),
+    skip: Joi.string().allow("").optional(),
+  });
+
   public getAllRoomsQueryValidator = Joi.object({
     current_date: Joi.string().required(),
   });
