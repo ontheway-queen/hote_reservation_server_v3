@@ -251,8 +251,10 @@ class RoomService extends abstract_service_1.default {
                     const newGivenRoomTypesRoomAvailability = yield roomModel.getRoomAvailabilitiesByRoomTypeId(hotel_code, room_type_id);
                     if (newGivenRoomTypesRoomAvailability) {
                         yield roomModel.updateInRoomAvailabilities(hotel_code, room_type_id, {
-                            total_rooms: newGivenRoomTypesRoomAvailability.total_rooms + 1,
-                            available_rooms: newGivenRoomTypesRoomAvailability.available_rooms + 1,
+                            total_rooms: newGivenRoomTypesRoomAvailability.total_rooms +
+                                1,
+                            available_rooms: newGivenRoomTypesRoomAvailability.available_rooms +
+                                1,
                         });
                     }
                     else {
@@ -314,13 +316,15 @@ class RoomService extends abstract_service_1.default {
                     };
                 }
                 const availability = yield roomModel.getRoomAvailabilitiesByRoomTypeId(hotel_code, currentRoom.room_type_id);
-                if (currentStatus != "out_of_service" && status === "out_of_service") {
+                if (currentStatus != "out_of_service" &&
+                    status === "out_of_service") {
                     yield roomModel.updateInRoomAvailabilities(hotel_code, currentRoom.room_type_id, {
                         total_rooms: availability.total_rooms - 1,
                         available_rooms: availability.available_rooms - 1,
                     });
                 }
-                else if (currentStatus == "out_of_service" && status === "in_service") {
+                else if (currentStatus == "out_of_service" &&
+                    status === "in_service") {
                     // Going back to in_service: increase availability
                     yield roomModel.updateInRoomAvailabilities(hotel_code, currentRoom.room_type_id, {
                         total_rooms: availability.total_rooms + 1,
@@ -388,6 +392,81 @@ class RoomService extends abstract_service_1.default {
             const model = this.Model.RoomModel();
             const data = yield model.getAllOccupiedRooms(date, req.hotel_admin.hotel_code);
             return Object.assign({ success: true, code: this.StatusCode.HTTP_OK, message: this.ResMsg.HTTP_OK }, data);
+        });
+    }
+    // Create multiple rooms
+    createMultipleRooms(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
+                const { room_type_id, from_room, to_room, floor_no } = req.body;
+                const { hotel_code, id: user_id } = req.hotel_admin;
+                const settingModel = this.Model.settingModel(trx);
+                const roomModel = this.Model.RoomModel(trx);
+                const checkRoomType = yield settingModel.getSingleRoomType(room_type_id, hotel_code);
+                if (!checkRoomType.length) {
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_NOT_FOUND,
+                        message: "Room type is not found",
+                    };
+                }
+                const from = Number(from_room);
+                const to = Number(to_room);
+                const createRooms = [];
+                const roomPromises = [];
+                for (let roomNo = from; roomNo <= to; roomNo++) {
+                    const room_name = roomNo.toString();
+                    roomPromises.push((() => __awaiter(this, void 0, void 0, function* () {
+                        const { data: duplicateRooms } = yield roomModel.getAllRoom({
+                            hotel_code,
+                            exact_name: room_name,
+                        });
+                        if (duplicateRooms.length > 0)
+                            return null;
+                        yield roomModel.createRoom({
+                            room_name,
+                            floor_no,
+                            room_type_id,
+                            hotel_code,
+                            created_by: user_id,
+                        });
+                        return room_name;
+                    }))());
+                }
+                const creationResults = yield Promise.all(roomPromises);
+                const createdRoomNames = creationResults.filter((name) => !!name);
+                const createdCount = createdRoomNames.length;
+                if (createdCount > 0) {
+                    const availability = yield roomModel.getRoomAvailabilitiesByRoomTypeId(hotel_code, room_type_id);
+                    if (availability) {
+                        yield roomModel.updateInRoomAvailabilities(hotel_code, room_type_id, {
+                            available_rooms: availability.available_rooms + createdCount,
+                            total_rooms: availability.total_rooms + createdCount,
+                        });
+                    }
+                    else {
+                        const roomAvailabilityPayload = [];
+                        for (let i = 0; i < 365; i++) {
+                            const date = new Date();
+                            date.setUTCDate(date.getUTCDate() + i);
+                            const dateStr = date.toISOString().split("T")[0];
+                            roomAvailabilityPayload.push({
+                                hotel_code,
+                                room_type_id,
+                                date: dateStr,
+                                available_rooms: createdCount,
+                                total_rooms: createdCount,
+                            });
+                        }
+                        yield roomModel.insertInRoomAvilabilities(roomAvailabilityPayload);
+                    }
+                }
+                return {
+                    success: true,
+                    code: this.StatusCode.HTTP_SUCCESSFUL,
+                    message: `Multiple rooms created successfully.`,
+                };
+            }));
         });
     }
 }

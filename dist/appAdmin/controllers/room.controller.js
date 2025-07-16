@@ -82,6 +82,11 @@ class RoomController extends abstract_controller_1.default {
             const _k = yield this.roomService.getAllOccupiedRooms(req), { code } = _k, data = __rest(_k, ["code"]);
             res.status(code).json(data);
         }));
+        // Create multiple rooms
+        this.createMultipleRooms = this.asyncWrapper.wrap({ bodySchema: this.roomvalidator.createMultipleRoomValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _l = yield this.roomService.createMultipleRooms(req), { code } = _l, data = __rest(_l, ["code"]);
+            res.status(code).json(data);
+        }));
     }
 }
 exports.default = RoomController;

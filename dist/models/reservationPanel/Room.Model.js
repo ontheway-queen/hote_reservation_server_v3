@@ -21,6 +21,7 @@ class RoomModel extends schema_1.default {
     // create room
     createRoom(payload) {
         return __awaiter(this, void 0, void 0, function* () {
+            console.log({ payload });
             return yield this.db("rooms")
                 .withSchema(this.RESERVATION_SCHEMA)
                 .insert(payload);
@@ -98,7 +99,8 @@ class RoomModel extends schema_1.default {
             // Calculate number of nights
             const checkInDate = new Date(check_in);
             const checkOutDate = new Date(check_out);
-            const number_of_nights = Math.ceil((checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24));
+            const number_of_nights = Math.ceil((checkOutDate.getTime() - checkInDate.getTime()) /
+                (1000 * 60 * 60 * 24));
             if (number_of_nights <= 0) {
                 throw new Error("Invalid check-in and check-out date range");
             }
@@ -208,7 +210,7 @@ class RoomModel extends schema_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("room_availability")
                 .withSchema(this.RESERVATION_SCHEMA)
-                .select("id", "total_rooms", "available_rooms")
+                .select("id", "total_rooms", "available_rooms", "room_type_id")
                 .where("hotel_code", hotel_code)
                 .andWhere("room_type_id", room_type_id)
                 .first();
@@ -344,7 +346,14 @@ class RoomModel extends schema_1.default {
       ) AS sorted_rooms
       GROUP BY floor_no
       ORDER BY floor_no ASC
-    `, [current_date, current_date, "B", "confirmed", "checked_in", hotel_code]);
+    `, [
+                current_date,
+                current_date,
+                "B",
+                "confirmed",
+                "checked_in",
+                hotel_code,
+            ]);
             const total = yield this.db("rooms as r")
                 .withSchema(this.RESERVATION_SCHEMA)
                 .count("r.id as total")
