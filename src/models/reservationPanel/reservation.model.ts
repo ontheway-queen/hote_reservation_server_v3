@@ -117,7 +117,7 @@ AND (
       COALESCE(
         json_agg(
           DISTINCT jsonb_build_object(
-            'rate_plan_id', rpd.id,
+            'rate_plan_id', rp.id,
             'name', rp.name,
             'base_rate', rpd.base_rate
           )
@@ -148,8 +148,23 @@ AND (
     check_out: string;
     hotel_code: number;
     room_type_id: number;
-  }) {
-    const { hotel_code, check_in, check_out, room_type_id } = payload;
+    exclude_booking_id?: number;
+  }): Promise<
+    {
+      hotel_code: number;
+      room_id: number;
+      room_name: string;
+      room_type_id: number;
+      room_type_name: string;
+    }[]
+  > {
+    const {
+      hotel_code,
+      check_in,
+      check_out,
+      room_type_id,
+      exclude_booking_id,
+    } = payload;
     const schema = this.RESERVATION_SCHEMA;
 
     const availableRoomTypes = () =>
@@ -198,6 +213,11 @@ AND (
           .from(`${schema}.bookings as b`)
           .join(`${schema}.booking_rooms as br`, "br.booking_id", "b.id")
           .whereRaw("br.room_id = r.id")
+          .andWhere(function () {
+            if (exclude_booking_id) {
+              this.andWhere("br.booking_id", "!=", exclude_booking_id);
+            }
+          })
           .andWhere(function () {
             this.where(function () {
               this.where("b.booking_type", "B").whereNotIn("br.status", [
@@ -276,8 +296,8 @@ AND (
         "unit_changed_rate",
         "base_rate",
         "changed_rate",
-        "check_in",
-        "check_out"
+        this.db.raw(`TO_CHAR(check_in, 'YYYY-MM-DD') as check_in`),
+        this.db.raw(`TO_CHAR(check_out, 'YYYY-MM-DD') as check_out`)
       )
       .where({
         booking_id,
@@ -305,6 +325,7 @@ AND (
     changed_rate: number;
     check_in: string;
     check_out: string;
+    room_type_id: number;
   }> {
     return await this.db("booking_rooms")
       .withSchema(this.RESERVATION_SCHEMA)
@@ -315,8 +336,9 @@ AND (
         "unit_changed_rate",
         "base_rate",
         "changed_rate",
-        "check_in",
-        "check_out"
+        this.db.raw(`TO_CHAR(check_in, 'YYYY-MM-DD') as check_in`),
+        this.db.raw(`TO_CHAR(check_out, 'YYYY-MM-DD') as check_out`),
+        "room_type_id"
       )
       .where({
         booking_id,
@@ -334,6 +356,9 @@ AND (
       status?: "checked_in" | "checked_out" | "confirmed";
       checked_out_at?: string;
       checked_in_at?: string;
+      check_in?: string;
+      check_out?: string;
+      nights?: number;
     },
     where: {
       room_id: number;
@@ -359,12 +384,18 @@ AND (
     },
     where: {
       booking_id: number;
+      exclude_checkout?: boolean;
     }
   ) {
     return await this.db("booking_rooms")
       .withSchema(this.RESERVATION_SCHEMA)
       .update(payload)
-      .where("booking_id", where.booking_id);
+      .where("booking_id", where.booking_id)
+      .andWhere(function () {
+        if (where.exclude_checkout) {
+          this.andWhereNot("status", "checked_out");
+        }
+      });
   }
 
   public async insertBookingRoomGuest(payload: {
@@ -884,7 +915,7 @@ AND (
         "g.phone",
         "g.address",
         "c.country_name",
-        "g.passport_number",
+        "g.passport_no",
         "c.nationality",
         this.db.raw(
           `(
@@ -903,8 +934,8 @@ AND (
                 'changed_rate', br.changed_rate,
                 'unit_base_rate', br.unit_base_rate,
                 'unit_changed_rate', br.unit_changed_rate,
-                'check_in',br.check_in,
-                'check_out',br.check_out,
+             'check_in',  br.check_in::date,
+             'check_out', br.check_out::date,
                 'status',br.status,
                 'room_guests', (
                   SELECT COALESCE(
@@ -956,8 +987,8 @@ AND (
       total_amount?: number;
       sub_total?: number;
       total_nights?: number;
-      check_in?: number;
-      check_out?: number;
+      check_in?: string;
+      check_out?: string;
     },
     hotel_code: number,
     booking_id: number

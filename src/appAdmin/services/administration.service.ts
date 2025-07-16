@@ -1,6 +1,7 @@
 import { Request } from "express";
 import Lib from "../../utils/lib/lib";
 import AbstractServices from "../../abstarcts/abstract.service";
+import { newAdminUserAccountTemp } from "../../templates/adminCredsTemplate";
 
 class AdministrationService extends AbstractServices {
   constructor() {
@@ -14,6 +15,8 @@ class AdministrationService extends AbstractServices {
     const check = await administrationModel.getSingleAdmin({
       email: req.body.email,
     });
+
+    console.log(req.body, { check });
 
     if (check.length) {
       return {
@@ -48,6 +51,13 @@ class AdministrationService extends AbstractServices {
       ...rest,
       hotel_code,
     });
+
+    // send email
+    await Lib.sendEmail(
+      req.body.email,
+      "Your panel access has been successfully created",
+      newAdminUserAccountTemp(req.body.email, req.body.password, req.body.name)
+    );
 
     return {
       success: true,
@@ -127,8 +137,8 @@ class AdministrationService extends AbstractServices {
 
     return {
       success: true,
-      code: this.StatusCode.HTTP_SUCCESSFUL,
-      message: this.ResMsg.HTTP_SUCCESSFUL,
+      code: this.StatusCode.HTTP_OK,
+      message: "Successfully Updated",
     };
   }
 

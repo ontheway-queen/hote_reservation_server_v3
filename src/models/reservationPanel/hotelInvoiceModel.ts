@@ -1,4 +1,5 @@
 import {
+  IFolioWithEntries,
   IinsertFolioEntriesPayload,
   IinsertFolioPayload,
   ISingleFolioInvoice,
@@ -32,6 +33,31 @@ class HotelInvoiceModel extends Schema {
       .select("id")
       .limit(1)
       .orderBy("id", "desc");
+  }
+
+  public async updateSingleFolio(
+    payload: { is_void?: boolean },
+    conditions: {
+      booking_id: number;
+      hotel_code: number;
+      folio_id?: number;
+      folioIds?: number[];
+    }
+  ) {
+    const { hotel_code, booking_id, folio_id, folioIds } = conditions;
+    return await this.db("folios")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .update(payload)
+      .where({ hotel_code })
+      .andWhere({ booking_id })
+      .andWhere(function () {
+        if (folio_id) {
+          this.andWhere({ id: folio_id });
+        }
+        if (folioIds) {
+          this.whereIn("id", folioIds);
+        }
+      });
   }
 
   public async insertInFolioEntries(
@@ -335,12 +361,13 @@ class HotelInvoiceModel extends Schema {
     hotel_code: number;
     booking_id: number;
     type?: string;
-  }): Promise<{ id: number; name: string }[]> {
+  }): Promise<{ id: number; name: string; room_id: number }[]> {
     return await this.db("folios")
       .withSchema(this.RESERVATION_SCHEMA)
-      .select("id", "name")
+      .select("id", "name", "is_void", "room_id", "type")
       .where("booking_id", booking_id)
       .andWhere("hotel_code", hotel_code)
+      .andWhere("is_void", false)
       .andWhere(function () {
         if (type) {
           this.andWhere("type", type);
@@ -356,18 +383,18 @@ class HotelInvoiceModel extends Schema {
     hotel_code: number;
     booking_id: number;
     entry_ids?: number[];
-  }): Promise<{ id: number; name: string }[]> {
+  }): Promise<IFolioWithEntries | undefined> {
     return await this.db("folios as f")
       .withSchema(this.RESERVATION_SCHEMA)
       .select(
         "f.id",
         "f.name",
         this.db.raw(
-          `(SELECT JSON_AGG(JSON_BUILD_OBJECT('entries_id',fe.id,'description',fe.description,'posting_type',fe.posting_type,'debit',fe.debit,'credit',fe.credit,'created_at',fe.created_at,'is_void',fe.is_void,'invoiced',fe.invoiced,'date',fe.date)) as folio_entries)`
+          `(SELECT JSON_AGG(JSON_BUILD_OBJECT('entries_id',fe.id,'description',fe.description,'posting_type',fe.posting_type,'debit',fe.debit,'credit',fe.credit,'created_at',fe.created_at,'is_void',fe.is_void,'invoiced',fe.invoiced,'date',fe.date,'room_id',fe.room_id,'room_name',r.room_name)) as folio_entries)`
         )
       )
       .leftJoin("folio_entries as fe", "f.id", "fe.folio_id")
-
+      .leftJoin("rooms as r", "fe.room_id", "r.id")
       .where("f.booking_id", booking_id)
       .andWhere("fe.is_void", false)
       .andWhere("fe.invoiced", false)
@@ -376,6 +403,37 @@ class HotelInvoiceModel extends Schema {
         if (entry_ids?.length) {
           this.whereIn("fe.id", entry_ids);
         }
+      })
+      .groupBy("f.id", "f.name");
+  }
+
+  public async getFolioWithEntriesbySingleBookingAndRoomID({
+    hotel_code,
+    booking_id,
+    room_ids,
+  }: {
+    hotel_code: number;
+    booking_id: number;
+    room_ids: number[];
+  }): Promise<IFolioWithEntries[]> {
+    return await this.db("folios as f")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .select(
+        "f.id",
+        "f.name",
+        "f.is_void",
+        this.db.raw(
+          `(SELECT JSON_AGG(JSON_BUILD_OBJECT('entries_id',fe.id,'description',fe.description,'posting_type',fe.posting_type,'debit',fe.debit,'credit',fe.credit,'created_at',fe.created_at,'is_void',fe.is_void,'invoiced',fe.invoiced,'date',fe.date,'room_id',fe.room_id,'room_name',r.room_name)) as folio_entries)`
+        )
+      )
+      .leftJoin("folio_entries as fe", "f.id", "fe.folio_id")
+      .leftJoin("rooms as r", "fe.room_id", "r.id")
+
+      .where("f.booking_id", booking_id)
+      .andWhere("fe.is_void", false)
+      .andWhere("f.hotel_code", hotel_code)
+      .andWhere(function () {
+        this.whereIn("f.room_id", room_ids);
       })
       .groupBy("f.id", "f.name");
   }
@@ -423,7 +481,6 @@ class HotelInvoiceModel extends Schema {
         "fe.description",
         "fe.posting_type",
         "fe.rack_rate",
-
         this.db.raw(`TO_CHAR(fe.date, 'YYYY-MM-DD') as date`),
         "fe.room_id",
         "r.room_name",
@@ -449,7 +506,7 @@ class HotelInvoiceModel extends Schema {
     hotel_code: number;
     booking_id: number;
     posting_type?: string;
-    type?: string;
+    type?: "room_primary" | "group_master";
     entry_ids?: number[];
   }): Promise<
     {
@@ -522,15 +579,15 @@ class HotelInvoiceModel extends Schema {
   public async updateFolioEntriesByFolioId(
     payload: { is_void?: boolean; invoiced?: boolean },
     where: { folio_id: number },
-    where_not?: { type: "Payment" }
+    exlclude_type?: { exlclude: "Payment" }
   ) {
     return await this.db("folio_entries")
       .withSchema(this.RESERVATION_SCHEMA)
       .update(payload)
       .where("folio_id", where.folio_id)
       .andWhere(function () {
-        if (where_not?.type) {
-          this.andWhereNot("posting_type", where_not.type);
+        if (exlclude_type?.exlclude) {
+          this.andWhereNot("posting_type", exlclude_type.exlclude);
         }
       });
   }
@@ -569,6 +626,28 @@ class HotelInvoiceModel extends Schema {
         `)
       )
       .first();
+  }
+
+  public async getFolioEntriesCalculationByBookingID({
+    hotel_code,
+    booking_id,
+  }: {
+    hotel_code: number;
+    booking_id: number;
+  }): Promise<{ total_debit: number; total_credit: number }> {
+    const data = await this.db("folio_entries as fe")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .sum("fe.debit as total_debit")
+      .sum("fe.credit as total_credit")
+      .leftJoin("folios as f", "fe.folio_id", "f.id")
+      .where("fe.is_void", false)
+      .andWhere("f.booking_id", booking_id)
+      .andWhere("f.hotel_code", hotel_code)
+      .first();
+    return {
+      total_debit: Number(data?.total_debit || 0),
+      total_credit: Number(data?.total_credit || 0),
+    };
   }
 }
 

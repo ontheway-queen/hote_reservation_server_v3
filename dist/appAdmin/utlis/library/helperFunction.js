@@ -77,6 +77,12 @@ class HelperFunction extends abstract_service_1.default {
         }
         return dates;
     }
+    static calculateNights(checkIn, checkOut) {
+        const from = new Date(checkIn);
+        const to = new Date(checkOut);
+        const diffTime = Math.abs(to.getTime() - from.getTime());
+        return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    }
     static generateFolioNumber(lastFolioId) {
         const now = (0, moment_1.default)();
         const prefix = `FOLIO-${now.format("YYYYMM")}`;

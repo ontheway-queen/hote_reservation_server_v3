@@ -148,6 +148,18 @@ export class ReservationController extends AbstractController {
     }
   );
 
+  public individualRoomDatesChangeOfBooking = this.asyncWrapper.wrap(
+    {
+      paramSchema: this.commonValidator.singleParamValidator(),
+      bodySchema: this.validator.changeDatesOfBookingRoom,
+    },
+    async (req: Request, res: Response) => {
+      const { code, ...data } =
+        await this.service.individualRoomDatesChangeOfBooking(req);
+      res.status(code).json(data);
+    }
+  );
+
   public checkIn = this.asyncWrapper.wrap(
     { paramSchema: this.commonValidator.singleParamValidator() },
     async (req: Request, res: Response) => {
@@ -156,10 +168,10 @@ export class ReservationController extends AbstractController {
     }
   );
 
-  public individualCheckIn = this.asyncWrapper.wrap(
+  public individualRoomCheckIn = this.asyncWrapper.wrap(
     { paramSchema: this.commonValidator.doubleParamValidator("id", "room_id") },
     async (req: Request, res: Response) => {
-      const { code, ...data } = await this.service.individualCheckIn(req);
+      const { code, ...data } = await this.service.individualRoomCheckIn(req);
       res.status(code).json(data);
     }
   );
@@ -231,6 +243,7 @@ export class ReservationController extends AbstractController {
       res.status(code).json(data);
     }
   );
+
   public adjustAmountByFolioID = this.asyncWrapper.wrap(
     {
       bodySchema: this.validator.adjustBalance,

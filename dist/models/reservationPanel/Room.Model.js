@@ -98,8 +98,7 @@ class RoomModel extends schema_1.default {
             // Calculate number of nights
             const checkInDate = new Date(check_in);
             const checkOutDate = new Date(check_out);
-            const number_of_nights = Math.ceil((checkOutDate.getTime() - checkInDate.getTime()) /
-                (1000 * 60 * 60 * 24));
+            const number_of_nights = Math.ceil((checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24));
             if (number_of_nights <= 0) {
                 throw new Error("Invalid check-in and check-out date range");
             }
@@ -345,14 +344,7 @@ class RoomModel extends schema_1.default {
       ) AS sorted_rooms
       GROUP BY floor_no
       ORDER BY floor_no ASC
-    `, [
-                current_date,
-                current_date,
-                "B",
-                "confirmed",
-                "checked_in",
-                hotel_code,
-            ]);
+    `, [current_date, current_date, "B", "confirmed", "checked_in", hotel_code]);
             const total = yield this.db("rooms as r")
                 .withSchema(this.RESERVATION_SCHEMA)
                 .count("r.id as total")
@@ -397,7 +389,7 @@ class RoomModel extends schema_1.default {
         });
     }
     // Get all occupied rooms using a specific date
-    getAllOccupiedRooms(date) {
+    getAllOccupiedRooms(date, hotel_code) {
         return __awaiter(this, void 0, void 0, function* () {
             const rows = yield this.db("booking_rooms as br")
                 .withSchema(this.RESERVATION_SCHEMA)
@@ -409,6 +401,7 @@ class RoomModel extends schema_1.default {
                 .where((qb) => {
                 qb.where("bk.status", "checked_in").orWhere("bk.status", "confirmed");
             })
+                .andWhere("bk.hotel_code", hotel_code)
                 .andWhere("bk.check_in", "<=", date)
                 .andWhere("bk.check_out", ">", date)
                 .andWhere("r.is_deleted", false)

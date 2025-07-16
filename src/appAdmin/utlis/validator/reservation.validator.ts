@@ -155,6 +155,7 @@ export class ReservationValidator {
                     phone: Joi.string().allow("").optional(),
                     country_id: Joi.number().required(),
                     address: Joi.string().allow("").optional(),
+                    passport_no: Joi.string().allow("").optional(),
                     type: Joi.string()
                       .allow("adult", "child", "infant")
                       .required(),
@@ -185,6 +186,7 @@ export class ReservationValidator {
 
     source_id: Joi.number().required(),
   });
+
   public createGroupBookingValidator = Joi.object({
     is_individual_booking: Joi.bool().required(),
     reservation_type: Joi.string().valid("hold", "booked").required(),
@@ -252,6 +254,7 @@ export class ReservationValidator {
                       .allow("adult", "child", "infant")
                       .required(),
                     is_lead_guest: Joi.boolean().required(),
+                    passport_no: Joi.string().allow("").optional(),
                   })
                 ),
               })
@@ -306,6 +309,8 @@ export class ReservationValidator {
           rooms: Joi.array()
             .items(
               Joi.object({
+                check_in: Joi.date().iso().required(),
+                check_out: Joi.date().iso().required(),
                 room_id: Joi.number().required(),
                 cbf: Joi.number().required().default(0),
                 adults: Joi.number().min(1).required(),
@@ -324,6 +329,7 @@ export class ReservationValidator {
                     phone: Joi.string().allow("").optional(),
                     country_id: Joi.number().required(),
                     address: Joi.string().allow("").optional(),
+                    passport_no: Joi.string().allow("").optional(),
                     type: Joi.string()
                       .allow("adult", "child", "infant")
                       .required(),
@@ -375,6 +381,12 @@ export class ReservationValidator {
   public changeDatesOfBooking = Joi.object({
     check_in: Joi.string().required(),
     check_out: Joi.string().required(),
+  });
+
+  public changeDatesOfBookingRoom = Joi.object({
+    check_in: Joi.string().required(),
+    check_out: Joi.string().required(),
+    room_id: Joi.number().required(),
   });
 
   public updateReservationHoldStatusValidator = Joi.object({

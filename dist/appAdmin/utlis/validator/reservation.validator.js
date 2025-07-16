@@ -146,6 +146,7 @@ class ReservationValidator {
                         phone: joi_1.default.string().allow("").optional(),
                         country_id: joi_1.default.number().required(),
                         address: joi_1.default.string().allow("").optional(),
+                        passport_no: joi_1.default.string().allow("").optional(),
                         type: joi_1.default.string()
                             .allow("adult", "child", "infant")
                             .required(),
@@ -230,6 +231,7 @@ class ReservationValidator {
                             .allow("adult", "child", "infant")
                             .required(),
                         is_lead_guest: joi_1.default.boolean().required(),
+                        passport_no: joi_1.default.string().allow("").optional(),
                     })),
                 }))
                     .min(1)
@@ -271,6 +273,8 @@ class ReservationValidator {
                 rate_plan_id: joi_1.default.number().required(),
                 rooms: joi_1.default.array()
                     .items(joi_1.default.object({
+                    check_in: joi_1.default.date().iso().required(),
+                    check_out: joi_1.default.date().iso().required(),
                     room_id: joi_1.default.number().required(),
                     cbf: joi_1.default.number().required().default(0),
                     adults: joi_1.default.number().min(1).required(),
@@ -287,6 +291,7 @@ class ReservationValidator {
                         phone: joi_1.default.string().allow("").optional(),
                         country_id: joi_1.default.number().required(),
                         address: joi_1.default.string().allow("").optional(),
+                        passport_no: joi_1.default.string().allow("").optional(),
                         type: joi_1.default.string()
                             .allow("adult", "child", "infant")
                             .required(),
@@ -328,6 +333,11 @@ class ReservationValidator {
         this.changeDatesOfBooking = joi_1.default.object({
             check_in: joi_1.default.string().required(),
             check_out: joi_1.default.string().required(),
+        });
+        this.changeDatesOfBookingRoom = joi_1.default.object({
+            check_in: joi_1.default.string().required(),
+            check_out: joi_1.default.string().required(),
+            room_id: joi_1.default.number().required(),
         });
         this.updateReservationHoldStatusValidator = joi_1.default.object({
             status: joi_1.default.string().allow("confirmed", "canceled").required(),

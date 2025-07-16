@@ -47,6 +47,9 @@ class ReservationRouter {
             .route("/booking/change-dates/by-booking/:id")
             .patch(this.controller.changeDatesOfBooking);
         this.router
+            .route("/booking/individual-room-dates-change/by-booking/:id")
+            .patch(this.controller.individualRoomDatesChangeOfBooking);
+        this.router
             .route("/folios-by/booking_id/:id")
             .get(this.controller.getFoliosbySingleBooking);
         this.router
@@ -63,12 +66,10 @@ class ReservationRouter {
             .route("/adjust-balance")
             .post(this.controller.adjustAmountByFolioID);
         this.router.route("/add-item").post(this.controller.addItemByFolioID);
-        this.router
-            .route("/checkin/by/booking/:id")
-            .patch(this.controller.individualCheckIn);
+        this.router.route("/checkin/by/booking/:id").patch(this.controller.checkIn);
         this.router
             .route("/individual-checkin/by/booking-id/:id/room-id/:room_id")
-            .patch(this.controller.individualCheckIn);
+            .patch(this.controller.individualRoomCheckIn);
         this.router
             .route("/checkout/by/booking/:id")
             .patch(this.controller.checkOut);

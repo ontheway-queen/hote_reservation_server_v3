@@ -273,7 +273,7 @@ class AccountModel extends schema_1.default {
                 dtbs.offset(parseInt(skip));
             }
             const data = yield dtbs
-                .select("id", "hotel_code", "name", "ac_type", "branch", "acc_number", "details", "is_active")
+                .select("id", "hotel_code", "name", "acc_type", "branch", "acc_number", "details", "is_active")
                 .withSchema(this.ACC_SCHEMA)
                 .where("hotel_code", hotel_code)
                 .andWhere(function () {
@@ -281,7 +281,7 @@ class AccountModel extends schema_1.default {
                     this.where("is_active", status);
                 }
                 if (ac_type) {
-                    this.andWhereRaw("LOWER(ac_type) = ?", [
+                    this.andWhereRaw("LOWER(acc_type) = ?", [
                         ac_type.toLowerCase(),
                     ]);
                 }
@@ -304,7 +304,7 @@ class AccountModel extends schema_1.default {
                     this.where("is_active", status);
                 }
                 if (ac_type) {
-                    this.andWhere("ac_type", ac_type.toUpperCase());
+                    this.andWhere("acc_type", ac_type.toUpperCase());
                 }
                 if (acc_ids) {
                     this.whereIn("id", acc_ids);

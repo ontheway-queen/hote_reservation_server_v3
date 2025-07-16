@@ -124,9 +124,9 @@ export interface IguestReqBody {
   email?: string;
   phone: string;
   nationality?: string;
-  country?: string;
   country_id: number;
   address: string;
+  passport_no?: string;
 }
 
 export interface BookingRequestBody {
@@ -231,6 +231,7 @@ export interface IGBRoomGuest {
     phone: string;
     country_id: number;
     address: string;
+    passport_no?: string;
     type: "adult" | "child" | "infant";
     is_lead_guest: boolean;
   }[];
@@ -347,7 +348,7 @@ interface BookingGuest {
   phone: string;
   address: string;
   country: string;
-  passport_number: string;
+  passport_no: string;
   nationality: string;
 }
 
@@ -359,7 +360,7 @@ export interface IBookingDetails extends BookingGuest {
   is_individual_booking: boolean;
   check_out: string;
   booking_type: string;
-  status: string;
+  status: "confirmed" | "checked_in" | "checked_out";
   source_name: string | null;
   total_amount: number;
   vat_percentage: number;
@@ -411,7 +412,6 @@ export interface IUpdateReservationRequestBody {
     unit_base_rate: number;
     unit_changed_rate: number;
   }[];
-
   add_room_types?: {
     room_type_id: number;
     rate_plan_id: number;

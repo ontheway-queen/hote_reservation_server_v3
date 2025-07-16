@@ -326,7 +326,7 @@ class AccountModel extends Schema {
 				"id",
 				"hotel_code",
 				"name",
-				"ac_type",
+				"acc_type",
 				"branch",
 				"acc_number",
 				"details",
@@ -341,7 +341,7 @@ class AccountModel extends Schema {
 				}
 
 				if (ac_type) {
-					this.andWhereRaw("LOWER(ac_type) = ?", [
+					this.andWhereRaw("LOWER(acc_type) = ?", [
 						ac_type.toLowerCase(),
 					]);
 				}
@@ -371,7 +371,7 @@ class AccountModel extends Schema {
 				}
 
 				if (ac_type) {
-					this.andWhere("ac_type", ac_type.toUpperCase());
+					this.andWhere("acc_type", ac_type.toUpperCase());
 				}
 
 				if (acc_ids) {
