@@ -329,6 +329,7 @@ export class ReservationValidator {
                     phone: Joi.string().allow("").optional(),
                     country_id: Joi.number().required(),
                     address: Joi.string().allow("").optional(),
+                    passport_no: Joi.string().allow("").optional(),
                     type: Joi.string()
                       .allow("adult", "child", "infant")
                       .required(),

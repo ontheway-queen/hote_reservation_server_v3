@@ -386,7 +386,7 @@ class RoomService extends abstract_service_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             const date = req.query.date;
             const model = this.Model.RoomModel();
-            const data = yield model.getAllOccupiedRooms(date);
+            const data = yield model.getAllOccupiedRooms(date, req.hotel_admin.hotel_code);
             return Object.assign({ success: true, code: this.StatusCode.HTTP_OK, message: this.ResMsg.HTTP_OK }, data);
         });
     }

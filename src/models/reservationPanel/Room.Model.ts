@@ -529,7 +529,8 @@ class RoomModel extends Schema {
 
   // Get all occupied rooms using a specific date
   public async getAllOccupiedRooms(
-    date: string
+    date: string,
+    hotel_code: number
   ): Promise<{ data: IOccupiedRoomList[]; total: number }> {
     const rows = await this.db("booking_rooms as br")
       .withSchema(this.RESERVATION_SCHEMA)
@@ -558,6 +559,7 @@ class RoomModel extends Schema {
       .where((qb) => {
         qb.where("bk.status", "checked_in").orWhere("bk.status", "confirmed");
       })
+      .andWhere("bk.hotel_code", hotel_code)
       .andWhere("bk.check_in", "<=", date)
       .andWhere("bk.check_out", ">", date)
       .andWhere("r.is_deleted", false)

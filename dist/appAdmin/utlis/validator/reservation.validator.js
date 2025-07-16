@@ -291,6 +291,7 @@ class ReservationValidator {
                         phone: joi_1.default.string().allow("").optional(),
                         country_id: joi_1.default.number().required(),
                         address: joi_1.default.string().allow("").optional(),
+                        passport_no: joi_1.default.string().allow("").optional(),
                         type: joi_1.default.string()
                             .allow("adult", "child", "infant")
                             .required(),

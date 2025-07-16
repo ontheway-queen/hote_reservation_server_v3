@@ -496,7 +496,10 @@ export class RoomService extends AbstractServices {
 
     const model = this.Model.RoomModel();
 
-    const data = await model.getAllOccupiedRooms(date);
+    const data = await model.getAllOccupiedRooms(
+      date,
+      req.hotel_admin.hotel_code
+    );
     return {
       success: true,
       code: this.StatusCode.HTTP_OK,
