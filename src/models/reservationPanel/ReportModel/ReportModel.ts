@@ -188,29 +188,27 @@ class ReportModel extends Schema {
 
         if (search) {
           qb.andWhere((sub) => {
-            const like = `%${search}%`;
-            sub
-              .where(
-                this.db.raw("COALESCE(g.first_name, g2.first_name)"),
-                "ILIKE",
-                like
-              )
-              .orWhere(
-                this.db.raw("COALESCE(g.last_name,  g2.last_name)"),
-                "ILIKE",
-                like
-              )
-              .orWhere(
-                this.db.raw("COALESCE(g.email, g2.email)"),
-                "ILIKE",
-                like
-              )
-              .orWhere(
-                this.db.raw("COALESCE(g.phone, g2.phone)"),
-                "ILIKE",
-                like
-              )
+            const like = `${search.replace(/[\\%_]/g, "\\$&")}%`;
 
+            sub
+              .whereRaw("b.company_name ILIKE ?", [like])
+
+              .orWhereRaw("COALESCE(g.first_name, g2.first_name) ILIKE ?", [
+                like,
+              ])
+              .orWhereRaw("COALESCE(g.last_name,  g2.last_name)  ILIKE ?", [
+                like,
+              ])
+              .orWhereRaw(
+                `(
+           COALESCE(g.first_name, g2.first_name, '')
+           || ' ' ||
+           COALESCE(g.last_name,  g2.last_name,  '')
+         ) ILIKE ?`,
+                [like]
+              )
+              .orWhereRaw("COALESCE(g.email, g2.email) ILIKE ?", [like])
+              .orWhereRaw("COALESCE(g.phone, g2.phone) ILIKE ?", [like])
               .orWhereILike("r.room_name", like);
           });
         }
@@ -243,29 +241,27 @@ class ReportModel extends Schema {
 
         if (search) {
           qb.andWhere((sub) => {
-            const like = `%${search}%`;
-            sub
-              .where(
-                this.db.raw("COALESCE(g.first_name, g2.first_name)"),
-                "ILIKE",
-                like
-              )
-              .orWhere(
-                this.db.raw("COALESCE(g.last_name,  g2.last_name)"),
-                "ILIKE",
-                like
-              )
-              .orWhere(
-                this.db.raw("COALESCE(g.email, g2.email)"),
-                "ILIKE",
-                like
-              )
-              .orWhere(
-                this.db.raw("COALESCE(g.phone, g2.phone)"),
-                "ILIKE",
-                like
-              )
+            const like = `${search.replace(/[\\%_]/g, "\\$&")}%`;
 
+            sub
+              .whereRaw("b.company_name ILIKE ?", [like])
+
+              .orWhereRaw("COALESCE(g.first_name, g2.first_name) ILIKE ?", [
+                like,
+              ])
+              .orWhereRaw("COALESCE(g.last_name,  g2.last_name)  ILIKE ?", [
+                like,
+              ])
+              .orWhereRaw(
+                `(
+           COALESCE(g.first_name, g2.first_name, '')
+           || ' ' ||
+           COALESCE(g.last_name,  g2.last_name,  '')
+         ) ILIKE ?`,
+                [like]
+              )
+              .orWhereRaw("COALESCE(g.email, g2.email) ILIKE ?", [like])
+              .orWhereRaw("COALESCE(g.phone, g2.phone) ILIKE ?", [like])
               .orWhereILike("r.room_name", like);
           });
         }
@@ -302,29 +298,27 @@ class ReportModel extends Schema {
 
         if (search) {
           qb.andWhere((sub) => {
-            const like = `%${search}%`;
-            sub
-              .where(
-                this.db.raw("COALESCE(g.first_name, g2.first_name)"),
-                "ILIKE",
-                like
-              )
-              .orWhere(
-                this.db.raw("COALESCE(g.last_name,  g2.last_name)"),
-                "ILIKE",
-                like
-              )
-              .orWhere(
-                this.db.raw("COALESCE(g.email, g2.email)"),
-                "ILIKE",
-                like
-              )
-              .orWhere(
-                this.db.raw("COALESCE(g.phone, g2.phone)"),
-                "ILIKE",
-                like
-              )
+            const like = `${search.replace(/[\\%_]/g, "\\$&")}%`;
 
+            sub
+              .whereRaw("b.company_name ILIKE ?", [like])
+
+              .orWhereRaw("COALESCE(g.first_name, g2.first_name) ILIKE ?", [
+                like,
+              ])
+              .orWhereRaw("COALESCE(g.last_name,  g2.last_name)  ILIKE ?", [
+                like,
+              ])
+              .orWhereRaw(
+                `(
+           COALESCE(g.first_name, g2.first_name, '')
+           || ' ' ||
+           COALESCE(g.last_name,  g2.last_name,  '')
+         ) ILIKE ?`,
+                [like]
+              )
+              .orWhereRaw("COALESCE(g.email, g2.email) ILIKE ?", [like])
+              .orWhereRaw("COALESCE(g.phone, g2.phone) ILIKE ?", [like])
               .orWhereILike("r.room_name", like);
           });
         }
@@ -413,29 +407,27 @@ class ReportModel extends Schema {
 
         if (search) {
           qb.andWhere((sub) => {
-            const like = `%${search}%`;
-            sub
-              .where(
-                this.db.raw("COALESCE(g.first_name, g2.first_name)"),
-                "ILIKE",
-                like
-              )
-              .orWhere(
-                this.db.raw("COALESCE(g.last_name,  g2.last_name)"),
-                "ILIKE",
-                like
-              )
-              .orWhere(
-                this.db.raw("COALESCE(g.email, g2.email)"),
-                "ILIKE",
-                like
-              )
-              .orWhere(
-                this.db.raw("COALESCE(g.phone, g2.phone)"),
-                "ILIKE",
-                like
-              )
+            const like = `${search.replace(/[\\%_]/g, "\\$&")}%`;
 
+            sub
+              .whereRaw("b.company_name ILIKE ?", [like])
+
+              .orWhereRaw("COALESCE(g.first_name, g2.first_name) ILIKE ?", [
+                like,
+              ])
+              .orWhereRaw("COALESCE(g.last_name,  g2.last_name)  ILIKE ?", [
+                like,
+              ])
+              .orWhereRaw(
+                `(
+           COALESCE(g.first_name, g2.first_name, '')
+           || ' ' ||
+           COALESCE(g.last_name,  g2.last_name,  '')
+         ) ILIKE ?`,
+                [like]
+              )
+              .orWhereRaw("COALESCE(g.email, g2.email) ILIKE ?", [like])
+              .orWhereRaw("COALESCE(g.phone, g2.phone) ILIKE ?", [like])
               .orWhereILike("r.room_name", like);
           });
         }
@@ -464,29 +456,27 @@ class ReportModel extends Schema {
 
         if (search) {
           qb.andWhere((sub) => {
-            const like = `%${search}%`;
-            sub
-              .where(
-                this.db.raw("COALESCE(g.first_name, g2.first_name)"),
-                "ILIKE",
-                like
-              )
-              .orWhere(
-                this.db.raw("COALESCE(g.last_name,  g2.last_name)"),
-                "ILIKE",
-                like
-              )
-              .orWhere(
-                this.db.raw("COALESCE(g.email, g2.email)"),
-                "ILIKE",
-                like
-              )
-              .orWhere(
-                this.db.raw("COALESCE(g.phone, g2.phone)"),
-                "ILIKE",
-                like
-              )
+            const like = `${search.replace(/[\\%_]/g, "\\$&")}%`;
 
+            sub
+              .whereRaw("b.company_name ILIKE ?", [like])
+
+              .orWhereRaw("COALESCE(g.first_name, g2.first_name) ILIKE ?", [
+                like,
+              ])
+              .orWhereRaw("COALESCE(g.last_name,  g2.last_name)  ILIKE ?", [
+                like,
+              ])
+              .orWhereRaw(
+                `(
+           COALESCE(g.first_name, g2.first_name, '')
+           || ' ' ||
+           COALESCE(g.last_name,  g2.last_name,  '')
+         ) ILIKE ?`,
+                [like]
+              )
+              .orWhereRaw("COALESCE(g.email, g2.email) ILIKE ?", [like])
+              .orWhereRaw("COALESCE(g.phone, g2.phone) ILIKE ?", [like])
               .orWhereILike("r.room_name", like);
           });
         }
@@ -520,29 +510,27 @@ class ReportModel extends Schema {
 
         if (search) {
           qb.andWhere((sub) => {
-            const like = `%${search}%`;
-            sub
-              .where(
-                this.db.raw("COALESCE(g.first_name, g2.first_name)"),
-                "ILIKE",
-                like
-              )
-              .orWhere(
-                this.db.raw("COALESCE(g.last_name,  g2.last_name)"),
-                "ILIKE",
-                like
-              )
-              .orWhere(
-                this.db.raw("COALESCE(g.email, g2.email)"),
-                "ILIKE",
-                like
-              )
-              .orWhere(
-                this.db.raw("COALESCE(g.phone, g2.phone)"),
-                "ILIKE",
-                like
-              )
+            const like = `${search.replace(/[\\%_]/g, "\\$&")}%`;
 
+            sub
+              .whereRaw("b.company_name ILIKE ?", [like])
+
+              .orWhereRaw("COALESCE(g.first_name, g2.first_name) ILIKE ?", [
+                like,
+              ])
+              .orWhereRaw("COALESCE(g.last_name,  g2.last_name)  ILIKE ?", [
+                like,
+              ])
+              .orWhereRaw(
+                `(
+           COALESCE(g.first_name, g2.first_name, '')
+           || ' ' ||
+           COALESCE(g.last_name,  g2.last_name,  '')
+         ) ILIKE ?`,
+                [like]
+              )
+              .orWhereRaw("COALESCE(g.email, g2.email) ILIKE ?", [like])
+              .orWhereRaw("COALESCE(g.phone, g2.phone) ILIKE ?", [like])
               .orWhereILike("r.room_name", like);
           });
         }
@@ -630,29 +618,27 @@ class ReportModel extends Schema {
         qb.andWhere("br.status", "confirmed");
         if (search) {
           qb.andWhere((sub) => {
-            const like = `%${search}%`;
-            sub
-              .where(
-                this.db.raw("COALESCE(g.first_name, g2.first_name)"),
-                "ILIKE",
-                like
-              )
-              .orWhere(
-                this.db.raw("COALESCE(g.last_name,  g2.last_name)"),
-                "ILIKE",
-                like
-              )
-              .orWhere(
-                this.db.raw("COALESCE(g.email, g2.email)"),
-                "ILIKE",
-                like
-              )
-              .orWhere(
-                this.db.raw("COALESCE(g.phone, g2.phone)"),
-                "ILIKE",
-                like
-              )
+            const like = `${search.replace(/[\\%_]/g, "\\$&")}%`;
 
+            sub
+              .whereRaw("b.company_name ILIKE ?", [like])
+
+              .orWhereRaw("COALESCE(g.first_name, g2.first_name) ILIKE ?", [
+                like,
+              ])
+              .orWhereRaw("COALESCE(g.last_name,  g2.last_name)  ILIKE ?", [
+                like,
+              ])
+              .orWhereRaw(
+                `(
+           COALESCE(g.first_name, g2.first_name, '')
+           || ' ' ||
+           COALESCE(g.last_name,  g2.last_name,  '')
+         ) ILIKE ?`,
+                [like]
+              )
+              .orWhereRaw("COALESCE(g.email, g2.email) ILIKE ?", [like])
+              .orWhereRaw("COALESCE(g.phone, g2.phone) ILIKE ?", [like])
               .orWhereILike("r.room_name", like);
           });
         }
@@ -681,29 +667,27 @@ class ReportModel extends Schema {
 
         if (search) {
           qb.andWhere((sub) => {
-            const like = `%${search}%`;
-            sub
-              .where(
-                this.db.raw("COALESCE(g.first_name, g2.first_name)"),
-                "ILIKE",
-                like
-              )
-              .orWhere(
-                this.db.raw("COALESCE(g.last_name,  g2.last_name)"),
-                "ILIKE",
-                like
-              )
-              .orWhere(
-                this.db.raw("COALESCE(g.email, g2.email)"),
-                "ILIKE",
-                like
-              )
-              .orWhere(
-                this.db.raw("COALESCE(g.phone, g2.phone)"),
-                "ILIKE",
-                like
-              )
+            const like = `${search.replace(/[\\%_]/g, "\\$&")}%`;
 
+            sub
+              .whereRaw("b.company_name ILIKE ?", [like])
+
+              .orWhereRaw("COALESCE(g.first_name, g2.first_name) ILIKE ?", [
+                like,
+              ])
+              .orWhereRaw("COALESCE(g.last_name,  g2.last_name)  ILIKE ?", [
+                like,
+              ])
+              .orWhereRaw(
+                `(
+           COALESCE(g.first_name, g2.first_name, '')
+           || ' ' ||
+           COALESCE(g.last_name,  g2.last_name,  '')
+         ) ILIKE ?`,
+                [like]
+              )
+              .orWhereRaw("COALESCE(g.email, g2.email) ILIKE ?", [like])
+              .orWhereRaw("COALESCE(g.phone, g2.phone) ILIKE ?", [like])
               .orWhereILike("r.room_name", like);
           });
         }
@@ -737,29 +721,27 @@ class ReportModel extends Schema {
 
         if (search) {
           qb.andWhere((sub) => {
-            const like = `%${search}%`;
-            sub
-              .where(
-                this.db.raw("COALESCE(g.first_name, g2.first_name)"),
-                "ILIKE",
-                like
-              )
-              .orWhere(
-                this.db.raw("COALESCE(g.last_name,  g2.last_name)"),
-                "ILIKE",
-                like
-              )
-              .orWhere(
-                this.db.raw("COALESCE(g.email, g2.email)"),
-                "ILIKE",
-                like
-              )
-              .orWhere(
-                this.db.raw("COALESCE(g.phone, g2.phone)"),
-                "ILIKE",
-                like
-              )
+            const like = `${search.replace(/[\\%_]/g, "\\$&")}%`;
 
+            sub
+              .whereRaw("b.company_name ILIKE ?", [like])
+
+              .orWhereRaw("COALESCE(g.first_name, g2.first_name) ILIKE ?", [
+                like,
+              ])
+              .orWhereRaw("COALESCE(g.last_name,  g2.last_name)  ILIKE ?", [
+                like,
+              ])
+              .orWhereRaw(
+                `(
+           COALESCE(g.first_name, g2.first_name, '')
+           || ' ' ||
+           COALESCE(g.last_name,  g2.last_name,  '')
+         ) ILIKE ?`,
+                [like]
+              )
+              .orWhereRaw("COALESCE(g.email, g2.email) ILIKE ?", [like])
+              .orWhereRaw("COALESCE(g.phone, g2.phone) ILIKE ?", [like])
               .orWhereILike("r.room_name", like);
           });
         }
