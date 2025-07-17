@@ -182,7 +182,7 @@ export class AccountService extends AbstractServices {
 
   public async createAccount(req: Request) {
     return this.db.transaction(async (trx) => {
-      const { name, ac_type, ...rest } = req.body;
+      const { name, acc_type, ...rest } = req.body;
       const { id, hotel_code } = req.hotel_admin;
       const accModel = this.Model.accountModel(trx);
       const hotelModel = this.Model.HotelModel(trx);
@@ -201,19 +201,19 @@ export class AccountService extends AbstractServices {
       // Get parent head===========================================
       let parent_head = 0;
 
-      if (ac_type === "CASH") {
+      if (acc_type === "CASH") {
         const configData = await hotelModel.getHotelAccConfig(hotel_code, [
           ACC_HEAD_CONFIG.CASH_HEAD_ID,
         ]);
 
         parent_head = configData[0].head_id;
-      } else if (ac_type === "BANK") {
+      } else if (acc_type === "BANK") {
         const configData = await hotelModel.getHotelAccConfig(hotel_code, [
           ACC_HEAD_CONFIG.BANK_HEAD_ID,
         ]);
 
         parent_head = configData[0].head_id;
-      } else if (ac_type === "MOBILE_BANKING") {
+      } else if (acc_type === "MOBILE_BANKING") {
         const configData = await hotelModel.getHotelAccConfig(hotel_code, [
           ACC_HEAD_CONFIG.MFS_HEAD_ID,
         ]);
@@ -249,7 +249,7 @@ export class AccountService extends AbstractServices {
       const createAccount = await accModel.createAccount({
         name,
         acc_head_id: newHead[0].id,
-        ac_type,
+        acc_type,
         hotel_code,
         ...rest,
       });
@@ -263,7 +263,6 @@ export class AccountService extends AbstractServices {
     });
   }
 
-  
   public async getAllAccount(req: Request) {
     const { hotel_code } = req.hotel_admin;
 
@@ -285,7 +284,6 @@ export class AccountService extends AbstractServices {
       data,
     };
   }
-
 
   public async updateAccount(req: Request) {
     const { hotel_code } = req.hotel_admin;
@@ -309,7 +307,6 @@ export class AccountService extends AbstractServices {
       message: "Account updated successfully.",
     };
   }
-
 
   public async balanceTransfer(req: Request) {
     const { id, hotel_code } = req.hotel_admin;

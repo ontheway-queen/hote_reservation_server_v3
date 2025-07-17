@@ -8,9 +8,11 @@ class AccountValidator {
   // create account validator
   createAccountValidator = Joi.object({
     name: Joi.string().required(),
-    ac_type: Joi.string().valid("MOBILE_BANKING", "BANK", "CASH").required(),
+    acc_type: Joi.string()
+      .valid("MOBILE_BANKING", "BANK", "CASH", "CARD")
+      .required(),
     branch: Joi.string().allow("").optional(),
-    acc_number: Joi.string().allow("").required(),
+    acc_number: Joi.string().allow("").optional(),
     acc_routing_no: Joi.string().allow("").optional(),
     details: Joi.string().allow("").optional(),
   });
@@ -20,7 +22,7 @@ class AccountValidator {
     is_active: Joi.bool().optional(),
     ac_type: Joi.string()
       .lowercase()
-      .valid("bank", "cash", "cheque", "mobile_banking")
+      .valid("bank", "cash", "cheque", "mobile_banking", "card")
       .optional(),
     key: Joi.string().allow("").optional(),
     limit: Joi.string().allow("").optional(),

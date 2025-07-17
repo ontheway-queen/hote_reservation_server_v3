@@ -178,7 +178,7 @@ class AccountService extends abstract_service_1.default {
     createAccount(req) {
         return __awaiter(this, void 0, void 0, function* () {
             return this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
-                const _a = req.body, { name, ac_type } = _a, rest = __rest(_a, ["name", "ac_type"]);
+                const _a = req.body, { name, acc_type } = _a, rest = __rest(_a, ["name", "acc_type"]);
                 const { id, hotel_code } = req.hotel_admin;
                 const accModel = this.Model.accountModel(trx);
                 const hotelModel = this.Model.HotelModel(trx);
@@ -193,19 +193,19 @@ class AccountService extends abstract_service_1.default {
                 }
                 // Get parent head===========================================
                 let parent_head = 0;
-                if (ac_type === "CASH") {
+                if (acc_type === "CASH") {
                     const configData = yield hotelModel.getHotelAccConfig(hotel_code, [
                         constants_1.ACC_HEAD_CONFIG.CASH_HEAD_ID,
                     ]);
                     parent_head = configData[0].head_id;
                 }
-                else if (ac_type === "BANK") {
+                else if (acc_type === "BANK") {
                     const configData = yield hotelModel.getHotelAccConfig(hotel_code, [
                         constants_1.ACC_HEAD_CONFIG.BANK_HEAD_ID,
                     ]);
                     parent_head = configData[0].head_id;
                 }
-                else if (ac_type === "MOBILE_BANKING") {
+                else if (acc_type === "MOBILE_BANKING") {
                     const configData = yield hotelModel.getHotelAccConfig(hotel_code, [
                         constants_1.ACC_HEAD_CONFIG.MFS_HEAD_ID,
                     ]);
@@ -232,7 +232,7 @@ class AccountService extends abstract_service_1.default {
                     parent_id: parent_head,
                     code: newHeadCode,
                 });
-                const createAccount = yield accModel.createAccount(Object.assign({ name, acc_head_id: newHead[0].id, ac_type,
+                const createAccount = yield accModel.createAccount(Object.assign({ name, acc_head_id: newHead[0].id, acc_type,
                     hotel_code }, rest));
                 return {
                     success: true,

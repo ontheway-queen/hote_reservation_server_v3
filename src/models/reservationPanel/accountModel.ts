@@ -330,7 +330,6 @@ class AccountModel extends Schema {
       )
       .withSchema(this.ACC_SCHEMA)
       .where("hotel_code", hotel_code)
-
       .andWhere(function () {
         if (status) {
           this.where("is_active", status);
@@ -365,7 +364,7 @@ class AccountModel extends Schema {
         }
 
         if (ac_type) {
-          this.andWhere("acc_type", ac_type.toUpperCase());
+          this.andWhereRaw("LOWER(acc_type) = ?", [ac_type.toLowerCase()]);
         }
 
         if (acc_ids) {

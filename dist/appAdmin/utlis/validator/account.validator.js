@@ -14,9 +14,11 @@ class AccountValidator {
         // create account validator
         this.createAccountValidator = joi_1.default.object({
             name: joi_1.default.string().required(),
-            ac_type: joi_1.default.string().valid("MOBILE_BANKING", "BANK", "CASH").required(),
+            acc_type: joi_1.default.string()
+                .valid("MOBILE_BANKING", "BANK", "CASH", "CARD")
+                .required(),
             branch: joi_1.default.string().allow("").optional(),
-            acc_number: joi_1.default.string().allow("").required(),
+            acc_number: joi_1.default.string().allow("").optional(),
             acc_routing_no: joi_1.default.string().allow("").optional(),
             details: joi_1.default.string().allow("").optional(),
         });
@@ -25,7 +27,7 @@ class AccountValidator {
             is_active: joi_1.default.bool().optional(),
             ac_type: joi_1.default.string()
                 .lowercase()
-                .valid("bank", "cash", "cheque", "mobile_banking")
+                .valid("bank", "cash", "cheque", "mobile_banking", "card")
                 .optional(),
             key: joi_1.default.string().allow("").optional(),
             limit: joi_1.default.string().allow("").optional(),
