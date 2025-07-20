@@ -173,6 +173,7 @@ class ReportModel extends Schema {
       .leftJoin("booking_room_guest as brg", "br.id", "brg.booking_room_id")
       .leftJoin("guests AS g", "brg.guest_id", "g.id")
       .leftJoin("guests as g2", "b.guest_id", "g2.id")
+
       // .leftJoin("booking_room_guest as brg", function () {
       //   this.on("br.id", "=", "brg.booking_room_id").andOnVal(
       //     "brg.is_room_primary_guest",
@@ -185,6 +186,7 @@ class ReportModel extends Schema {
       .leftJoin("rooms AS r", "br.room_id", "r.id")
       .joinRaw("Left Join public.country as c on g.country_id = c.id")
       .joinRaw("Left Join public.country as c2 on g2.country_id = c2.id")
+      .where("b.hotel_code", hotel_code)
       .andWhere((qb) => {
         qb.whereRaw("Date(br.check_in) <= ?", [current_date]).andWhereRaw(
           "Date(br.check_out) >= ?",

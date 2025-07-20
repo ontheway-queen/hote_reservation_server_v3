@@ -102,6 +102,7 @@ class ReportModel extends schema_1.default {
                 .leftJoin("rooms AS r", "br.room_id", "r.id")
                 .joinRaw("Left Join public.country as c on g.country_id = c.id")
                 .joinRaw("Left Join public.country as c2 on g2.country_id = c2.id")
+                .where("b.hotel_code", hotel_code)
                 .andWhere((qb) => {
                 qb.whereRaw("Date(br.check_in) <= ?", [current_date]).andWhereRaw("Date(br.check_out) >= ?", [current_date]);
                 qb.andWhere("b.booking_type", "B");
