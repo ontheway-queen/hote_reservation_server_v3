@@ -4,7 +4,7 @@ export interface IUpdateUser {
   email?: string;
   phone?: string;
   address?: string;
-  passport_number?: string;
+  passport_no?: string;
   country_id?: number;
   is_active?: boolean;
 }

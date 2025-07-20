@@ -364,7 +364,7 @@ class HotelInvoiceModel extends Schema {
   }): Promise<{ id: number; name: string; room_id: number }[]> {
     return await this.db("folios")
       .withSchema(this.RESERVATION_SCHEMA)
-      .select("id", "name", "is_void", "room_id")
+      .select("id", "name", "is_void", "room_id", "type")
       .where("booking_id", booking_id)
       .andWhere("hotel_code", hotel_code)
       .andWhere("is_void", false)
@@ -634,18 +634,19 @@ class HotelInvoiceModel extends Schema {
   }: {
     hotel_code: number;
     booking_id: number;
-  }): Promise<{ total_debit: number }> {
+  }): Promise<{ total_debit: number; total_credit: number }> {
     const data = await this.db("folio_entries as fe")
       .withSchema(this.RESERVATION_SCHEMA)
       .sum("fe.debit as total_debit")
+      .sum("fe.credit as total_credit")
       .leftJoin("folios as f", "fe.folio_id", "f.id")
       .where("fe.is_void", false)
       .andWhere("f.booking_id", booking_id)
       .andWhere("f.hotel_code", hotel_code)
       .first();
-
     return {
       total_debit: Number(data?.total_debit || 0),
+      total_credit: Number(data?.total_credit || 0),
     };
   }
 }

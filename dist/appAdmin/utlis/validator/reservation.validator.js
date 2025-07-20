@@ -146,6 +146,7 @@ class ReservationValidator {
                         phone: joi_1.default.string().allow("").optional(),
                         country_id: joi_1.default.number().required(),
                         address: joi_1.default.string().allow("").optional(),
+                        passport_no: joi_1.default.string().allow("").optional(),
                         type: joi_1.default.string()
                             .allow("adult", "child", "infant")
                             .required(),
@@ -230,6 +231,7 @@ class ReservationValidator {
                             .allow("adult", "child", "infant")
                             .required(),
                         is_lead_guest: joi_1.default.boolean().required(),
+                        passport_no: joi_1.default.string().allow("").optional(),
                     })),
                 }))
                     .min(1)
@@ -330,6 +332,11 @@ class ReservationValidator {
         this.changeDatesOfBooking = joi_1.default.object({
             check_in: joi_1.default.string().required(),
             check_out: joi_1.default.string().required(),
+        });
+        this.changeDatesOfBookingRoom = joi_1.default.object({
+            check_in: joi_1.default.string().required(),
+            check_out: joi_1.default.string().required(),
+            room_id: joi_1.default.number().required(),
         });
         this.updateReservationHoldStatusValidator = joi_1.default.object({
             status: joi_1.default.string().allow("confirmed", "canceled").required(),

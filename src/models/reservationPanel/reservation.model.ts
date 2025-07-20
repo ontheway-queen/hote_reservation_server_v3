@@ -325,6 +325,7 @@ AND (
     changed_rate: number;
     check_in: string;
     check_out: string;
+    room_type_id: number;
   }> {
     return await this.db("booking_rooms")
       .withSchema(this.RESERVATION_SCHEMA)
@@ -335,8 +336,9 @@ AND (
         "unit_changed_rate",
         "base_rate",
         "changed_rate",
-        "check_in",
-        "check_out"
+        this.db.raw(`TO_CHAR(check_in, 'YYYY-MM-DD') as check_in`),
+        this.db.raw(`TO_CHAR(check_out, 'YYYY-MM-DD') as check_out`),
+        "room_type_id"
       )
       .where({
         booking_id,
@@ -363,7 +365,6 @@ AND (
       booking_id: number;
     }
   ) {
-    console.log({ payload, where });
     return await this.db("booking_rooms")
       .withSchema(this.RESERVATION_SCHEMA)
       .update(payload)
@@ -914,7 +915,7 @@ AND (
         "g.phone",
         "g.address",
         "c.country_name",
-        "g.passport_number",
+        "g.passport_no",
         "c.nationality",
         this.db.raw(
           `(
@@ -933,8 +934,8 @@ AND (
                 'changed_rate', br.changed_rate,
                 'unit_base_rate', br.unit_base_rate,
                 'unit_changed_rate', br.unit_changed_rate,
-                'check_in',br.check_in,
-                'check_out',br.check_out,
+             'check_in',  br.check_in::date,
+             'check_out', br.check_out::date,
                 'status',br.status,
                 'room_guests', (
                   SELECT COALESCE(

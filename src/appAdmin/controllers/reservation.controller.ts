@@ -148,6 +148,18 @@ export class ReservationController extends AbstractController {
     }
   );
 
+  public individualRoomDatesChangeOfBooking = this.asyncWrapper.wrap(
+    {
+      paramSchema: this.commonValidator.singleParamValidator(),
+      bodySchema: this.validator.changeDatesOfBookingRoom,
+    },
+    async (req: Request, res: Response) => {
+      const { code, ...data } =
+        await this.service.individualRoomDatesChangeOfBooking(req);
+      res.status(code).json(data);
+    }
+  );
+
   public checkIn = this.asyncWrapper.wrap(
     { paramSchema: this.commonValidator.singleParamValidator() },
     async (req: Request, res: Response) => {

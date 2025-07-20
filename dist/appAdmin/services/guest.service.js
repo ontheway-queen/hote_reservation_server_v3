@@ -23,10 +23,8 @@ class GuestService extends abstract_service_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
                 const { hotel_code } = req.hotel_admin;
-                const { name, email, city, country } = req.body;
-                // Model
+                const { name, email, city, country_id } = req.body;
                 const model = this.Model.guestModel(trx);
-                // Check if user already exists
                 const checkUser = yield model.getSingleGuest({
                     email,
                     hotel_code,
@@ -45,11 +43,9 @@ class GuestService extends abstract_service_1.default {
                     last_name: name,
                     email,
                     city,
-                    country,
+                    country_id,
                     hotel_code,
                 });
-                const userID = userRes[0].id;
-                // Check user's user_type
                 return {
                     success: true,
                     code: this.StatusCode.HTTP_SUCCESSFUL,

@@ -124,9 +124,9 @@ export interface IguestReqBody {
   email?: string;
   phone: string;
   nationality?: string;
-  country?: string;
   country_id: number;
   address: string;
+  passport_no?: string;
 }
 
 export interface BookingRequestBody {
@@ -231,6 +231,7 @@ export interface IGBRoomGuest {
     phone: string;
     country_id: number;
     address: string;
+    passport_no?: string;
     type: "adult" | "child" | "infant";
     is_lead_guest: boolean;
   }[];
@@ -347,7 +348,7 @@ interface BookingGuest {
   phone: string;
   address: string;
   country: string;
-  passport_number: string;
+  passport_no: string;
   nationality: string;
 }
 

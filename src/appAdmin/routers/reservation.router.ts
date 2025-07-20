@@ -54,6 +54,10 @@ export class ReservationRouter {
       .patch(this.controller.changeDatesOfBooking);
 
     this.router
+      .route("/booking/individual-room-dates-change/by-booking/:id")
+      .patch(this.controller.individualRoomDatesChangeOfBooking);
+
+    this.router
       .route("/folios-by/booking_id/:id")
       .get(this.controller.getFoliosbySingleBooking);
 

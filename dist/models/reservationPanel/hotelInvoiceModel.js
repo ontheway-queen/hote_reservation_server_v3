@@ -270,7 +270,7 @@ class HotelInvoiceModel extends schema_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("folios")
                 .withSchema(this.RESERVATION_SCHEMA)
-                .select("id", "name", "is_void", "room_id")
+                .select("id", "name", "is_void", "room_id", "type")
                 .where("booking_id", booking_id)
                 .andWhere("hotel_code", hotel_code)
                 .andWhere("is_void", false)
@@ -419,6 +419,7 @@ class HotelInvoiceModel extends schema_1.default {
             const data = yield this.db("folio_entries as fe")
                 .withSchema(this.RESERVATION_SCHEMA)
                 .sum("fe.debit as total_debit")
+                .sum("fe.credit as total_credit")
                 .leftJoin("folios as f", "fe.folio_id", "f.id")
                 .where("fe.is_void", false)
                 .andWhere("f.booking_id", booking_id)
@@ -426,6 +427,7 @@ class HotelInvoiceModel extends schema_1.default {
                 .first();
             return {
                 total_debit: Number((data === null || data === void 0 ? void 0 : data.total_debit) || 0),
+                total_credit: Number((data === null || data === void 0 ? void 0 : data.total_credit) || 0),
             };
         });
     }

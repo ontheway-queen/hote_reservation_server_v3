@@ -66,52 +66,51 @@ class GuestModel extends schema_1.default {
     getAllGuest(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             const { key, hotel_code, limit, skip, phone, email, status } = payload;
-            const dtbs = this.db("guests");
+            const dtbs = this.db("guests as g");
             if (limit && skip) {
                 dtbs.limit(parseInt(limit));
                 dtbs.offset(parseInt(skip));
             }
             const data = yield dtbs
-                .select("id", "first_name", "last_name", "email", "address", "phone", "country", "is_active", "created_at")
+                .select("g.id", "g.first_name", "g.last_name", "g.email", "g.address", "g.phone", "c.country_name as country", "c.nationality", "g.is_active", "g.created_at")
+                .joinRaw("Left Join public.country as c on g.country_id = c.id")
                 .withSchema(this.RESERVATION_SCHEMA)
-                .where({ hotel_code })
+                .where("g.hotel_code", hotel_code)
                 .andWhere(function () {
                 if (key) {
-                    this.andWhere("first_name", "like", `%${key}%`)
-                        .orWhere("email", "like", `%${key}%`)
-                        .orWhere("country", "like", `%${key}%`)
-                        .orWhere("phone", "like", `%${key}%`);
+                    this.andWhere("g.first_name", "like", `%${key}%`)
+                        .orWhere("g.email", "like", `%${key}%`)
+                        .orWhere("g.phone", "like", `%${key}%`);
                 }
                 if (phone) {
-                    this.andWhere("phone", "like", `%${phone}%`);
+                    this.andWhere("g.phone", "like", `%${phone}%`);
                 }
                 if (email) {
-                    this.andWhere("email", email);
+                    this.andWhere("g.email", email);
                 }
                 if (status) {
-                    this.andWhere("is_active", status);
+                    this.andWhere("g.is_active", status);
                 }
             })
-                .orderBy("id", "desc");
-            const total = yield this.db("guests")
+                .orderBy("g.id", "desc");
+            const total = yield this.db("guests as g")
                 .withSchema(this.RESERVATION_SCHEMA)
-                .count("id as total")
-                .where({ hotel_code })
+                .count("g.id as total")
+                .where("g.hotel_code", hotel_code)
                 .andWhere(function () {
                 if (key) {
-                    this.andWhere("first_name", "like", `%${key}%`)
-                        .orWhere("email", "like", `%${key}%`)
-                        .orWhere("country", "like", `%${key}%`)
-                        .orWhere("phone", "like", `%${key}%`);
+                    this.andWhere("g.first_name", "like", `%${key}%`)
+                        .orWhere("g.email", "like", `%${key}%`)
+                        .orWhere("g.phone", "like", `%${key}%`);
                 }
                 if (phone) {
-                    this.andWhere("phone", "like", `%${phone}%`);
+                    this.andWhere("g.phone", "like", `%${phone}%`);
                 }
                 if (email) {
-                    this.andWhere("email", email);
+                    this.andWhere("g.email", email);
                 }
                 if (status) {
-                    this.andWhere("is_active", status);
+                    this.andWhere("g.is_active", status);
                 }
             });
             return { data, total: total[0].total };

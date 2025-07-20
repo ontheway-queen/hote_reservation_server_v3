@@ -7,8 +7,6 @@ export interface IguestInterface {
   phone?: string;
   city?: string;
   address?: string;
-  country?: string;
-  nationality?: string;
   passport_no?: string;
   nid_no?: string;
   type?: "adult" | "child" | "infant";

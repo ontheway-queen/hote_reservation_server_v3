@@ -158,34 +158,37 @@ class DashBoardModel extends Schema {
   }) {
     const totalArrivals = await this.db("bookings as b")
       .withSchema(this.RESERVATION_SCHEMA)
+      .leftJoin("booking_rooms as br", "b.id", "br.booking_id")
       .count("b.id as total")
       .leftJoin("guests as g", "b.guest_id", "g.id")
       .where("b.hotel_code", hotel_code)
-      .andWhere("b.check_in", current_date)
-      .andWhere("b.status", "confirmed")
+      .andWhere("br.check_in", current_date)
+      .andWhere("br.status", "confirmed")
       .first();
 
     const totalDepartures = await this.db("bookings as b")
       .withSchema(this.RESERVATION_SCHEMA)
+      .leftJoin("booking_rooms as br", "b.id", "br.booking_id")
       .count("b.id as total")
       .leftJoin("guests as g", "b.guest_id", "g.id")
       .where("b.hotel_code", hotel_code)
-      .andWhere("b.status", "checked_in")
-      .andWhere("b.check_out", current_date)
+      .andWhere("br.status", "checked_in")
+      .andWhere("br.check_out", current_date)
       .first();
 
     const totalStays = await this.db("bookings as b")
       .withSchema(this.RESERVATION_SCHEMA)
+      .leftJoin("booking_rooms as br", "b.id", "br.booking_id")
       .count("b.id as total")
       .where("b.hotel_code", hotel_code)
       .andWhere(function () {
-        this.where("b.check_out", ">", current_date).andWhere(
-          "b.check_in",
+        this.where("br.check_out", ">", current_date).andWhere(
+          "br.check_in",
           "<=",
           current_date
         );
       })
-      .andWhere("b.status", "checked_in")
+      .andWhere("br.status", "checked_in")
       .first();
 
     return {
@@ -285,24 +288,26 @@ class DashBoardModel extends Schema {
           "g.id as guest_id",
           "g.first_name",
           "g.last_name",
-          "b.check_in",
-          "b.check_out",
-          "b.status"
+          "br.check_in",
+          "br.check_out",
+          "br.status"
         )
+        .leftJoin("booking_rooms as br", "b.id", "br.booking_id")
         .leftJoin("guests as g", "b.guest_id", "g.id")
         .where("b.hotel_code", hotel_code)
-        .andWhere("b.check_in", current_date)
-        .andWhere("b.status", "confirmed")
+        .andWhere("br.check_in", current_date)
+        .andWhere("br.status", "confirmed")
         .limit(limit ? parseInt(limit) : 50)
         .offset(skip ? parseInt(skip) : 0);
 
       const total = await this.db("bookings as b")
         .withSchema(this.RESERVATION_SCHEMA)
         .select("b.id as total")
+        .leftJoin("booking_rooms as br", "b.id", "br.booking_id")
         .leftJoin("guests as g", "b.guest_id", "g.id")
         .where("b.hotel_code", hotel_code)
-        .andWhere("b.check_in", current_date)
-        .andWhere("b.status", "confirmed")
+        .andWhere("br.check_in", current_date)
+        .andWhere("br.status", "confirmed")
         .first();
 
       return {
@@ -316,14 +321,15 @@ class DashBoardModel extends Schema {
           "g.id as guest_id",
           "g.first_name",
           "g.last_name",
-          "b.check_in",
-          "b.check_out",
-          "b.status"
+          "br.check_in",
+          "br.check_out",
+          "br.status"
         )
+        .leftJoin("booking_rooms as br", "b.id", "br.booking_id")
         .leftJoin("guests as g", "b.guest_id", "g.id")
         .where("b.hotel_code", hotel_code)
-        .andWhere("b.check_out", current_date)
-        .andWhere("b.status", "checked_in")
+        .andWhere("br.check_out", current_date)
+        .andWhere("br.status", "checked_in")
         .limit(limit ? parseInt(limit) : 50)
         .offset(skip ? parseInt(skip) : 0);
 
@@ -331,9 +337,10 @@ class DashBoardModel extends Schema {
         .withSchema(this.RESERVATION_SCHEMA)
         .select("b.id as total")
         .leftJoin("guests as g", "b.guest_id", "g.id")
+        .leftJoin("booking_rooms as br", "b.id", "br.booking_id")
         .where("b.hotel_code", hotel_code)
-        .andWhere("b.status", "checked_in")
-        .andWhere("b.check_out", current_date)
+        .andWhere("br.status", "checked_in")
+        .andWhere("br.check_out", current_date)
         .first();
       return {
         data,
@@ -346,20 +353,21 @@ class DashBoardModel extends Schema {
           "g.id as guest_id",
           "g.first_name",
           "g.last_name",
-          "b.check_in",
-          "b.check_out",
-          "b.status"
+          "br.check_in",
+          "br.check_out",
+          "br.status"
         )
         .leftJoin("guests as g", "b.guest_id", "g.id")
+        .leftJoin("booking_rooms as br", "b.id", "br.booking_id")
         .where("b.hotel_code", hotel_code)
         .andWhere(function () {
-          this.where("b.check_out", ">", current_date).andWhere(
-            "b.check_in",
+          this.where("br.check_out", ">", current_date).andWhere(
+            "br.check_in",
             "<=",
             current_date
           );
         })
-        .andWhere("b.status", "checked_in")
+        .andWhere("br.status", "checked_in")
         .limit(limit ? parseInt(limit) : 50)
         .offset(skip ? parseInt(skip) : 0);
 
@@ -367,15 +375,16 @@ class DashBoardModel extends Schema {
         .withSchema(this.RESERVATION_SCHEMA)
         .select("b.id as total")
         .leftJoin("guests as g", "b.guest_id", "g.id")
+        .leftJoin("booking_rooms as br", "b.id", "br.booking_id")
         .where("b.hotel_code", hotel_code)
         .andWhere(function () {
-          this.where("b.check_out", ">", current_date).andWhere(
-            "b.check_in",
+          this.where("br.check_out", ">", current_date).andWhere(
+            "br.check_in",
             "<=",
             current_date
           );
         })
-        .andWhere("b.status", "checked_in")
+        .andWhere("br.status", "checked_in")
         .first();
       return {
         data,
@@ -436,11 +445,15 @@ class DashBoardModel extends Schema {
     limit?: string;
     skip?: string;
   }) {
-    return await this.db("guests")
+    return await this.db("guests as g")
       .withSchema(this.RESERVATION_SCHEMA)
-      .select("country", this.db.raw("count(id) as total_guests"))
-      .where("hotel_code", hotel_code)
-      .groupBy("country");
+      .select(
+        "c.country_name as country",
+        this.db.raw("count(g.id) as total_guests")
+      )
+      .joinRaw("LEFT JOIN public.country as c ON g.country_id = c.id")
+      .where("g.hotel_code", hotel_code)
+      .groupBy("c.country_name");
   }
 }
 export default DashBoardModel;
