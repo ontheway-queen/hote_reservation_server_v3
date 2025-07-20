@@ -30,6 +30,7 @@ exports.origin = [
     "https://www.main.d289joll8dty0k.amplifyapp.com",
     "https://thehotel360.com",
     "https://www.thehotel360.com",
+    "https://thehotel360.com",
     "https://admin.thehotel360.com",
     "https://www.admin.thehotel360.com",
 ];
