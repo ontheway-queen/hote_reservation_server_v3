@@ -197,29 +197,32 @@ export class ReservationService extends AbstractServices {
       }
 
       // Find lead guest
-      let leadGuest: IguestReqBody | null = null;
+      // let leadGuest: IguestReqBody | null = null;
 
-      outer: for (const rt of booked_room_types) {
-        for (const room of rt.rooms) {
-          for (const guest of room.guest_info) {
-            if (guest.is_lead_guest) {
-              leadGuest = guest;
-              break outer;
-            }
-          }
-        }
-      }
+      // outer: for (const rt of booked_room_types) {
+      //   for (const room of rt.rooms) {
+      //     for (const guest of room.guest_info) {
+      //       if (guest.is_lead_guest) {
+      //         leadGuest = guest;
+      //         break outer;
+      //       }
+      //     }
+      //   }
+      // }
 
-      if (!leadGuest) {
-        return {
-          success: false,
-          code: this.StatusCode.HTTP_BAD_REQUEST,
-          message: "Lead guest information is required",
-        };
-      }
+      // if (!leadGuest) {
+      //   return {
+      //     success: false,
+      //     code: this.StatusCode.HTTP_BAD_REQUEST,
+      //     message: "Lead guest information is required",
+      //   };
+      // }
 
       // Insert or get lead guest
-      const guest_id = await sub.findOrCreateGuest(leadGuest, hotel_code);
+      const guest_id = await sub.findOrCreateGuest(
+        body.lead_guest_info,
+        hotel_code
+      );
 
       // Create main booking
       const booking = await sub.createMainBooking({
@@ -380,29 +383,32 @@ export class ReservationService extends AbstractServices {
       }
 
       // Find lead guest
-      let leadGuest: IguestReqBody | null = null;
+      // let leadGuest: IguestReqBody | null = null;
 
-      outer: for (const rt of booked_room_types) {
-        for (const room of rt.rooms) {
-          for (const guest of room.guest_info) {
-            if (guest.is_lead_guest) {
-              leadGuest = guest;
-              break outer;
-            }
-          }
-        }
-      }
+      // outer: for (const rt of booked_room_types) {
+      //   for (const room of rt.rooms) {
+      //     for (const guest of room.guest_info) {
+      //       if (guest.is_lead_guest) {
+      //         leadGuest = guest;
+      //         break outer;
+      //       }
+      //     }
+      //   }
+      // }
 
-      if (!leadGuest) {
-        return {
-          success: false,
-          code: this.StatusCode.HTTP_BAD_REQUEST,
-          message: "Lead guest information is required",
-        };
-      }
+      // if (!leadGuest) {
+      //   return {
+      //     success: false,
+      //     code: this.StatusCode.HTTP_BAD_REQUEST,
+      //     message: "Lead guest information is required",
+      //   };
+      // }
 
       // Insert or get lead guest
-      const guest_id = await sub.findOrCreateGuest(leadGuest, hotel_code);
+      const guest_id = await sub.findOrCreateGuest(
+        body.lead_guest_info,
+        hotel_code
+      );
 
       // Create main booking
       const booking = await sub.createMainBooking({
@@ -1150,6 +1156,214 @@ export class ReservationService extends AbstractServices {
         success: true,
         code: this.StatusCode.HTTP_OK,
         message: "Reservation dates modified successfully.",
+      };
+    });
+  }
+
+  public async changeRoomOfAReservation(req: Request) {
+    return this.db.transaction(async (trx) => {
+      const booking_id = Number(req.params.id);
+      const { hotel_code } = req.hotel_admin;
+      const { new_room_id, previous_room_id } = req.body as {
+        previous_room_id: number;
+        new_room_id: number;
+      };
+
+      const reservationModel = this.Model.reservationModel(trx);
+      const invoiceModel = this.Model.hotelInvoiceModel(trx);
+      const sub = new SubReservationService(trx);
+
+      const booking = await reservationModel.getSingleBooking(
+        hotel_code,
+        booking_id
+      );
+      if (!booking) {
+        return {
+          success: false,
+          code: this.StatusCode.HTTP_NOT_FOUND,
+          message: "Booking not found",
+        };
+      }
+
+      console.log({ booking });
+
+      const { booking_rooms } = booking;
+
+      const previouseRoom = booking_rooms.find(
+        (room) => room.room_id === previous_room_id
+      );
+
+      if (!previouseRoom) {
+        return {
+          success: false,
+          code: this.StatusCode.HTTP_BAD_REQUEST,
+          message: "You have given an invalid room that you want to change",
+        };
+      }
+
+      // const get single room
+      const checkNewRoom = await this.Model.RoomModel(trx).getSingleRoom(
+        hotel_code,
+        new_room_id
+      );
+
+      if (!checkNewRoom.length) {
+        return {
+          success: false,
+          code: this.StatusCode.HTTP_NOT_FOUND,
+          message: "New Room not found",
+        };
+      }
+
+      const { room_type_id } = checkNewRoom[0];
+
+      const availableRoomList =
+        await reservationModel.getAllAvailableRoomsByRoomType({
+          hotel_code,
+          check_in: previouseRoom.check_in,
+          check_out: previouseRoom.check_out,
+          room_type_id,
+          exclude_booking_id: booking_id,
+        });
+
+      const isNewRoomAvailable = availableRoomList.find(
+        (room) => room.room_id === new_room_id
+      );
+
+      console.log({ isNewRoomAvailable });
+
+      if (!isNewRoomAvailable) {
+        return {
+          success: false,
+          code: this.StatusCode.HTTP_CONFLICT,
+          message: `Room ${checkNewRoom[0].room_name} is not available for the new dates.`,
+        };
+      }
+
+      const roomFolios = await invoiceModel.getFoliosbySingleBooking({
+        booking_id,
+        hotel_code,
+        type: "room_primary",
+      });
+
+      if (!roomFolios.length) {
+        return {
+          success: false,
+          code: 404,
+          message: "No room-primary folios found.",
+        };
+      }
+
+      console.log({ roomFolios });
+      const prevRoomFolio = roomFolios.find(
+        (rf) => rf.room_id === previous_room_id
+      );
+
+      if (!prevRoomFolio) {
+        return {
+          success: false,
+          code: this.StatusCode.HTTP_BAD_REQUEST,
+          message: "Previous rooms folio not found",
+        };
+      }
+
+      console.log({ prevRoomFolio });
+      const folioEntriesByFolio = await invoiceModel.getFolioEntriesbyFolioID(
+        hotel_code,
+        prevRoomFolio.id
+      );
+
+      console.log({ folioEntriesByFolio });
+
+      const folioEntryIDs = folioEntriesByFolio
+        .filter((fe) => fe.room_id === previous_room_id)
+        .map((fe) => fe.id);
+
+      if (!folioEntryIDs.length) {
+        return {
+          success: false,
+          code: this.StatusCode.HTTP_NOT_FOUND,
+          message: "Folio entries not found by previous room ID",
+        };
+      }
+      console.log({ folioEntryIDs });
+
+      // update folio entries
+      await invoiceModel.updateFolioEntries(
+        { room_id: new_room_id },
+        folioEntryIDs as number[]
+      );
+
+      // update folio
+      await invoiceModel.updateSingleFolio(
+        {
+          room_id: new_room_id,
+          name: `Room ${checkNewRoom[0].room_name} Folio`,
+        },
+        { hotel_code, booking_id, folio_id: prevRoomFolio.id }
+      );
+
+      // update single booking rooms
+      await reservationModel.updateSingleBookingRoom(
+        { room_id: new_room_id },
+        { booking_id, room_id: previous_room_id }
+      );
+
+      // await sub.updateRoomAvailabilityService({
+      //   reservation_type: "booked_room_decrease",
+      //   rooms: [previouseRoom],
+      //   hotel_code,
+      // });
+
+      // await sub.updateRoomAvailabilityService({
+      //   reservation_type: "booked_room_increase",
+      //   rooms: [
+      //     {
+      //       check_in: previouseRoom.check_in,
+      //       check_out: previouseRoom.check_out,
+      //       room_type_id,
+      //     },
+      //   ],
+      //   hotel_code,
+      // });
+
+      return {
+        success: true,
+        code: this.StatusCode.HTTP_OK,
+        message: "Successfully Room has been shifted",
+      };
+    });
+  }
+
+  public async updateOthersOfARoomByBookingID(req: Request) {
+    return this.db.transaction(async (trx) => {
+      const booking_id = Number(req.params.booking_id);
+      const { hotel_code } = req.hotel_admin;
+
+      const reservationModel = this.Model.reservationModel(trx);
+
+      const booking = await reservationModel.getSingleBooking(
+        hotel_code,
+        booking_id
+      );
+      if (!booking) {
+        return {
+          success: false,
+          code: this.StatusCode.HTTP_NOT_FOUND,
+          message: "Booking not found",
+        };
+      }
+
+      // update single booking rooms
+      await reservationModel.updateSingleBookingRoom(req.body, {
+        booking_id,
+        room_id: Number(req.params.room_id),
+      });
+
+      return {
+        success: true,
+        code: this.StatusCode.HTTP_OK,
+        message: "Successfully Updated",
       };
     });
   }

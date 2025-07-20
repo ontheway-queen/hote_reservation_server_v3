@@ -134,7 +134,8 @@ class MConfigurationModel extends schema_1.default {
             return yield this.db("hotel_permission_view")
                 .withSchema(this.RESERVATION_SCHEMA)
                 .select("*")
-                .where({ hotel_code });
+                .where({ hotel_code })
+                .first();
         });
     }
     // get all permission
@@ -161,19 +162,19 @@ class MConfigurationModel extends schema_1.default {
         });
     }
     // create hotel permission
-    deleteHotelPermission(hotel_id, permission_id) {
+    deleteHotelPermission(hotel_code, permission_id) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("hotel_permission")
                 .withSchema(this.RESERVATION_SCHEMA)
                 .whereIn("permission_id", permission_id)
-                .andWhere({ hotel_id })
+                .andWhere({ hotel_code })
                 .delete();
         });
     }
     // delete hotel hotel role permission
     deleteHotelRolePermission(hotel_code, h_permission_id) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("role_permission")
+            return yield this.db("role_permissions")
                 .withSchema(this.RESERVATION_SCHEMA)
                 .whereIn("h_permission_id", h_permission_id)
                 .andWhere({ hotel_code })

@@ -91,12 +91,11 @@ class MConfigurationService extends AbstractServices {
   public async getSingleHotelPermission(req: Request) {
     const { hotel_code } = req.params;
 
-    const data: IhotelPermissions[] =
-      await this.Model.mConfigurationModel().getAllPermissionByHotel(
-        parseInt(hotel_code)
-      );
+    const data = await this.Model.mConfigurationModel().getAllPermissionByHotel(
+      parseInt(hotel_code)
+    );
 
-    const { permissions } = data[0];
+    const { permissions } = data;
 
     const groupedPermissions: any = {};
 
@@ -140,7 +139,7 @@ class MConfigurationService extends AbstractServices {
       );
 
       const existingPermissions: HotelPermission[] =
-        checkHotelPermission[0]?.permissions || [];
+        checkHotelPermission?.permissions || [];
 
       const existingPermissionIds = new Set(
         existingPermissions.map((perm) => perm.permission_id)

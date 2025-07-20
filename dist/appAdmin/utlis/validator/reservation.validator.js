@@ -122,6 +122,16 @@ class ReservationValidator {
             vat: joi_1.default.number().min(0).required(),
             service_charge_percentage: joi_1.default.number().min(0).default(0),
             vat_percentage: joi_1.default.number().min(0).default(0),
+            lead_guest_info: joi_1.default.object({
+                first_name: joi_1.default.string().optional(),
+                last_name: joi_1.default.string().allow("").optional(),
+                email: joi_1.default.string().allow("").optional(),
+                phone: joi_1.default.string().allow("").optional(),
+                country_id: joi_1.default.number().required(),
+                address: joi_1.default.string().allow("").optional(),
+                passport_no: joi_1.default.string().allow("").optional(),
+                type: joi_1.default.string().allow("adult", "child", "infant").required(),
+            }),
             booked_room_types: joi_1.default.array()
                 .items(joi_1.default.object({
                 room_type_id: joi_1.default.number().required(),
@@ -150,7 +160,7 @@ class ReservationValidator {
                         type: joi_1.default.string()
                             .allow("adult", "child", "infant")
                             .required(),
-                        is_lead_guest: joi_1.default.boolean().required(),
+                        is_room_primary_guest: joi_1.default.boolean().required(),
                     })),
                 }))
                     .min(1)
@@ -203,6 +213,16 @@ class ReservationValidator {
             vat: joi_1.default.number().min(0).required(),
             service_charge_percentage: joi_1.default.number().min(0).default(0),
             vat_percentage: joi_1.default.number().min(0).default(0),
+            lead_guest_info: joi_1.default.object({
+                first_name: joi_1.default.string().optional(),
+                last_name: joi_1.default.string().allow("").optional(),
+                email: joi_1.default.string().allow("").optional(),
+                phone: joi_1.default.string().allow("").optional(),
+                country_id: joi_1.default.number().required(),
+                address: joi_1.default.string().allow("").optional(),
+                type: joi_1.default.string().allow("adult", "child", "infant").required(),
+                passport_no: joi_1.default.string().allow("").optional(),
+            }),
             booked_room_types: joi_1.default.array()
                 .items(joi_1.default.object({
                 room_type_id: joi_1.default.number().required(),
@@ -230,8 +250,8 @@ class ReservationValidator {
                         type: joi_1.default.string()
                             .allow("adult", "child", "infant")
                             .required(),
-                        is_lead_guest: joi_1.default.boolean().required(),
                         passport_no: joi_1.default.string().allow("").optional(),
+                        is_room_primary_guest: joi_1.default.boolean().required(),
                     })),
                 }))
                     .min(1)
@@ -333,6 +353,15 @@ class ReservationValidator {
         this.changeDatesOfBooking = joi_1.default.object({
             check_in: joi_1.default.string().required(),
             check_out: joi_1.default.string().required(),
+        });
+        this.changeRoomOfAReservation = joi_1.default.object({
+            previous_room_id: joi_1.default.number().required(),
+            new_room_id: joi_1.default.number().required(),
+        });
+        this.updateOthersOfARoomByBookingID = joi_1.default.object({
+            adults: joi_1.default.number().optional(),
+            children: joi_1.default.number().optional(),
+            cbf: joi_1.default.number().optional(),
         });
         this.changeDatesOfBookingRoom = joi_1.default.object({
             check_in: joi_1.default.string().required(),

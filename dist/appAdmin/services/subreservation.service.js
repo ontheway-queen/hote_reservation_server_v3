@@ -163,23 +163,25 @@ class SubReservationService extends abstract_service_1.default {
                     ]);
                     const booking_room_id = bookingRoomRes.id;
                     // Insert guests and booking_room_guests
-                    for (const guest of room.guest_info) {
-                        const [guestRes] = yield this.Model.guestModel(this.trx).createGuestForGroupBooking({
-                            first_name: guest.first_name,
-                            last_name: guest.last_name,
-                            email: guest.email,
-                            address: guest.address,
-                            country_id: guest.country_id,
-                            phone: guest.phone,
-                            hotel_code,
-                        });
-                        yield this.Model.reservationModel(this.trx).insertBookingRoomGuest({
-                            is_lead_guest: guest.is_lead_guest,
-                            guest_id: guestRes.id,
-                            hotel_code,
-                            booking_room_id,
-                        });
-                    }
+                    if (room === null || room === void 0 ? void 0 : room.guest_info)
+                        for (const guest of room === null || room === void 0 ? void 0 : room.guest_info) {
+                            const [guestRes] = yield this.Model.guestModel(this.trx).createGuestForGroupBooking({
+                                first_name: guest.first_name,
+                                last_name: guest.last_name,
+                                email: guest.email,
+                                address: guest.address,
+                                country_id: guest.country_id,
+                                phone: guest.phone,
+                                hotel_code,
+                            });
+                            yield this.Model.reservationModel(this.trx).insertBookingRoomGuest({
+                                // is_lead_guest: guest.is_lead_guest,
+                                guest_id: guestRes.id,
+                                hotel_code,
+                                is_room_primary_guest: guest.is_room_primary_guest,
+                                booking_room_id,
+                            });
+                        }
                 }
             }
         });
@@ -223,10 +225,11 @@ class SubReservationService extends abstract_service_1.default {
                                 hotel_code,
                             });
                             yield this.Model.reservationModel(this.trx).insertBookingRoomGuest({
-                                is_lead_guest: guest.is_lead_guest,
+                                // is_lead_guest: guest.is_lead_guest,
                                 guest_id: guestRes.id,
                                 hotel_code,
                                 booking_room_id,
+                                is_room_primary_guest: guest.is_room_primary_guest,
                             });
                         }
                     }
@@ -629,7 +632,6 @@ class SubReservationService extends abstract_service_1.default {
                                 posting_type: "Charge",
                                 debit: +((rate * body.service_charge_percentage) / 100).toFixed(2),
                                 credit: 0,
-                                room_id: room.room_id,
                                 description: "Service Charge",
                                 rack_rate: 0,
                             });

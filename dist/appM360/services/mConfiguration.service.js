@@ -84,7 +84,7 @@ class MConfigurationService extends abstract_service_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             const { hotel_code } = req.params;
             const data = yield this.Model.mConfigurationModel().getAllPermissionByHotel(parseInt(hotel_code));
-            const { permissions } = data[0];
+            const { permissions } = data;
             const groupedPermissions = {};
             permissions === null || permissions === void 0 ? void 0 : permissions.forEach((entry) => {
                 const permission_group_id = entry.permission_group_id;
@@ -114,12 +114,11 @@ class MConfigurationService extends abstract_service_1.default {
     updateSingleHotelPermission(req) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
-                var _a;
                 const hotel_code = parseInt(req.params.hotel_code);
                 const { added = [], deleted = [] } = req.body;
                 const model = this.Model.mConfigurationModel(trx);
                 const checkHotelPermission = yield model.getAllPermissionByHotel(hotel_code);
-                const existingPermissions = ((_a = checkHotelPermission[0]) === null || _a === void 0 ? void 0 : _a.permissions) || [];
+                const existingPermissions = (checkHotelPermission === null || checkHotelPermission === void 0 ? void 0 : checkHotelPermission.permissions) || [];
                 const existingPermissionIds = new Set(existingPermissions.map((perm) => perm.permission_id));
                 const existingHPermissionMap = new Map();
                 existingPermissions.forEach((perm) => existingHPermissionMap.set(perm.permission_id, perm.h_permission_id));

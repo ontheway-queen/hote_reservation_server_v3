@@ -119,6 +119,7 @@ AND (
     getAllAvailableRoomsByRoomType(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             const { hotel_code, check_in, check_out, room_type_id, exclude_booking_id, } = payload;
+            console.log({ payload });
             const schema = this.RESERVATION_SCHEMA;
             const availableRoomTypes = () => this.db(`${schema}.room_availability as ra`)
                 .joinRaw(`
@@ -226,6 +227,7 @@ AND (
     }
     updateSingleBookingRoom(payload, where) {
         return __awaiter(this, void 0, void 0, function* () {
+            console.log({ payload });
             return yield this.db("booking_rooms")
                 .withSchema(this.RESERVATION_SCHEMA)
                 .update(payload)
@@ -567,6 +569,7 @@ AND (
                 'adults', br.adults,
                 'children', br.children,
                 'infant', br.infant,
+                'cbf',br.cbf,
                 'base_rate', br.base_rate,
                 'changed_rate', br.changed_rate,
                 'unit_base_rate', br.unit_base_rate,

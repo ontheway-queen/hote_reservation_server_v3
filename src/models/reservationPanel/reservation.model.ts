@@ -165,6 +165,8 @@ AND (
       room_type_id,
       exclude_booking_id,
     } = payload;
+
+    console.log({ payload });
     const schema = this.RESERVATION_SCHEMA;
 
     const availableRoomTypes = () =>
@@ -349,6 +351,7 @@ AND (
 
   public async updateSingleBookingRoom(
     payload: {
+      room_id?: number;
       unit_changed_rate?: number;
       unit_base_rate?: number;
       base_rate?: number;
@@ -365,6 +368,7 @@ AND (
       booking_id: number;
     }
   ) {
+    console.log({ payload });
     return await this.db("booking_rooms")
       .withSchema(this.RESERVATION_SCHEMA)
       .update(payload)
@@ -400,7 +404,8 @@ AND (
 
   public async insertBookingRoomGuest(payload: {
     hotel_code: number;
-    is_lead_guest: boolean;
+    // is_lead_guest: boolean;
+    is_room_primary_guest: boolean;
     booking_room_id: number;
     guest_id: number;
   }) {
@@ -930,6 +935,7 @@ AND (
                 'adults', br.adults,
                 'children', br.children,
                 'infant', br.infant,
+                'cbf',br.cbf,
                 'base_rate', br.base_rate,
                 'changed_rate', br.changed_rate,
                 'unit_base_rate', br.unit_base_rate,

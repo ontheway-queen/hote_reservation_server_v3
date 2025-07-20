@@ -150,11 +150,23 @@ class MConfigurationModel extends Schema {
   }
 
   // get all permission
-  public async getAllPermissionByHotel(hotel_code: number) {
+  public async getAllPermissionByHotel(hotel_code: number): Promise<{
+    hotel_id: number;
+    hotel_code: string;
+    name: string;
+    permissions: {
+      h_permission_id: number;
+      permission_group_id: number;
+      permission_group_name: string;
+      permission_id: number;
+      permission_name: string;
+    }[];
+  }> {
     return await this.db("hotel_permission_view")
       .withSchema(this.RESERVATION_SCHEMA)
       .select("*")
-      .where({ hotel_code });
+      .where({ hotel_code })
+      .first();
   }
 
   // get all permission
@@ -190,13 +202,13 @@ class MConfigurationModel extends Schema {
 
   // create hotel permission
   public async deleteHotelPermission(
-    hotel_id: number,
+    hotel_code: number,
     permission_id: number[]
   ) {
     return await this.db("hotel_permission")
       .withSchema(this.RESERVATION_SCHEMA)
       .whereIn("permission_id", permission_id)
-      .andWhere({ hotel_id })
+      .andWhere({ hotel_code })
       .delete();
   }
 
@@ -205,7 +217,7 @@ class MConfigurationModel extends Schema {
     hotel_code: number,
     h_permission_id: number[]
   ) {
-    return await this.db("role_permission")
+    return await this.db("role_permissions")
       .withSchema(this.RESERVATION_SCHEMA)
       .whereIn("h_permission_id", h_permission_id)
       .andWhere({ hotel_code })

@@ -148,6 +148,34 @@ export class ReservationController extends AbstractController {
     }
   );
 
+  public changeRoomOfAReservation = this.asyncWrapper.wrap(
+    {
+      paramSchema: this.commonValidator.singleParamValidator(),
+      bodySchema: this.validator.changeRoomOfAReservation,
+    },
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.changeRoomOfAReservation(
+        req
+      );
+      res.status(code).json(data);
+    }
+  );
+
+  public updateOthersOfARoomByBookingID = this.asyncWrapper.wrap(
+    {
+      paramSchema: this.commonValidator.doubleParamValidator(
+        "booking_id",
+        "room_id"
+      ),
+      bodySchema: this.validator.updateOthersOfARoomByBookingID,
+    },
+    async (req: Request, res: Response) => {
+      const { code, ...data } =
+        await this.service.updateOthersOfARoomByBookingID(req);
+      res.status(code).json(data);
+    }
+  );
+
   public individualRoomDatesChangeOfBooking = this.asyncWrapper.wrap(
     {
       paramSchema: this.commonValidator.singleParamValidator(),

@@ -36,7 +36,7 @@ class HotelInvoiceModel extends Schema {
   }
 
   public async updateSingleFolio(
-    payload: { is_void?: boolean },
+    payload: { is_void?: boolean; room_id?: number; name?: string },
     conditions: {
       booking_id: number;
       hotel_code: number;
@@ -567,7 +567,7 @@ class HotelInvoiceModel extends Schema {
   }
 
   public async updateFolioEntries(
-    payload: { is_void?: boolean; invoiced?: boolean },
+    payload: { is_void?: boolean; invoiced?: boolean; room_id?: number },
     entryIDs: number[]
   ) {
     return await this.db("folio_entries")

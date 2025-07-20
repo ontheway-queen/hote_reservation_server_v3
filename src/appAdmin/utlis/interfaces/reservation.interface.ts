@@ -199,6 +199,16 @@ export interface IGBookingRequestBody {
   service_charge_percentage: number;
   vat_percentage: number;
   is_payment_given: boolean;
+  lead_guest_info: {
+    first_name: string;
+    last_name: string;
+    email: string;
+    phone: string;
+    country_id: number;
+    address: string;
+    passport_no?: string;
+    type: "adult" | "child" | "infant";
+  };
   booked_room_types: IGBookedRoomTypeRequest[];
   special_requests?: string;
   payment: IbookingReqPayment;
@@ -233,7 +243,7 @@ export interface IGBRoomGuest {
     address: string;
     passport_no?: string;
     type: "adult" | "child" | "infant";
-    is_lead_guest: boolean;
+    is_room_primary_guest: boolean;
   }[];
 }
 
@@ -436,6 +446,7 @@ export interface IUpdateReservationRequestBody {
         address: string;
         type: "adult" | "child" | "infant";
         is_lead_guest: boolean;
+        is_room_primary_guest: boolean;
       }[];
     }[];
   }[];
