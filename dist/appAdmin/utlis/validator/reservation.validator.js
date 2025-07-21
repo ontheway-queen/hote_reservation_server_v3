@@ -315,7 +315,7 @@ class ReservationValidator {
                         type: joi_1.default.string()
                             .allow("adult", "child", "infant")
                             .required(),
-                        is_lead_guest: joi_1.default.boolean().required(),
+                        is_room_primary_guest: joi_1.default.boolean().required(),
                     })),
                 }))
                     .min(1)
@@ -370,6 +370,22 @@ class ReservationValidator {
         });
         this.updateReservationHoldStatusValidator = joi_1.default.object({
             status: joi_1.default.string().allow("confirmed", "canceled").required(),
+        });
+        this.updateOrRemoveGuestFromRoom = joi_1.default.object({
+            remove_guest: joi_1.default.number().optional(),
+            add_guest: joi_1.default.array()
+                .items(joi_1.default.object({
+                first_name: joi_1.default.string().optional(),
+                last_name: joi_1.default.string().allow("").optional(),
+                email: joi_1.default.string().allow("").optional(),
+                phone: joi_1.default.string().allow("").optional(),
+                country_id: joi_1.default.number().required(),
+                address: joi_1.default.string().allow("").optional(),
+                passport_no: joi_1.default.string().allow("").optional(),
+                type: joi_1.default.string().allow("adult", "child", "infant").required(),
+                is_room_primary_guest: joi_1.default.boolean().required(),
+            }))
+                .optional(),
         });
     }
 }

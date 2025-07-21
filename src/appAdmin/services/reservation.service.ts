@@ -3,17 +3,15 @@ import AbstractServices from "../../abstarcts/abstract.service";
 import { IinsertFolioEntriesPayload } from "../utlis/interfaces/invoice.interface";
 import {
   addPaymentReqBody,
-  BookingRequestBody,
   BookingRoom,
   IBookingDetails,
-  IbookingRooms,
+  IGBGuestInfo,
   IGBookingRequestBody,
-  IguestReqBody,
+  IGBRoomGuest,
   IUpdateReservationRequestBody,
 } from "../utlis/interfaces/reservation.interface";
-import { SubReservationService } from "./subreservation.service";
-import CustomError from "../../utils/lib/customEror";
 import { HelperFunction } from "../utlis/library/helperFunction";
+import { SubReservationService } from "./subreservation.service";
 
 export class ReservationService extends AbstractServices {
   constructor() {
@@ -1153,7 +1151,6 @@ export class ReservationService extends AbstractServices {
 
       const reservationModel = this.Model.reservationModel(trx);
       const invoiceModel = this.Model.hotelInvoiceModel(trx);
-      const sub = new SubReservationService(trx);
 
       const booking = await reservationModel.getSingleBooking(
         hotel_code,
@@ -1166,8 +1163,6 @@ export class ReservationService extends AbstractServices {
           message: "Booking not found",
         };
       }
-
-      console.log({ booking });
 
       const { booking_rooms } = booking;
 
@@ -1211,8 +1206,6 @@ export class ReservationService extends AbstractServices {
       const isNewRoomAvailable = availableRoomList.find(
         (room) => room.room_id === new_room_id
       );
-
-      console.log({ isNewRoomAvailable });
 
       if (!isNewRoomAvailable) {
         return {
@@ -1287,7 +1280,7 @@ export class ReservationService extends AbstractServices {
 
       // update single booking rooms
       await reservationModel.updateSingleBookingRoom(
-        { room_id: new_room_id },
+        { room_id: new_room_id, room_type_id },
         { booking_id, room_id: previous_room_id }
       );
 
@@ -2162,6 +2155,126 @@ export class ReservationService extends AbstractServices {
         success: true,
         code: this.StatusCode.HTTP_OK,
         message: this.ResMsg.HTTP_OK,
+      };
+    });
+  }
+
+  public async updateOrRemoveGuestFromRoom(req: Request) {
+    return await this.db.transaction(async (trx) => {
+      const { id: booking_id, room_id } = req.params;
+      const hotel_code = req.hotel_admin.hotel_code;
+
+      const { add_guest, remove_guest } = req.body as {
+        add_guest?: IGBGuestInfo[];
+        remove_guest?: number[];
+      };
+      console.log(req.body);
+      const reservationModel = this.Model.reservationModel();
+      const guestModel = this.Model.guestModel(trx);
+
+      const booking = await reservationModel.getSingleBooking(
+        req.hotel_admin.hotel_code,
+        parseInt(booking_id)
+      );
+
+      if (!booking) {
+        return {
+          success: false,
+          code: this.StatusCode.HTTP_NOT_FOUND,
+          message: "Booking not found",
+        };
+      }
+
+      const { booking_rooms } = booking;
+
+      if (add_guest && add_guest.length) {
+        const room = booking_rooms.find((r) => r.room_id === parseInt(room_id));
+
+        if (!room) {
+          return {
+            success: false,
+            code: this.StatusCode.HTTP_NOT_FOUND,
+            message: "Room not found in this booking",
+          };
+        }
+
+        const hasPrimaryGuest = room.room_guests.some(
+          (g) => g.is_room_primary_guest
+        );
+
+        if (hasPrimaryGuest && add_guest.some((g) => g.is_room_primary_guest)) {
+          return {
+            success: false,
+            code: this.StatusCode.HTTP_BAD_REQUEST,
+            message: "You cannot add more than one primary guest in a room",
+          };
+        }
+
+        //check multiple guest has primary guest
+        if (add_guest.filter((g) => g.is_room_primary_guest).length > 1) {
+          return {
+            success: false,
+            code: this.StatusCode.HTTP_BAD_REQUEST,
+            message: "You cannot add more than one primary guest in a room",
+          };
+        }
+
+        await Promise.all(
+          add_guest.map(async (guest) => {
+            const [guestRes] = await guestModel.createGuestForGroupBooking({
+              first_name: guest.first_name,
+              last_name: guest.last_name,
+              email: guest.email,
+              address: guest.address,
+              country_id: guest.country_id,
+              phone: guest.phone,
+              passport_no: guest.passport_no,
+              hotel_code,
+            });
+
+            await this.Model.reservationModel(trx).insertBookingRoomGuest({
+              guest_id: guestRes.id,
+              hotel_code,
+              booking_room_id: room.id,
+              is_room_primary_guest: guest.is_room_primary_guest,
+            });
+          })
+        );
+      }
+
+      if (remove_guest && remove_guest.length) {
+        const room = booking_rooms.find((r) => r.room_id === parseInt(room_id));
+
+        if (!room) {
+          return {
+            success: false,
+            code: this.StatusCode.HTTP_NOT_FOUND,
+            message: "Room not found in this booking",
+          };
+        }
+
+        const guestsToRemove = room.room_guests.filter((g) =>
+          remove_guest.includes(g.guest_id)
+        );
+
+        if (!guestsToRemove.length) {
+          return {
+            success: false,
+            code: this.StatusCode.HTTP_NOT_FOUND,
+            message: "Guests not found in this room",
+          };
+        }
+
+        await this.Model.reservationModel(trx).deleteBookingRoomGuest({
+          booking_room_id: room.id,
+          guest_ids: guestsToRemove.map((g) => g.guest_id),
+        });
+      }
+
+      return {
+        success: true,
+        code: this.StatusCode.HTTP_OK,
+        message: "Successfully updated room guests",
       };
     });
   }

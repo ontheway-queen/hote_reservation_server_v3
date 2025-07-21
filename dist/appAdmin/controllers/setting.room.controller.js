@@ -31,7 +31,6 @@ class RoomSettingController extends abstract_controller_1.default {
         super();
         this.roomSettingService = new setting_room_service_1.default();
         this.settingValidator = new setting_validator_1.default();
-        //=================== Room Type Controller ======================//
         this.createRoomType = this.asyncWrapper.wrap({ bodySchema: this.settingValidator.createRoomTypeValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
             const _a = yield this.roomSettingService.createRoomType(req), { code } = _a, data = __rest(_a, ["code"]);
             res.status(code).json(data);

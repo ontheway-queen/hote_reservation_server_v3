@@ -317,10 +317,9 @@ class DashBoardModel extends schema_1.default {
     }
     getRoomReport({ current_date, hotel_code, limit, skip, }) {
         return __awaiter(this, void 0, void 0, function* () {
-            console.log({ hotel_code });
             return yield this.db("room_types as rt")
                 .withSchema(this.RESERVATION_SCHEMA)
-                .select("rt.id as room_type_id", "rt.name", this.db.raw(`
+                .select("rt.id as room_type_id", "rt.name", "rt.hotel_code", this.db.raw(`
         COALESCE((
           SELECT json_build_object(
             'total_rooms', ra.total_rooms,
@@ -339,7 +338,8 @@ class DashBoardModel extends schema_1.default {
           'stop_sell', false
         )) as availability
         `, [current_date]))
-                .where("rt.hotel_code", hotel_code);
+                .where("rt.hotel_code", hotel_code)
+                .andWhere("rt.is_deleted", false);
         });
     }
     getGuestDistributionCountryWise({ hotel_code, limit, skip, }) {

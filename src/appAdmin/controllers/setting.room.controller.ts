@@ -10,8 +10,6 @@ class RoomSettingController extends AbstractController {
     super();
   }
 
-  //=================== Room Type Controller ======================//
-
   public createRoomType = this.asyncWrapper.wrap(
     { bodySchema: this.settingValidator.createRoomTypeValidator },
     async (req: Request, res: Response) => {

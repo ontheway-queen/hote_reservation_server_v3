@@ -350,7 +350,7 @@ export class ReservationValidator {
                     type: Joi.string()
                       .allow("adult", "child", "infant")
                       .required(),
-                    is_lead_guest: Joi.boolean().required(),
+                    is_room_primary_guest: Joi.boolean().required(),
                   })
                 ),
               })
@@ -419,5 +419,24 @@ export class ReservationValidator {
 
   public updateReservationHoldStatusValidator = Joi.object({
     status: Joi.string().allow("confirmed", "canceled").required(),
+  });
+
+  public updateOrRemoveGuestFromRoom = Joi.object({
+    remove_guest: Joi.number().optional(),
+    add_guest: Joi.array()
+      .items(
+        Joi.object({
+          first_name: Joi.string().optional(),
+          last_name: Joi.string().allow("").optional(),
+          email: Joi.string().allow("").optional(),
+          phone: Joi.string().allow("").optional(),
+          country_id: Joi.number().required(),
+          address: Joi.string().allow("").optional(),
+          passport_no: Joi.string().allow("").optional(),
+          type: Joi.string().allow("adult", "child", "infant").required(),
+          is_room_primary_guest: Joi.boolean().required(),
+        })
+      )
+      .optional(),
   });
 }

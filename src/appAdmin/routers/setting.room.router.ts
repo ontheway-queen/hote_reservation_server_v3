@@ -10,8 +10,6 @@ class RoomSettingRouter extends AbstractRouter {
   }
 
   private callRouter() {
-    //=================== Room Type Router ======================//
-
     // room type
     this.router
       .route("/room-type")

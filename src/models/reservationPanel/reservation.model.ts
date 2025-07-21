@@ -47,15 +47,13 @@ export class ReservationModel extends Schema {
                     SELECT json_agg(
                       jsonb_build_object(
                       'booking_id',b.id,
-                        'check_in', b.check_in,
-                        'check_out', b.check_out,
-                        'booking_status', b.status,
+                        'check_in', br2.check_in,
+                        'check_out', br2.check_out,
+                        'booking_status', br2.status,
                         'guest_id',b.guest_id,
-  
                         'guest_name', CONCAT(g.first_name, ' ', g.last_name),
                         'vat',b.vat,
                         'service_charge',b.service_charge,
-                        'sub_total',b.sub_total,
                         'discount_amount',b.discount_amount,
                         'total_amount',b.total_amount
                       )
@@ -69,14 +67,13 @@ AND (
   OR
   (b.booking_type = 'H' AND b.status != 'canceled')
 )
-
-
-                      AND b.check_in <= ?
-                      AND b.check_out >= ?
-                      AND b.status != ?
+                      AND br2.check_in <= ?
+                      AND br2.check_out >= ?
+                      AND br2.status != ?
                   ), '[]'
                 )
               )
+                order by r.room_name::int asc
             ) FILTER (WHERE r.id IS NOT NULL),
             '[]'
           ) AS rooms
@@ -93,7 +90,8 @@ AND (
       )
       .leftJoin("rooms as r", "rt.id", "r.room_type_id")
       .where("rt.hotel_code", hotel_code)
-      .groupBy("rt.id");
+      .groupBy("rt.id")
+      .orderBy("rt.name", "asc");
   }
 
   public async getAllAvailableRoomsTypeWithAvailableRoomCount(payload: {
@@ -166,7 +164,6 @@ AND (
       exclude_booking_id,
     } = payload;
 
-    console.log({ payload });
     const schema = this.RESERVATION_SCHEMA;
 
     const availableRoomTypes = () =>
@@ -423,6 +420,7 @@ AND (
   public async updateSingleBookingRoom(
     payload: {
       room_id?: number;
+      room_type_id?: number;
       unit_changed_rate?: number;
       unit_base_rate?: number;
       base_rate?: number;
@@ -483,6 +481,20 @@ AND (
     return await this.db("booking_room_guest")
       .withSchema(this.RESERVATION_SCHEMA)
       .insert(payload);
+  }
+
+  public async deleteBookingRoomGuest({
+    booking_room_id,
+    guest_ids,
+  }: {
+    booking_room_id: number;
+    guest_ids: number[];
+  }) {
+    return await this.db("booking_room_guest")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .del()
+      .where({ booking_room_id })
+      .whereIn("guest_id", guest_ids);
   }
 
   public async getAllBooking({
@@ -1025,7 +1037,8 @@ AND (
                         'phone', gg.phone,
                         'address', gg.address,
                         'country', c.country_name,
-                        'nationality', c.nationality
+                        'nationality', c.nationality,
+                        'is_room_primary_guest', brg.is_room_primary_guest
                       )
                     ),
                     '[]'::json

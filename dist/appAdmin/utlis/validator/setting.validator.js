@@ -12,7 +12,6 @@ class SettingValidator {
             description: joi_1.default.string().required(),
             categories_type_id: joi_1.default.number().required(),
             area: joi_1.default.number().required(),
-            building_id: joi_1.default.number().required(),
             room_info: joi_1.default.string().required(),
             rt_amenities: joi_1.default.string().required(),
             bed_count: joi_1.default.number().optional(),
@@ -299,12 +298,8 @@ class SettingValidator {
             rules: joi_1.default.array()
                 .items(joi_1.default.object({
                 days_before: joi_1.default.number().required(),
-                rule_type: joi_1.default.string()
-                    .allow("free", "charge", "no_show")
-                    .required(),
-                fee_type: joi_1.default.string()
-                    .allow("fixed", "percentage")
-                    .optional(),
+                rule_type: joi_1.default.string().allow("free", "charge", "no_show").required(),
+                fee_type: joi_1.default.string().allow("fixed", "percentage").optional(),
                 fee_value: joi_1.default.number().optional(),
             }))
                 .required(),
@@ -329,9 +324,7 @@ class SettingValidator {
         this.createRoomRateValidator = joi_1.default.object({
             name: joi_1.default.string().required(),
             cancellation_policy_id: joi_1.default.number().integer().required(),
-            sources: joi_1.default.array()
-                .items(joi_1.default.number().integer().required())
-                .optional(),
+            sources: joi_1.default.array().items(joi_1.default.number().integer().required()).optional(),
             meal_plan_items: joi_1.default.array()
                 .items(joi_1.default.number().integer().required())
                 .optional(),
@@ -345,9 +338,7 @@ class SettingValidator {
         this.updateRoomRateValidator = joi_1.default.object({
             name: joi_1.default.string().required(),
             cancellation_policy_id: joi_1.default.number().integer().required(),
-            sources: joi_1.default.array()
-                .items(joi_1.default.number().integer().required())
-                .optional(),
+            sources: joi_1.default.array().items(joi_1.default.number().integer().required()).optional(),
             meal_plan_items: joi_1.default.array()
                 .items(joi_1.default.number().integer().required())
                 .optional(),
@@ -374,9 +365,7 @@ class SettingValidator {
                 vat: joi_1.default.number().required(),
             }))
                 .optional(),
-            remove_meal_items: joi_1.default.array()
-                .items(joi_1.default.number().required())
-                .optional(),
+            remove_meal_items: joi_1.default.array().items(joi_1.default.number().required()).optional(),
         });
         this.updateRoomBookingMealOption = joi_1.default.object({
             is_possible_book_meal_opt_with_room: joi_1.default.string().optional(),
@@ -387,9 +376,7 @@ class SettingValidator {
                 vat: joi_1.default.number().required(),
             }))
                 .optional(),
-            remove_meal_items: joi_1.default.array()
-                .items(joi_1.default.number().required())
-                .optional(),
+            remove_meal_items: joi_1.default.array().items(joi_1.default.number().required()).optional(),
         });
         //==================== Floor Setup validation ======================//
         this.createFloorSetupValidator = joi_1.default.object({

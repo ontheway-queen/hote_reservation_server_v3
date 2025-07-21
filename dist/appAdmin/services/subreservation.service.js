@@ -213,6 +213,19 @@ class SubReservationService extends abstract_service_1.default {
                     const booking_room_id = bookingRoomRes.id;
                     // Insert guests and booking_room_guests
                     if (room === null || room === void 0 ? void 0 : room.guest_info) {
+                        console.log(room.guest_info);
+                        let primaryGuestCount = 0;
+                        for (const guest of room === null || room === void 0 ? void 0 : room.guest_info) {
+                            if (guest.is_room_primary_guest) {
+                                primaryGuestCount++;
+                            }
+                        }
+                        if (!primaryGuestCount) {
+                            throw new Error("At least one primary guest is required for each room.");
+                        }
+                        if (primaryGuestCount > 1) {
+                            throw new Error("Only one primary guest is allowed per room.");
+                        }
                         for (const guest of room.guest_info) {
                             const [guestRes] = yield this.Model.guestModel(this.trx).createGuestForGroupBooking({
                                 first_name: guest.first_name,

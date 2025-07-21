@@ -174,6 +174,13 @@ class GuestModel extends schema_1.default {
             };
         });
     }
+    addGuestToRoom(payload) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("booking_room_guests")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .insert(payload);
+        });
+    }
 }
 exports.default = GuestModel;
 //# sourceMappingURL=guestModel.js.map

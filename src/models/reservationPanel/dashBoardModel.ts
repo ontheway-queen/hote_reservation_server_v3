@@ -404,12 +404,12 @@ class DashBoardModel extends Schema {
     limit?: string;
     skip?: string;
   }) {
-    console.log({ hotel_code });
     return await this.db("room_types as rt")
       .withSchema(this.RESERVATION_SCHEMA)
       .select(
         "rt.id as room_type_id",
         "rt.name",
+        "rt.hotel_code",
         this.db.raw(
           `
         COALESCE((
@@ -433,7 +433,8 @@ class DashBoardModel extends Schema {
           [current_date]
         )
       )
-      .where("rt.hotel_code", hotel_code);
+      .where("rt.hotel_code", hotel_code)
+      .andWhere("rt.is_deleted", false);
   }
 
   public async getGuestDistributionCountryWise({

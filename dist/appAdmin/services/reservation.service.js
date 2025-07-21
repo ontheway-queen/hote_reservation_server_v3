@@ -14,8 +14,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ReservationService = void 0;
 const abstract_service_1 = __importDefault(require("../../abstarcts/abstract.service"));
-const subreservation_service_1 = require("./subreservation.service");
 const helperFunction_1 = require("../utlis/library/helperFunction");
+const subreservation_service_1 = require("./subreservation.service");
 class ReservationService extends abstract_service_1.default {
     constructor() {
         super();
@@ -836,7 +836,6 @@ class ReservationService extends abstract_service_1.default {
                 const { new_room_id, previous_room_id } = req.body;
                 const reservationModel = this.Model.reservationModel(trx);
                 const invoiceModel = this.Model.hotelInvoiceModel(trx);
-                const sub = new subreservation_service_1.SubReservationService(trx);
                 const booking = yield reservationModel.getSingleBooking(hotel_code, booking_id);
                 if (!booking) {
                     return {
@@ -845,7 +844,6 @@ class ReservationService extends abstract_service_1.default {
                         message: "Booking not found",
                     };
                 }
-                console.log({ booking });
                 const { booking_rooms } = booking;
                 const previouseRoom = booking_rooms.find((room) => room.room_id === previous_room_id);
                 if (!previouseRoom) {
@@ -873,7 +871,6 @@ class ReservationService extends abstract_service_1.default {
                     exclude_booking_id: booking_id,
                 });
                 const isNewRoomAvailable = availableRoomList.find((room) => room.room_id === new_room_id);
-                console.log({ isNewRoomAvailable });
                 if (!isNewRoomAvailable) {
                     return {
                         success: false,
@@ -924,7 +921,7 @@ class ReservationService extends abstract_service_1.default {
                     name: `Room ${checkNewRoom[0].room_name} Folio`,
                 }, { hotel_code, booking_id, folio_id: prevRoomFolio.id });
                 // update single booking rooms
-                yield reservationModel.updateSingleBookingRoom({ room_id: new_room_id }, { booking_id, room_id: previous_room_id });
+                yield reservationModel.updateSingleBookingRoom({ room_id: new_room_id, room_type_id }, { booking_id, room_id: previous_room_id });
                 // await sub.updateRoomAvailabilityService({
                 //   reservation_type: "booked_room_decrease",
                 //   rooms: [previouseRoom],
@@ -1585,6 +1582,98 @@ class ReservationService extends abstract_service_1.default {
                     success: true,
                     code: this.StatusCode.HTTP_OK,
                     message: this.ResMsg.HTTP_OK,
+                };
+            }));
+        });
+    }
+    updateOrRemoveGuestFromRoom(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
+                const { id: booking_id, room_id } = req.params;
+                const hotel_code = req.hotel_admin.hotel_code;
+                const { add_guest, remove_guest } = req.body;
+                console.log(req.body);
+                const reservationModel = this.Model.reservationModel();
+                const guestModel = this.Model.guestModel(trx);
+                const booking = yield reservationModel.getSingleBooking(req.hotel_admin.hotel_code, parseInt(booking_id));
+                if (!booking) {
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_NOT_FOUND,
+                        message: "Booking not found",
+                    };
+                }
+                const { booking_rooms } = booking;
+                if (add_guest && add_guest.length) {
+                    const room = booking_rooms.find((r) => r.room_id === parseInt(room_id));
+                    if (!room) {
+                        return {
+                            success: false,
+                            code: this.StatusCode.HTTP_NOT_FOUND,
+                            message: "Room not found in this booking",
+                        };
+                    }
+                    const hasPrimaryGuest = room.room_guests.some((g) => g.is_room_primary_guest);
+                    if (hasPrimaryGuest && add_guest.some((g) => g.is_room_primary_guest)) {
+                        return {
+                            success: false,
+                            code: this.StatusCode.HTTP_BAD_REQUEST,
+                            message: "You cannot add more than one primary guest in a room",
+                        };
+                    }
+                    //check multiple guest has primary guest
+                    if (add_guest.filter((g) => g.is_room_primary_guest).length > 1) {
+                        return {
+                            success: false,
+                            code: this.StatusCode.HTTP_BAD_REQUEST,
+                            message: "You cannot add more than one primary guest in a room",
+                        };
+                    }
+                    yield Promise.all(add_guest.map((guest) => __awaiter(this, void 0, void 0, function* () {
+                        const [guestRes] = yield guestModel.createGuestForGroupBooking({
+                            first_name: guest.first_name,
+                            last_name: guest.last_name,
+                            email: guest.email,
+                            address: guest.address,
+                            country_id: guest.country_id,
+                            phone: guest.phone,
+                            passport_no: guest.passport_no,
+                            hotel_code,
+                        });
+                        yield this.Model.reservationModel(trx).insertBookingRoomGuest({
+                            guest_id: guestRes.id,
+                            hotel_code,
+                            booking_room_id: room.id,
+                            is_room_primary_guest: guest.is_room_primary_guest,
+                        });
+                    })));
+                }
+                if (remove_guest && remove_guest.length) {
+                    const room = booking_rooms.find((r) => r.room_id === parseInt(room_id));
+                    if (!room) {
+                        return {
+                            success: false,
+                            code: this.StatusCode.HTTP_NOT_FOUND,
+                            message: "Room not found in this booking",
+                        };
+                    }
+                    const guestsToRemove = room.room_guests.filter((g) => remove_guest.includes(g.guest_id));
+                    if (!guestsToRemove.length) {
+                        return {
+                            success: false,
+                            code: this.StatusCode.HTTP_NOT_FOUND,
+                            message: "Guests not found in this room",
+                        };
+                    }
+                    yield this.Model.reservationModel(trx).deleteBookingRoomGuest({
+                        booking_room_id: room.id,
+                        guest_ids: guestsToRemove.map((g) => g.guest_id),
+                    });
+                }
+                return {
+                    success: true,
+                    code: this.StatusCode.HTTP_OK,
+                    message: "Successfully updated room guests",
                 };
             }));
         });

@@ -301,4 +301,17 @@ export class ReservationController extends AbstractController {
       res.status(code).json(data);
     }
   );
+
+  public updateOrRemoveGuestFromRoom = this.asyncWrapper.wrap(
+    {
+      paramSchema: this.commonValidator.doubleParamValidator("id", "room_id"),
+      querySchema: this.validator.updateOrRemoveGuestFromRoom,
+    },
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.updateOrRemoveGuestFromRoom(
+        req
+      );
+      res.status(code).json(data);
+    }
+  );
 }

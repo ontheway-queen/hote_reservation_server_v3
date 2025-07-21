@@ -227,5 +227,17 @@ class GuestModel extends Schema {
       total: total[0].total,
     };
   }
+
+  public async addGuestToRoom(
+    payload: {
+      booking_room_id: number;
+      guest_id: number;
+      is_room_primary_guest: boolean;
+    }[]
+  ) {
+    return await this.db("booking_room_guests")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .insert(payload);
+  }
 }
 export default GuestModel;

@@ -330,6 +330,25 @@ export class SubReservationService extends AbstractServices {
 
         // Insert guests and booking_room_guests
         if (room?.guest_info) {
+          console.log(room.guest_info);
+          let primaryGuestCount = 0;
+
+          for (const guest of room?.guest_info) {
+            if (guest.is_room_primary_guest) {
+              primaryGuestCount++;
+            }
+          }
+
+          if (!primaryGuestCount) {
+            throw new Error(
+              "At least one primary guest is required for each room."
+            );
+          }
+
+          if (primaryGuestCount > 1) {
+            throw new Error("Only one primary guest is allowed per room.");
+          }
+
           for (const guest of room.guest_info) {
             const [guestRes] = await this.Model.guestModel(
               this.trx

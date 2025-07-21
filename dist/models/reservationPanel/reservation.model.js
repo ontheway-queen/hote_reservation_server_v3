@@ -37,15 +37,13 @@ class ReservationModel extends schema_1.default {
                     SELECT json_agg(
                       jsonb_build_object(
                       'booking_id',b.id,
-                        'check_in', b.check_in,
-                        'check_out', b.check_out,
-                        'booking_status', b.status,
+                        'check_in', br2.check_in,
+                        'check_out', br2.check_out,
+                        'booking_status', br2.status,
                         'guest_id',b.guest_id,
-  
                         'guest_name', CONCAT(g.first_name, ' ', g.last_name),
                         'vat',b.vat,
                         'service_charge',b.service_charge,
-                        'sub_total',b.sub_total,
                         'discount_amount',b.discount_amount,
                         'total_amount',b.total_amount
                       )
@@ -59,14 +57,13 @@ AND (
   OR
   (b.booking_type = 'H' AND b.status != 'canceled')
 )
-
-
-                      AND b.check_in <= ?
-                      AND b.check_out >= ?
-                      AND b.status != ?
+                      AND br2.check_in <= ?
+                      AND br2.check_out >= ?
+                      AND br2.status != ?
                   ), '[]'
                 )
               )
+                order by r.room_name::int asc
             ) FILTER (WHERE r.id IS NOT NULL),
             '[]'
           ) AS rooms
@@ -80,7 +77,8 @@ AND (
             ]))
                 .leftJoin("rooms as r", "rt.id", "r.room_type_id")
                 .where("rt.hotel_code", hotel_code)
-                .groupBy("rt.id");
+                .groupBy("rt.id")
+                .orderBy("rt.name", "asc");
         });
     }
     getAllAvailableRoomsTypeWithAvailableRoomCount(payload) {
@@ -119,7 +117,6 @@ AND (
     getAllAvailableRoomsByRoomType(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             const { hotel_code, check_in, check_out, room_type_id, exclude_booking_id, } = payload;
-            console.log({ payload });
             const schema = this.RESERVATION_SCHEMA;
             const availableRoomTypes = () => this.db(`${schema}.room_availability as ra`)
                 .joinRaw(`
@@ -293,6 +290,15 @@ AND (
             return yield this.db("booking_room_guest")
                 .withSchema(this.RESERVATION_SCHEMA)
                 .insert(payload);
+        });
+    }
+    deleteBookingRoomGuest({ booking_room_id, guest_ids, }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("booking_room_guest")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .del()
+                .where({ booking_room_id })
+                .whereIn("guest_id", guest_ids);
         });
     }
     getAllBooking({ hotel_code, checkin_from, checkin_to, checkout_from, checkout_to, booked_from, booked_to, limit, search, skip, booking_type, status, }) {
@@ -628,7 +634,8 @@ AND (
                         'phone', gg.phone,
                         'address', gg.address,
                         'country', c.country_name,
-                        'nationality', c.nationality
+                        'nationality', c.nationality,
+                        'is_room_primary_guest', brg.is_room_primary_guest
                       )
                     ),
                     '[]'::json

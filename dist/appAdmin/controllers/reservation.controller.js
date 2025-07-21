@@ -185,6 +185,13 @@ class ReservationController extends abstract_controller_1.default {
             const _3 = yield this.service.getFolioEntriesbyFolioID(req), { code } = _3, data = __rest(_3, ["code"]);
             res.status(code).json(data);
         }));
+        this.updateOrRemoveGuestFromRoom = this.asyncWrapper.wrap({
+            paramSchema: this.commonValidator.doubleParamValidator("id", "room_id"),
+            querySchema: this.validator.updateOrRemoveGuestFromRoom,
+        }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _4 = yield this.service.updateOrRemoveGuestFromRoom(req), { code } = _4, data = __rest(_4, ["code"]);
+            res.status(code).json(data);
+        }));
     }
 }
 exports.ReservationController = ReservationController;

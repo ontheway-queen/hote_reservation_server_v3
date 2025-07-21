@@ -85,6 +85,9 @@ class ReservationRouter {
         this.router
             .route("/reservation-type/by/booking/:id")
             .patch(this.controller.updateReservationHoldStatus);
+        this.router
+            .route("/add-or-remove-guest/by/booking_id/:id/room/:room_id")
+            .post(this.controller.updateOrRemoveGuestFromRoom);
     }
 }
 exports.ReservationRouter = ReservationRouter;

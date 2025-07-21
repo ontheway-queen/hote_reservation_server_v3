@@ -11,8 +11,6 @@ class RoomSettingService extends AbstractServices {
     super();
   }
 
-  //=================== Room Type ======================//
-
   // create room type
   public async createRoomType(req: Request) {
     return await this.db.transaction(async (trx) => {

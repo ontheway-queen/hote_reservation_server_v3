@@ -28,7 +28,6 @@ class RoomSettingService extends abstract_service_1.default {
     constructor() {
         super();
     }
-    //=================== Room Type ======================//
     // create room type
     createRoomType(req) {
         return __awaiter(this, void 0, void 0, function* () {

@@ -234,17 +234,19 @@ export interface IGBRoomGuest {
     base_rate: number;
     changed_rate: number;
   };
-  guest_info: {
-    first_name: string;
-    last_name: string;
-    email: string;
-    phone: string;
-    country_id: number;
-    address: string;
-    passport_no?: string;
-    type: "adult" | "child" | "infant";
-    is_room_primary_guest: boolean;
-  }[];
+  guest_info: IGBGuestInfo[];
+}
+
+export interface IGBGuestInfo {
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string;
+  country_id: number;
+  address: string;
+  passport_no?: string;
+  type: "adult" | "child" | "infant";
+  is_room_primary_guest: boolean;
 }
 
 export interface IbookingReqPayment {
@@ -332,6 +334,74 @@ export interface IbookingRooms {
 
 // ------------------------ single booking ----------------------//
 
+// export interface BookingRoom {
+//   id: number;
+//   room_type_id: number;
+//   room_type_name: string;
+//   room_id: number;
+//   room_name: string;
+//   adults: number;
+//   children: number;
+//   infant: number;
+//   base_rate: number;
+//   changed_rate: number;
+//   unit_base_rate: number;
+//   unit_changed_rate: number;
+//   check_in: string;
+//   check_out: string;
+//   status: "confirmed" | "checked_in" | "checked_out";
+// }
+
+// interface BookingGuest {
+//   guest_id: number;
+//   first_name: string;
+//   last_name: string;
+//   guest_email: string;
+//   phone: string;
+//   address: string;
+//   country: string;
+//   passport_no: string;
+//   nationality: string;
+// }
+
+// export interface IBookingDetails extends BookingGuest {
+//   id: number;
+//   booking_reference: string;
+//   booking_date: string; // or Date if parsed
+//   check_in: string;
+//   is_individual_booking: boolean;
+//   check_out: string;
+//   booking_type: string;
+//   status: "confirmed" | "checked_in" | "checked_out";
+//   source_name: string | null;
+//   total_amount: number;
+//   vat_percentage: number;
+//   service_charge_percentage: number;
+//   vat: number;
+//   service_charge: number;
+//   payment_status: string;
+//   comments: string | null;
+//   pickup: boolean;
+//   pickup_from: string | null;
+//   pickup_time: string | null;
+//   drop: boolean;
+//   drop_time: string | null;
+//   drop_to: string | null;
+//   booking_rooms: BookingRoom[];
+// }
+
+export interface BookingGuest {
+  guest_id: number;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string;
+  address: string;
+  country: string;
+  nationality: string;
+  is_room_primary_guest: boolean;
+}
+
 export interface BookingRoom {
   id: number;
   room_type_id: number;
@@ -341,42 +411,33 @@ export interface BookingRoom {
   adults: number;
   children: number;
   infant: number;
+  cbf: number;
   base_rate: number;
   changed_rate: number;
   unit_base_rate: number;
   unit_changed_rate: number;
-  check_in: string;
-  check_out: string;
-  status: "confirmed" | "checked_in" | "checked_out";
+  check_in: string; // formatted as YYYY-MM-DD
+  check_out: string; // formatted as YYYY-MM-DD
+  status: string;
+  room_guests: BookingGuest[] | [];
 }
 
-interface BookingGuest {
-  guest_id: number;
-  first_name: string;
-  last_name: string;
-  guest_email: string;
-  phone: string;
-  address: string;
-  country: string;
-  passport_no: string;
-  nationality: string;
-}
-
-export interface IBookingDetails extends BookingGuest {
+export interface IBookingDetails {
   id: number;
   booking_reference: string;
-  booking_date: string; // or Date if parsed
-  check_in: string;
-  is_individual_booking: boolean;
-  check_out: string;
+  check_in: string; // YYYY-MM-DD
+  check_out: string; // YYYY-MM-DD
+  booking_date: string; // YYYY-MM-DD
   booking_type: string;
-  status: "confirmed" | "checked_in" | "checked_out";
+  status: string;
+  is_individual_booking: boolean;
   source_name: string | null;
   total_amount: number;
-  vat_percentage: number;
-  service_charge_percentage: number;
   vat: number;
+  discount_amount: number;
   service_charge: number;
+  service_charge_percentage: number;
+  vat_percentage: number;
   payment_status: string;
   comments: string | null;
   pickup: boolean;
@@ -385,6 +446,15 @@ export interface IBookingDetails extends BookingGuest {
   drop: boolean;
   drop_time: string | null;
   drop_to: string | null;
+  guest_id: number;
+  first_name: string;
+  last_name: string;
+  guest_email: string;
+  phone: string;
+  address: string;
+  country_name: string;
+  passport_no: string;
+  nationality: string;
   booking_rooms: BookingRoom[];
 }
 
