@@ -661,7 +661,6 @@ class ReservationService extends abstract_service_1.default {
     changeDatesOfBooking(req) {
         return __awaiter(this, void 0, void 0, function* () {
             return this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
-                var _a;
                 const booking_id = Number(req.params.id);
                 const { hotel_code } = req.hotel_admin;
                 const { check_in, check_out } = req.body;
@@ -699,20 +698,7 @@ class ReservationService extends abstract_service_1.default {
                     byType.get(r.room_type_id).push(r);
                 }
                 for (const [room_type_id, roomsOfType] of byType) {
-                    const [availInfo] = yield reservationModel.getAllAvailableRoomsTypeWithAvailableRoomCount({
-                        hotel_code,
-                        check_in,
-                        check_out,
-                        room_type_id,
-                    });
-                    if (roomsOfType.length > ((_a = availInfo === null || availInfo === void 0 ? void 0 : availInfo.available_rooms) !== null && _a !== void 0 ? _a : 0)) {
-                        return {
-                            success: false,
-                            code: this.StatusCode.HTTP_CONFLICT,
-                            message: `More rooms of type #${room_type_id} required than available.`,
-                        };
-                    }
-                    const availableRoomList = yield reservationModel.getAllAvailableRoomsByRoomType({
+                    const availableRoomList = yield reservationModel.getAvailableRoomsByRoomType({
                         hotel_code,
                         check_in,
                         check_out,
@@ -821,13 +807,12 @@ class ReservationService extends abstract_service_1.default {
                     }, { room_id: r.room_id, booking_id });
                 });
                 yield Promise.all(roomsUpdate);
-                //   d) Block inventory for new range
+                //  Block inventory for new range
                 yield sub.updateRoomAvailabilityService({
                     reservation_type: "booked_room_increase",
                     rooms: updateRooms,
                     hotel_code,
                 });
-                /* ─── 5. Update booking header -------------------------------------- */
                 const totalAmount = folioEntries.reduce((sum, e) => { var _a; return sum + ((_a = e.debit) !== null && _a !== void 0 ? _a : 0); }, 0);
                 yield reservationModel.updateRoomBooking({
                     total_amount: totalAmount,
@@ -835,7 +820,6 @@ class ReservationService extends abstract_service_1.default {
                     check_in,
                     check_out,
                 }, hotel_code, booking_id);
-                /* ─── 6. Done -------------------------------------------------------- */
                 return {
                     success: true,
                     code: this.StatusCode.HTTP_OK,

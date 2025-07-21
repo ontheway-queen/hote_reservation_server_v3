@@ -241,6 +241,77 @@ AND (
       });
   }
 
+  public async getAvailableRoomsByRoomType(payload: {
+    check_in: string;
+    check_out: string;
+    hotel_code: number;
+    room_type_id: number;
+    exclude_booking_id?: number;
+  }): Promise<
+    {
+      hotel_code: number;
+      room_id: number;
+      room_name: string;
+      room_type_id: number;
+      room_type_name: string;
+    }[]
+  > {
+    const {
+      hotel_code,
+      check_in,
+      check_out,
+      room_type_id,
+      exclude_booking_id,
+    } = payload;
+
+    const schema = this.RESERVATION_SCHEMA;
+
+    const availableRooms = await this.db
+      .withSchema(schema)
+      .select(
+        "r.id as room_id",
+        "r.room_name",
+        "r.room_type_id",
+        "r.hotel_code"
+      )
+      .from("rooms as r")
+      .leftJoin("room_types as rt", "r.room_type_id", "rt.id")
+      .where("r.hotel_code", hotel_code)
+      .andWhere("r.room_type_id", room_type_id)
+      .andWhere("r.is_deleted", false)
+      .whereNotExists(function () {
+        this.select("*")
+          .from(`${schema}.bookings as b`)
+          .join(`${schema}.booking_rooms as br`, "br.booking_id", "b.id")
+          .whereRaw("br.room_id = r.id")
+          .andWhere("br.check_in", "<", check_out)
+          .andWhere("br.check_out", ">", check_in)
+          .modify((qb) => {
+            if (exclude_booking_id) {
+              qb.andWhere("br.booking_id", "!=", exclude_booking_id);
+            }
+          })
+          .andWhere(function () {
+            this.where(function () {
+              this.where("b.booking_type", "B").whereNotIn("br.status", [
+                "checked_out",
+                "pending",
+                "canceled",
+                "rejected",
+              ]);
+            }).orWhere(function () {
+              this.where("b.booking_type", "H").where(
+                "br.status",
+                "!=",
+                "canceled"
+              );
+            });
+          });
+      });
+
+    return availableRooms;
+  }
+
   public async getAllAvailableRoomsTypeForEachAvailableRoom(payload: {
     check_in: string;
     check_out: string;

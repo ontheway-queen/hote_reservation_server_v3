@@ -968,31 +968,15 @@ export class ReservationService extends AbstractServices {
       }
 
       for (const [room_type_id, roomsOfType] of byType) {
-        const [availInfo] =
-          await reservationModel.getAllAvailableRoomsTypeWithAvailableRoomCount(
-            {
-              hotel_code,
-              check_in,
-              check_out,
-              room_type_id,
-            }
-          );
-        if (roomsOfType.length > (availInfo?.available_rooms ?? 0)) {
-          return {
-            success: false,
-            code: this.StatusCode.HTTP_CONFLICT,
-            message: `More rooms of type #${room_type_id} required than available.`,
-          };
-        }
-
         const availableRoomList =
-          await reservationModel.getAllAvailableRoomsByRoomType({
+          await reservationModel.getAvailableRoomsByRoomType({
             hotel_code,
             check_in,
             check_out,
             room_type_id,
             exclude_booking_id: booking_id,
           });
+
         const idSet = new Set(availableRoomList.map((r) => r.room_id));
 
         for (const r of roomsOfType) {
@@ -1128,14 +1112,13 @@ export class ReservationService extends AbstractServices {
       });
       await Promise.all(roomsUpdate);
 
-      //   d) Block inventory for new range
+      //  Block inventory for new range
       await sub.updateRoomAvailabilityService({
         reservation_type: "booked_room_increase",
         rooms: updateRooms,
         hotel_code,
       });
 
-      /* ─── 5. Update booking header -------------------------------------- */
       const totalAmount = folioEntries.reduce(
         (sum, e) => sum + (e.debit ?? 0),
         0
@@ -1151,7 +1134,6 @@ export class ReservationService extends AbstractServices {
         booking_id
       );
 
-      /* ─── 6. Done -------------------------------------------------------- */
       return {
         success: true,
         code: this.StatusCode.HTTP_OK,
