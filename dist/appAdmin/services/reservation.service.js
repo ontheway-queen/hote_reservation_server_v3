@@ -836,6 +836,7 @@ class ReservationService extends abstract_service_1.default {
                 const { new_room_id, previous_room_id } = req.body;
                 const reservationModel = this.Model.reservationModel(trx);
                 const invoiceModel = this.Model.hotelInvoiceModel(trx);
+                const sub = new subreservation_service_1.SubReservationService(trx);
                 const booking = yield reservationModel.getSingleBooking(hotel_code, booking_id);
                 if (!booking) {
                     return {
@@ -899,9 +900,7 @@ class ReservationService extends abstract_service_1.default {
                         message: "Previous rooms folio not found",
                     };
                 }
-                console.log({ prevRoomFolio });
                 const folioEntriesByFolio = yield invoiceModel.getFolioEntriesbyFolioID(hotel_code, prevRoomFolio.id);
-                console.log({ folioEntriesByFolio });
                 const folioEntryIDs = folioEntriesByFolio
                     .filter((fe) => fe.room_id === previous_room_id)
                     .map((fe) => fe.id);
@@ -922,22 +921,22 @@ class ReservationService extends abstract_service_1.default {
                 }, { hotel_code, booking_id, folio_id: prevRoomFolio.id });
                 // update single booking rooms
                 yield reservationModel.updateSingleBookingRoom({ room_id: new_room_id, room_type_id }, { booking_id, room_id: previous_room_id });
-                // await sub.updateRoomAvailabilityService({
-                //   reservation_type: "booked_room_decrease",
-                //   rooms: [previouseRoom],
-                //   hotel_code,
-                // });
-                // await sub.updateRoomAvailabilityService({
-                //   reservation_type: "booked_room_increase",
-                //   rooms: [
-                //     {
-                //       check_in: previouseRoom.check_in,
-                //       check_out: previouseRoom.check_out,
-                //       room_type_id,
-                //     },
-                //   ],
-                //   hotel_code,
-                // });
+                yield sub.updateRoomAvailabilityService({
+                    reservation_type: "booked_room_decrease",
+                    rooms: [previouseRoom],
+                    hotel_code,
+                });
+                yield sub.updateRoomAvailabilityService({
+                    reservation_type: "booked_room_increase",
+                    rooms: [
+                        {
+                            check_in: previouseRoom.check_in,
+                            check_out: previouseRoom.check_out,
+                            room_type_id,
+                        },
+                    ],
+                    hotel_code,
+                });
                 return {
                     success: true,
                     code: this.StatusCode.HTTP_OK,

@@ -1151,6 +1151,7 @@ export class ReservationService extends AbstractServices {
 
       const reservationModel = this.Model.reservationModel(trx);
       const invoiceModel = this.Model.hotelInvoiceModel(trx);
+      const sub = new SubReservationService(trx);
 
       const booking = await reservationModel.getSingleBooking(
         hotel_code,
@@ -1242,13 +1243,10 @@ export class ReservationService extends AbstractServices {
         };
       }
 
-      console.log({ prevRoomFolio });
       const folioEntriesByFolio = await invoiceModel.getFolioEntriesbyFolioID(
         hotel_code,
         prevRoomFolio.id
       );
-
-      console.log({ folioEntriesByFolio });
 
       const folioEntryIDs = folioEntriesByFolio
         .filter((fe) => fe.room_id === previous_room_id)
@@ -1284,23 +1282,23 @@ export class ReservationService extends AbstractServices {
         { booking_id, room_id: previous_room_id }
       );
 
-      // await sub.updateRoomAvailabilityService({
-      //   reservation_type: "booked_room_decrease",
-      //   rooms: [previouseRoom],
-      //   hotel_code,
-      // });
+      await sub.updateRoomAvailabilityService({
+        reservation_type: "booked_room_decrease",
+        rooms: [previouseRoom],
+        hotel_code,
+      });
 
-      // await sub.updateRoomAvailabilityService({
-      //   reservation_type: "booked_room_increase",
-      //   rooms: [
-      //     {
-      //       check_in: previouseRoom.check_in,
-      //       check_out: previouseRoom.check_out,
-      //       room_type_id,
-      //     },
-      //   ],
-      //   hotel_code,
-      // });
+      await sub.updateRoomAvailabilityService({
+        reservation_type: "booked_room_increase",
+        rooms: [
+          {
+            check_in: previouseRoom.check_in,
+            check_out: previouseRoom.check_out,
+            room_type_id,
+          },
+        ],
+        hotel_code,
+      });
 
       return {
         success: true,
