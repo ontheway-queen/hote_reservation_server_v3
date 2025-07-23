@@ -503,7 +503,7 @@ class RoomModel extends Schema {
       })
       .andWhere("bk.hotel_code", hotel_code)
       .andWhere("bk.check_in", "<=", date)
-      .andWhere("bk.check_out", ">", date)
+      .andWhere("bk.check_out", ">=", date)
       .andWhere("r.is_deleted", false)
       .orderBy("r.id", "asc");
 
