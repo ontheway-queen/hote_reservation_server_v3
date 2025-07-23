@@ -195,23 +195,31 @@ class RoomModel extends schema_1.default {
                 .andWhere({ room_type_id });
         });
     }
-    updateInRoomAvailabilities(hotel_code, room_type_id, payload) {
+    updateInRoomAvailabilities(updates) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("room_availability")
-                .withSchema(this.RESERVATION_SCHEMA)
-                .update(payload)
-                .where({ hotel_code })
-                .andWhere({ room_type_id });
+            return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
+                for (const update of updates) {
+                    yield trx("room_availability")
+                        .withSchema(this.RESERVATION_SCHEMA)
+                        .where({
+                        id: update.id,
+                    })
+                        .update({
+                        total_rooms: update.total_rooms,
+                        available_rooms: update.available_rooms,
+                    });
+                }
+            }));
         });
     }
     getRoomAvailabilitiesByRoomTypeId(hotel_code, room_type_id) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("room_availability")
                 .withSchema(this.RESERVATION_SCHEMA)
-                .select("id", "total_rooms", "available_rooms")
+                .select("id", this.db.raw(`TO_CHAR(date, 'YYYY-MM-DD') as date`), "total_rooms", "booked_rooms", "hold_rooms", "available_rooms")
                 .where("hotel_code", hotel_code)
                 .andWhere("room_type_id", room_type_id)
-                .first();
+                .orderBy("date", "asc");
         });
     }
     updateRoom(roomId, hotel_code, payload) {

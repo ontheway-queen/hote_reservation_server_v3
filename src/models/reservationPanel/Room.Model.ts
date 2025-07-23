@@ -291,27 +291,40 @@ class RoomModel extends Schema {
   }
 
   public async updateInRoomAvailabilities(
-    hotel_code: number,
-    room_type_id: number,
-    payload: Partial<IUpdateRoomAvailabilitiesPayload>
+    updates: IUpdateRoomAvailabilitiesPayload[]
   ) {
-    return await this.db("room_availability")
-      .withSchema(this.RESERVATION_SCHEMA)
-      .update(payload)
-      .where({ hotel_code })
-      .andWhere({ room_type_id });
+    return await this.db.transaction(async (trx) => {
+      for (const update of updates) {
+        await trx("room_availability")
+          .withSchema(this.RESERVATION_SCHEMA)
+          .where({
+            id: update.id,
+          })
+          .update({
+            total_rooms: update.total_rooms,
+            available_rooms: update.available_rooms,
+          });
+      }
+    });
   }
 
   public async getRoomAvailabilitiesByRoomTypeId(
     hotel_code: number,
     room_type_id: number
-  ): Promise<IgetRoomAvailabilitiesByRoomTypeId> {
+  ): Promise<IgetRoomAvailabilitiesByRoomTypeId[]> {
     return await this.db("room_availability")
       .withSchema(this.RESERVATION_SCHEMA)
-      .select("id", "total_rooms", "available_rooms")
+      .select(
+        "id",
+        this.db.raw(`TO_CHAR(date, 'YYYY-MM-DD') as date`),
+        "total_rooms",
+        "booked_rooms",
+        "hold_rooms",
+        "available_rooms"
+      )
       .where("hotel_code", hotel_code)
       .andWhere("room_type_id", room_type_id)
-      .first();
+      .orderBy("date", "asc");
   }
 
   public async updateRoom(
