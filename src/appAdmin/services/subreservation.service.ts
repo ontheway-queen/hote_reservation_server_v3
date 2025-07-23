@@ -1,20 +1,18 @@
 import { Knex } from "knex";
 import {
-  BookingRequestBody,
   BookingRoom,
   IbookingReqPayment,
-  IbookingRooms,
   IGBookedRoomTypeRequest,
   IGBookingRequestBody,
   IguestReqBody,
   RoomRequest,
 } from "../utlis/interfaces/reservation.interface";
 
+import { Request } from "express";
 import AbstractServices from "../../abstarcts/abstract.service";
 import Lib from "../../utils/lib/lib";
-import { HelperFunction } from "../utlis/library/helperFunction";
-import { Request } from "express";
 import { IinsertFolioEntriesPayload } from "../utlis/interfaces/invoice.interface";
+import { HelperFunction } from "../utlis/library/helperFunction";
 
 export class SubReservationService extends AbstractServices {
   constructor(private trx: Knex.Transaction) {
@@ -375,37 +373,6 @@ export class SubReservationService extends AbstractServices {
       }
     }
   }
-
-  // async insertInBookingRoomsBySingleBookingRooms(
-  //   rooms: BookingRoom[],
-  //   booking_id: number,
-  //   nights: number
-  // ) {
-  //   const payload: IbookingRooms[] = [];
-
-  //   rooms.forEach((room) => {
-  //     const base_rate = room.unit_base_rate * nights;
-  //     const changed_rate = room.unit_changed_rate * nights;
-  //     rooms.forEach((room) => {
-  //       payload.push({
-  //         check_in: room.check_in,
-  //         check_out: room.check_out,
-  //         booking_id,
-  //         room_id: room.room_id,
-  //         room_type_id: room.room_type_id,
-  //         adults: room.adults,
-  //         children: room.children,
-  //         infant: room.infant,
-  //         base_rate,
-  //         changed_rate,
-  //         unit_base_rate: room.unit_base_rate,
-  //         unit_changed_rate: room.unit_changed_rate,
-  //       });
-  //     });
-  //   });
-
-  //   await this.Model.reservationModel(this.trx).insertBookingRoom(payload);
-  // }
 
   async updateAvailabilityWhenRoomBooking(
     reservation_type: "booked" | "hold",

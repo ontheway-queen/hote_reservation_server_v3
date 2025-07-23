@@ -39,7 +39,7 @@ class RoomRouter extends abstract_router_1.default {
             .get(this.roomController.getAllOccupiedRooms);
         // get all rooms by room type
         this.router
-            .route("/:room_type_id")
+            .route("/by/room-type/:room_type_id")
             .get(this.roomController.getAllRoomByRoomType);
     }
 }

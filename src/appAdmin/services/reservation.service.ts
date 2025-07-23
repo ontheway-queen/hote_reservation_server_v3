@@ -194,28 +194,6 @@ export class ReservationService extends AbstractServices {
         }
       }
 
-      // Find lead guest
-      // let leadGuest: IguestReqBody | null = null;
-
-      // outer: for (const rt of booked_room_types) {
-      //   for (const room of rt.rooms) {
-      //     for (const guest of room.guest_info) {
-      //       if (guest.is_lead_guest) {
-      //         leadGuest = guest;
-      //         break outer;
-      //       }
-      //     }
-      //   }
-      // }
-
-      // if (!leadGuest) {
-      //   return {
-      //     success: false,
-      //     code: this.StatusCode.HTTP_BAD_REQUEST,
-      //     message: "Lead guest information is required",
-      //   };
-      // }
-
       // Insert or get lead guest
       const guest_id = await sub.findOrCreateGuest(
         body.lead_guest_info,
@@ -379,28 +357,6 @@ export class ReservationService extends AbstractServices {
           }
         }
       }
-
-      // Find lead guest
-      // let leadGuest: IguestReqBody | null = null;
-
-      // outer: for (const rt of booked_room_types) {
-      //   for (const room of rt.rooms) {
-      //     for (const guest of room.guest_info) {
-      //       if (guest.is_lead_guest) {
-      //         leadGuest = guest;
-      //         break outer;
-      //       }
-      //     }
-      //   }
-      // }
-
-      // if (!leadGuest) {
-      //   return {
-      //     success: false,
-      //     code: this.StatusCode.HTTP_BAD_REQUEST,
-      //     message: "Lead guest information is required",
-      //   };
-      // }
 
       // Insert or get lead guest
       const guest_id = await sub.findOrCreateGuest(
@@ -1711,22 +1667,6 @@ export class ReservationService extends AbstractServices {
         };
       }
 
-      // check  due balance exist or not
-      // const hotelInvoiceModel = this.Model.hotelInvoiceModel(trx);
-
-      // const checkDueAmount = await hotelInvoiceModel.getDueAmountByBookingID({
-      //   booking_id,
-      //   hotel_code,
-      // });
-
-      // if (checkDueAmount > 0) {
-      //   return {
-      //     success: false,
-      //     code: this.StatusCode.HTTP_UNPROCESSABLE_ENTITY,
-      //     message: `This guest has ${checkDueAmount} due. So you cannot checkout`,
-      //   };
-      // }
-
       const remainCheckOutRooms: BookingRoom[] = booking_rooms?.filter(
         (room) => room.status !== "checked_out"
       );
@@ -1801,22 +1741,6 @@ export class ReservationService extends AbstractServices {
           message: `You can only check out when the check-out date is or after ${check_out}`,
         };
       }
-
-      // check  due balance exist or not
-      // const hotelInvoiceModel = this.Model.hotelInvoiceModel(trx);
-
-      // const checkDueAmount = await hotelInvoiceModel.getDueAmountByBookingID({
-      //   booking_id,
-      //   hotel_code,
-      // });
-
-      // if (checkDueAmount > 0) {
-      //   return {
-      //     success: false,
-      //     code: this.StatusCode.HTTP_UNPROCESSABLE_ENTITY,
-      //     message: `This guest has ${checkDueAmount} due. So you cannot checkout`,
-      //   };
-      // }
 
       const checkoutRoom = booking_rooms.find((room) => room.room_id == roomID);
 
