@@ -178,11 +178,11 @@ class DashBoardModel extends Schema {
 
     const totalStays = await this.db("bookings as b")
       .withSchema(this.RESERVATION_SCHEMA)
-      .leftJoin("booking_rooms as br", "b.id", "br.booking_id")
-      .count("b.id as total")
+      .join("booking_rooms as br", "b.id", "br.booking_id")
+      .count("br.id as total")
       .where("b.hotel_code", hotel_code)
       .andWhere(function () {
-        this.where("br.check_out", ">", current_date).andWhere(
+        this.where("br.check_out", ">=", current_date).andWhere(
           "br.check_in",
           "<=",
           current_date
@@ -285,15 +285,27 @@ class DashBoardModel extends Schema {
       const data = await this.db("bookings as b")
         .withSchema(this.RESERVATION_SCHEMA)
         .select(
-          "g.id as guest_id",
-          "g.first_name",
-          "g.last_name",
+          // "g.id as guest_id",
+          // "g.first_name",
+          // "g.last_name",
+          this.db.raw("COALESCE(brg.guest_id, b.guest_id) AS guest_id"),
+          this.db.raw("COALESCE(g.first_name, g2.first_name) AS first_name"),
+          this.db.raw("COALESCE(g.last_name, g2.last_name) AS last_name"),
           "br.check_in",
           "br.check_out",
           "br.status"
         )
         .leftJoin("booking_rooms as br", "b.id", "br.booking_id")
-        .leftJoin("guests as g", "b.guest_id", "g.id")
+        // .leftJoin("guests as g", "b.guest_id", "g.id")
+        .leftJoin("booking_room_guest as brg", function () {
+          this.on("br.id", "=", "brg.booking_room_id").andOnVal(
+            "brg.is_room_primary_guest",
+            "=",
+            true
+          );
+        })
+        .leftJoin("guests AS g", "brg.guest_id", "g.id")
+        .leftJoin("guests as g2", "b.guest_id", "g2.id")
         .where("b.hotel_code", hotel_code)
         .andWhere("br.check_in", current_date)
         .andWhere("br.status", "confirmed")
@@ -304,7 +316,16 @@ class DashBoardModel extends Schema {
         .withSchema(this.RESERVATION_SCHEMA)
         .select("b.id as total")
         .leftJoin("booking_rooms as br", "b.id", "br.booking_id")
-        .leftJoin("guests as g", "b.guest_id", "g.id")
+        // .leftJoin("guests as g", "b.guest_id", "g.id")
+        .leftJoin("booking_room_guest as brg", function () {
+          this.on("br.id", "=", "brg.booking_room_id").andOnVal(
+            "brg.is_room_primary_guest",
+            "=",
+            true
+          );
+        })
+        .leftJoin("guests AS g", "brg.guest_id", "g.id")
+        .leftJoin("guests as g2", "b.guest_id", "g2.id")
         .where("b.hotel_code", hotel_code)
         .andWhere("br.check_in", current_date)
         .andWhere("br.status", "confirmed")
@@ -318,15 +339,28 @@ class DashBoardModel extends Schema {
       const data = await this.db("bookings as b")
         .withSchema(this.RESERVATION_SCHEMA)
         .select(
-          "g.id as guest_id",
-          "g.first_name",
-          "g.last_name",
+          // "g.id as guest_id",
+          // "g.first_name",
+          // "g.last_name",
+
+          this.db.raw("COALESCE(brg.guest_id, b.guest_id) AS guest_id"),
+          this.db.raw("COALESCE(g.first_name, g2.first_name) AS first_name"),
+          this.db.raw("COALESCE(g.last_name, g2.last_name) AS last_name"),
           "br.check_in",
           "br.check_out",
           "br.status"
         )
         .leftJoin("booking_rooms as br", "b.id", "br.booking_id")
-        .leftJoin("guests as g", "b.guest_id", "g.id")
+        // .leftJoin("guests as g", "b.guest_id", "g.id")
+        .leftJoin("booking_room_guest as brg", function () {
+          this.on("br.id", "=", "brg.booking_room_id").andOnVal(
+            "brg.is_room_primary_guest",
+            "=",
+            true
+          );
+        })
+        .leftJoin("guests AS g", "brg.guest_id", "g.id")
+        .leftJoin("guests as g2", "b.guest_id", "g2.id")
         .where("b.hotel_code", hotel_code)
         .andWhere("br.check_out", current_date)
         .andWhere("br.status", "checked_in")
@@ -336,8 +370,17 @@ class DashBoardModel extends Schema {
       const total = await this.db("bookings as b")
         .withSchema(this.RESERVATION_SCHEMA)
         .select("b.id as total")
-        .leftJoin("guests as g", "b.guest_id", "g.id")
         .leftJoin("booking_rooms as br", "b.id", "br.booking_id")
+        // .leftJoin("guests as g", "b.guest_id", "g.id")
+        .leftJoin("booking_room_guest as brg", function () {
+          this.on("br.id", "=", "brg.booking_room_id").andOnVal(
+            "brg.is_room_primary_guest",
+            "=",
+            true
+          );
+        })
+        .leftJoin("guests AS g", "brg.guest_id", "g.id")
+        .leftJoin("guests as g2", "b.guest_id", "g2.id")
         .where("b.hotel_code", hotel_code)
         .andWhere("br.status", "checked_in")
         .andWhere("br.check_out", current_date)
@@ -350,15 +393,27 @@ class DashBoardModel extends Schema {
       const data = await this.db("bookings as b")
         .withSchema(this.RESERVATION_SCHEMA)
         .select(
-          "g.id as guest_id",
-          "g.first_name",
-          "g.last_name",
+          // "g.id as guest_id",
+          // "g.first_name",
+          // "g.last_name",
+          this.db.raw("COALESCE(brg.guest_id, b.guest_id) AS guest_id"),
+          this.db.raw("COALESCE(g.first_name, g2.first_name) AS first_name"),
+          this.db.raw("COALESCE(g.last_name, g2.last_name) AS last_name"),
           "br.check_in",
           "br.check_out",
           "br.status"
         )
-        .leftJoin("guests as g", "b.guest_id", "g.id")
         .leftJoin("booking_rooms as br", "b.id", "br.booking_id")
+        // .leftJoin("guests as g", "b.guest_id", "g.id")
+        .leftJoin("booking_room_guest as brg", function () {
+          this.on("br.id", "=", "brg.booking_room_id").andOnVal(
+            "brg.is_room_primary_guest",
+            "=",
+            true
+          );
+        })
+        .leftJoin("guests AS g", "brg.guest_id", "g.id")
+        .leftJoin("guests as g2", "b.guest_id", "g2.id")
         .where("b.hotel_code", hotel_code)
         .andWhere(function () {
           this.where("br.check_out", ">", current_date).andWhere(
@@ -404,6 +459,38 @@ class DashBoardModel extends Schema {
     limit?: string;
     skip?: string;
   }) {
+    // return await this.db("room_types as rt")
+    //   .withSchema(this.RESERVATION_SCHEMA)
+    //   .select(
+    //     "rt.id as room_type_id",
+    //     "rt.name",
+    //     "rt.hotel_code",
+    //     this.db.raw(
+    //       `
+    //     COALESCE((
+    //       SELECT json_build_object(
+    //         'total_rooms', ra.total_rooms,
+    //         'booked_rooms', ra.booked_rooms,
+    //         'hold_rooms', ra.hold_rooms,
+    //         'available_rooms', ra.available_rooms,
+    //         'stop_sell', ra.stop_sell
+    //       )
+    //       FROM hotel_reservation.room_availability as ra
+    //       WHERE rt.id = ra.room_type_id AND ra.date = ?
+    //     ), json_build_object(
+    //       'total_rooms', 0,
+    //       'booked_rooms', 0,
+    //       'hold_rooms', 0,
+    //       'available_rooms', 0,
+    //       'stop_sell', false
+    //     )) as availability
+    //     `,
+    //       [current_date]
+    //     )
+    //   )
+    //   .where("rt.hotel_code", hotel_code)
+    //   .andWhere("rt.is_deleted", false);
+
     return await this.db("room_types as rt")
       .withSchema(this.RESERVATION_SCHEMA)
       .select(
@@ -412,24 +499,26 @@ class DashBoardModel extends Schema {
         "rt.hotel_code",
         this.db.raw(
           `
-        COALESCE((
-          SELECT json_build_object(
-            'total_rooms', ra.total_rooms,
-            'booked_rooms', ra.booked_rooms,
-            'hold_rooms', ra.hold_rooms,
-            'available_rooms', ra.available_rooms,
-            'stop_sell', ra.stop_sell
-          )
-          FROM hotel_reservation.room_availability as ra
-          WHERE rt.id = ra.room_type_id AND ra.date = ?
-        ), json_build_object(
-          'total_rooms', 0,
-          'booked_rooms', 0,
-          'hold_rooms', 0,
-          'available_rooms', 0,
-          'stop_sell', false
-        )) as availability
-        `,
+      COALESCE((
+        SELECT json_build_object(
+          'total_rooms', ra.total_rooms,
+          'booked_rooms', ra.booked_rooms,
+          'hold_rooms', ra.hold_rooms,
+          'available_rooms', ra.available_rooms,
+          'stop_sell', ra.stop_sell
+        )
+        FROM hotel_reservation.room_availability as ra
+        WHERE rt.id = ra.room_type_id 
+          AND ra.date = ? 
+          AND ra.hotel_code = rt.hotel_code
+      ), json_build_object(
+        'total_rooms', 0,
+        'booked_rooms', 0,
+        'hold_rooms', 0,
+        'available_rooms', 0,
+        'stop_sell', false
+      )) as availability
+      `,
           [current_date]
         )
       )

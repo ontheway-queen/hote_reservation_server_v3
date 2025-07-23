@@ -160,6 +160,9 @@ class ReportModel extends Schema {
         "br.children as child_count",
         "br.infant",
         this.db.raw("COALESCE(brg.guest_id, b.guest_id) AS guest_id"),
+        this.db.raw(
+          "COALESCE(brg.is_room_primary_guest, false) AS is_room_primary_guest"
+        ),
         this.db.raw("COALESCE(g.first_name, g2.first_name) AS first_name"),
         this.db.raw("COALESCE(g.last_name, g2.last_name) AS last_name"),
         this.db.raw("COALESCE(g.passport_no, g2.passport_no) AS passport_no"),
@@ -170,19 +173,19 @@ class ReportModel extends Schema {
         this.db.raw("COALESCE(c.nationality, c2.nationality) AS nationality")
       )
       .leftJoin("bookings AS b", "br.booking_id", "b.id")
-      .leftJoin("booking_room_guest as brg", "br.id", "brg.booking_room_id")
-      .leftJoin("guests AS g", "brg.guest_id", "g.id")
-      .leftJoin("guests as g2", "b.guest_id", "g2.id")
-
-      // .leftJoin("booking_room_guest as brg", function () {
-      //   this.on("br.id", "=", "brg.booking_room_id").andOnVal(
-      //     "brg.is_room_primary_guest",
-      //     "=",
-      //     true
-      //   );
-      // })
+      // .leftJoin("booking_room_guest as brg", "br.id", "brg.booking_room_id")
       // .leftJoin("guests AS g", "brg.guest_id", "g.id")
       // .leftJoin("guests as g2", "b.guest_id", "g2.id")
+
+      .leftJoin("booking_room_guest as brg", function () {
+        this.on("br.id", "=", "brg.booking_room_id").andOnVal(
+          "brg.is_room_primary_guest",
+          "=",
+          true
+        );
+      })
+      .leftJoin("guests AS g", "brg.guest_id", "g.id")
+      .leftJoin("guests as g2", "b.guest_id", "g2.id")
       .leftJoin("rooms AS r", "br.room_id", "r.id")
       .joinRaw("Left Join public.country as c on g.country_id = c.id")
       .joinRaw("Left Join public.country as c2 on g2.country_id = c2.id")
@@ -233,7 +236,16 @@ class ReportModel extends Schema {
       .withSchema(this.RESERVATION_SCHEMA)
       .count("br.id as total")
       .leftJoin("bookings AS b", "br.booking_id", "b.id")
-      .leftJoin("booking_room_guest as brg", "br.id", "brg.booking_room_id")
+      // .leftJoin("booking_room_guest as brg", "br.id", "brg.booking_room_id")
+      // .leftJoin("guests AS g", "brg.guest_id", "g.id")
+      // .leftJoin("guests as g2", "b.guest_id", "g2.id")
+      .leftJoin("booking_room_guest as brg", function () {
+        this.on("br.id", "=", "brg.booking_room_id").andOnVal(
+          "brg.is_room_primary_guest",
+          "=",
+          true
+        );
+      })
       .leftJoin("guests AS g", "brg.guest_id", "g.id")
       .leftJoin("guests as g2", "b.guest_id", "g2.id")
       .leftJoin("rooms AS r", "br.room_id", "r.id")
@@ -400,10 +412,22 @@ class ReportModel extends Schema {
         this.db.raw("COALESCE(g.email, g2.email) AS guest_email"),
         this.db.raw("COALESCE(g.phone, g2.phone) AS phone"),
         this.db.raw("COALESCE(c.country_name, c2.country_name) AS country"),
-        this.db.raw("COALESCE(c.nationality, c2.nationality) AS nationality")
+        this.db.raw("COALESCE(c.nationality, c2.nationality) AS nationality"),
+        this.db.raw(
+          "COALESCE(brg.is_room_primary_guest, false) AS is_room_primary_guest"
+        )
       )
       .leftJoin("bookings AS b", "br.booking_id", "b.id")
-      .leftJoin("booking_room_guest as brg", "br.id", "brg.booking_room_id")
+      // .leftJoin("booking_room_guest as brg", "br.id", "brg.booking_room_id")
+      // .leftJoin("guests AS g", "brg.guest_id", "g.id")
+      // .leftJoin("guests as g2", "b.guest_id", "g2.id")
+      .leftJoin("booking_room_guest as brg", function () {
+        this.on("br.id", "=", "brg.booking_room_id").andOnVal(
+          "brg.is_room_primary_guest",
+          "=",
+          true
+        );
+      })
       .leftJoin("guests AS g", "brg.guest_id", "g.id")
       .leftJoin("guests as g2", "b.guest_id", "g2.id")
       .leftJoin("rooms AS r", "br.room_id", "r.id")
@@ -452,7 +476,16 @@ class ReportModel extends Schema {
       .withSchema(this.RESERVATION_SCHEMA)
       .count("br.id as total")
       .leftJoin("bookings AS b", "br.booking_id", "b.id")
-      .leftJoin("booking_room_guest as brg", "br.id", "brg.booking_room_id")
+      // .leftJoin("booking_room_guest as brg", "br.id", "brg.booking_room_id")
+      // .leftJoin("guests AS g", "brg.guest_id", "g.id")
+      // .leftJoin("guests as g2", "b.guest_id", "g2.id")
+      .leftJoin("booking_room_guest as brg", function () {
+        this.on("br.id", "=", "brg.booking_room_id").andOnVal(
+          "brg.is_room_primary_guest",
+          "=",
+          true
+        );
+      })
       .leftJoin("guests AS g", "brg.guest_id", "g.id")
       .leftJoin("guests as g2", "b.guest_id", "g2.id")
       .leftJoin("rooms AS r", "br.room_id", "r.id")
@@ -506,7 +539,16 @@ class ReportModel extends Schema {
         this.db.raw("SUM(br.adults + br.children + br.infant) AS total_person")
       )
       .leftJoin("bookings AS b", "br.booking_id", "b.id")
-      .leftJoin("booking_room_guest as brg", "br.id", "brg.booking_room_id")
+      // .leftJoin("booking_room_guest as brg", "br.id", "brg.booking_room_id")
+      // .leftJoin("guests AS g", "brg.guest_id", "g.id")
+      // .leftJoin("guests as g2", "b.guest_id", "g2.id")
+      .leftJoin("booking_room_guest as brg", function () {
+        this.on("br.id", "=", "brg.booking_room_id").andOnVal(
+          "brg.is_room_primary_guest",
+          "=",
+          true
+        );
+      })
       .leftJoin("guests AS g", "brg.guest_id", "g.id")
       .leftJoin("guests as g2", "b.guest_id", "g2.id")
       .leftJoin("rooms AS r", "br.room_id", "r.id")
@@ -612,10 +654,23 @@ class ReportModel extends Schema {
         this.db.raw("COALESCE(g.email, g2.email) AS guest_email"),
         this.db.raw("COALESCE(g.phone, g2.phone) AS phone"),
         this.db.raw("COALESCE(c.country_name, c2.country_name) AS country"),
-        this.db.raw("COALESCE(c.nationality, c2.nationality) AS nationality")
+        this.db.raw("COALESCE(c.nationality, c2.nationality) AS nationality"),
+        this.db.raw(
+          "COALESCE(brg.is_room_primary_guest, false) AS is_room_primary_guest"
+        )
       )
       .leftJoin("bookings AS b", "br.booking_id", "b.id")
-      .leftJoin("booking_room_guest as brg", "br.id", "brg.booking_room_id")
+      // .leftJoin("booking_room_guest as brg", "br.id", "brg.booking_room_id")
+      // .leftJoin("guests AS g", "brg.guest_id", "g.id")
+      // .leftJoin("guests as g2", "b.guest_id", "g2.id")
+
+      .leftJoin("booking_room_guest as brg", function () {
+        this.on("br.id", "=", "brg.booking_room_id").andOnVal(
+          "brg.is_room_primary_guest",
+          "=",
+          true
+        );
+      })
       .leftJoin("guests AS g", "brg.guest_id", "g.id")
       .leftJoin("guests as g2", "b.guest_id", "g2.id")
       .leftJoin("rooms AS r", "br.room_id", "r.id")
@@ -663,7 +718,16 @@ class ReportModel extends Schema {
       .withSchema(this.RESERVATION_SCHEMA)
       .count("br.id as total")
       .leftJoin("bookings AS b", "br.booking_id", "b.id")
-      .leftJoin("booking_room_guest as brg", "br.id", "brg.booking_room_id")
+      // .leftJoin("booking_room_guest as brg", "br.id", "brg.booking_room_id")
+      // .leftJoin("guests AS g", "brg.guest_id", "g.id")
+      // .leftJoin("guests as g2", "b.guest_id", "g2.id")
+      .leftJoin("booking_room_guest as brg", function () {
+        this.on("br.id", "=", "brg.booking_room_id").andOnVal(
+          "brg.is_room_primary_guest",
+          "=",
+          true
+        );
+      })
       .leftJoin("guests AS g", "brg.guest_id", "g.id")
       .leftJoin("guests as g2", "b.guest_id", "g2.id")
       .leftJoin("rooms AS r", "br.room_id", "r.id")
@@ -717,7 +781,16 @@ class ReportModel extends Schema {
         this.db.raw("SUM(br.adults + br.children + br.infant) AS total_person")
       )
       .leftJoin("bookings AS b", "br.booking_id", "b.id")
-      .leftJoin("booking_room_guest as brg", "br.id", "brg.booking_room_id")
+      // .leftJoin("booking_room_guest as brg", "br.id", "brg.booking_room_id")
+      // .leftJoin("guests AS g", "brg.guest_id", "g.id")
+      // .leftJoin("guests as g2", "b.guest_id", "g2.id")
+      .leftJoin("booking_room_guest as brg", function () {
+        this.on("br.id", "=", "brg.booking_room_id").andOnVal(
+          "brg.is_room_primary_guest",
+          "=",
+          true
+        );
+      })
       .leftJoin("guests AS g", "brg.guest_id", "g.id")
       .leftJoin("guests as g2", "b.guest_id", "g2.id")
       .leftJoin("rooms AS r", "br.room_id", "r.id")

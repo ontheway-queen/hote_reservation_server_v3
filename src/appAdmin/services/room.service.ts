@@ -168,6 +168,112 @@ export class RoomService extends AbstractServices {
     });
   }
 
+  public async createMultipleRooms(req: Request) {
+    const { hotel_code, id: user_id } = req.hotel_admin;
+    const { room_type_id, from_room, to_room, floor_no } = req.body;
+
+    // Validate input
+    if (from_room > to_room) {
+      return {
+        success: false,
+        code: this.StatusCode.HTTP_BAD_REQUEST,
+        message: "From room number cannot be greater than to room number.",
+      };
+    }
+
+    return await this.db.transaction(async (trx) => {
+      const settingModel = this.Model.settingModel(trx);
+      const roomModel = this.Model.RoomModel(trx);
+
+      // Check if room type exists
+      const roomTypeExists = await settingModel.getSingleRoomType(
+        room_type_id,
+        hotel_code
+      );
+
+      if (!roomTypeExists.length) {
+        return {
+          success: false,
+          code: this.StatusCode.HTTP_NOT_FOUND,
+          message: "Room type not found.",
+        };
+      }
+
+      const createdRooms: string[] = [];
+
+      for (
+        let roomNo = Number(from_room);
+        roomNo <= Number(to_room);
+        roomNo++
+      ) {
+        const room_name = roomNo.toString();
+
+        // Check for existing room with the same name
+        const { data: existingRooms } = await roomModel.getAllRoom({
+          hotel_code,
+          exact_name: room_name,
+        });
+
+        if (existingRooms.length === 0) {
+          await roomModel.createRoom({
+            room_name,
+            floor_no,
+            room_type_id,
+            hotel_code,
+            created_by: user_id,
+          });
+          createdRooms.push(room_name);
+        }
+      }
+
+      const createdCount = createdRooms.length;
+
+      if (createdCount > 0) {
+        const availability = await roomModel.getRoomAvailabilitiesByRoomTypeId(
+          hotel_code,
+          room_type_id
+        );
+
+        if (availability) {
+          await roomModel.updateInRoomAvailabilities(hotel_code, room_type_id, {
+            available_rooms:
+              Number(availability.available_rooms) + createdCount,
+            total_rooms: Number(availability.total_rooms) + createdCount,
+          });
+        } else {
+          // Prepare room availability records for the next 365 days
+          const today = new Date();
+          const roomAvailabilityPayload = Array.from(
+            { length: 365 },
+            (_, i) => {
+              const date = new Date(today);
+              date.setUTCDate(date.getUTCDate() + i);
+              const dateStr = date.toISOString().split("T")[0];
+              return {
+                hotel_code,
+                room_type_id,
+                date: dateStr,
+                available_rooms: createdCount,
+                total_rooms: createdCount,
+              };
+            }
+          );
+
+          await roomModel.insertInRoomAvilabilities(roomAvailabilityPayload);
+        }
+      }
+
+      return {
+        success: true,
+        code: this.StatusCode.HTTP_SUCCESSFUL,
+        message:
+          createdCount > 0
+            ? `${createdCount} room(s) created successfully.`
+            : "No new rooms were created due to duplication.",
+      };
+    });
+  }
+
   public async getAllRoom(req: Request) {
     const { search, limit, skip, room_type_id, status } = req.query;
 

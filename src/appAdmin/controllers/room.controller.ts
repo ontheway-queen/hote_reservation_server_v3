@@ -22,6 +22,14 @@ class RoomController extends AbstractController {
     }
   );
 
+  public createMultipleRooms = this.asyncWrapper.wrap(
+    { bodySchema: this.roomvalidator.createMultipleRoomValidator },
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.roomService.createMultipleRooms(req);
+      res.status(code).json(data);
+    }
+  );
+
   public getAllRoom = this.asyncWrapper.wrap(
     { querySchema: this.roomvalidator.getAllHotelRoomQueryValidator },
     async (req: Request, res: Response) => {

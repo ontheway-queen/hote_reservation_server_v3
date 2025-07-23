@@ -137,7 +137,7 @@ AND (
         }
       })
 
-      .groupBy("rt.id")
+      .groupBy("rt.id", "rt.name", "rt.description", "rt.hotel_code")
       .having(this.db.raw("MIN(ra.available_rooms) > 0"));
   }
 
