@@ -1100,10 +1100,13 @@ export class ReservationService extends AbstractServices {
     return this.db.transaction(async (trx) => {
       const booking_id = Number(req.params.id);
       const { hotel_code } = req.hotel_admin;
-      const { new_room_id, previous_room_id } = req.body as {
-        previous_room_id: number;
-        new_room_id: number;
-      };
+      const { new_room_id, previous_room_id, base_rate, changed_rate } =
+        req.body as {
+          previous_room_id: number;
+          new_room_id: number;
+          base_rate: number;
+          changed_rate: number;
+        };
 
       const reservationModel = this.Model.reservationModel(trx);
       const invoiceModel = this.Model.hotelInvoiceModel(trx);
@@ -1127,6 +1130,8 @@ export class ReservationService extends AbstractServices {
         (room) => room.room_id === previous_room_id
       );
 
+      console.log({ previouseRoom });
+
       if (!previouseRoom) {
         return {
           success: false,
@@ -1149,20 +1154,22 @@ export class ReservationService extends AbstractServices {
         };
       }
 
-      const { room_type_id } = checkNewRoom[0];
+      const { room_type_id: new_rooms_rm_type_id } = checkNewRoom[0];
 
       const availableRoomList =
         await reservationModel.getAllAvailableRoomsByRoomType({
           hotel_code,
           check_in: previouseRoom.check_in,
           check_out: previouseRoom.check_out,
-          room_type_id,
+          room_type_id: new_rooms_rm_type_id,
           exclude_booking_id: booking_id,
         });
 
       const isNewRoomAvailable = availableRoomList.find(
         (room) => room.room_id === new_room_id
       );
+
+      console.log({ isNewRoomAvailable });
 
       if (!isNewRoomAvailable) {
         return {
@@ -1186,7 +1193,6 @@ export class ReservationService extends AbstractServices {
         };
       }
 
-      console.log({ roomFolios });
       const prevRoomFolio = roomFolios.find(
         (rf) => rf.room_id === previous_room_id
       );
@@ -1199,29 +1205,95 @@ export class ReservationService extends AbstractServices {
         };
       }
 
+      console.log({ prevRoomFolio });
+
       const folioEntriesByFolio = await invoiceModel.getFolioEntriesbyFolioID(
         hotel_code,
         prevRoomFolio.id
       );
 
-      const folioEntryIDs = folioEntriesByFolio
-        .filter((fe) => fe.room_id === previous_room_id)
-        .map((fe) => fe.id);
+      console.log({ folioEntriesByFolio });
+
+      const folioEntryIDs = folioEntriesByFolio.map((fe) => fe.id);
+
+      console.log({ previous_room_id, folioEntryIDs });
 
       if (!folioEntryIDs.length) {
         return {
           success: false,
-          code: this.StatusCode.HTTP_NOT_FOUND,
-          message: "Folio entries not found by previous room ID",
+          code: this.StatusCode.HTTP_BAD_REQUEST,
+          message: "Previous room folio entries not found",
         };
       }
-      console.log({ folioEntryIDs });
+      await invoiceModel.updateFolioEntries({ is_void: true }, folioEntryIDs);
 
-      // update folio entries
-      await invoiceModel.updateFolioEntries(
-        { room_id: new_room_id },
-        folioEntryIDs as number[]
+      // update single boooking
+      await sub.updateRoomAvailabilityService({
+        reservation_type: "booked_room_decrease",
+        rooms: [previouseRoom],
+        hotel_code,
+      });
+
+      const nights = sub.calculateNights(
+        previouseRoom.check_in,
+        previouseRoom.check_out
       );
+
+      if (nights <= 0) {
+        return {
+          success: false,
+          code: this.StatusCode.HTTP_BAD_REQUEST,
+          message: "Invalid check‑in / check‑out dates.",
+        };
+      }
+
+      const folioEntries: IinsertFolioEntriesPayload[] = [];
+
+      for (let i = 0; i < nights; i++) {
+        const date = sub.addDays(previouseRoom.check_in, i);
+        const tariff = changed_rate;
+        const vat = (tariff * booking.vat_percentage) / 100;
+        const sc = (tariff * booking.service_charge_percentage) / 100;
+
+        // Tariff
+        folioEntries.push({
+          folio_id: prevRoomFolio.id,
+          date,
+          posting_type: "Charge",
+          debit: tariff,
+          credit: 0,
+          room_id: new_room_id,
+          description: "Room Tariff",
+          rack_rate: base_rate,
+        });
+
+        // VAT
+        if (vat > 0) {
+          folioEntries.push({
+            folio_id: prevRoomFolio.id,
+            date,
+            posting_type: "Charge",
+            debit: vat,
+            credit: 0,
+            description: "VAT",
+            rack_rate: 0,
+          });
+        }
+        // Service Charge
+        if (sc > 0) {
+          folioEntries.push({
+            folio_id: prevRoomFolio.id,
+            date,
+            posting_type: "Charge",
+            debit: sc,
+            credit: 0,
+            description: "Service Charge",
+            rack_rate: 0,
+          });
+        }
+      }
+
+      await invoiceModel.insertInFolioEntries(folioEntries);
 
       // update folio
       await invoiceModel.updateSingleFolio(
@@ -1234,15 +1306,16 @@ export class ReservationService extends AbstractServices {
 
       // update single booking rooms
       await reservationModel.updateSingleBookingRoom(
-        { room_id: new_room_id, room_type_id },
+        {
+          room_id: new_room_id,
+          room_type_id: new_rooms_rm_type_id,
+          unit_changed_rate: changed_rate,
+          unit_base_rate: base_rate,
+          changed_rate: changed_rate * nights,
+          base_rate: base_rate * nights,
+        },
         { booking_id, room_id: previous_room_id }
       );
-
-      await sub.updateRoomAvailabilityService({
-        reservation_type: "booked_room_decrease",
-        rooms: [previouseRoom],
-        hotel_code,
-      });
 
       await sub.updateRoomAvailabilityService({
         reservation_type: "booked_room_increase",
@@ -1250,11 +1323,26 @@ export class ReservationService extends AbstractServices {
           {
             check_in: previouseRoom.check_in,
             check_out: previouseRoom.check_out,
-            room_type_id,
+            room_type_id: new_rooms_rm_type_id,
           },
         ],
         hotel_code,
       });
+
+      //get folio entries calculation
+      const { total_debit } =
+        await invoiceModel.getFolioEntriesCalculationByBookingID({
+          booking_id,
+          hotel_code,
+        });
+
+      await reservationModel.updateRoomBooking(
+        {
+          total_amount: total_debit,
+        },
+        hotel_code,
+        booking_id
+      );
 
       return {
         success: true,
@@ -1381,6 +1469,32 @@ export class ReservationService extends AbstractServices {
         };
       }
 
+      const roomFoliosByBooking = await invoiceModel.getFoliosbySingleBooking({
+        booking_id,
+        hotel_code,
+        type: "room_primary",
+      });
+
+      if (!roomFoliosByBooking.length) {
+        return {
+          success: false,
+          code: 404,
+          message: "No room-primary folios found.",
+        };
+      }
+
+      const prevRoomFolio = roomFoliosByBooking.find(
+        (rf) => rf.room_id === room_id
+      );
+
+      if (!prevRoomFolio) {
+        return {
+          success: false,
+          code: this.StatusCode.HTTP_BAD_REQUEST,
+          message: "Previous rooms folio not found",
+        };
+      }
+
       const folioEntries: IinsertFolioEntriesPayload[] = [];
 
       for (let i = 0; i < nights; i++) {
@@ -1391,7 +1505,7 @@ export class ReservationService extends AbstractServices {
 
         // Tariff
         folioEntries.push({
-          folio_id: 0,
+          folio_id: prevRoomFolio.id,
           date,
           posting_type: "Charge",
           debit: tariff,
@@ -1404,12 +1518,11 @@ export class ReservationService extends AbstractServices {
         // VAT
         if (vat > 0) {
           folioEntries.push({
-            folio_id: 0,
+            folio_id: prevRoomFolio.id,
             date,
             posting_type: "Charge",
             debit: vat,
             credit: 0,
-            room_id,
             description: "VAT",
             rack_rate: 0,
           });
@@ -1418,50 +1531,36 @@ export class ReservationService extends AbstractServices {
         // Service Charge
         if (sc > 0) {
           folioEntries.push({
-            folio_id: 0,
+            folio_id: prevRoomFolio.id,
             date,
             posting_type: "Charge",
             debit: sc,
             credit: 0,
-            room_id,
             description: "Service Charge",
             rack_rate: 0,
           });
         }
       }
 
-      /* ─── 5. Void OLD folio entries for this room ───────────────────────── */
-      const roomFolios =
-        await invoiceModel.getFolioWithEntriesbySingleBookingAndRoomID({
-          booking_id,
-          hotel_code,
-          room_ids: [room_id],
-        });
+      const folioEntriesByFolio = await invoiceModel.getFolioEntriesbyFolioID(
+        hotel_code,
+        prevRoomFolio.id
+      );
 
-      if (!roomFolios.length) {
-        return { success: false, code: 404, message: "No room‑primary folio." };
+      console.log({ folioEntriesByFolio });
+
+      const folioEntryIDs = folioEntriesByFolio.map((fe) => fe.id);
+
+      console.log({ room_id, folioEntryIDs });
+
+      if (!folioEntryIDs.length) {
+        return {
+          success: false,
+          code: this.StatusCode.HTTP_NOT_FOUND,
+          message: "No folio entries found for the specified room.",
+        };
       }
-
-      const entryIdsToVoid: number[] = [];
-      for (const f of roomFolios) {
-        const oldEntries = await invoiceModel.getFolioEntriesbyFolioID(
-          hotel_code,
-          f.id
-        );
-        entryIdsToVoid.push(...oldEntries.map((fe) => fe.id));
-
-        // Tag new entries with correct folio_id right here
-        folioEntries.forEach((e) => {
-          e.folio_id = f.id;
-        });
-      }
-
-      if (entryIdsToVoid.length) {
-        await invoiceModel.updateFolioEntries(
-          { is_void: true },
-          entryIdsToVoid
-        );
-      }
+      await invoiceModel.updateFolioEntries({ is_void: true }, folioEntryIDs);
 
       await sub.updateRoomAvailabilityService({
         reservation_type: "booked_room_decrease",

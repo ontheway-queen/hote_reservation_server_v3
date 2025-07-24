@@ -403,6 +403,8 @@ export class ReservationValidator {
   public changeRoomOfAReservation = Joi.object({
     previous_room_id: Joi.number().required(),
     new_room_id: Joi.number().required(),
+    base_rate: Joi.number().required(),
+    changed_rate: Joi.number().required(),
   });
 
   public updateOthersOfARoomByBookingID = Joi.object({

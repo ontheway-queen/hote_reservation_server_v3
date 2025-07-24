@@ -467,6 +467,7 @@ class HotelInvoiceModel extends Schema {
       description: string;
       posting_type: string;
       rack_rate: number;
+      folio_id: number;
       date: string;
       room_id: number | null;
       room_name: string | null;
@@ -479,6 +480,7 @@ class HotelInvoiceModel extends Schema {
       .select(
         "fe.id",
         "fe.description",
+        "fe.folio_id",
         "fe.posting_type",
         "fe.rack_rate",
         this.db.raw(`TO_CHAR(fe.date, 'YYYY-MM-DD') as date`),

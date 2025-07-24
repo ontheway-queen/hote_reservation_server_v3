@@ -357,6 +357,8 @@ class ReservationValidator {
         this.changeRoomOfAReservation = joi_1.default.object({
             previous_room_id: joi_1.default.number().required(),
             new_room_id: joi_1.default.number().required(),
+            base_rate: joi_1.default.number().required(),
+            changed_rate: joi_1.default.number().required(),
         });
         this.updateOthersOfARoomByBookingID = joi_1.default.object({
             adults: joi_1.default.number().optional(),
