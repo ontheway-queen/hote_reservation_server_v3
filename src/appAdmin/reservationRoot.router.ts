@@ -15,6 +15,7 @@ import RoomRouter from "./routers/room.router";
 import SettingRouter from "./routers/setting.router";
 import FolioRouter from "./routers/folio.router";
 import EmployeeSettingRouter from "./routers/employee.router";
+import CommonRouter from "./routers/common.router";
 
 export class ReservationRootRouter {
   public router = Router();
@@ -25,6 +26,11 @@ export class ReservationRootRouter {
   }
 
   private callRouter() {
+    this.router.use(
+      "/common",
+      this.authChecker.hotelAdminAuthChecker,
+      new CommonRouter().router
+    );
     this.router.use(
       "/setting",
       this.authChecker.hotelAdminAuthChecker,

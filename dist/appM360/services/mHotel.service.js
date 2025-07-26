@@ -211,7 +211,7 @@ class MHotelService extends abstract_service_1.default {
             const { id } = req.params;
             const model = this.Model.HotelModel();
             const getSingleHotel = yield model.getSingleHotel({ id: parseInt(id) });
-            if (!getSingleHotel.length) {
+            if (!getSingleHotel) {
                 return {
                     success: false,
                     code: this.StatusCode.HTTP_NOT_FOUND,
@@ -244,112 +244,15 @@ class MHotelService extends abstract_service_1.default {
             return {
                 success: true,
                 code: this.StatusCode.HTTP_OK,
-                data: getSingleHotel[0],
+                data: getSingleHotel,
                 // data: { ...rest, permissions: result },
             };
         });
     }
-    // old
-    // public async updateHotel(req: Request) {
-    //   return await this.db.transaction(async (trx) => {
-    //     const {
-    //       fax,
-    //       phone,
-    //       website_url,
-    //       hotel_email,
-    //       remove_hotel_images,
-    //       expiry_date,
-    //       hotel_name,
-    //       ...hotelData
-    //     } = req.body as Partial<IUpdateHoteReqBody>;
-    //     console.log(req.body, "request body");
-    //     const { id } = req.params;
-    //     const parsedId = parseInt(id);
-    //     if (expiry_date && new Date(expiry_date) < new Date()) {
-    //       return {
-    //         success: false,
-    //         code: this.StatusCode.HTTP_UNPROCESSABLE_ENTITY,
-    //         message: "Expiry date cannot be earlier than today",
-    //       };
-    //     }
-    //     const files = (req.files as Express.Multer.File[]) || [];
-    //     console.log({ files });
-    //     const model = this.Model.HotelModel(trx);
-    //     const existingHotel = await model.getSingleHotel({
-    //       id: parsedId,
-    //     });
-    //     if (!existingHotel || existingHotel.length === 0) {
-    //       return {
-    //         success: false,
-    //         code: this.StatusCode.HTTP_NOT_FOUND,
-    //         message: this.ResMsg.HTTP_NOT_FOUND,
-    //       };
-    //     }
-    //     const { hotel_code } = existingHotel[0];
-    //     const filteredUpdateData: Partial<IUpdateHoteReqBody> =
-    //       Object.fromEntries(
-    //         Object.entries({
-    //           ...hotelData,
-    //           expiry_date,
-    //           name: hotel_name,
-    //         }).filter(([_, value]) => value !== undefined)
-    //       );
-    //     if (Object.keys(filteredUpdateData).length > 0) {
-    //       await model.updateHotel(filteredUpdateData, { id: parsedId });
-    //     }
-    //     // Process uploaded files
-    //     let logoFilename = "";
-    //     const hotelImages: {
-    //       hotel_code: number;
-    //       image_url: string;
-    //       image_caption?: string;
-    //       main_image: string;
-    //     }[] = [];
-    //     for (const file of files) {
-    //       const { fieldname, filename } = file;
-    //       if (fieldname === "logo") {
-    //         logoFilename = filename;
-    //       } else {
-    //         hotelImages.push({
-    //           hotel_code,
-    //           image_url: filename,
-    //           image_caption: undefined,
-    //           main_image: fieldname === "main_image" ? "Y" : "N",
-    //         });
-    //       }
-    //     }
-    //     console.log(logoFilename, "logo filename");
-    //     if (logoFilename || hotel_email || fax || phone || website_url)
-    //       await model.updateHotelContactDetails(
-    //         {
-    //           logo: logoFilename,
-    //           email: hotel_email,
-    //           fax,
-    //           phone,
-    //           website_url,
-    //         },
-    //         hotel_code
-    //       );
-    //     if (hotelImages.length > 0) {
-    //       await model.insertHotelImages(hotelImages);
-    //     }
-    //     if (
-    //       Array.isArray(remove_hotel_images) &&
-    //       remove_hotel_images.length > 0
-    //     ) {
-    //       await model.deleteHotelImage(remove_hotel_images, hotel_code);
-    //     }
-    //     return {
-    //       success: true,
-    //       code: this.StatusCode.HTTP_OK,
-    //       message: "Hotel updated successfully",
-    //     };
-    //   });
-    // }
     updateHotel(req) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
-                const _a = req.body, { fax, phone, website_url, hotel_email, remove_hotel_images, expiry_date, hotel_name } = _a, hotelData = __rest(_a, ["fax", "phone", "website_url", "hotel_email", "remove_hotel_images", "expiry_date", "hotel_name"]);
+                const _a = req.body, { fax, phone, website_url, hotel_email, remove_hotel_images, expiry_date, optional_phone1, hotel_name } = _a, hotelData = __rest(_a, ["fax", "phone", "website_url", "hotel_email", "remove_hotel_images", "expiry_date", "optional_phone1", "hotel_name"]);
                 const { id } = req.params;
                 const parsedId = parseInt(id);
                 const files = req.files || [];
@@ -362,14 +265,14 @@ class MHotelService extends abstract_service_1.default {
                 }
                 const model = this.Model.HotelModel(trx);
                 const existingHotel = yield model.getSingleHotel({ id: parsedId });
-                if (!existingHotel || existingHotel.length === 0) {
+                if (!existingHotel) {
                     return {
                         success: false,
                         code: this.StatusCode.HTTP_NOT_FOUND,
                         message: this.ResMsg.HTTP_NOT_FOUND,
                     };
                 }
-                const { hotel_code } = existingHotel[0];
+                const { hotel_code } = existingHotel;
                 // Filter out only defined fields for update
                 const filteredUpdateData = Object.fromEntries(Object.entries(Object.assign(Object.assign({}, hotelData), { expiry_date, name: hotel_name })).filter(([_, value]) => value !== undefined));
                 if (Object.keys(filteredUpdateData).length > 0) {

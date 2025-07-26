@@ -23,25 +23,18 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.CommonController = void 0;
 const abstract_controller_1 = __importDefault(require("../../abstarcts/abstract.controller"));
-const hotel_service_1 = __importDefault(require("../services/hotel.service"));
-const hotel_validator_1 = __importDefault(require("../utlis/validator/hotel.validator"));
-class HotelController extends abstract_controller_1.default {
+const common_service_1 = require("../services/common.service");
+class CommonController extends abstract_controller_1.default {
     constructor() {
         super();
-        this.hotelValidator = new hotel_validator_1.default();
-        // get my hotel
-        this.getMyHotel = this.asyncWrapper.wrap(null, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _a = yield this.hotelService.getMyHotel(req), { code } = _a, data = __rest(_a, ["code"]);
+        this.service = new common_service_1.CommonService();
+        this.getAllCity = this.asyncWrapper.wrap(null, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _a = yield this.service.getAllCity(req), { code } = _a, data = __rest(_a, ["code"]);
             res.status(code).json(data);
         }));
-        // update my hotel
-        this.updateHotel = this.asyncWrapper.wrap({ bodySchema: this.hotelValidator.updateHotelValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _b = yield this.hotelService.updateHotel(req), { code } = _b, data = __rest(_b, ["code"]);
-            res.status(code).json(data);
-        }));
-        this.hotelService = new hotel_service_1.default();
     }
 }
-exports.default = HotelController;
-//# sourceMappingURL=hotel.controller.js.map
+exports.CommonController = CommonController;
+//# sourceMappingURL=common.controller.js.map

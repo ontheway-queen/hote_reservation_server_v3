@@ -62,11 +62,6 @@ export interface IgetAllHotelUserPayload extends ILimitSkip {
   group?: string;
 }
 
-export interface IsingleHotelUserPayload {
-  email?: string;
-  id?: number;
-}
-
 export interface IupdateHotelUser {
   name?: string;
   logo?: string;
