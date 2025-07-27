@@ -188,6 +188,7 @@ class ReservationService extends abstract_service_1.default {
                     body,
                     guest_id,
                     booking_id: booking.id,
+                    booking_ref: booking.booking_ref,
                     req,
                 });
                 return {

@@ -253,6 +253,7 @@ export class ReservationService extends AbstractServices {
         body,
         guest_id,
         booking_id: booking.id,
+        booking_ref: booking.booking_ref,
         req,
       });
 

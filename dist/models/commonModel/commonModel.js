@@ -20,7 +20,7 @@ class CommonModel extends schema_1.default {
     }
     insertOTP(payload) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("email_otp")
+            return yield this.db('email_otp')
                 .withSchema(this.DBO_SCHEMA)
                 .insert(payload);
         });
@@ -28,20 +28,20 @@ class CommonModel extends schema_1.default {
     getOTP(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             console.log({ payload });
-            const check = yield this.db("email_otp")
+            const check = yield this.db('email_otp')
                 .withSchema(this.DBO_SCHEMA)
-                .select("id", "hashed_otp as otp", "tried")
-                .andWhere("email", payload.email)
-                .andWhere("type", payload.type)
-                .andWhere("matched", 0)
-                .andWhere("tried", "<", 3)
+                .select('id', 'hashed_otp as otp', 'tried')
+                .andWhere('email', payload.email)
+                .andWhere('type', payload.type)
+                .andWhere('matched', 0)
+                .andWhere('tried', '<', 3)
                 .andWhereRaw(`"created_at" + interval '3 minutes' > NOW()`);
             return check;
         });
     }
     updateOTP(payload, where) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("email_otp")
+            return yield this.db('email_otp')
                 .withSchema(this.DBO_SCHEMA)
                 .update(payload)
                 .where(where);
@@ -65,9 +65,9 @@ class CommonModel extends schema_1.default {
     }
     getAllCountry() {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("country")
+            return yield this.db('country')
                 .withSchema(this.PUBLIC_SCHEMA)
-                .select("id", "country_code_2_letter", "country_code_3_letter", "country_name", "nationality");
+                .select('id', 'country_code_2_letter', 'country_code_3_letter', 'country_name', 'nationality');
         });
     }
     // insert audit trail
@@ -79,17 +79,17 @@ class CommonModel extends schema_1.default {
     // get all blood group
     getAllBloodGroup() {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("blood_group")
+            return yield this.db('blood_group')
                 .withSchema(this.DBO_SCHEMA)
-                .orderBy("id", "asc");
+                .orderBy('id', 'asc');
         });
     }
     // get all months
     getMonthList() {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("months")
+            return yield this.db('months')
                 .withSchema(this.DBO_SCHEMA)
-                .orderBy("id", "asc");
+                .orderBy('id', 'asc');
         });
     }
 }

@@ -120,7 +120,7 @@ class ReservationController extends abstract_controller_1.default {
             res.status(code).json(data);
         }));
         this.updateOthersOfARoomByBookingID = this.asyncWrapper.wrap({
-            paramSchema: this.commonValidator.doubleParamValidator("booking_id", "room_id"),
+            paramSchema: this.commonValidator.doubleParamValidator('booking_id', 'room_id'),
             bodySchema: this.validator.updateOthersOfARoomByBookingID,
         }, (req, res) => __awaiter(this, void 0, void 0, function* () {
             const _r = yield this.service.updateOthersOfARoomByBookingID(req), { code } = _r, data = __rest(_r, ["code"]);
@@ -137,7 +137,7 @@ class ReservationController extends abstract_controller_1.default {
             const _t = yield this.service.checkIn(req), { code } = _t, data = __rest(_t, ["code"]);
             res.status(code).json(data);
         }));
-        this.individualRoomCheckIn = this.asyncWrapper.wrap({ paramSchema: this.commonValidator.doubleParamValidator("id", "room_id") }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+        this.individualRoomCheckIn = this.asyncWrapper.wrap({ paramSchema: this.commonValidator.doubleParamValidator('id', 'room_id') }, (req, res) => __awaiter(this, void 0, void 0, function* () {
             const _u = yield this.service.individualRoomCheckIn(req), { code } = _u, data = __rest(_u, ["code"]);
             res.status(code).json(data);
         }));
@@ -145,7 +145,7 @@ class ReservationController extends abstract_controller_1.default {
             const _v = yield this.service.checkOut(req), { code } = _v, data = __rest(_v, ["code"]);
             res.status(code).json(data);
         }));
-        this.individualCheckOut = this.asyncWrapper.wrap({ paramSchema: this.commonValidator.doubleParamValidator("id", "room_id") }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+        this.individualCheckOut = this.asyncWrapper.wrap({ paramSchema: this.commonValidator.doubleParamValidator('id', 'room_id') }, (req, res) => __awaiter(this, void 0, void 0, function* () {
             const _w = yield this.service.individualCheckOut(req), { code } = _w, data = __rest(_w, ["code"]);
             res.status(code).json(data);
         }));
@@ -193,7 +193,7 @@ class ReservationController extends abstract_controller_1.default {
             res.status(code).json(data);
         }));
         this.updateOrRemoveGuestFromRoom = this.asyncWrapper.wrap({
-            paramSchema: this.commonValidator.doubleParamValidator("id", "room_id"),
+            paramSchema: this.commonValidator.doubleParamValidator('id', 'room_id'),
             querySchema: this.validator.updateOrRemoveGuestFromRoom,
         }, (req, res) => __awaiter(this, void 0, void 0, function* () {
             const _5 = yield this.service.updateOrRemoveGuestFromRoom(req), { code } = _5, data = __rest(_5, ["code"]);

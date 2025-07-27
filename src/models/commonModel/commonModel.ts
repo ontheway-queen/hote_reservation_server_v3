@@ -1,14 +1,14 @@
 import {
   IGetOTPPayload,
   IInsertOTPPayload,
-} from "../../common/interfaces/commonInterface";
+} from '../../common/interfaces/commonInterface';
 import {
   IUpdateChangePassModelProps,
   IVerifyModelPassProps,
   TDB,
-} from "../../common/types/commontypes";
+} from '../../common/types/commontypes';
 
-import Schema from "../../utils/miscellaneous/schema";
+import Schema from '../../utils/miscellaneous/schema';
 class CommonModel extends Schema {
   private db: TDB;
 
@@ -18,20 +18,20 @@ class CommonModel extends Schema {
   }
 
   public async insertOTP(payload: IInsertOTPPayload) {
-    return await this.db("email_otp")
+    return await this.db('email_otp')
       .withSchema(this.DBO_SCHEMA)
       .insert(payload);
   }
 
   public async getOTP(payload: IGetOTPPayload) {
     console.log({ payload });
-    const check = await this.db("email_otp")
+    const check = await this.db('email_otp')
       .withSchema(this.DBO_SCHEMA)
-      .select("id", "hashed_otp as otp", "tried")
-      .andWhere("email", payload.email)
-      .andWhere("type", payload.type)
-      .andWhere("matched", 0)
-      .andWhere("tried", "<", 3)
+      .select('id', 'hashed_otp as otp', 'tried')
+      .andWhere('email', payload.email)
+      .andWhere('type', payload.type)
+      .andWhere('matched', 0)
+      .andWhere('tried', '<', 3)
       .andWhereRaw(`"created_at" + interval '3 minutes' > NOW()`);
     return check;
   }
@@ -40,7 +40,7 @@ class CommonModel extends Schema {
     payload: { tried: number; matched?: number },
     where: { id: number }
   ) {
-    return await this.db("email_otp")
+    return await this.db('email_otp')
       .withSchema(this.DBO_SCHEMA)
       .update(payload)
       .where(where);
@@ -74,14 +74,14 @@ class CommonModel extends Schema {
   }
 
   public async getAllCountry() {
-    return await this.db("country")
+    return await this.db('country')
       .withSchema(this.PUBLIC_SCHEMA)
       .select(
-        "id",
-        "country_code_2_letter",
-        "country_code_3_letter",
-        "country_name",
-        "nationality"
+        'id',
+        'country_code_2_letter',
+        'country_code_3_letter',
+        'country_name',
+        'nationality'
       );
   }
   // insert audit trail
@@ -93,16 +93,16 @@ class CommonModel extends Schema {
 
   // get all blood group
   public async getAllBloodGroup(): Promise<{ id: number; name: string }[]> {
-    return await this.db("blood_group")
+    return await this.db('blood_group')
       .withSchema(this.DBO_SCHEMA)
-      .orderBy("id", "asc");
+      .orderBy('id', 'asc');
   }
 
   // get all months
   public async getMonthList(): Promise<{ id: number; name: string }[]> {
-    return await this.db("months")
+    return await this.db('months')
       .withSchema(this.DBO_SCHEMA)
-      .orderBy("id", "asc");
+      .orderBy('id', 'asc');
   }
 }
 export default CommonModel;

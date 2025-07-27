@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const commonModel_1 = __importDefault(require("./commonModel/commonModel"));
 const mAdministration_model_1 = __importDefault(require("./managementsModel/mAdministrationModel/mAdministration.model"));
 const mConfigurationModel_1 = __importDefault(require("./managementsModel/mConfigurationModel/mConfigurationModel"));
-const accountModel_1 = __importDefault(require("./reservationPanel/accountModel"));
+const accountModel_1 = __importDefault(require("./reservationPanel/accountModel/accountModel"));
 const dashBoardModel_1 = __importDefault(require("./reservationPanel/dashBoardModel"));
 const employeeModel_1 = __importDefault(require("./reservationPanel/employeeModel"));
 const expenseModel_1 = __importDefault(require("./reservationPanel/expenseModel"));
@@ -23,6 +23,7 @@ const ReportModel_1 = __importDefault(require("./reservationPanel/ReportModel/Re
 const Room_Model_1 = __importDefault(require("./reservationPanel/Room.Model"));
 const Setting_Model_1 = __importDefault(require("./reservationPanel/Setting.Model"));
 const reservation_model_1 = require("./reservationPanel/reservation.model");
+const dboModel_1 = __importDefault(require("./commonModel/dboModel"));
 class Models {
     constructor(db) {
         this.db = db;
@@ -94,6 +95,9 @@ class Models {
     // configuration model
     mConfigurationModel(trx) {
         return new mConfigurationModel_1.default(trx || this.db);
+    }
+    DboModel(trx) {
+        return new dboModel_1.default(trx || this.db);
     }
 }
 exports.default = Models;

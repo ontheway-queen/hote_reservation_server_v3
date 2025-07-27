@@ -1,5 +1,5 @@
 import { Knex } from 'knex';
-import AccountModel from '../../../models/reservationPanel/accountModel';
+import AccountModel from '../../../models/reservationPanel/accountModel/accountModel';
 
 export default class HelperLib {
   private trx: Knex.Transaction;
