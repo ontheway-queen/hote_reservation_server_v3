@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const accountModel_1 = __importDefault(require("../../../models/reservationPanel/accountModel"));
+const accountModel_1 = __importDefault(require("../../../models/reservationPanel/accountModel/accountModel"));
 class HelperLib {
     constructor(trx) {
         this.trx = trx;

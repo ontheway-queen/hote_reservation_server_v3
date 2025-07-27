@@ -1,6 +1,6 @@
-import { Router } from "express";
-import AuthChecker from "../../common/middleware/authChecker/authChecker";
-import { ReservationController } from "./../controllers/reservation.controller";
+import { Router } from 'express';
+import AuthChecker from '../../common/middleware/authChecker/authChecker';
+import { ReservationController } from './../controllers/reservation.controller';
 
 export class ReservationRouter {
   public router = Router();
@@ -12,103 +12,103 @@ export class ReservationRouter {
   }
 
   private callRouter() {
-    this.router.route("/calendar").get(this.controller.calendar);
+    this.router.route('/calendar').get(this.controller.calendar);
 
     this.router
-      .route("/room-type/availability/search")
+      .route('/room-type/availability/search')
       .get(this.controller.getAllAvailableRoomsTypeWithAvailableRoomCount);
 
     this.router
-      .route("/room-type/by/availabity-room-count")
+      .route('/room-type/by/availabity-room-count')
       .get(this.controller.getAllAvailableRoomsTypeForEachDateAvailableRoom);
 
     this.router
-      .route("/available-room/by/room-type/:id")
+      .route('/available-room/by/room-type/:id')
       .get(this.controller.getAllAvailableRoomsByRoomType);
 
     this.router
-      .route("/booking")
+      .route('/booking')
       .post(this.controller.createBooking)
       .get(this.controller.getAllBooking);
 
     this.router
-      .route("/group-booking")
+      .route('/group-booking')
       .post(this.controller.createGroupBooking)
       .get(this.controller.getAllGroupBooking);
 
     this.router
-      .route("/individual-booking")
+      .route('/individual-booking')
       .get(this.controller.getAllIndividualBooking);
 
     this.router
-      .route("/booking/by/booking-mode")
+      .route('/booking/by/booking-mode')
       .get(this.controller.getArrivalDepStayBookings);
 
     this.router
-      .route("/booking/:id")
+      .route('/booking/:id')
       .get(this.controller.getSingleBooking)
       .patch(this.controller.updateSingleBooking);
 
     this.router
-      .route("/booking/change-dates/by-booking/:id")
+      .route('/booking/change-dates/by-booking/:id')
       .patch(this.controller.changeDatesOfBooking);
 
     this.router
-      .route("/booking/change-room/by-booking/:id")
+      .route('/booking/change-room/by-booking/:id')
       .patch(this.controller.changeRoomOfAReservation);
 
     this.router
-      .route("/booking/room-others/by-booking/:booking_id/by-room-id/:room_id")
+      .route('/booking/room-others/by-booking/:booking_id/by-room-id/:room_id')
       .patch(this.controller.updateOthersOfARoomByBookingID);
 
     this.router
-      .route("/booking/individual-room-dates-change/by-booking/:id")
+      .route('/booking/individual-room-dates-change/by-booking/:id')
       .patch(this.controller.individualRoomDatesChangeOfBooking);
 
     this.router
-      .route("/folios-by/booking_id/:id")
+      .route('/folios-by/booking_id/:id')
       .get(this.controller.getFoliosbySingleBooking);
 
     this.router
-      .route("/folios-with-entries-by/booking_id/:id")
+      .route('/folios-with-entries-by/booking_id/:id')
       .get(this.controller.getFoliosWithEntriesbySingleBooking);
 
     this.router
-      .route("/folio-entries/by/folio-id/:id")
+      .route('/folio-entries/by/folio-id/:id')
       .get(this.controller.getFolioEntriesbyFolioID);
 
-    this.router.route("/add-payment").post(this.controller.addPaymentByFolioID);
+    this.router.route('/add-payment').post(this.controller.addPaymentByFolioID);
 
     this.router
-      .route("/refund-payment")
+      .route('/refund-payment')
       .post(this.controller.refundPaymentByFolioID);
 
     this.router
-      .route("/adjust-balance")
+      .route('/adjust-balance')
       .post(this.controller.adjustAmountByFolioID);
 
-    this.router.route("/add-item").post(this.controller.addItemByFolioID);
+    this.router.route('/add-item').post(this.controller.addItemByFolioID);
 
-    this.router.route("/checkin/by/booking/:id").patch(this.controller.checkIn);
+    this.router.route('/checkin/by/booking/:id').patch(this.controller.checkIn);
 
     this.router
-      .route("/individual-checkin/by/booking-id/:id/room-id/:room_id")
+      .route('/individual-checkin/by/booking-id/:id/room-id/:room_id')
       .patch(this.controller.individualRoomCheckIn);
 
     this.router
-      .route("/checkout/by/booking/:id")
+      .route('/checkout/by/booking/:id')
       .patch(this.controller.checkOut);
 
     this.router
-      .route("/individual-checkout/by/booking-id/:id/room-id/:room_id")
+      .route('/individual-checkout/by/booking-id/:id/room-id/:room_id')
       .patch(this.controller.individualCheckOut);
 
     this.router
-      .route("/reservation-type/by/booking/:id")
+      .route('/reservation-type/by/booking/:id')
       .patch(this.controller.updateReservationHoldStatus);
 
     this.router
-      .route("/add-or-remove-guest/by/booking_id/:id/room/:room_id")
+      .route('/add-or-remove-guest/by/booking_id/:id/room/:room_id')
       .post(this.controller.updateOrRemoveGuestFromRoom);
   }
 }

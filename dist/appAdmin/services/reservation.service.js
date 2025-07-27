@@ -99,7 +99,7 @@ class ReservationService extends abstract_service_1.default {
                     return {
                         success: false,
                         code: this.StatusCode.HTTP_BAD_REQUEST,
-                        message: "Check-in date must be before check-out date",
+                        message: 'Check-in date must be before check-out date',
                     };
                 }
                 const reservationModel = this.Model.reservationModel(trx);
@@ -116,7 +116,7 @@ class ReservationService extends abstract_service_1.default {
                         return {
                             success: false,
                             code: this.StatusCode.HTTP_NOT_FOUND,
-                            message: "Room Assigned is more than available rooms",
+                            message: 'Room Assigned is more than available rooms',
                         };
                     }
                     // check rooms available or not
@@ -171,7 +171,7 @@ class ReservationService extends abstract_service_1.default {
                         created_by: req.hotel_admin.id,
                         discount_amount,
                         drop,
-                        booking_type: reservation_type === "booked" ? "B" : "H",
+                        booking_type: reservation_type === 'booked' ? 'B' : 'H',
                         drop_time,
                         pickup_from,
                         pickup,
@@ -207,12 +207,13 @@ class ReservationService extends abstract_service_1.default {
                     body,
                     guest_id,
                     booking_id: booking.id,
+                    booking_ref: booking.booking_ref,
                     req,
                 });
                 return {
                     success: true,
                     code: this.StatusCode.HTTP_SUCCESSFUL,
-                    message: "Booking created successfully",
+                    message: 'Booking created successfully',
                     data: {
                         booking_id: booking.id,
                     },
@@ -234,7 +235,7 @@ class ReservationService extends abstract_service_1.default {
                     return {
                         success: false,
                         code: this.StatusCode.HTTP_BAD_REQUEST,
-                        message: "Check-in date must be before check-out date",
+                        message: 'Check-in date must be before check-out date',
                     };
                 }
                 const reservationModel = this.Model.reservationModel(trx);
@@ -250,7 +251,7 @@ class ReservationService extends abstract_service_1.default {
                         return {
                             success: false,
                             code: this.StatusCode.HTTP_NOT_FOUND,
-                            message: "Room Assigned is more than available rooms",
+                            message: 'Room Assigned is more than available rooms',
                         };
                     }
                     // check rooms available or not
@@ -305,7 +306,7 @@ class ReservationService extends abstract_service_1.default {
                         created_by: req.hotel_admin.id,
                         discount_amount,
                         drop,
-                        booking_type: reservation_type === "booked" ? "B" : "H",
+                        booking_type: reservation_type === 'booked' ? 'B' : 'H',
                         drop_time,
                         pickup_from,
                         pickup,
@@ -345,7 +346,7 @@ class ReservationService extends abstract_service_1.default {
                 return {
                     success: true,
                     code: this.StatusCode.HTTP_SUCCESSFUL,
-                    message: "Booking created successfully",
+                    message: 'Booking created successfully',
                     data: {
                         booking_id: booking.id,
                     },
@@ -511,8 +512,8 @@ class ReservationService extends abstract_service_1.default {
                             const sc = (tariff * bookingScPct) / 100;
                             newEntries.push({
                                 folio_id: roomFolio.id,
-                                description: "Room Tariff",
-                                posting_type: "Charge",
+                                description: 'Room Tariff',
+                                posting_type: 'Charge',
                                 debit: tariff,
                                 credit: 0,
                                 date,
@@ -522,8 +523,8 @@ class ReservationService extends abstract_service_1.default {
                             if (vat > 0) {
                                 newEntries.push({
                                     folio_id: roomFolio.id,
-                                    description: "VAT",
-                                    posting_type: "Charge",
+                                    description: 'VAT',
+                                    posting_type: 'Charge',
                                     debit: vat,
                                     credit: 0,
                                     date,
@@ -532,8 +533,8 @@ class ReservationService extends abstract_service_1.default {
                             if (sc > 0) {
                                 newEntries.push({
                                     folio_id: roomFolio.id,
-                                    description: "Service Charge",
-                                    posting_type: "Charge",
+                                    description: 'Service Charge',
+                                    posting_type: 'Charge',
                                     debit: sc,
                                     credit: 0,
                                     date,
@@ -550,7 +551,7 @@ class ReservationService extends abstract_service_1.default {
                     const roomsBeingRemoved = booking_rooms.filter((br) => removedIDs.includes(br.room_id));
                     yield reservationModel.deleteBookingRooms(removedIDs);
                     yield sub.updateRoomAvailabilityService({
-                        reservation_type: "booked_room_decrease",
+                        reservation_type: 'booked_room_decrease',
                         rooms: roomsBeingRemoved,
                         hotel_code,
                     });
@@ -581,7 +582,7 @@ class ReservationService extends abstract_service_1.default {
                         hotel_code,
                         is_checked_in: false,
                     });
-                    yield sub.updateAvailabilityWhenRoomBooking("booked", body.add_room_types, hotel_code);
+                    yield sub.updateAvailabilityWhenRoomBooking('booked', body.add_room_types, hotel_code);
                     const { booking_rooms: freshRooms } = (yield reservationModel.getSingleBooking(hotel_code, booking_id));
                     const addedIDs = body.add_room_types.flatMap((rt) => rt.rooms.map((r) => r.room_id));
                     const freshMap = new Map(freshRooms.map((br) => [br.room_id, br]));
@@ -606,10 +607,10 @@ class ReservationService extends abstract_service_1.default {
                         hotel_code,
                         booking_id,
                         room_id: br.room_id,
-                        type: "room_primary",
+                        type: 'room_primary',
                         guest_id,
                         folio_number,
-                        status: "open",
+                        status: 'open',
                         name: `Room ${roomName} Folio`,
                     });
                     const nights = sub.calculateNights(br.check_in, br.check_out);
@@ -621,23 +622,23 @@ class ReservationService extends abstract_service_1.default {
                         const sc = (tariff * bookingScPct) / 100;
                         entries.push({
                             folio_id: roomFolio.id,
-                            description: "Room Tariff",
-                            posting_type: "Charge",
+                            description: 'Room Tariff',
+                            posting_type: 'Charge',
                             debit: tariff,
                             credit: 0,
                             date,
                             room_id: br.room_id,
                         }, {
                             folio_id: roomFolio.id,
-                            description: "VAT",
-                            posting_type: "Charge",
+                            description: 'VAT',
+                            posting_type: 'Charge',
                             debit: vat,
                             credit: 0,
                             date,
                         }, {
                             folio_id: roomFolio.id,
-                            description: "Service Charge",
-                            posting_type: "Charge",
+                            description: 'Service Charge',
+                            posting_type: 'Charge',
                             debit: sc,
                             credit: 0,
                             date,
@@ -653,7 +654,7 @@ class ReservationService extends abstract_service_1.default {
                 return {
                     success: true,
                     code: this.StatusCode.HTTP_OK,
-                    message: "Group reservation updated",
+                    message: 'Group reservation updated',
                 };
             }));
         });
@@ -672,7 +673,7 @@ class ReservationService extends abstract_service_1.default {
                     return {
                         success: false,
                         code: this.StatusCode.HTTP_NOT_FOUND,
-                        message: "Booking not found",
+                        message: 'Booking not found',
                     };
                 }
                 const { booking_rooms, check_in: prev_checkin, check_out: prev_checkout, vat_percentage = 0, service_charge_percentage = 0, } = booking;
@@ -680,7 +681,7 @@ class ReservationService extends abstract_service_1.default {
                     return {
                         success: false,
                         code: this.StatusCode.HTTP_BAD_REQUEST,
-                        message: "You have requested the previous date range.",
+                        message: 'You have requested the previous date range.',
                     };
                 }
                 const nights = sub.calculateNights(check_in, check_out);
@@ -688,7 +689,7 @@ class ReservationService extends abstract_service_1.default {
                     return {
                         success: false,
                         code: this.StatusCode.HTTP_BAD_REQUEST,
-                        message: "Invalid check‑in / check‑out date combination.",
+                        message: 'Invalid check‑in / check‑out date combination.',
                     };
                 }
                 const byType = new Map();
@@ -726,22 +727,22 @@ class ReservationService extends abstract_service_1.default {
                         folioEntries.push({
                             folio_id: 0,
                             date,
-                            posting_type: "Charge",
+                            posting_type: 'Charge',
                             debit: tariff,
                             credit: 0,
                             room_id: room.room_id,
-                            description: "Room Tariff",
+                            description: 'Room Tariff',
                             rack_rate: room.unit_base_rate,
                         });
                         if (vat > 0) {
                             folioEntries.push({
                                 folio_id: 0,
                                 date,
-                                posting_type: "Charge",
+                                posting_type: 'Charge',
                                 debit: vat,
                                 credit: 0,
                                 room_id: room.room_id,
-                                description: "VAT",
+                                description: 'VAT',
                                 rack_rate: 0,
                             });
                         }
@@ -749,11 +750,11 @@ class ReservationService extends abstract_service_1.default {
                             folioEntries.push({
                                 folio_id: 0,
                                 date,
-                                posting_type: "Charge",
+                                posting_type: 'Charge',
                                 debit: sc,
                                 credit: 0,
                                 room_id: room.room_id,
-                                description: "Service Charge",
+                                description: 'Service Charge',
                                 rack_rate: 0,
                             });
                         }
@@ -762,13 +763,13 @@ class ReservationService extends abstract_service_1.default {
                 const roomFolios = yield invoiceModel.getFoliosbySingleBooking({
                     booking_id,
                     hotel_code,
-                    type: "room_primary",
+                    type: 'room_primary',
                 });
                 if (!roomFolios.length) {
                     return {
                         success: false,
                         code: 404,
-                        message: "No room-primary folios found.",
+                        message: 'No room-primary folios found.',
                     };
                 }
                 const entryIdsToVoid = [];
@@ -789,7 +790,7 @@ class ReservationService extends abstract_service_1.default {
                 }
                 yield invoiceModel.insertInFolioEntries(folioEntries);
                 yield sub.updateRoomAvailabilityService({
-                    reservation_type: "booked_room_decrease",
+                    reservation_type: 'booked_room_decrease',
                     rooms: booking_rooms,
                     hotel_code,
                 });
@@ -809,7 +810,7 @@ class ReservationService extends abstract_service_1.default {
                 yield Promise.all(roomsUpdate);
                 //  Block inventory for new range
                 yield sub.updateRoomAvailabilityService({
-                    reservation_type: "booked_room_increase",
+                    reservation_type: 'booked_room_increase',
                     rooms: updateRooms,
                     hotel_code,
                 });
@@ -823,7 +824,7 @@ class ReservationService extends abstract_service_1.default {
                 return {
                     success: true,
                     code: this.StatusCode.HTTP_OK,
-                    message: "Reservation dates modified successfully.",
+                    message: 'Reservation dates modified successfully.',
                 };
             }));
         });
@@ -842,7 +843,7 @@ class ReservationService extends abstract_service_1.default {
                     return {
                         success: false,
                         code: this.StatusCode.HTTP_NOT_FOUND,
-                        message: "Booking not found",
+                        message: 'Booking not found',
                     };
                 }
                 const { booking_rooms } = booking;
@@ -851,7 +852,7 @@ class ReservationService extends abstract_service_1.default {
                     return {
                         success: false,
                         code: this.StatusCode.HTTP_BAD_REQUEST,
-                        message: "You have given an invalid room that you want to change",
+                        message: 'You have given an invalid room that you want to change',
                     };
                 }
                 // const get single room
@@ -860,7 +861,7 @@ class ReservationService extends abstract_service_1.default {
                     return {
                         success: false,
                         code: this.StatusCode.HTTP_NOT_FOUND,
-                        message: "New Room not found",
+                        message: 'New Room not found',
                     };
                 }
                 const { room_type_id } = checkNewRoom[0];
@@ -882,13 +883,13 @@ class ReservationService extends abstract_service_1.default {
                 const roomFolios = yield invoiceModel.getFoliosbySingleBooking({
                     booking_id,
                     hotel_code,
-                    type: "room_primary",
+                    type: 'room_primary',
                 });
                 if (!roomFolios.length) {
                     return {
                         success: false,
                         code: 404,
-                        message: "No room-primary folios found.",
+                        message: 'No room-primary folios found.',
                     };
                 }
                 console.log({ roomFolios });
@@ -897,7 +898,7 @@ class ReservationService extends abstract_service_1.default {
                     return {
                         success: false,
                         code: this.StatusCode.HTTP_BAD_REQUEST,
-                        message: "Previous rooms folio not found",
+                        message: 'Previous rooms folio not found',
                     };
                 }
                 const folioEntriesByFolio = yield invoiceModel.getFolioEntriesbyFolioID(hotel_code, prevRoomFolio.id);
@@ -908,7 +909,7 @@ class ReservationService extends abstract_service_1.default {
                     return {
                         success: false,
                         code: this.StatusCode.HTTP_NOT_FOUND,
-                        message: "Folio entries not found by previous room ID",
+                        message: 'Folio entries not found by previous room ID',
                     };
                 }
                 console.log({ folioEntryIDs });
@@ -922,12 +923,12 @@ class ReservationService extends abstract_service_1.default {
                 // update single booking rooms
                 yield reservationModel.updateSingleBookingRoom({ room_id: new_room_id, room_type_id }, { booking_id, room_id: previous_room_id });
                 yield sub.updateRoomAvailabilityService({
-                    reservation_type: "booked_room_decrease",
+                    reservation_type: 'booked_room_decrease',
                     rooms: [previouseRoom],
                     hotel_code,
                 });
                 yield sub.updateRoomAvailabilityService({
-                    reservation_type: "booked_room_increase",
+                    reservation_type: 'booked_room_increase',
                     rooms: [
                         {
                             check_in: previouseRoom.check_in,
@@ -940,7 +941,7 @@ class ReservationService extends abstract_service_1.default {
                 return {
                     success: true,
                     code: this.StatusCode.HTTP_OK,
-                    message: "Successfully Room has been shifted",
+                    message: 'Successfully Room has been shifted',
                 };
             }));
         });
@@ -956,7 +957,7 @@ class ReservationService extends abstract_service_1.default {
                     return {
                         success: false,
                         code: this.StatusCode.HTTP_NOT_FOUND,
-                        message: "Booking not found",
+                        message: 'Booking not found',
                     };
                 }
                 // update single booking rooms
@@ -967,7 +968,7 @@ class ReservationService extends abstract_service_1.default {
                 return {
                     success: true,
                     code: this.StatusCode.HTTP_OK,
-                    message: "Successfully Updated",
+                    message: 'Successfully Updated',
                 };
             }));
         });
@@ -986,7 +987,7 @@ class ReservationService extends abstract_service_1.default {
                     return {
                         success: false,
                         code: this.StatusCode.HTTP_NOT_FOUND,
-                        message: "Booking not found",
+                        message: 'Booking not found',
                     };
                 }
                 const { vat_percentage, service_charge_percentage } = getSingleBooking;
@@ -998,7 +999,7 @@ class ReservationService extends abstract_service_1.default {
                     return {
                         success: false,
                         code: this.StatusCode.HTTP_NOT_FOUND,
-                        message: "Room not found.",
+                        message: 'Room not found.',
                     };
                 }
                 const { check_in: prevCheckIn, check_out: prevCheckOut, unit_base_rate, unit_changed_rate, room_type_id, } = bookingRoom;
@@ -1006,7 +1007,7 @@ class ReservationService extends abstract_service_1.default {
                     return {
                         success: false,
                         code: this.StatusCode.HTTP_BAD_REQUEST,
-                        message: "You submitted the same date range.",
+                        message: 'You submitted the same date range.',
                     };
                 }
                 const nights = sub.calculateNights(check_in, check_out);
@@ -1014,7 +1015,7 @@ class ReservationService extends abstract_service_1.default {
                     return {
                         success: false,
                         code: this.StatusCode.HTTP_BAD_REQUEST,
-                        message: "Invalid check‑in / check‑out dates.",
+                        message: 'Invalid check‑in / check‑out dates.',
                     };
                 }
                 // Is the exact room free?
@@ -1042,11 +1043,11 @@ class ReservationService extends abstract_service_1.default {
                     folioEntries.push({
                         folio_id: 0,
                         date,
-                        posting_type: "Charge",
+                        posting_type: 'Charge',
                         debit: tariff,
                         credit: 0,
                         room_id,
-                        description: "Room Tariff",
+                        description: 'Room Tariff',
                         rack_rate: unit_base_rate,
                     });
                     // VAT
@@ -1054,11 +1055,11 @@ class ReservationService extends abstract_service_1.default {
                         folioEntries.push({
                             folio_id: 0,
                             date,
-                            posting_type: "Charge",
+                            posting_type: 'Charge',
                             debit: vat,
                             credit: 0,
                             room_id,
-                            description: "VAT",
+                            description: 'VAT',
                             rack_rate: 0,
                         });
                     }
@@ -1067,11 +1068,11 @@ class ReservationService extends abstract_service_1.default {
                         folioEntries.push({
                             folio_id: 0,
                             date,
-                            posting_type: "Charge",
+                            posting_type: 'Charge',
                             debit: sc,
                             credit: 0,
                             room_id,
-                            description: "Service Charge",
+                            description: 'Service Charge',
                             rack_rate: 0,
                         });
                     }
@@ -1083,7 +1084,7 @@ class ReservationService extends abstract_service_1.default {
                     room_ids: [room_id],
                 });
                 if (!roomFolios.length) {
-                    return { success: false, code: 404, message: "No room‑primary folio." };
+                    return { success: false, code: 404, message: 'No room‑primary folio.' };
                 }
                 const entryIdsToVoid = [];
                 for (const f of roomFolios) {
@@ -1098,7 +1099,7 @@ class ReservationService extends abstract_service_1.default {
                     yield invoiceModel.updateFolioEntries({ is_void: true }, entryIdsToVoid);
                 }
                 yield sub.updateRoomAvailabilityService({
-                    reservation_type: "booked_room_decrease",
+                    reservation_type: 'booked_room_decrease',
                     rooms: [bookingRoom],
                     hotel_code,
                 });
@@ -1110,7 +1111,7 @@ class ReservationService extends abstract_service_1.default {
                     base_rate: unit_base_rate * nights,
                 }, { room_id, booking_id });
                 yield sub.updateRoomAvailabilityService({
-                    reservation_type: "booked_room_increase",
+                    reservation_type: 'booked_room_increase',
                     rooms: [
                         Object.assign(Object.assign({}, bookingRoom), { check_in,
                             check_out }),
@@ -1128,7 +1129,7 @@ class ReservationService extends abstract_service_1.default {
                 return {
                     success: true,
                     code: this.StatusCode.HTTP_OK,
-                    message: "Room dates updated successfully.",
+                    message: 'Room dates updated successfully.',
                 };
             }));
         });
@@ -1147,11 +1148,11 @@ class ReservationService extends abstract_service_1.default {
                 };
             }
             const { status, check_in } = data;
-            if (status != "confirmed") {
+            if (status != 'confirmed') {
                 return {
                     success: false,
                     code: this.StatusCode.HTTP_BAD_REQUEST,
-                    message: "This booking has other status. So, you cannot checkin",
+                    message: 'This booking has other status. So, you cannot checkin',
                 };
             }
             if (check_in > new Date().toISOString()) {
@@ -1163,14 +1164,14 @@ class ReservationService extends abstract_service_1.default {
             }
             // update
             yield model.updateRoomBooking({
-                status: "checked_in",
+                status: 'checked_in',
             }, hotel_code, booking_id);
             // update booking rooms
-            yield model.updateAllBookingRoomsByBookingID({ status: "checked_in", checked_in_at: new Date().toISOString() }, { booking_id, exclude_checkout: true });
+            yield model.updateAllBookingRoomsByBookingID({ status: 'checked_in', checked_in_at: new Date().toISOString() }, { booking_id, exclude_checkout: true });
             return {
                 success: true,
                 code: this.StatusCode.HTTP_OK,
-                message: "Successfully Cheked in",
+                message: 'Successfully Cheked in',
             };
         });
     }
@@ -1195,21 +1196,21 @@ class ReservationService extends abstract_service_1.default {
                 };
             }
             // update booking rooms
-            yield model.updateSingleBookingRoom({ status: "checked_in", checked_in_at: new Date().toISOString() }, { booking_id, room_id: Number(req.params.room_id) });
+            yield model.updateSingleBookingRoom({ status: 'checked_in', checked_in_at: new Date().toISOString() }, { booking_id, room_id: Number(req.params.room_id) });
             // check all booking rooms are check in or not
             const getSingleBookingRoom = yield model.getSingleBooking(hotel_code, booking_id);
             if (getSingleBookingRoom) {
                 const { booking_rooms } = getSingleBookingRoom;
-                const isAllCheckIn = booking_rooms.every((room) => room.status === "checked_in");
+                const isAllCheckIn = booking_rooms.every((room) => room.status === 'checked_in');
                 if (isAllCheckIn) {
                     // update main booking
-                    yield model.updateRoomBooking({ status: "checked_in" }, hotel_code, booking_id);
+                    yield model.updateRoomBooking({ status: 'checked_in' }, hotel_code, booking_id);
                 }
             }
             return {
                 success: true,
                 code: this.StatusCode.HTTP_OK,
-                message: "Successfully Cheked in",
+                message: 'Successfully Cheked in',
             };
         });
     }
@@ -1229,11 +1230,11 @@ class ReservationService extends abstract_service_1.default {
                     };
                 }
                 const { status, booking_type, booking_rooms, check_in, check_out } = data;
-                if (booking_type != "B" && status != "checked_in") {
+                if (booking_type != 'B' && status != 'checked_in') {
                     return {
                         success: false,
                         code: this.StatusCode.HTTP_BAD_REQUEST,
-                        message: "This booking has other status. So, you cannot checkout",
+                        message: 'This booking has other status. So, you cannot checkout',
                     };
                 }
                 if (check_out > new Date().toISOString()) {
@@ -1256,24 +1257,24 @@ class ReservationService extends abstract_service_1.default {
                 //     message: `This guest has ${checkDueAmount} due. So you cannot checkout`,
                 //   };
                 // }
-                const remainCheckOutRooms = booking_rooms === null || booking_rooms === void 0 ? void 0 : booking_rooms.filter((room) => room.status !== "checked_out");
+                const remainCheckOutRooms = booking_rooms === null || booking_rooms === void 0 ? void 0 : booking_rooms.filter((room) => room.status !== 'checked_out');
                 if (remainCheckOutRooms === null || remainCheckOutRooms === void 0 ? void 0 : remainCheckOutRooms.length) {
                     yield sub.updateRoomAvailabilityService({
-                        reservation_type: "booked_room_decrease",
+                        reservation_type: 'booked_room_decrease',
                         rooms: remainCheckOutRooms,
                         hotel_code,
                     });
                 }
                 // update reservation
                 yield reservationModel.updateRoomBooking({
-                    status: "checked_out",
+                    status: 'checked_out',
                 }, hotel_code, booking_id);
                 // update booking rooms status
-                yield reservationModel.updateAllBookingRoomsByBookingID({ status: "checked_out", checked_out_at: new Date().toISOString() }, { booking_id });
+                yield reservationModel.updateAllBookingRoomsByBookingID({ status: 'checked_out', checked_out_at: new Date().toISOString() }, { booking_id });
                 return {
                     success: true,
                     code: this.StatusCode.HTTP_OK,
-                    message: "Successfully Checked out",
+                    message: 'Successfully Checked out',
                 };
             }));
         });
@@ -1295,11 +1296,11 @@ class ReservationService extends abstract_service_1.default {
                     };
                 }
                 const { status, booking_type, booking_rooms, check_in, check_out } = data;
-                if (booking_type != "B" && status != "checked_in") {
+                if (booking_type != 'B' && status != 'checked_in') {
                     return {
                         success: false,
                         code: this.StatusCode.HTTP_BAD_REQUEST,
-                        message: "This booking has other status. So, you cannot checkout",
+                        message: 'This booking has other status. So, you cannot checkout',
                     };
                 }
                 if (check_out > new Date().toISOString()) {
@@ -1327,31 +1328,31 @@ class ReservationService extends abstract_service_1.default {
                     return {
                         success: false,
                         code: this.StatusCode.HTTP_BAD_REQUEST,
-                        message: "Room not found by this booking ID",
+                        message: 'Room not found by this booking ID',
                     };
                 }
                 // room avaibility decrease
                 yield sub.updateRoomAvailabilityService({
-                    reservation_type: "booked_room_decrease",
+                    reservation_type: 'booked_room_decrease',
                     rooms: [checkoutRoom],
                     hotel_code,
                 });
                 // update booking rooms status
-                yield reservationModel.updateSingleBookingRoom({ status: "checked_out", checked_out_at: new Date().toISOString() }, { booking_id, room_id: checkoutRoom.room_id });
+                yield reservationModel.updateSingleBookingRoom({ status: 'checked_out', checked_out_at: new Date().toISOString() }, { booking_id, room_id: checkoutRoom.room_id });
                 // check all booking rooms are check in or not
                 const getSingleBookingRoom = yield reservationModel.getSingleBooking(hotel_code, booking_id);
                 if (getSingleBookingRoom) {
                     const { booking_rooms } = getSingleBookingRoom;
-                    const isAllCheckout = booking_rooms.every((room) => room.status === "checked_out");
+                    const isAllCheckout = booking_rooms.every((room) => room.status === 'checked_out');
                     if (isAllCheckout) {
                         // update main booking
-                        yield reservationModel.updateRoomBooking({ status: "checked_out" }, hotel_code, booking_id);
+                        yield reservationModel.updateRoomBooking({ status: 'checked_out' }, hotel_code, booking_id);
                     }
                 }
                 return {
                     success: true,
                     code: this.StatusCode.HTTP_OK,
-                    message: "Successfully Cheked out",
+                    message: 'Successfully Cheked out',
                 };
             }));
         });
@@ -1372,41 +1373,41 @@ class ReservationService extends abstract_service_1.default {
                     };
                 }
                 const { booking_type, status, booking_rooms, check_in, check_out } = data;
-                if (booking_type != "H" && status !== "confirmed") {
+                if (booking_type != 'H' && status !== 'confirmed') {
                     return {
                         success: false,
                         code: this.StatusCode.HTTP_BAD_REQUEST,
-                        message: "This booking has other status. So, you cannot changed",
+                        message: 'This booking has other status. So, you cannot changed',
                     };
                 }
-                if (reservation_type_status == "confirmed") {
+                if (reservation_type_status == 'confirmed') {
                     // update
                     yield this.Model.reservationModel().updateRoomBooking({
-                        booking_type: "B",
-                        status: "confirmed",
+                        booking_type: 'B',
+                        status: 'confirmed',
                     }, hotel_code, booking_id);
                     // Availability
                     yield sub.updateRoomAvailabilityService({
-                        reservation_type: "hold_decrease",
+                        reservation_type: 'hold_decrease',
                         rooms: booking_rooms,
                         hotel_code,
                     });
                     yield sub.updateRoomAvailabilityService({
-                        reservation_type: "booked_room_increase",
+                        reservation_type: 'booked_room_increase',
                         rooms: booking_rooms,
                         hotel_code,
                     });
                     // update room availability
                 }
-                else if (reservation_type_status == "canceled") {
+                else if (reservation_type_status == 'canceled') {
                     // update
                     yield this.Model.reservationModel().updateRoomBooking({
-                        booking_type: "H",
-                        status: "canceled",
+                        booking_type: 'H',
+                        status: 'canceled',
                     }, hotel_code, booking_id);
                     // Availability
                     yield sub.updateRoomAvailabilityService({
-                        reservation_type: "hold_decrease",
+                        reservation_type: 'hold_decrease',
                         rooms: booking_rooms,
                         hotel_code,
                     });
@@ -1414,7 +1415,7 @@ class ReservationService extends abstract_service_1.default {
                 return {
                     success: true,
                     code: this.StatusCode.HTTP_OK,
-                    message: "Successfully updated",
+                    message: 'Successfully updated',
                 };
             }));
         });
@@ -1484,7 +1485,7 @@ class ReservationService extends abstract_service_1.default {
                     amount,
                     folio_id,
                     guest_id: checkSingleFolio.guest_id,
-                    payment_for: "ADD MONEY",
+                    payment_for: 'ADD MONEY',
                     remarks,
                     req,
                     payment_date,
@@ -1492,7 +1493,7 @@ class ReservationService extends abstract_service_1.default {
                 return {
                     success: true,
                     code: this.StatusCode.HTTP_OK,
-                    message: "Payment has been added",
+                    message: 'Payment has been added',
                 };
             }));
         });
@@ -1517,7 +1518,7 @@ class ReservationService extends abstract_service_1.default {
                     amount,
                     folio_id,
                     guest_id: checkSingleFolio.guest_id,
-                    payment_for: "REFUND",
+                    payment_for: 'REFUND',
                     remarks,
                     req,
                     payment_date,
@@ -1525,7 +1526,7 @@ class ReservationService extends abstract_service_1.default {
                 return {
                     success: true,
                     code: this.StatusCode.HTTP_OK,
-                    message: "Payment has been refunded",
+                    message: 'Payment has been refunded',
                 };
             }));
         });
@@ -1547,7 +1548,7 @@ class ReservationService extends abstract_service_1.default {
                     debit: -amount,
                     credit: 0,
                     folio_id: folio_id,
-                    posting_type: "Adjustment",
+                    posting_type: 'Adjustment',
                     description: remarks,
                 });
                 return {
@@ -1574,7 +1575,7 @@ class ReservationService extends abstract_service_1.default {
                 yield this.Model.hotelInvoiceModel().insertInFolioEntries({
                     debit: amount,
                     folio_id: folio_id,
-                    posting_type: "Charge",
+                    posting_type: 'Charge',
                     description: remarks,
                 });
                 return {
@@ -1599,7 +1600,7 @@ class ReservationService extends abstract_service_1.default {
                     return {
                         success: false,
                         code: this.StatusCode.HTTP_NOT_FOUND,
-                        message: "Booking not found",
+                        message: 'Booking not found',
                     };
                 }
                 const { booking_rooms } = booking;
@@ -1609,7 +1610,7 @@ class ReservationService extends abstract_service_1.default {
                         return {
                             success: false,
                             code: this.StatusCode.HTTP_NOT_FOUND,
-                            message: "Room not found in this booking",
+                            message: 'Room not found in this booking',
                         };
                     }
                     const hasPrimaryGuest = room.room_guests.some((g) => g.is_room_primary_guest);
@@ -1617,7 +1618,7 @@ class ReservationService extends abstract_service_1.default {
                         return {
                             success: false,
                             code: this.StatusCode.HTTP_BAD_REQUEST,
-                            message: "You cannot add more than one primary guest in a room",
+                            message: 'You cannot add more than one primary guest in a room',
                         };
                     }
                     //check multiple guest has primary guest
@@ -1625,7 +1626,7 @@ class ReservationService extends abstract_service_1.default {
                         return {
                             success: false,
                             code: this.StatusCode.HTTP_BAD_REQUEST,
-                            message: "You cannot add more than one primary guest in a room",
+                            message: 'You cannot add more than one primary guest in a room',
                         };
                     }
                     yield Promise.all(add_guest.map((guest) => __awaiter(this, void 0, void 0, function* () {
@@ -1653,7 +1654,7 @@ class ReservationService extends abstract_service_1.default {
                         return {
                             success: false,
                             code: this.StatusCode.HTTP_NOT_FOUND,
-                            message: "Room not found in this booking",
+                            message: 'Room not found in this booking',
                         };
                     }
                     const guestsToRemove = room.room_guests.filter((g) => remove_guest.includes(g.guest_id));
@@ -1661,7 +1662,7 @@ class ReservationService extends abstract_service_1.default {
                         return {
                             success: false,
                             code: this.StatusCode.HTTP_NOT_FOUND,
-                            message: "Guests not found in this room",
+                            message: 'Guests not found in this room',
                         };
                     }
                     yield this.Model.reservationModel(trx).deleteBookingRoomGuest({
@@ -1672,7 +1673,7 @@ class ReservationService extends abstract_service_1.default {
                 return {
                     success: true,
                     code: this.StatusCode.HTTP_OK,
-                    message: "Successfully updated room guests",
+                    message: 'Successfully updated room guests',
                 };
             }));
         });

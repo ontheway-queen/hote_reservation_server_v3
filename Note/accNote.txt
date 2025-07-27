@@ -1,0 +1,4 @@
+'JV' - Journal Voucher - Receivable amount
+'BCV' - Bank Credit Voucher - Payment collection via bank
+'CCV' - Cash Credit Voucher - Payment collection via cash
+'DV' - Debit Voucher - Expense or Cost of good sales

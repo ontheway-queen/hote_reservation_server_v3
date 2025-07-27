@@ -15,30 +15,20 @@ export interface IAccHeadDb {
   created_by: number;
 }
 
-export type voucherType =
-  | 'REFUND'
-  | 'INVOICE'
-  | 'EMD'
-  | 'AIR_TICKET_VOID'
-  | 'RECEIPT'
-  | 'OPENING_BALANCE'
-  | 'INVESTMENT'
-  | 'ADVANCE'
-  | 'EXPENSE'
-  | 'PAYMENT'
-  | 'PAYROLL'
-  | 'LOAN'
-  | 'LOAN_PAYMENT'
-  | 'LOAN_RECEIVE'
-  | 'JOURNAL';
-
-export interface IVoucher {
+export interface IInsertVoucherPayload {
   acc_head_id: number;
   voucher_no: string;
   voucher_date: string;
   debit: number;
   credit: number;
-  voucher_type: voucherType;
   description: string;
   created_by: number;
+  hotel_code: number;
+}
+export interface IUpdateVoucherPayload {
+  voucher_no: string;
+  voucher_date: string;
+  debit: number;
+  credit: number;
+  description: string;
 }

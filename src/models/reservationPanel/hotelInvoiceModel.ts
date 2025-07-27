@@ -3,9 +3,9 @@ import {
   IinsertFolioEntriesPayload,
   IinsertFolioPayload,
   ISingleFolioInvoice,
-} from "../../appAdmin/utlis/interfaces/invoice.interface";
-import { TDB } from "../../common/types/commontypes";
-import Schema from "../../utils/miscellaneous/schema";
+} from '../../appAdmin/utlis/interfaces/invoice.interface';
+import { TDB } from '../../common/types/commontypes';
+import Schema from '../../utils/miscellaneous/schema';
 
 class HotelInvoiceModel extends Schema {
   private db: TDB;
@@ -15,24 +15,24 @@ class HotelInvoiceModel extends Schema {
   }
 
   public async insertInFolio(payload: IinsertFolioPayload) {
-    return await this.db("folios")
+    return await this.db('folios')
       .withSchema(this.RESERVATION_SCHEMA)
-      .insert(payload, "id");
+      .insert(payload, 'id');
   }
 
   public async getAllFolio({ hotel_code }: { hotel_code: number }) {
-    return await this.db("folios")
+    return await this.db('folios')
       .withSchema(this.RESERVATION_SCHEMA)
-      .select("id", "folio_number", "type", "status")
-      .where("hotel_code", hotel_code);
+      .select('id', 'folio_number', 'type', 'status')
+      .where('hotel_code', hotel_code);
   }
 
   public async getLasFolioId() {
-    return await this.db("folios")
+    return await this.db('folios')
       .withSchema(this.RESERVATION_SCHEMA)
-      .select("id")
+      .select('id')
       .limit(1)
-      .orderBy("id", "desc");
+      .orderBy('id', 'desc');
   }
 
   public async updateSingleFolio(
@@ -45,7 +45,7 @@ class HotelInvoiceModel extends Schema {
     }
   ) {
     const { hotel_code, booking_id, folio_id, folioIds } = conditions;
-    return await this.db("folios")
+    return await this.db('folios')
       .withSchema(this.RESERVATION_SCHEMA)
       .update(payload)
       .where({ hotel_code })
@@ -55,7 +55,7 @@ class HotelInvoiceModel extends Schema {
           this.andWhere({ id: folio_id });
         }
         if (folioIds) {
-          this.whereIn("id", folioIds);
+          this.whereIn('id', folioIds);
         }
       });
   }
@@ -63,7 +63,7 @@ class HotelInvoiceModel extends Schema {
   public async insertInFolioEntries(
     payload: IinsertFolioEntriesPayload | IinsertFolioEntriesPayload[]
   ) {
-    return await this.db("folio_entries")
+    return await this.db('folio_entries')
       .withSchema(this.RESERVATION_SCHEMA)
       .insert(payload);
   }
@@ -75,11 +75,11 @@ class HotelInvoiceModel extends Schema {
     booking_id: number;
     hotel_code: number;
   }): Promise<number> {
-    const dueBalance = await this.db("folios as f")
+    const dueBalance = await this.db('folios as f')
       .withSchema(this.RESERVATION_SCHEMA)
-      .leftJoin("folio_entries as fe", "f.id", "fe.folio_id")
-      .where("f.booking_id", booking_id)
-      .andWhere("f.hotel_code", hotel_code)
+      .leftJoin('folio_entries as fe', 'f.id', 'fe.folio_id')
+      .where('f.booking_id', booking_id)
+      .andWhere('f.hotel_code', hotel_code)
       .select(
         this.db.raw(`
         SUM(CASE WHEN fe.posting_type = 'Charge' THEN COALESCE(fe.debit, 0)
@@ -99,9 +99,9 @@ class HotelInvoiceModel extends Schema {
     total_amount: number;
     notes?: string;
   }) {
-    return await this.db("invoices")
+    return await this.db('invoices')
       .withSchema(this.RESERVATION_SCHEMA)
-      .insert(payload, "id");
+      .insert(payload, 'id');
   }
 
   public async insertFolioInvoice(payload: {
@@ -109,9 +109,9 @@ class HotelInvoiceModel extends Schema {
     folio_id: number;
     booking_id: number;
   }) {
-    return await this.db("invoice_folios")
+    return await this.db('invoice_folios')
       .withSchema(this.RESERVATION_SCHEMA)
-      .insert(payload, "id");
+      .insert(payload, 'id');
   }
 
   public async getAllFolioInvoiceByBookingId({
@@ -121,21 +121,21 @@ class HotelInvoiceModel extends Schema {
     hotel_code: number;
     booking_id: number;
   }) {
-    return await this.db("invoices as inv")
+    return await this.db('invoices as inv')
       .withSchema(this.RESERVATION_SCHEMA)
       .select(
-        "inv.id",
-        "inv.invoice_number",
-        "inv.invoice_date",
-        "inv.status",
-        "inv.notes",
-        "inv.is_void"
+        'inv.id',
+        'inv.invoice_number',
+        'inv.invoice_date',
+        'inv.status',
+        'inv.notes',
+        'inv.is_void'
       )
-      .leftJoin("invoice_folios as if", "inv.id", "if.invoice_id")
-      .where("inv.hotel_code", hotel_code)
-      .andWhere("if.booking_id", booking_id)
-      .andWhere("inv.is_void", false)
-      .groupBy("inv.id");
+      .leftJoin('invoice_folios as if', 'inv.id', 'if.invoice_id')
+      .where('inv.hotel_code', hotel_code)
+      .andWhere('if.booking_id', booking_id)
+      .andWhere('inv.is_void', false)
+      .groupBy('inv.id');
   }
 
   public async getSingleFolioInvoice({
@@ -145,23 +145,23 @@ class HotelInvoiceModel extends Schema {
     hotel_code: number;
     inv_id: number;
   }): Promise<ISingleFolioInvoice> {
-    return await this.db("invoices as inv")
+    return await this.db('invoices as inv')
       .withSchema(this.RESERVATION_SCHEMA)
       .select(
-        "inv.id",
-        "inv.invoice_number",
-        "inv.invoice_date",
-        "inv.status",
-        "inv.notes",
-        "b.booking_reference",
-        "b.total_nights",
-        "b.is_individual_booking",
-        "b.is_company_booked",
-        "b.company_name",
-        "b.check_in",
-        "b.check_out",
-        this.db.raw("check_in::TEXT AS check_in_date"),
-        this.db.raw("check_out::TEXT AS check_out_date"),
+        'inv.id',
+        'inv.invoice_number',
+        'inv.invoice_date',
+        'inv.status',
+        'inv.notes',
+        'b.booking_reference',
+        'b.total_nights',
+        'b.is_individual_booking',
+        'b.is_company_booked',
+        'b.company_name',
+        'b.check_in',
+        'b.check_out',
+        this.db.raw('check_in::TEXT AS check_in_date'),
+        this.db.raw('check_out::TEXT AS check_out_date'),
         this.db.raw(`
         JSON_BUILD_OBJECT(
           'first_name', g.first_name,
@@ -240,16 +240,16 @@ class HotelInvoiceModel extends Schema {
         ) AS inv_items
         `,
           [
-            "hotel_reservation.invoice_folio_items",
-            "hotel_reservation.invoice_folios",
+            'hotel_reservation.invoice_folio_items',
+            'hotel_reservation.invoice_folios',
           ]
         )
       )
-      .leftJoin("invoice_folios as if", "inv.id", "if.invoice_id")
-      .leftJoin("bookings as b", "if.booking_id", "b.id")
-      .leftJoin("guests as g", "b.guest_id", "g.id")
-      .where("inv.hotel_code", hotel_code)
-      .andWhere("inv.id", inv_id)
+      .leftJoin('invoice_folios as if', 'inv.id', 'if.invoice_id')
+      .leftJoin('bookings as b', 'if.booking_id', 'b.id')
+      .leftJoin('guests as g', 'b.guest_id', 'g.id')
+      .where('inv.hotel_code', hotel_code)
+      .andWhere('inv.id', inv_id)
       .first();
   }
 
@@ -260,14 +260,14 @@ class HotelInvoiceModel extends Schema {
     hotel_code: number;
     inv_id: number;
   }) {
-    return await this.db("invoices as inv")
+    return await this.db('invoices as inv')
       .withSchema(this.RESERVATION_SCHEMA)
       .select(
-        "inv.id",
-        "inv.invoice_number",
-        "inv.invoice_date",
-        "inv.status",
-        "inv.notes",
+        'inv.id',
+        'inv.invoice_number',
+        'inv.invoice_date',
+        'inv.status',
+        'inv.notes',
         this.db.raw(
           `
         (
@@ -289,13 +289,13 @@ class HotelInvoiceModel extends Schema {
         ) AS inv_items
         `,
           [
-            "hotel_reservation.invoice_folio_items",
-            "hotel_reservation.invoice_folios",
+            'hotel_reservation.invoice_folio_items',
+            'hotel_reservation.invoice_folios',
           ]
         )
       )
-      .where("inv.hotel_code", hotel_code)
-      .andWhere("inv.id", inv_id)
+      .where('inv.hotel_code', hotel_code)
+      .andWhere('inv.id', inv_id)
       .first();
   }
 
@@ -303,10 +303,10 @@ class HotelInvoiceModel extends Schema {
     payload: { is_void?: boolean },
     inv_id: number
   ) {
-    return await this.db("invoices")
+    return await this.db('invoices')
       .withSchema(this.RESERVATION_SCHEMA)
       .update(payload)
-      .where("id", inv_id);
+      .where('id', inv_id);
   }
 
   public async insertInFolioInvoiceItems(
@@ -322,7 +322,7 @@ class HotelInvoiceModel extends Schema {
       date: string;
     }[]
   ) {
-    return await this.db("invoice_folio_items")
+    return await this.db('invoice_folio_items')
       .withSchema(this.RESERVATION_SCHEMA)
       .insert(payload);
   }
@@ -334,20 +334,20 @@ class HotelInvoiceModel extends Schema {
     hotel_code: number;
     status: string;
   }) {
-    return await this.db("invoices")
+    return await this.db('invoices')
       .withSchema(this.RESERVATION_SCHEMA)
-      .select("*")
+      .select('*')
       .where(function () {
         if (hotel_code) {
-          this.andWhere("hotel_code", hotel_code);
+          this.andWhere('hotel_code', hotel_code);
         }
       });
   }
 
   public async getLastInvoiceId() {
-    const result = await this.db("invoices")
+    const result = await this.db('invoices')
       .withSchema(this.RESERVATION_SCHEMA)
-      .max("id as maxId")
+      .max('id as maxId')
       .first();
 
     return result?.maxId || 0;
@@ -362,15 +362,15 @@ class HotelInvoiceModel extends Schema {
     booking_id: number;
     type?: string;
   }): Promise<{ id: number; name: string; room_id: number }[]> {
-    return await this.db("folios")
+    return await this.db('folios')
       .withSchema(this.RESERVATION_SCHEMA)
-      .select("id", "name", "is_void", "room_id", "type")
-      .where("booking_id", booking_id)
-      .andWhere("hotel_code", hotel_code)
-      .andWhere("is_void", false)
+      .select('id', 'name', 'is_void', 'room_id', 'type')
+      .where('booking_id', booking_id)
+      .andWhere('hotel_code', hotel_code)
+      .andWhere('is_void', false)
       .andWhere(function () {
         if (type) {
-          this.andWhere("type", type);
+          this.andWhere('type', type);
         }
       });
   }
@@ -384,27 +384,27 @@ class HotelInvoiceModel extends Schema {
     booking_id: number;
     entry_ids?: number[];
   }): Promise<IFolioWithEntries | undefined> {
-    return await this.db("folios as f")
+    return await this.db('folios as f')
       .withSchema(this.RESERVATION_SCHEMA)
       .select(
-        "f.id",
-        "f.name",
+        'f.id',
+        'f.name',
         this.db.raw(
           `(SELECT JSON_AGG(JSON_BUILD_OBJECT('entries_id',fe.id,'description',fe.description,'posting_type',fe.posting_type,'debit',fe.debit,'credit',fe.credit,'created_at',fe.created_at,'is_void',fe.is_void,'invoiced',fe.invoiced,'date',fe.date,'room_id',fe.room_id,'room_name',r.room_name)) as folio_entries)`
         )
       )
-      .leftJoin("folio_entries as fe", "f.id", "fe.folio_id")
-      .leftJoin("rooms as r", "fe.room_id", "r.id")
-      .where("f.booking_id", booking_id)
-      .andWhere("fe.is_void", false)
-      .andWhere("fe.invoiced", false)
-      .andWhere("f.hotel_code", hotel_code)
+      .leftJoin('folio_entries as fe', 'f.id', 'fe.folio_id')
+      .leftJoin('rooms as r', 'fe.room_id', 'r.id')
+      .where('f.booking_id', booking_id)
+      .andWhere('fe.is_void', false)
+      .andWhere('fe.invoiced', false)
+      .andWhere('f.hotel_code', hotel_code)
       .andWhere(function () {
         if (entry_ids?.length) {
-          this.whereIn("fe.id", entry_ids);
+          this.whereIn('fe.id', entry_ids);
         }
       })
-      .groupBy("f.id", "f.name");
+      .groupBy('f.id', 'f.name');
   }
 
   public async getFolioWithEntriesbySingleBookingAndRoomID({
@@ -416,26 +416,26 @@ class HotelInvoiceModel extends Schema {
     booking_id: number;
     room_ids: number[];
   }): Promise<IFolioWithEntries[]> {
-    return await this.db("folios as f")
+    return await this.db('folios as f')
       .withSchema(this.RESERVATION_SCHEMA)
       .select(
-        "f.id",
-        "f.name",
-        "f.is_void",
+        'f.id',
+        'f.name',
+        'f.is_void',
         this.db.raw(
           `(SELECT JSON_AGG(JSON_BUILD_OBJECT('entries_id',fe.id,'description',fe.description,'posting_type',fe.posting_type,'debit',fe.debit,'credit',fe.credit,'created_at',fe.created_at,'is_void',fe.is_void,'invoiced',fe.invoiced,'date',fe.date,'room_id',fe.room_id,'room_name',r.room_name)) as folio_entries)`
         )
       )
-      .leftJoin("folio_entries as fe", "f.id", "fe.folio_id")
-      .leftJoin("rooms as r", "fe.room_id", "r.id")
+      .leftJoin('folio_entries as fe', 'f.id', 'fe.folio_id')
+      .leftJoin('rooms as r', 'fe.room_id', 'r.id')
 
-      .where("f.booking_id", booking_id)
-      .andWhere("fe.is_void", false)
-      .andWhere("f.hotel_code", hotel_code)
+      .where('f.booking_id', booking_id)
+      .andWhere('fe.is_void', false)
+      .andWhere('f.hotel_code', hotel_code)
       .andWhere(function () {
-        this.whereIn("f.room_id", room_ids);
+        this.whereIn('f.room_id', room_ids);
       })
-      .groupBy("f.id", "f.name");
+      .groupBy('f.id', 'f.name');
   }
 
   public async getSingleFoliobyHotelCodeAndFolioID(
@@ -450,11 +450,11 @@ class HotelInvoiceModel extends Schema {
       }
     | undefined
   > {
-    return await this.db("folios")
+    return await this.db('folios')
       .withSchema(this.RESERVATION_SCHEMA)
-      .select("id", "name", "guest_id", "booking_id")
-      .where("id", folio_id)
-      .andWhere("hotel_code", hotel_code)
+      .select('id', 'name', 'guest_id', 'booking_id')
+      .where('id', folio_id)
+      .andWhere('hotel_code', hotel_code)
       .first();
   }
 
@@ -474,26 +474,26 @@ class HotelInvoiceModel extends Schema {
       credit: number;
     }[]
   > {
-    return await this.db("folio_entries as fe")
+    return await this.db('folio_entries as fe')
       .withSchema(this.RESERVATION_SCHEMA)
       .select(
-        "fe.id",
-        "fe.description",
-        "fe.posting_type",
-        "fe.rack_rate",
+        'fe.id',
+        'fe.description',
+        'fe.posting_type',
+        'fe.rack_rate',
         this.db.raw(`TO_CHAR(fe.date, 'YYYY-MM-DD') as date`),
-        "fe.room_id",
-        "r.room_name",
-        "fe.debit",
-        "fe.credit",
-        "fe.is_void"
+        'fe.room_id',
+        'r.room_name',
+        'fe.debit',
+        'fe.credit',
+        'fe.is_void'
       )
-      .join("folios as f", "fe.folio_id", "f.id")
-      .leftJoin("rooms as r", "fe.room_id", "r.id")
-      .where("fe.folio_id", folio_id)
-      .andWhere("f.hotel_code", hotel_code)
-      .andWhere("fe.is_void", false)
-      .orderBy("fe.id", "asc");
+      .join('folios as f', 'fe.folio_id', 'f.id')
+      .leftJoin('rooms as r', 'fe.room_id', 'r.id')
+      .where('fe.folio_id', folio_id)
+      .andWhere('f.hotel_code', hotel_code)
+      .andWhere('fe.is_void', false)
+      .orderBy('fe.id', 'asc');
   }
 
   public async getFoliosEntriesbySingleBooking({
@@ -506,7 +506,7 @@ class HotelInvoiceModel extends Schema {
     hotel_code: number;
     booking_id: number;
     posting_type?: string;
-    type?: "room_primary" | "group_master";
+    type?: 'room_primary' | 'group_master';
     entry_ids?: number[];
   }): Promise<
     {
@@ -526,68 +526,68 @@ class HotelInvoiceModel extends Schema {
       room_name: string | null;
     }[]
   > {
-    return await this.db("folios as f")
+    return await this.db('folios as f')
       .withSchema(this.RESERVATION_SCHEMA)
       .select(
-        "f.id",
-        "f.name",
-        "fe.id as entries_id",
-        "fe.description",
-        "fe.posting_type",
-        "fe.debit",
-        "fe.credit",
-        "fe.is_void",
-        "fe.invoiced",
-        "fe.rack_rate",
-        "fe.date",
-        "fe.room_id",
-        "r.room_name"
+        'f.id',
+        'f.name',
+        'fe.id as entries_id',
+        'fe.description',
+        'fe.posting_type',
+        'fe.debit',
+        'fe.credit',
+        'fe.is_void',
+        'fe.invoiced',
+        'fe.rack_rate',
+        'fe.date',
+        'fe.room_id',
+        'r.room_name'
       )
-      .leftJoin("folio_entries as fe", "f.id", "fe.folio_id")
-      .leftJoin("rooms as r", "fe.room_id", "r.id")
-      .where("f.booking_id", booking_id)
-      .andWhere("f.hotel_code", hotel_code)
-      .andWhere("fe.is_void", false)
+      .leftJoin('folio_entries as fe', 'f.id', 'fe.folio_id')
+      .leftJoin('rooms as r', 'fe.room_id', 'r.id')
+      .where('f.booking_id', booking_id)
+      .andWhere('f.hotel_code', hotel_code)
+      .andWhere('fe.is_void', false)
       .andWhere(function () {
         if (entry_ids?.length) {
-          this.whereIn("fe.id", entry_ids);
+          this.whereIn('fe.id', entry_ids);
         }
 
         if (posting_type) {
-          this.andWhereRaw("LOWER(fe.posting_type) = ?", [
+          this.andWhereRaw('LOWER(fe.posting_type) = ?', [
             posting_type.toLowerCase(),
           ]);
         }
 
         if (type) {
-          this.andWhereRaw("LOWER(f.type) = ?", [type.toLowerCase()]);
+          this.andWhereRaw('LOWER(f.type) = ?', [type.toLowerCase()]);
         }
       })
-      .orderBy("fe.id", "asc");
+      .orderBy('fe.id', 'asc');
   }
 
   public async updateFolioEntries(
     payload: { is_void?: boolean; invoiced?: boolean; room_id?: number },
     entryIDs: number[]
   ) {
-    return await this.db("folio_entries")
+    return await this.db('folio_entries')
       .withSchema(this.RESERVATION_SCHEMA)
       .update(payload)
-      .whereIn("id", entryIDs);
+      .whereIn('id', entryIDs);
   }
 
   public async updateFolioEntriesByFolioId(
     payload: { is_void?: boolean; invoiced?: boolean },
     where: { folio_id: number },
-    exlclude_type?: { exlclude: "Payment" }
+    exlclude_type?: { exlclude: 'Payment' }
   ) {
-    return await this.db("folio_entries")
+    return await this.db('folio_entries')
       .withSchema(this.RESERVATION_SCHEMA)
       .update(payload)
-      .where("folio_id", where.folio_id)
+      .where('folio_id', where.folio_id)
       .andWhere(function () {
         if (exlclude_type?.exlclude) {
-          this.andWhereNot("posting_type", exlclude_type.exlclude);
+          this.andWhereNot('posting_type', exlclude_type.exlclude);
         }
       });
   }
@@ -598,13 +598,13 @@ class HotelInvoiceModel extends Schema {
     booking_id: number
   ) {
     console.log(payload, room_id, booking_id);
-    return await this.db("folio_entries as fe")
+    return await this.db('folio_entries as fe')
       .withSchema(this.RESERVATION_SCHEMA)
-      .where("fe.room_id", room_id)
-      .whereIn("fe.folio_id", function () {
-        this.select("f.id")
-          .from("hotel_reservation.folios as f")
-          .where("f.booking_id", booking_id);
+      .where('fe.room_id', room_id)
+      .whereIn('fe.folio_id', function () {
+        this.select('f.id')
+          .from('hotel_reservation.folios as f')
+          .where('f.booking_id', booking_id);
       })
       .update(payload);
   }
@@ -614,10 +614,10 @@ class HotelInvoiceModel extends Schema {
     paid_amount: number;
     due_amount: number;
   }> {
-    return await this.db("folio_entries")
+    return await this.db('folio_entries')
       .withSchema(this.RESERVATION_SCHEMA)
-      .whereIn("id", folioEntryIds)
-      .andWhere("is_void", false)
+      .whereIn('id', folioEntryIds)
+      .andWhere('is_void', false)
       .select(
         this.db.raw(`
           COALESCE(SUM(debit), 0) AS total_amount,
@@ -635,14 +635,14 @@ class HotelInvoiceModel extends Schema {
     hotel_code: number;
     booking_id: number;
   }): Promise<{ total_debit: number; total_credit: number }> {
-    const data = await this.db("folio_entries as fe")
+    const data = await this.db('folio_entries as fe')
       .withSchema(this.RESERVATION_SCHEMA)
-      .sum("fe.debit as total_debit")
-      .sum("fe.credit as total_credit")
-      .leftJoin("folios as f", "fe.folio_id", "f.id")
-      .where("fe.is_void", false)
-      .andWhere("f.booking_id", booking_id)
-      .andWhere("f.hotel_code", hotel_code)
+      .sum('fe.debit as total_debit')
+      .sum('fe.credit as total_credit')
+      .leftJoin('folios as f', 'fe.folio_id', 'f.id')
+      .where('fe.is_void', false)
+      .andWhere('f.booking_id', booking_id)
+      .andWhere('f.hotel_code', hotel_code)
       .first();
     return {
       total_debit: Number(data?.total_debit || 0),

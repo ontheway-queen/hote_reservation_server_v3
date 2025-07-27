@@ -22,21 +22,21 @@ class HotelModel extends schema_1.default {
     createHotel(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             console.log(payload);
-            return yield this.db("hotels")
+            return yield this.db('hotels')
                 .withSchema(this.RESERVATION_SCHEMA)
-                .insert(payload, "id");
+                .insert(payload, 'id');
         });
     }
     insertHotelContactDetails(payload) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("hotel_contact_details")
+            return yield this.db('hotel_contact_details')
                 .withSchema(this.RESERVATION_SCHEMA)
                 .insert(payload);
         });
     }
     updateHotelContactDetails(payload, hotel_code) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("hotel_contact_details")
+            return yield this.db('hotel_contact_details')
                 .withSchema(this.RESERVATION_SCHEMA)
                 .update(payload)
                 .where({ hotel_code });
@@ -44,7 +44,7 @@ class HotelModel extends schema_1.default {
     }
     insertHotelImages(body) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("hotel_image")
+            return yield this.db('hotel_image')
                 .withSchema(this.RESERVATION_SCHEMA)
                 .insert(body);
         });
@@ -55,39 +55,39 @@ class HotelModel extends schema_1.default {
             const { from_date, to_date, name, status, limit, skip } = payload;
             const endDate = new Date(to_date);
             endDate.setDate(endDate.getDate() + 1);
-            const dtbs = this.db("hotels as h");
+            const dtbs = this.db('hotels as h');
             if (limit && skip) {
                 dtbs.limit(parseInt(limit));
                 dtbs.offset(parseInt(skip));
             }
             const data = yield dtbs
                 .withSchema(this.RESERVATION_SCHEMA)
-                .select("h.id", "h.hotel_code", "h.name", "h.address", "h.star_category", "h.city_code", "h.country_code", "h.accommodation_type_id", "h.accommodation_type_name", "h.created_at", "hcd.email", "h.status", "hcd.logo", "h.expiry_date", "h.created_at")
-                .leftJoin("hotel_contact_details as hcd", "h.hotel_code", "hcd.hotel_code")
+                .select('h.id', 'h.hotel_code', 'h.name', 'h.address', 'h.star_category', 'h.city_code', 'h.country_code', 'h.accommodation_type_id', 'h.accommodation_type_name', 'h.created_at', 'hcd.email', 'h.status', 'hcd.logo', 'h.expiry_date', 'h.created_at')
+                .leftJoin('hotel_contact_details as hcd', 'h.hotel_code', 'hcd.hotel_code')
                 .where(function () {
                 if (from_date && to_date) {
-                    this.andWhereBetween("h.created_at", [from_date, endDate]);
+                    this.andWhereBetween('h.created_at', [from_date, endDate]);
                 }
                 if (name) {
-                    this.andWhere("h.name", "like", `%${name}%`).orWhere("h.chain_name", "like", `%${name}%`);
+                    this.andWhere('h.name', 'like', `%${name}%`).orWhere('h.chain_name', 'like', `%${name}%`);
                 }
                 if (status) {
-                    this.andWhere("hoi.status", status);
+                    this.andWhere('hoi.status', status);
                 }
             })
-                .orderBy("id", "desc");
-            const total = yield this.db("hotels as h")
+                .orderBy('id', 'desc');
+            const total = yield this.db('hotels as h')
                 .withSchema(this.RESERVATION_SCHEMA)
-                .count("h.id AS total")
+                .count('h.id AS total')
                 .where(function () {
                 if (from_date && to_date) {
-                    this.andWhereBetween("h.created_at", [from_date, endDate]);
+                    this.andWhereBetween('h.created_at', [from_date, endDate]);
                 }
                 if (name) {
-                    this.andWhere("h.name", "like", `%${name}%`).orWhere("h.chain_name", "like", `%${name}%`);
+                    this.andWhere('h.name', 'like', `%${name}%`).orWhere('h.chain_name', 'like', `%${name}%`);
                 }
                 if (status) {
-                    this.andWhere("hoi.status", status);
+                    this.andWhere('hoi.status', status);
                 }
             });
             return {
@@ -98,11 +98,11 @@ class HotelModel extends schema_1.default {
     }
     getHotelLastId() {
         return __awaiter(this, void 0, void 0, function* () {
-            const hotels = yield this.db("hotels")
+            const hotels = yield this.db('hotels')
                 .withSchema(this.RESERVATION_SCHEMA)
-                .select("id")
+                .select('id')
                 .limit(1)
-                .orderBy("id", "desc");
+                .orderBy('id', 'desc');
             return hotels.length ? hotels[0].id : 1;
         });
     }
@@ -110,20 +110,20 @@ class HotelModel extends schema_1.default {
     getSingleHotel(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             const { id, email } = payload;
-            return yield this.db("hotels as h")
+            return yield this.db('hotels as h')
                 .withSchema(this.RESERVATION_SCHEMA)
-                .select("h.id", "h.hotel_code", "h.name as hotel_name", "h.address", "h.star_category", "h.city_code", "h.country_code", "h.accommodation_type_id", "h.accommodation_type_name", "h.created_at", "h.latitude", "h.longitude", "h.chain_name", "h.postal_code", "h.description", "h.star_category", "h.created_at", "h.status", "h.expiry_date", "h.created_at", "hcd.logo", "hcd.fax", "hcd.website_url", "hcd.email as hotel_email", "hcd.phone"
+                .select('h.id', 'h.hotel_code', 'h.name as hotel_name', 'h.address', 'h.star_category', 'h.city_code', 'h.country_code', 'h.accommodation_type_id', 'h.accommodation_type_name', 'h.created_at', 'h.latitude', 'h.longitude', 'h.chain_name', 'h.postal_code', 'h.description', 'h.star_category', 'h.created_at', 'h.status', 'h.expiry_date', 'h.created_at', 'hcd.logo', 'hcd.fax', 'hcd.website_url', 'hcd.email as hotel_email', 'hcd.phone'
             // this.db.raw(
             //   `(select json_agg(json_build_object('id')) from hotel_images as hi where h.hotel_code = )`
             // )
             )
-                .leftJoin("hotel_contact_details as hcd", "h.hotel_code", "hcd.hotel_code")
+                .leftJoin('hotel_contact_details as hcd', 'h.hotel_code', 'hcd.hotel_code')
                 .where(function () {
                 if (id) {
-                    this.andWhere("h.id", id);
+                    this.andWhere('h.id', id);
                 }
                 if (email) {
-                    this.andWhere("hcd.email", email);
+                    this.andWhere('hcd.email', email);
                 }
             });
         });
@@ -132,7 +132,7 @@ class HotelModel extends schema_1.default {
     updateHotel(payload, where) {
         return __awaiter(this, void 0, void 0, function* () {
             const { email, id } = where;
-            return yield this.db("hotels")
+            return yield this.db('hotels')
                 .withSchema(this.RESERVATION_SCHEMA)
                 .update(payload)
                 .where(function () {
@@ -148,17 +148,17 @@ class HotelModel extends schema_1.default {
     // delete hotel images
     deleteHotelImage(payload, hotel_code) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("hotel_images")
+            return yield this.db('hotel_images')
                 .withSchema(this.RESERVATION_SCHEMA)
                 .delete()
-                .whereIn("id", payload)
-                .andWhere("hotel_code", hotel_code);
+                .whereIn('id', payload)
+                .andWhere('hotel_code', hotel_code);
         });
     }
     // insert hotel amnities
     insertHotelAmnities(payload) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("hotel_aminities")
+            return yield this.db('hotel_aminities')
                 .withSchema(this.RESERVATION_SCHEMA)
                 .insert(payload);
         });
@@ -166,21 +166,21 @@ class HotelModel extends schema_1.default {
     // delete hotel amnities
     deleteHotelAmnities(payload, hotel_code) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("hotel_aminities")
+            return yield this.db('hotel_aminities')
                 .withSchema(this.RESERVATION_SCHEMA)
                 .delete()
-                .whereIn("id", payload)
-                .andWhere("hotel_code", hotel_code);
+                .whereIn('id', payload)
+                .andWhere('hotel_code', hotel_code);
         });
     }
     // Get Hotel Account config
     getHotelAccConfig(hotel_code, configs) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("acc_head_config")
+            return yield this.db('acc_head_config')
                 .withSchema(this.ACC_SCHEMA)
-                .select("*")
-                .andWhere("hotel_code", hotel_code)
-                .whereIn("config", configs);
+                .select('*')
+                .andWhere('hotel_code', hotel_code)
+                .whereIn('config', configs);
         });
     }
 }

@@ -28,7 +28,7 @@ class SubReservationService extends abstract_service_1.default {
         return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     }
     addDays(date, days = 0) {
-        const base = typeof date === "string" ? new Date(`${date}T00:00:00Z`) : new Date(date);
+        const base = typeof date === 'string' ? new Date(`${date}T00:00:00Z`) : new Date(date);
         base.setUTCHours(0, 0, 0, 0);
         base.setUTCDate(base.getUTCDate() + days);
         return base.toISOString().slice(0, 10);
@@ -122,7 +122,7 @@ class SubReservationService extends abstract_service_1.default {
                 created_by: payload.created_by,
                 comments: payload.special_requests,
                 booking_type: payload.booking_type,
-                status: is_checked_in ? "checked_in" : "confirmed",
+                status: is_checked_in ? 'checked_in' : 'confirmed',
                 drop: payload.drop,
                 drop_time: payload.drop_time,
                 drop_to: payload.drop_to,
@@ -135,7 +135,7 @@ class SubReservationService extends abstract_service_1.default {
                 service_charge_percentage: payload.service_charge_percentage,
                 vat_percentage: payload.vat_percentage,
             });
-            return booking;
+            return { id: booking.id, booking_ref: ref };
         });
     }
     insertBookingRooms({ booked_room_types, booking_id, nights, hotel_code, is_checked_in, }) {
@@ -147,7 +147,7 @@ class SubReservationService extends abstract_service_1.default {
                         {
                             check_in: room.check_in,
                             check_out: room.check_out,
-                            status: is_checked_in ? "checked_in" : "confirmed",
+                            status: is_checked_in ? 'checked_in' : 'confirmed',
                             booking_id,
                             room_id: room.room_id,
                             room_type_id: rt.room_type_id,
@@ -196,7 +196,7 @@ class SubReservationService extends abstract_service_1.default {
                         {
                             check_in: room.check_in,
                             check_out: room.check_out,
-                            status: is_checked_in ? "checked_in" : "confirmed",
+                            status: is_checked_in ? 'checked_in' : 'confirmed',
                             booking_id,
                             room_id: room.room_id,
                             room_type_id: rt.room_type_id,
@@ -221,10 +221,10 @@ class SubReservationService extends abstract_service_1.default {
                             }
                         }
                         if (!primaryGuestCount) {
-                            throw new Error("At least one primary guest is required for each room.");
+                            throw new Error('At least one primary guest is required for each room.');
                         }
                         if (primaryGuestCount > 1) {
-                            throw new Error("Only one primary guest is allowed per room.");
+                            throw new Error('Only one primary guest is allowed per room.');
                         }
                         for (const guest of room.guest_info) {
                             const [guestRes] = yield this.Model.guestModel(this.trx).createGuestForGroupBooking({
@@ -285,9 +285,9 @@ class SubReservationService extends abstract_service_1.default {
                 for (const { check_in, check_out } of rooms) {
                     const dates = helperFunction_1.HelperFunction.getDatesBetween(check_in, check_out);
                     const updatePromises = dates.map((date) => {
-                        if (reservation_type === "booked") {
+                        if (reservation_type === 'booked') {
                             return reservation_model.updateRoomAvailability({
-                                type: "booked_room_increase",
+                                type: 'booked_room_increase',
                                 hotel_code,
                                 room_type_id,
                                 date,
@@ -300,7 +300,7 @@ class SubReservationService extends abstract_service_1.default {
                                 room_type_id,
                                 date,
                                 rooms_to_book: 1,
-                                type: "hold_increase",
+                                type: 'hold_increase',
                             });
                         }
                     });
@@ -315,31 +315,31 @@ class SubReservationService extends abstract_service_1.default {
             for (const { check_in, check_out, room_type_id } of rooms) {
                 const dates = helperFunction_1.HelperFunction.getDatesBetween(check_in, check_out);
                 const updatePromises = dates.map((date) => {
-                    if (reservation_type === "booked_room_increase") {
+                    if (reservation_type === 'booked_room_increase') {
                         return reservation_model.updateRoomAvailability({
-                            type: "booked_room_increase",
+                            type: 'booked_room_increase',
                             hotel_code,
                             room_type_id,
                             date,
                             rooms_to_book: 1,
                         });
                     }
-                    else if (reservation_type === "booked_room_decrease") {
+                    else if (reservation_type === 'booked_room_decrease') {
                         return reservation_model.updateRoomAvailability({
-                            type: "booked_room_decrease",
+                            type: 'booked_room_decrease',
                             hotel_code,
                             room_type_id,
                             date,
                             rooms_to_book: 1,
                         });
                     }
-                    else if (reservation_type == "hold_increase") {
+                    else if (reservation_type == 'hold_increase') {
                         return reservation_model.updateRoomAvailabilityHold({
                             hotel_code,
                             room_type_id,
                             date,
                             rooms_to_book: 1,
-                            type: "hold_increase",
+                            type: 'hold_increase',
                         });
                     }
                     else {
@@ -348,7 +348,7 @@ class SubReservationService extends abstract_service_1.default {
                             room_type_id,
                             date,
                             rooms_to_book: 1,
-                            type: "hold_decrease",
+                            type: 'hold_decrease',
                         });
                     }
                 });
@@ -362,21 +362,21 @@ class SubReservationService extends abstract_service_1.default {
             let voucherData;
             if (is_payment_given) {
                 if (!payment)
-                    throw new Error("Payment data is required when is_payment_given is true");
+                    throw new Error('Payment data is required when is_payment_given is true');
                 const [account] = yield accountModel.getSingleAccount({
                     hotel_code: req.hotel_admin.hotel_code,
                     id: payment.acc_id,
                 });
                 if (!account)
-                    throw new Error("Invalid Account");
+                    throw new Error('Invalid Account');
                 const voucher_no = yield new helperFunction_1.HelperFunction().generateVoucherNo();
                 const [voucher] = yield accountModel.insertAccVoucher({
                     acc_head_id: account.acc_head_id,
                     created_by: req.hotel_admin.id,
                     debit: payment.amount,
                     credit: 0,
-                    description: "For room booking payment",
-                    voucher_type: "PAYMENT",
+                    description: 'For room booking payment',
+                    voucher_type: 'PAYMENT',
                     voucher_date: new Date().toISOString(),
                     voucher_no,
                 });
@@ -390,9 +390,9 @@ class SubReservationService extends abstract_service_1.default {
                 folio_number,
                 guest_id,
                 hotel_code: req.hotel_admin.hotel_code,
-                name: "Reservation",
-                status: "open",
-                type: "Primary",
+                name: 'Reservation',
+                status: 'open',
+                type: 'Primary',
             });
             console.log({ folio });
             yield hotelInvModel.insertInFolioEntries({
@@ -400,19 +400,19 @@ class SubReservationService extends abstract_service_1.default {
                 debit: total_amount,
                 credit: 0,
                 folio_id: folio.id,
-                posting_type: "Charge",
-                description: "room booking",
+                posting_type: 'Charge',
+                description: 'room booking',
             });
             if (is_payment_given) {
                 if (!payment)
-                    throw new Error("Payment data is required when is_payment_given is true");
+                    throw new Error('Payment data is required when is_payment_given is true');
                 yield hotelInvModel.insertInFolioEntries({
                     acc_voucher_id: voucherData.id,
                     debit: 0,
                     credit: payment.amount,
                     folio_id: folio.id,
-                    posting_type: "Payment",
-                    description: "Payment given",
+                    posting_type: 'Payment',
+                    description: 'Payment given',
                 });
             }
             const guestModel = this.Model.guestModel(this.trx);
@@ -420,24 +420,24 @@ class SubReservationService extends abstract_service_1.default {
                 hotel_code: req.hotel_admin.hotel_code,
                 guest_id,
                 credit: 0,
-                remarks: "Owes for booking",
+                remarks: 'Owes for booking',
                 debit: total_amount,
             });
             if (is_payment_given) {
                 if (!payment)
-                    throw new Error("Payment data is required when is_payment_given is true");
+                    throw new Error('Payment data is required when is_payment_given is true');
                 yield guestModel.insertGuestLedger({
                     hotel_code: req.hotel_admin.hotel_code,
                     guest_id,
                     credit: payment.amount,
-                    remarks: "Paid amount for booking",
+                    remarks: 'Paid amount for booking',
                     debit: 0,
                 });
             }
         });
     }
     // This service for individual booking
-    createRoomBookingFolioWithEntries({ body, booking_id, guest_id, req, }) {
+    createRoomBookingFolioWithEntries({ body, booking_id, guest_id, req, booking_ref, }) {
         var _a, _b;
         return __awaiter(this, void 0, void 0, function* () {
             const { hotel_code, id: created_by } = req.hotel_admin;
@@ -445,7 +445,7 @@ class SubReservationService extends abstract_service_1.default {
             const accountModel = this.Model.accountModel(this.trx);
             const reservationModel = this.Model.reservationModel(this.trx);
             const roomModel = this.Model.RoomModel(this.trx);
-            const today = new Date().toISOString().split("T")[0];
+            const today = new Date().toISOString().split('T')[0];
             const [lastFolio] = yield hotelInvModel.getLasFolioId();
             const child = [];
             const push = (c, e) => {
@@ -463,8 +463,8 @@ class SubReservationService extends abstract_service_1.default {
                         guest_id,
                         hotel_code,
                         name: `Room ${info.room_name} Folio`,
-                        status: "open",
-                        type: "room_primary",
+                        status: 'open',
+                        type: 'room_primary',
                         room_id: room.room_id,
                     });
                     const ctx = {
@@ -477,7 +477,7 @@ class SubReservationService extends abstract_service_1.default {
                     /* date‑wise charges */
                     const rates = {};
                     for (let d = new Date(room.check_in); d < new Date(room.check_out); d.setDate(d.getDate() + 1)) {
-                        rates[d.toISOString().split("T")[0]] = room.rate.changed_rate;
+                        rates[d.toISOString().split('T')[0]] = room.rate.changed_rate;
                     }
                     for (const date of Object.keys(rates).sort()) {
                         const rate = rates[date];
@@ -485,10 +485,10 @@ class SubReservationService extends abstract_service_1.default {
                         push(ctx, {
                             folio_id: ctx.folioId,
                             date,
-                            posting_type: "Charge",
+                            posting_type: 'Charge',
                             debit: rate,
                             credit: 0,
-                            description: "Room Tariff",
+                            description: 'Room Tariff',
                             rack_rate: room.rate.base_rate,
                             room_id: room.room_id,
                         });
@@ -497,10 +497,10 @@ class SubReservationService extends abstract_service_1.default {
                             push(ctx, {
                                 folio_id: ctx.folioId,
                                 date,
-                                posting_type: "Charge",
+                                posting_type: 'Charge',
                                 debit: +((rate * body.vat_percentage) / 100).toFixed(2),
                                 credit: 0,
-                                description: "VAT",
+                                description: 'VAT',
                                 rack_rate: 0,
                             });
                         }
@@ -509,11 +509,11 @@ class SubReservationService extends abstract_service_1.default {
                             push(ctx, {
                                 folio_id: ctx.folioId,
                                 date,
-                                posting_type: "Charge",
+                                posting_type: 'Charge',
                                 debit: +((rate * body.service_charge_percentage) / 100).toFixed(2),
                                 credit: 0,
                                 room_id: room.room_id,
-                                description: "Service Charge",
+                                description: 'Service Charge',
                                 rack_rate: 0,
                             });
                         }
@@ -523,6 +523,45 @@ class SubReservationService extends abstract_service_1.default {
             }
             /* master‑level entries (payment + discount) */
             const masterEntries = [];
+            /*  update booking total (only debits) */
+            const totalDebit = child.reduce((s, c) => s + c.totalDebit, 0);
+            const helper = new helperFunction_1.HelperFunction();
+            const hotelModel = this.Model.HotelModel(this.trx);
+            const heads = yield hotelModel.getHotelAccConfig(hotel_code, [
+                'RECEIVABLE_HEAD_ID',
+                'SALES_HEAD_ID',
+            ]);
+            const receivable_head = heads.find((h) => h.config === 'RECEIVABLE_HEAD_ID');
+            if (!receivable_head) {
+                throw new Error('RECEIVABLE_HEAD_ID not configured for this hotel');
+            }
+            const sales_head = heads.find((h) => h.config === 'SALES_HEAD_ID');
+            if (!sales_head) {
+                throw new Error('RECEIVABLE_HEAD_ID not configured for this hotel');
+            }
+            const voucher_no1 = yield helper.generateVoucherNo('JV', this.trx);
+            yield accountModel.insertAccVoucher([
+                {
+                    acc_head_id: receivable_head.head_id,
+                    created_by,
+                    debit: body.payment.amount,
+                    credit: 0,
+                    description: `Receivable for individual room booking ${booking_ref}`,
+                    voucher_date: today,
+                    voucher_no: voucher_no1,
+                    hotel_code,
+                },
+                {
+                    acc_head_id: sales_head.head_id,
+                    created_by,
+                    debit: body.payment.amount,
+                    credit: 0,
+                    description: `Sales for individual room booking ${booking_ref}`,
+                    voucher_date: today,
+                    voucher_no: voucher_no1,
+                    hotel_code,
+                },
+            ]);
             // payment
             if (body.is_payment_given && ((_b = body.payment) === null || _b === void 0 ? void 0 : _b.amount) > 0) {
                 const [acc] = yield accountModel.getSingleAccount({
@@ -530,24 +569,38 @@ class SubReservationService extends abstract_service_1.default {
                     id: body.payment.acc_id,
                 });
                 if (!acc)
-                    throw new Error("Invalid Account");
-                const voucher_no = yield new helperFunction_1.HelperFunction().generateVoucherNo();
-                const [voucher] = yield accountModel.insertAccVoucher({
-                    acc_head_id: acc.acc_head_id,
-                    created_by,
-                    debit: body.payment.amount,
-                    credit: 0,
-                    description: `Payment for group booking ${booking_id}`,
-                    voucher_type: "PAYMENT",
-                    voucher_date: today,
-                    voucher_no,
-                });
+                    throw new Error('Invalid Account');
+                let voucher_type = 'CCV';
+                if (acc.acc_type === 'BANK') {
+                    voucher_type = 'BCV';
+                }
+                const voucher_no = yield helper.generateVoucherNo(voucher_type, this.trx);
+                yield accountModel.insertAccVoucher([
+                    {
+                        acc_head_id: acc.acc_head_id,
+                        created_by,
+                        debit: body.payment.amount,
+                        credit: 0,
+                        description: `Payment collection for booking ${booking_ref}`,
+                        voucher_date: today,
+                        voucher_no,
+                        hotel_code,
+                    },
+                    {
+                        acc_head_id: receivable_head.head_id,
+                        created_by,
+                        debit: 0,
+                        credit: body.payment.amount,
+                        description: `Payment collected for booking ${booking_ref}`,
+                        voucher_date: today,
+                        voucher_no,
+                        hotel_code,
+                    },
+                ]);
             }
             /*  persist entries */
             const allEntries = [...masterEntries, ...child.flatMap((c) => c.entries)];
             yield hotelInvModel.insertInFolioEntries(allEntries);
-            /*  update booking total (only debits) */
-            const totalDebit = child.reduce((s, c) => s + c.totalDebit, 0);
             yield reservationModel.updateRoomBooking({ total_amount: totalDebit }, hotel_code, booking_id);
             return {
                 childFolios: child.map((c) => ({
@@ -568,7 +621,7 @@ class SubReservationService extends abstract_service_1.default {
             const accountModel = this.Model.accountModel(this.trx);
             const reservationModel = this.Model.reservationModel(this.trx);
             const roomModel = this.Model.RoomModel(this.trx);
-            const today = new Date().toISOString().split("T")[0];
+            const today = new Date().toISOString().split('T')[0];
             const [lastFolio] = yield hotelInvModel.getLasFolioId();
             const masterNo = helperFunction_1.HelperFunction.generateFolioNumber(lastFolio === null || lastFolio === void 0 ? void 0 : lastFolio.id);
             const [masterFolio] = yield hotelInvModel.insertInFolio({
@@ -577,8 +630,8 @@ class SubReservationService extends abstract_service_1.default {
                 guest_id,
                 hotel_code,
                 name: `Group Folio #${booking_id}`,
-                status: "open",
-                type: "group_master",
+                status: 'open',
+                type: 'group_master',
             });
             const child = [];
             const push = (c, e) => {
@@ -596,8 +649,8 @@ class SubReservationService extends abstract_service_1.default {
                         guest_id,
                         hotel_code,
                         name: `Room ${info.room_name} Folio`,
-                        status: "open",
-                        type: "room_primary",
+                        status: 'open',
+                        type: 'room_primary',
                         room_id: room.room_id,
                     });
                     const ctx = {
@@ -610,7 +663,7 @@ class SubReservationService extends abstract_service_1.default {
                     /* date‑wise charges */
                     const rates = {};
                     for (let d = new Date(room.check_in); d < new Date(room.check_out); d.setDate(d.getDate() + 1)) {
-                        rates[d.toISOString().split("T")[0]] = room.rate.changed_rate;
+                        rates[d.toISOString().split('T')[0]] = room.rate.changed_rate;
                     }
                     for (const date of Object.keys(rates).sort()) {
                         const rate = rates[date];
@@ -618,10 +671,10 @@ class SubReservationService extends abstract_service_1.default {
                         push(ctx, {
                             folio_id: ctx.folioId,
                             date,
-                            posting_type: "Charge",
+                            posting_type: 'Charge',
                             debit: rate,
                             credit: 0,
-                            description: "Room Tariff",
+                            description: 'Room Tariff',
                             rack_rate: room.rate.base_rate,
                             room_id: room.room_id,
                         });
@@ -630,10 +683,10 @@ class SubReservationService extends abstract_service_1.default {
                             push(ctx, {
                                 folio_id: ctx.folioId,
                                 date,
-                                posting_type: "Charge",
+                                posting_type: 'Charge',
                                 debit: +((rate * body.vat_percentage) / 100).toFixed(2),
                                 credit: 0,
-                                description: "VAT",
+                                description: 'VAT',
                                 rack_rate: 0,
                             });
                         }
@@ -642,10 +695,10 @@ class SubReservationService extends abstract_service_1.default {
                             push(ctx, {
                                 folio_id: ctx.folioId,
                                 date,
-                                posting_type: "Charge",
+                                posting_type: 'Charge',
                                 debit: +((rate * body.service_charge_percentage) / 100).toFixed(2),
                                 credit: 0,
-                                description: "Service Charge",
+                                description: 'Service Charge',
                                 rack_rate: 0,
                             });
                         }
@@ -662,7 +715,7 @@ class SubReservationService extends abstract_service_1.default {
                     id: body.payment.acc_id,
                 });
                 if (!acc)
-                    throw new Error("Invalid Account");
+                    throw new Error('Invalid Account');
                 const voucher_no = yield new helperFunction_1.HelperFunction().generateVoucherNo();
                 const [voucher] = yield accountModel.insertAccVoucher({
                     acc_head_id: acc.acc_head_id,
@@ -670,7 +723,7 @@ class SubReservationService extends abstract_service_1.default {
                     debit: body.payment.amount,
                     credit: 0,
                     description: `Payment for group booking ${booking_id}`,
-                    voucher_type: "PAYMENT",
+                    voucher_type: 'PAYMENT',
                     voucher_date: today,
                     voucher_no,
                 });
@@ -678,11 +731,11 @@ class SubReservationService extends abstract_service_1.default {
                     folio_id: masterFolio.id,
                     acc_voucher_id: voucher.id,
                     date: today,
-                    posting_type: "Payment",
+                    posting_type: 'Payment',
                     debit: 0,
                     credit: body.payment.amount,
                     room_id: 0,
-                    description: "Payment Received",
+                    description: 'Payment Received',
                     rack_rate: 0,
                 });
             }
@@ -711,7 +764,7 @@ class SubReservationService extends abstract_service_1.default {
                 id: acc_id,
             });
             if (!account)
-                throw new Error("Invalid Account");
+                throw new Error('Invalid Account');
             const voucher_no = yield new helperFunction_1.HelperFunction().generateVoucherNo();
             const [voucher] = yield accountModel.insertAccVoucher({
                 acc_head_id: account.acc_head_id,
@@ -719,7 +772,7 @@ class SubReservationService extends abstract_service_1.default {
                 debit: amount,
                 credit: 0,
                 description: remarks,
-                voucher_type: "PAYMENT",
+                voucher_type: 'PAYMENT',
                 voucher_date: payment_date,
                 voucher_no,
             });
@@ -729,7 +782,7 @@ class SubReservationService extends abstract_service_1.default {
                 debit: 0,
                 credit: amount,
                 folio_id: folio_id,
-                posting_type: "Payment",
+                posting_type: 'Payment',
                 description: remarks,
             });
             const guestModel = this.Model.guestModel(this.trx);
@@ -750,7 +803,7 @@ class SubReservationService extends abstract_service_1.default {
                 id: acc_id,
             });
             if (!account)
-                throw new Error("Invalid Account");
+                throw new Error('Invalid Account');
             const voucher_no = yield new helperFunction_1.HelperFunction().generateVoucherNo();
             const [voucher] = yield accountModel.insertAccVoucher({
                 acc_head_id: account.acc_head_id,
@@ -758,7 +811,7 @@ class SubReservationService extends abstract_service_1.default {
                 debit: 0,
                 credit: amount,
                 description: remarks,
-                voucher_type: "REFUND",
+                voucher_type: 'REFUND',
                 voucher_date: payment_date,
                 voucher_no,
             });
@@ -768,7 +821,7 @@ class SubReservationService extends abstract_service_1.default {
                 debit: 0,
                 credit: -amount,
                 folio_id: folio_id,
-                posting_type: "Refund",
+                posting_type: 'Refund',
                 description: remarks,
             });
             const guestModel = this.Model.guestModel(this.trx);
