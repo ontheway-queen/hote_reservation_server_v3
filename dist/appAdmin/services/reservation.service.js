@@ -304,6 +304,7 @@ class ReservationService extends abstract_service_1.default {
                     guest_id,
                     booking_id: booking.id,
                     req,
+                    booking_ref: booking.booking_ref,
                 });
                 return {
                     success: true,
@@ -1537,6 +1538,7 @@ class ReservationService extends abstract_service_1.default {
                     remarks,
                     req,
                     payment_date,
+                    booking_ref: checkSingleFolio.booking_ref,
                 });
                 return {
                     success: true,

@@ -418,6 +418,7 @@ export class ReservationService extends AbstractServices {
         guest_id,
         booking_id: booking.id,
         req,
+        booking_ref: booking.booking_ref,
       });
 
       return {
@@ -2111,6 +2112,7 @@ export class ReservationService extends AbstractServices {
         remarks,
         req,
         payment_date,
+        booking_ref: checkSingleFolio.booking_ref,
       });
 
       return {

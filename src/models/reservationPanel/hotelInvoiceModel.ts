@@ -447,12 +447,14 @@ class HotelInvoiceModel extends Schema {
         name: string;
         guest_id: number;
         booking_id: string;
+        booking_ref: string;
       }
     | undefined
   > {
-    return await this.db("folios")
+    return await this.db("folios as f")
       .withSchema(this.RESERVATION_SCHEMA)
-      .select("id", "name", "guest_id", "booking_id")
+      .select("f.id", "f.name", "f.guest_id", "f.booking_id", "booking_ref")
+      .leftJoin("bookings as b", "f.booking_id", "b.id")
       .where("id", folio_id)
       .andWhere("hotel_code", hotel_code)
       .first();

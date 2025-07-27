@@ -31,12 +31,12 @@ class HelperFunction extends abstract_service_1.default {
             const end = new Date(detail.end_date);
             const dailyRates = [];
             for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-                const dateStr = d.toISOString().split('T')[0];
+                const dateStr = d.toISOString().split("T")[0];
                 const override = overrideMap.get(dateStr);
                 if (override) {
                     dailyRates.push({
                         date: dateStr,
-                        day_name: d.toLocaleDateString('en-US', { weekday: 'long' }),
+                        day_name: d.toLocaleDateString("en-US", { weekday: "long" }),
                         rate: override.rate,
                         extra_adult_rate: override.extra_adult_rate,
                         extra_child_rate: override.extra_child_rate,
@@ -47,7 +47,7 @@ class HelperFunction extends abstract_service_1.default {
                 else {
                     dailyRates.push({
                         date: dateStr,
-                        day_name: d.toLocaleDateString('en-US', { weekday: 'long' }),
+                        day_name: d.toLocaleDateString("en-US", { weekday: "long" }),
                         rate: detail.base_rate,
                         extra_adult_rate: detail.extra_adult_rate,
                         extra_child_rate: detail.extra_child_rate,
@@ -85,26 +85,26 @@ class HelperFunction extends abstract_service_1.default {
     }
     static generateFolioNumber(lastFolioId) {
         const now = (0, moment_1.default)();
-        const prefix = `FOLIO-${now.format('YYYYMM')}`;
+        const prefix = `FOLIO-${now.format("YYYYMM")}`;
         const nextId = (lastFolioId || 0) + 1;
-        const padded = nextId.toString().padStart(4, '0');
+        const padded = nextId.toString().padStart(4, "0");
         return `${prefix}-${padded}`;
     }
     generateVoucherNo(type, trx) {
         return __awaiter(this, void 0, void 0, function* () {
             const now = (0, moment_1.default)();
-            const prefix = `${type}-${now.format('YYYY')}`;
+            const prefix = `${type}-${now.format("YYYY")}`;
             const model = this.Model.DboModel(trx);
-            const getLasVoucherId = yield model.getLastNo('Voucher');
+            const getLasVoucherId = yield model.getLastNo("Voucher");
             let next = 1;
             if (getLasVoucherId === undefined) {
-                yield model.insertLastNo({ type: 'Voucher', last_no: next });
+                yield model.insertLastNo({ type: "Voucher", last_no: next });
             }
             else {
                 next = getLasVoucherId.last_no + 1;
-                yield model.updateLastNo('Voucher', next);
+                yield model.updateLastNo("Voucher", next);
             }
-            const padded = next.toString().padStart(4, '0');
+            const padded = next.toString().padStart(4, "0");
             return `${prefix}-${padded}`;
         });
     }
@@ -112,7 +112,7 @@ class HelperFunction extends abstract_service_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             const lastId = yield this.Model.hotelInvoiceModel().getLastInvoiceId();
             const nextId = lastId + 1;
-            const padded = String(nextId).padStart(6, '0'); // e.g., "000004"
+            const padded = String(nextId).padStart(6, "0"); // e.g., "000004"
             return `INV-${padded}`;
         });
     }

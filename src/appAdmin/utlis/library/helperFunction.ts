@@ -1,6 +1,6 @@
-import moment from 'moment';
-import AbstractServices from '../../../abstarcts/abstract.service';
-import knex, { Knex } from 'knex';
+import moment from "moment";
+import AbstractServices from "../../../abstarcts/abstract.service";
+import knex, { Knex } from "knex";
 
 export class HelperFunction extends AbstractServices {
   public static generateRateCalendar(rawData: any) {
@@ -22,13 +22,13 @@ export class HelperFunction extends AbstractServices {
       const dailyRates = [];
 
       for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-        const dateStr = d.toISOString().split('T')[0];
+        const dateStr = d.toISOString().split("T")[0];
         const override = overrideMap.get(dateStr);
 
         if (override) {
           dailyRates.push({
             date: dateStr,
-            day_name: d.toLocaleDateString('en-US', { weekday: 'long' }),
+            day_name: d.toLocaleDateString("en-US", { weekday: "long" }),
             rate: override.rate,
             extra_adult_rate: override.extra_adult_rate,
             extra_child_rate: override.extra_child_rate,
@@ -38,7 +38,7 @@ export class HelperFunction extends AbstractServices {
         } else {
           dailyRates.push({
             date: dateStr,
-            day_name: d.toLocaleDateString('en-US', { weekday: 'long' }),
+            day_name: d.toLocaleDateString("en-US", { weekday: "long" }),
             rate: detail.base_rate,
             extra_adult_rate: detail.extra_adult_rate,
             extra_child_rate: detail.extra_child_rate,
@@ -81,35 +81,35 @@ export class HelperFunction extends AbstractServices {
 
   public static generateFolioNumber(lastFolioId: number): string {
     const now = moment();
-    const prefix = `FOLIO-${now.format('YYYYMM')}`;
+    const prefix = `FOLIO-${now.format("YYYYMM")}`;
 
     const nextId = (lastFolioId || 0) + 1;
-    const padded = nextId.toString().padStart(4, '0');
+    const padded = nextId.toString().padStart(4, "0");
 
     return `${prefix}-${padded}`;
   }
 
   public async generateVoucherNo(
-    type: 'JV' | 'BCV' | 'DV' | 'CCV',
+    type: "JV" | "BCV" | "DV" | "CCV",
     trx: Knex.Transaction
   ): Promise<string> {
     const now = moment();
 
-    const prefix = `${type}-${now.format('YYYY')}`;
+    const prefix = `${type}-${now.format("YYYY")}`;
 
     const model = this.Model.DboModel(trx);
 
-    const getLasVoucherId = await model.getLastNo('Voucher');
+    const getLasVoucherId = await model.getLastNo("Voucher");
     let next = 1;
 
     if (getLasVoucherId === undefined) {
-      await model.insertLastNo({ type: 'Voucher', last_no: next });
+      await model.insertLastNo({ type: "Voucher", last_no: next });
     } else {
       next = getLasVoucherId.last_no + 1;
-      await model.updateLastNo('Voucher', next);
+      await model.updateLastNo("Voucher", next);
     }
 
-    const padded = next.toString().padStart(4, '0');
+    const padded = next.toString().padStart(4, "0");
 
     return `${prefix}-${padded}`;
   }
@@ -117,7 +117,7 @@ export class HelperFunction extends AbstractServices {
   public async generateInvoiceNumber() {
     const lastId = await this.Model.hotelInvoiceModel().getLastInvoiceId();
     const nextId = lastId + 1;
-    const padded = String(nextId).padStart(6, '0'); // e.g., "000004"
+    const padded = String(nextId).padStart(6, "0"); // e.g., "000004"
     return `INV-${padded}`;
   }
 }
