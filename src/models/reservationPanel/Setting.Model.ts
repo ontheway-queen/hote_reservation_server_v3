@@ -691,6 +691,13 @@ class SettingModel extends Schema {
         }
       });
   }
+  public async getSingleSource({ id }: { id: number }) {
+    return await this.db("sources")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .select("*")
+      .where({ id })
+      .first();
+  }
 
   public async getChildAgePolicies(hotel_code: number) {
     return await this.db("child_age_policies as cap")

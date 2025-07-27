@@ -15,7 +15,7 @@ class HotelAdminAuthService extends AbstractServices {
     const model = this.Model.rAdministrationModel();
     const checkUser = await model.getSingleAdmin({ email });
 
-    if (!checkUser.length) {
+    if (!checkUser) {
       return {
         success: false,
         code: this.StatusCode.HTTP_BAD_REQUEST,
@@ -30,7 +30,7 @@ class HotelAdminAuthService extends AbstractServices {
       hotel_status,
       hotel_contact_details,
       ...rest
-    } = checkUser[0];
+    } = checkUser;
 
     if (hotel_status == "disabled") {
       return {
@@ -93,23 +93,23 @@ class HotelAdminAuthService extends AbstractServices {
       id,
     });
 
-    const { password, ...rest } = data[0];
+    const { password, ...rest } = data;
 
-    if (data.length) {
-      return {
-        success: true,
-        code: this.StatusCode.HTTP_OK,
-        data: {
-          ...rest,
-        },
-      };
-    } else {
+    if (!data) {
       return {
         success: false,
         code: this.StatusCode.HTTP_NOT_FOUND,
         message: this.ResMsg.HTTP_NOT_FOUND,
       };
     }
+
+    return {
+      success: true,
+      code: this.StatusCode.HTTP_OK,
+      data: {
+        ...rest,
+      },
+    };
   }
 
   // update profile
@@ -122,7 +122,7 @@ class HotelAdminAuthService extends AbstractServices {
       id,
     });
 
-    if (!checkAdmin.length) {
+    if (!checkAdmin) {
       return {
         success: true,
         code: this.StatusCode.HTTP_NOT_FOUND,
@@ -136,7 +136,7 @@ class HotelAdminAuthService extends AbstractServices {
       req.body[files[0].fieldname] = files[0].filename;
     }
 
-    const { email } = checkAdmin[0];
+    const { email } = checkAdmin;
 
     await model.updateAdmin(req.body, { email });
 

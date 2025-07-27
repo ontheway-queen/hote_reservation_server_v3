@@ -36,14 +36,14 @@ class HotelAdminAuthService extends abstract_service_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             const model = this.Model.rAdministrationModel();
             const checkUser = yield model.getSingleAdmin({ email });
-            if (!checkUser.length) {
+            if (!checkUser) {
                 return {
                     success: false,
                     code: this.StatusCode.HTTP_BAD_REQUEST,
                     message: this.ResMsg.WRONG_CREDENTIALS,
                 };
             }
-            const _a = checkUser[0], { password: hashPass, id, status, hotel_status, hotel_contact_details } = _a, rest = __rest(_a, ["password", "id", "status", "hotel_status", "hotel_contact_details"]);
+            const { password: hashPass, id, status, hotel_status, hotel_contact_details } = checkUser, rest = __rest(checkUser, ["password", "id", "status", "hotel_status", "hotel_contact_details"]);
             if (hotel_status == "disabled") {
                 return {
                     success: false,
@@ -91,21 +91,19 @@ class HotelAdminAuthService extends abstract_service_1.default {
             const data = yield this.Model.rAdministrationModel().getSingleAdmin({
                 id,
             });
-            const _a = data[0], { password } = _a, rest = __rest(_a, ["password"]);
-            if (data.length) {
-                return {
-                    success: true,
-                    code: this.StatusCode.HTTP_OK,
-                    data: Object.assign({}, rest),
-                };
-            }
-            else {
+            const { password } = data, rest = __rest(data, ["password"]);
+            if (!data) {
                 return {
                     success: false,
                     code: this.StatusCode.HTTP_NOT_FOUND,
                     message: this.ResMsg.HTTP_NOT_FOUND,
                 };
             }
+            return {
+                success: true,
+                code: this.StatusCode.HTTP_OK,
+                data: Object.assign({}, rest),
+            };
         });
     }
     // update profile
@@ -116,7 +114,7 @@ class HotelAdminAuthService extends abstract_service_1.default {
             const checkAdmin = yield model.getSingleAdmin({
                 id,
             });
-            if (!checkAdmin.length) {
+            if (!checkAdmin) {
                 return {
                     success: true,
                     code: this.StatusCode.HTTP_NOT_FOUND,
@@ -127,7 +125,7 @@ class HotelAdminAuthService extends abstract_service_1.default {
             if (files.length) {
                 req.body[files[0].fieldname] = files[0].filename;
             }
-            const { email } = checkAdmin[0];
+            const { email } = checkAdmin;
             yield model.updateAdmin(req.body, { email });
             return {
                 success: true,

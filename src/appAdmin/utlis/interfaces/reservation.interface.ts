@@ -469,24 +469,37 @@ export interface addPaymentReqBody {
 
 // --------------------------- Update -------------------------//
 
-export interface IUpdateBookingRequestBody {
-  guest: IguestReqBody;
+// export interface IUpdateBookingRequestBody {
+//   guest: IguestReqBody;
+//   pickup: boolean;
+//   pickup_from: string;
+//   pickup_time: string;
+//   drop: boolean;
+//   drop_to: string;
+//   drop_time: string;
+//   is_company_booked: boolean;
+//   company_name?: string;
+//   visit_purpose?: string;
+//   add_room_types: IGBookedRoomTypeRequest[];
+//   special_requests: string;
+//   source_id: number;
+//   removed_rooms: number[];
+// }
+
+export interface IUpdateReservationRequestBody {
+  comments: string;
+  source_id: number;
   pickup: boolean;
   pickup_from: string;
   pickup_time: string;
   drop: boolean;
   drop_to: string;
   drop_time: string;
-  is_company_booked: boolean;
-  company_name?: string;
-  visit_purpose?: string;
-  add_room_types: IGBookedRoomTypeRequest[];
-  special_requests: string;
-  source_id: number;
-  removed_rooms: number[];
+  company_name: string;
+  visit_purpose: string;
 }
 
-export interface IUpdateReservationRequestBody {
+export interface IupdateRoomAndRateOfReservationRequestBody {
   changed_rate_of_booking_rooms?: {
     room_id: number;
     unit_base_rate: number;

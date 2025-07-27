@@ -42,7 +42,10 @@ class ReservationRouter {
         this.router
             .route("/booking/:id")
             .get(this.controller.getSingleBooking)
-            .patch(this.controller.updateSingleBooking);
+            .patch(this.controller.updateSingleReservation);
+        this.router
+            .route("/booking/update-room-and-rate/:id")
+            .patch(this.controller.updateRoomAndRateOfReservation);
         this.router
             .route("/booking/change-dates/by-booking/:id")
             .patch(this.controller.changeDatesOfBooking);

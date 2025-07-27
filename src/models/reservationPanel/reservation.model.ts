@@ -1153,15 +1153,25 @@ export class ReservationModel extends Schema {
   }
 
   public async updateRoomBooking(
-    payload: {
-      status?: "checked_in" | "checked_out" | "confirmed" | "canceled";
-      booking_type?: "B" | "C" | "H";
-      total_amount?: number;
-      sub_total?: number;
-      total_nights?: number;
-      check_in?: string;
-      check_out?: string;
-    },
+    payload: Partial<{
+      status: "checked_in" | "checked_out" | "confirmed" | "canceled";
+      booking_type: "B" | "C" | "H";
+      total_amount: number;
+      sub_total: number;
+      total_nights: number;
+      check_in: string;
+      check_out: string;
+      comments: string;
+      pickup: boolean;
+      pickup_from: string;
+      pickup_time: string;
+      drop: boolean;
+      drop_to: string;
+      drop_time: string;
+      visit_purpose: string;
+      source_id: number;
+      company_name: string;
+    }>,
     hotel_code: number,
     booking_id: number
   ) {

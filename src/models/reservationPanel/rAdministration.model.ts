@@ -1,5 +1,8 @@
 import { number } from "joi";
-import { IcreateRolePermission } from "../../appAdmin/utlis/interfaces/admin.role-permission.interface";
+import {
+  IcreateRolePermission,
+  IUserAdminWithHotel,
+} from "../../appAdmin/utlis/interfaces/reservationAdmin.interface";
 import {
   ICreateUserAdminPayload,
   IUpdateAdminPayload,
@@ -359,9 +362,8 @@ class RAdministrationModel extends Schema {
   public async getSingleAdmin(where: {
     email?: string;
     id?: number;
-
     hotel_code?: number;
-  }) {
+  }): Promise<IUserAdminWithHotel> {
     const { email, id, hotel_code } = where;
     return await this.db("user_admin AS ua")
       .withSchema(this.RESERVATION_SCHEMA)
@@ -370,6 +372,7 @@ class RAdministrationModel extends Schema {
         "ua.email",
         "ua.hotel_code",
         "h.name as hotel_name",
+        "h.status as hotel_status",
         "ua.phone",
         "ua.password",
         "ua.photo",
@@ -407,7 +410,8 @@ class RAdministrationModel extends Schema {
         if (hotel_code) {
           queryBuilder.where("ua.hotel_code", hotel_code);
         }
-      });
+      })
+      .first();
   }
 
   // update admin model

@@ -124,15 +124,25 @@ export class ReservationController extends AbstractController {
     }
   );
 
-  public updateSingleBooking = this.asyncWrapper.wrap(
+  public updateRoomAndRateOfReservation = this.asyncWrapper.wrap(
     {
       paramSchema: this.commonValidator.singleParamValidator(),
-      bodySchema: this.validator.updateSingleBookingValidator,
+      bodySchema: this.validator.updateRoomAndRateOfReservation,
     },
     async (req: Request, res: Response) => {
-      const { code, ...data } = await this.service.updatePartialReservation(
-        req
-      );
+      const { code, ...data } =
+        await this.service.updateRoomAndRateOfReservation(req);
+      res.status(code).json(data);
+    }
+  );
+
+  public updateSingleReservation = this.asyncWrapper.wrap(
+    {
+      paramSchema: this.commonValidator.singleParamValidator(),
+      // bodySchema: this.validator.updateSingleReservation,
+    },
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.updateSingleReservation(req);
       res.status(code).json(data);
     }
   );

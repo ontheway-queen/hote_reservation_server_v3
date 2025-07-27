@@ -42,7 +42,7 @@ class CommonService extends AbstractServices {
             email,
           });
 
-          if (!checkHotelAdmin.length) {
+          if (!checkHotelAdmin) {
             return {
               success: false,
               code: this.StatusCode.HTTP_NOT_FOUND,

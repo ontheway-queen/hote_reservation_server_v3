@@ -57,7 +57,7 @@ class MHotelService extends AbstractServices {
         email: hotel_email,
       });
 
-      if (checkHotelAdmin.length) {
+      if (checkHotelAdmin) {
         return {
           success: false,
           code: this.StatusCode.HTTP_CONFLICT,

@@ -501,6 +501,15 @@ class SettingModel extends schema_1.default {
             });
         });
     }
+    getSingleSource({ id }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("sources")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .select("*")
+                .where({ id })
+                .first();
+        });
+    }
     getChildAgePolicies(hotel_code) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("child_age_policies as cap")

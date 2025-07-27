@@ -51,7 +51,7 @@ class MHotelService extends abstract_service_1.default {
                 const checkHotelAdmin = yield administrationModel.getSingleAdmin({
                     email: hotel_email,
                 });
-                if (checkHotelAdmin.length) {
+                if (checkHotelAdmin) {
                     return {
                         success: false,
                         code: this.StatusCode.HTTP_CONFLICT,

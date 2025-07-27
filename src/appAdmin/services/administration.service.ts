@@ -16,9 +16,7 @@ class AdministrationService extends AbstractServices {
       email: req.body.email,
     });
 
-    console.log(req.body, { check });
-
-    if (check.length) {
+    if (check) {
       return {
         success: false,
         code: this.StatusCode.HTTP_CONFLICT,
@@ -98,7 +96,7 @@ class AdministrationService extends AbstractServices {
       hotel_code,
     });
 
-    if (!data.length) {
+    if (!data) {
       return {
         success: false,
         code: this.StatusCode.HTTP_NOT_FOUND,
@@ -109,7 +107,7 @@ class AdministrationService extends AbstractServices {
     return {
       success: true,
       code: this.StatusCode.HTTP_OK,
-      data: data[0],
+      data,
     };
   }
 
@@ -119,7 +117,7 @@ class AdministrationService extends AbstractServices {
       id: parseInt(req.params.id),
     });
 
-    if (!check.length) {
+    if (!check) {
       return {
         success: false,
         code: this.StatusCode.HTTP_NOT_FOUND,

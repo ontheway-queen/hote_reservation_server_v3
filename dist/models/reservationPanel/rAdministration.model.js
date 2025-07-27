@@ -242,7 +242,7 @@ class RAdministrationModel extends schema_1.default {
             const { email, id, hotel_code } = where;
             return yield this.db("user_admin AS ua")
                 .withSchema(this.RESERVATION_SCHEMA)
-                .select("ua.id", "ua.email", "ua.hotel_code", "h.name as hotel_name", "ua.phone", "ua.password", "ua.photo", "ua.name", "ua.status", "r.id as role_id", "r.name as role_name", "ua.created_at", this.db.raw(`
+                .select("ua.id", "ua.email", "ua.hotel_code", "h.name as hotel_name", "h.status as hotel_status", "ua.phone", "ua.password", "ua.photo", "ua.name", "ua.status", "r.id as role_id", "r.name as role_name", "ua.created_at", this.db.raw(`
         JSON_BUILD_OBJECT(
           'phone', hcd.phone,
           'fax', hcd.fax,
@@ -265,7 +265,8 @@ class RAdministrationModel extends schema_1.default {
                 if (hotel_code) {
                     queryBuilder.where("ua.hotel_code", hotel_code);
                 }
-            });
+            })
+                .first();
         });
     }
     // update admin model

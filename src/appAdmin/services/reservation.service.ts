@@ -9,6 +9,7 @@ import {
   IGBookingRequestBody,
   IGBRoomGuest,
   IUpdateReservationRequestBody,
+  IupdateRoomAndRateOfReservationRequestBody,
 } from "../utlis/interfaces/reservation.interface";
 import { HelperFunction } from "../utlis/library/helperFunction";
 import { SubReservationService } from "./subreservation.service";
@@ -577,11 +578,11 @@ export class ReservationService extends AbstractServices {
     };
   }
 
-  public async updatePartialReservation(req: Request) {
+  public async updateRoomAndRateOfReservation(req: Request) {
     return this.db.transaction(async (trx) => {
       const booking_id = Number(req.params.id);
       const { hotel_code } = req.hotel_admin;
-      const body = req.body as IUpdateReservationRequestBody;
+      const body = req.body as IupdateRoomAndRateOfReservationRequestBody;
       const reservationModel = this.Model.reservationModel(trx);
       const hotelInvModel = this.Model.hotelInvoiceModel(trx);
 
@@ -861,6 +862,55 @@ export class ReservationService extends AbstractServices {
         success: true,
         code: this.StatusCode.HTTP_OK,
         message: "Group reservation updated",
+      };
+    });
+  }
+
+  public async updateSingleReservation(req: Request) {
+    return this.db.transaction(async (trx) => {
+      const { source_id } = req.body as IUpdateReservationRequestBody;
+
+      const booking_id = Number(req.params.id);
+      const { hotel_code } = req.hotel_admin;
+
+      const reservationModel = this.Model.reservationModel(trx);
+      const booking = await reservationModel.getSingleBooking(
+        hotel_code,
+        booking_id
+      );
+
+      if (!booking) {
+        return {
+          success: false,
+          code: this.StatusCode.HTTP_NOT_FOUND,
+          message: "Booking not found",
+        };
+      }
+
+      if (source_id) {
+        const source = await this.Model.settingModel().getSingleSource({
+          id: source_id,
+        });
+
+        if (!source) {
+          return {
+            success: false,
+            code: this.StatusCode.HTTP_NOT_FOUND,
+            message: "Source not found",
+          };
+        }
+      }
+
+      await reservationModel.updateRoomBooking(
+        { ...req.body, source_id },
+        hotel_code,
+        booking_id
+      );
+
+      return {
+        success: true,
+        code: this.StatusCode.HTTP_OK,
+        message: "Single reservation updated",
       };
     });
   }

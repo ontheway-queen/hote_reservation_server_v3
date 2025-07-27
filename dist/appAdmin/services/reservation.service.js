@@ -418,7 +418,7 @@ class ReservationService extends abstract_service_1.default {
             };
         });
     }
-    updatePartialReservation(req) {
+    updateRoomAndRateOfReservation(req) {
         return __awaiter(this, void 0, void 0, function* () {
             return this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
                 var _a, _b, _c;
@@ -616,6 +616,42 @@ class ReservationService extends abstract_service_1.default {
                     success: true,
                     code: this.StatusCode.HTTP_OK,
                     message: "Group reservation updated",
+                };
+            }));
+        });
+    }
+    updateSingleReservation(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
+                const { source_id } = req.body;
+                const booking_id = Number(req.params.id);
+                const { hotel_code } = req.hotel_admin;
+                const reservationModel = this.Model.reservationModel(trx);
+                const booking = yield reservationModel.getSingleBooking(hotel_code, booking_id);
+                if (!booking) {
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_NOT_FOUND,
+                        message: "Booking not found",
+                    };
+                }
+                if (source_id) {
+                    const source = yield this.Model.settingModel().getSingleSource({
+                        id: source_id,
+                    });
+                    if (!source) {
+                        return {
+                            success: false,
+                            code: this.StatusCode.HTTP_NOT_FOUND,
+                            message: "Source not found",
+                        };
+                    }
+                }
+                yield reservationModel.updateRoomBooking(Object.assign(Object.assign({}, req.body), { source_id }), hotel_code, booking_id);
+                return {
+                    success: true,
+                    code: this.StatusCode.HTTP_OK,
+                    message: "Single reservation updated",
                 };
             }));
         });
