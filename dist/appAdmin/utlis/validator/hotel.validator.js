@@ -7,9 +7,10 @@ const joi_1 = __importDefault(require("joi"));
 class HotelValidator {
     constructor() {
         this.updateHotelValidator = joi_1.default.object({
-            name: joi_1.default.string().allow("").optional(),
+            hotel_name: joi_1.default.string().allow("").optional(),
             bin: joi_1.default.string().allow("").optional(),
             description: joi_1.default.string().allow("").optional(),
+            address: joi_1.default.string().allow("").optional(),
             postal_code: joi_1.default.string()
                 .lowercase()
                 .trim()

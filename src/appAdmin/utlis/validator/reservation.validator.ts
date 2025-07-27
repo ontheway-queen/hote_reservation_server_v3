@@ -375,7 +375,7 @@ export class ReservationValidator {
     drop: Joi.boolean().optional(),
     drop_time: Joi.when("drop", {
       is: true,
-      then: Joi.string().isoDate().required(),
+      then: Joi.string().required(),
       otherwise: Joi.forbidden(),
     }),
     drop_to: Joi.when("drop", {
@@ -386,7 +386,7 @@ export class ReservationValidator {
     pickup: Joi.boolean().optional(),
     pickup_time: Joi.when("pickup", {
       is: true,
-      then: Joi.string().isoDate().required(),
+      then: Joi.string().required(),
       otherwise: Joi.forbidden(),
     }),
     pickup_from: Joi.when("pickup", {

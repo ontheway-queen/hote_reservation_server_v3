@@ -52,6 +52,39 @@ class FolioService extends abstract_service_1.default {
             }));
         });
     }
+    splitMasterFolio(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
+                const { hotel_code } = req.hotel_admin;
+                const { booking_id, name } = req.body;
+                const invoiceModel = this.Model.hotelInvoiceModel(trx);
+                const reservationModel = this.Model.reservationModel(trx);
+                const checkSingleBooking = yield reservationModel.getSingleBooking(hotel_code, booking_id);
+                if (!checkSingleBooking) {
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_NOT_FOUND,
+                        message: this.ResMsg.HTTP_NOT_FOUND,
+                    };
+                }
+                const [lastFolio] = yield invoiceModel.getLasFolioId();
+                const folio_number = helperFunction_1.HelperFunction.generateFolioNumber(lastFolio === null || lastFolio === void 0 ? void 0 : lastFolio.id);
+                yield invoiceModel.insertInFolio({
+                    booking_id,
+                    name,
+                    folio_number,
+                    hotel_code,
+                    type: "Custom",
+                    status: "open",
+                });
+                return {
+                    success: true,
+                    code: this.StatusCode.HTTP_SUCCESSFUL,
+                    message: "Folio has been created",
+                };
+            }));
+        });
+    }
 }
 exports.FolioService = FolioService;
 //# sourceMappingURL=folio.service.js.map

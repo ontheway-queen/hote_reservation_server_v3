@@ -31,6 +31,7 @@ export class ReservationRootRouter {
       this.authChecker.hotelAdminAuthChecker,
       new CommonRouter().router
     );
+
     this.router.use(
       "/setting",
       this.authChecker.hotelAdminAuthChecker,

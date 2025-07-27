@@ -13,6 +13,9 @@ class FolioRouter extends abstract_router_1.default {
     }
     callRouter() {
         this.router.route("/").post(this.controller.createFolio);
+        this.router
+            .route("/split-master-folio")
+            .post(this.controller.splitMasterFolio);
     }
 }
 exports.default = FolioRouter;

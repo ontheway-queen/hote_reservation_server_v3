@@ -674,6 +674,18 @@ class ReportModel extends Schema {
         "ua.id as reservation_by_id",
         "ua.name as reservation_by_name",
         this.db.raw(`Count(br.id) AS total_reserved_rooms`),
+        this.db.raw(`(SELECT sum(fe.credit) from hotel_reservation.folios as f 
+          left join hotel_reservation.folio_entries as fe on f.id = fe.folio_id
+          where f.booking_id = b.id and fe.is_void = false) as total_paid_amount
+          `),
+        this.db.raw(`
+  COALESCE(
+    JSON_AGG(
+      DISTINCT JSONB_BUILD_OBJECT('changed_rate', br.changed_rate)
+    ) FILTER (WHERE br.changed_rate IS NOT NULL),
+    '[]'
+  ) as "changed_rates"
+`),
         this.db.raw(`
       COALESCE(
         JSON_AGG(

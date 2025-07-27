@@ -2,9 +2,10 @@ import Joi from "joi";
 
 class HotelValidator {
   public updateHotelValidator = Joi.object({
-    name: Joi.string().allow("").optional(),
+    hotel_name: Joi.string().allow("").optional(),
     bin: Joi.string().allow("").optional(),
     description: Joi.string().allow("").optional(),
+    address: Joi.string().allow("").optional(),
     postal_code: Joi.string()
       .lowercase()
       .trim()

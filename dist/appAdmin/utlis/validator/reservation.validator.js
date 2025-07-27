@@ -334,7 +334,7 @@ class ReservationValidator {
             drop: joi_1.default.boolean().optional(),
             drop_time: joi_1.default.when("drop", {
                 is: true,
-                then: joi_1.default.string().isoDate().required(),
+                then: joi_1.default.string().required(),
                 otherwise: joi_1.default.forbidden(),
             }),
             drop_to: joi_1.default.when("drop", {
@@ -345,7 +345,7 @@ class ReservationValidator {
             pickup: joi_1.default.boolean().optional(),
             pickup_time: joi_1.default.when("pickup", {
                 is: true,
-                then: joi_1.default.string().isoDate().required(),
+                then: joi_1.default.string().required(),
                 otherwise: joi_1.default.forbidden(),
             }),
             pickup_from: joi_1.default.when("pickup", {
