@@ -2194,6 +2194,35 @@ export class ReservationService extends AbstractServices {
         description: remarks,
       });
 
+      const helper = new HelperFunction();
+      const hotelModel = this.Model.HotelModel(trx);
+
+      const heads = await hotelModel.getHotelAccConfig(
+        req.hotel_admin.hotel_code,
+        ["RECEIVABLE_HEAD_ID"]
+      );
+
+      const receivable_head = heads.find(
+        (h) => h.config === "RECEIVABLE_HEAD_ID"
+      );
+      if (!receivable_head) {
+        throw new Error("RECEIVABLE_HEAD_ID not configured for this hotel");
+      }
+
+      const voucher_no1 = await helper.generateVoucherNo("JV", trx);
+
+      await this.Model.accountModel(trx).insertAccVoucher([
+        {
+          acc_head_id: receivable_head.head_id,
+          created_by: req.hotel_admin.id,
+          debit: 0,
+          credit: amount,
+          description: `Receivable for Adjusted room booking ${checkSingleFolio.booking_ref}`,
+          voucher_date: new Date().toISOString().split("T")[0],
+          voucher_no: voucher_no1,
+          hotel_code: req.hotel_admin.hotel_code,
+        },
+      ]);
       return {
         success: true,
         code: this.StatusCode.HTTP_OK,

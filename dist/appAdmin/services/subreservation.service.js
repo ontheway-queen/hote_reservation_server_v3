@@ -804,17 +804,6 @@ class SubReservationService extends abstract_service_1.default {
             });
             if (!account)
                 throw new Error("Invalid Account");
-            // const voucher_no = await new HelperFunction().generateVoucherNo();
-            // const [voucher] = await accountModel.insertAccVoucher({
-            //   acc_head_id: account.acc_head_id,
-            //   created_by: req.hotel_admin.id,
-            //   debit: amount,
-            //   credit: 0,
-            //   description: remarks,
-            //   voucher_type: "PAYMENT",
-            //   voucher_date: payment_date,
-            //   voucher_no,
-            // });
             const helper = new helperFunction_1.HelperFunction();
             const hotelModel = this.Model.HotelModel(this.trx);
             const heads = yield hotelModel.getHotelAccConfig(hotel_code, [
@@ -829,7 +818,6 @@ class SubReservationService extends abstract_service_1.default {
             if (!sales_head) {
                 throw new Error("RECEIVABLE_HEAD_ID not configured for this hotel");
             }
-            const voucher_no1 = yield helper.generateVoucherNo("JV", this.trx);
             const [acc] = yield accountModel.getSingleAccount({
                 hotel_code: req.hotel_admin.hotel_code,
                 id: acc_id,
@@ -935,14 +923,6 @@ class SubReservationService extends abstract_service_1.default {
                 folio_id: folio_id,
                 posting_type: "Refund",
                 description: remarks,
-            });
-            const guestModel = this.Model.guestModel(this.trx);
-            yield guestModel.insertGuestLedger({
-                hotel_code: req.hotel_admin.hotel_code,
-                guest_id,
-                credit: 0,
-                remarks: payment_for,
-                debit: amount,
             });
         });
     }

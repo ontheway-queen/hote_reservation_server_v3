@@ -1107,19 +1107,6 @@ export class SubReservationService extends AbstractServices {
 
     if (!account) throw new Error("Invalid Account");
 
-    // const voucher_no = await new HelperFunction().generateVoucherNo();
-
-    // const [voucher] = await accountModel.insertAccVoucher({
-    //   acc_head_id: account.acc_head_id,
-    //   created_by: req.hotel_admin.id,
-    //   debit: amount,
-    //   credit: 0,
-    //   description: remarks,
-    //   voucher_type: "PAYMENT",
-    //   voucher_date: payment_date,
-    //   voucher_no,
-    // });
-
     const helper = new HelperFunction();
     const hotelModel = this.Model.HotelModel(this.trx);
 
@@ -1141,7 +1128,6 @@ export class SubReservationService extends AbstractServices {
     if (!sales_head) {
       throw new Error("RECEIVABLE_HEAD_ID not configured for this hotel");
     }
-    const voucher_no1 = await helper.generateVoucherNo("JV", this.trx);
 
     const [acc] = await accountModel.getSingleAccount({
       hotel_code: req.hotel_admin.hotel_code,
@@ -1290,16 +1276,6 @@ export class SubReservationService extends AbstractServices {
       folio_id: folio_id,
       posting_type: "Refund",
       description: remarks,
-    });
-
-    const guestModel = this.Model.guestModel(this.trx);
-
-    await guestModel.insertGuestLedger({
-      hotel_code: req.hotel_admin.hotel_code,
-      guest_id,
-      credit: 0,
-      remarks: payment_for,
-      debit: amount,
     });
   }
 }
