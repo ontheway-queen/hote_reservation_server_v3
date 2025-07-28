@@ -1649,6 +1649,42 @@ class ReservationService extends abstract_service_1.default {
                     posting_type: "Charge",
                     description: remarks,
                 });
+                // insert entries
+                const helper = new helperFunction_1.HelperFunction();
+                const hotelModel = this.Model.HotelModel(trx);
+                const heads = yield hotelModel.getHotelAccConfig(req.hotel_admin.hotel_code, ["RECEIVABLE_HEAD_ID", "SALES_HEAD_ID"]);
+                const receivable_head = heads.find((h) => h.config === "RECEIVABLE_HEAD_ID");
+                if (!receivable_head) {
+                    throw new Error("RECEIVABLE_HEAD_ID not configured for this hotel");
+                }
+                const sales_head = heads.find((h) => h.config === "SALES_HEAD_ID");
+                if (!sales_head) {
+                    throw new Error("RECEIVABLE_HEAD_ID not configured for this hotel");
+                }
+                const voucher_no1 = yield helper.generateVoucherNo("JV", trx);
+                const today = new Date().toISOString().split("T")[0];
+                yield this.Model.accountModel(trx).insertAccVoucher([
+                    {
+                        acc_head_id: receivable_head.head_id,
+                        created_by: req.hotel_admin.id,
+                        debit: amount,
+                        credit: 0,
+                        description: `Receivable for ADD ITEM in ${checkSingleFolio.booking_ref}`,
+                        voucher_date: today,
+                        voucher_no: voucher_no1,
+                        hotel_code: req.hotel_admin.hotel_code,
+                    },
+                    {
+                        acc_head_id: sales_head.head_id,
+                        created_by: req.hotel_admin.id,
+                        debit: 0,
+                        credit: amount,
+                        description: `Sales for ADD ITEM in ${checkSingleFolio.booking_ref}`,
+                        voucher_date: today,
+                        voucher_no: voucher_no1,
+                        hotel_code: req.hotel_admin.hotel_code,
+                    },
+                ]);
                 return {
                     success: true,
                     code: this.StatusCode.HTTP_OK,
@@ -1663,7 +1699,6 @@ class ReservationService extends abstract_service_1.default {
                 const { id: booking_id, room_id } = req.params;
                 const hotel_code = req.hotel_admin.hotel_code;
                 const { add_guest, remove_guest } = req.body;
-                console.log(req.body);
                 const reservationModel = this.Model.reservationModel();
                 const guestModel = this.Model.guestModel(trx);
                 const booking = yield reservationModel.getSingleBooking(req.hotel_admin.hotel_code, parseInt(booking_id));
