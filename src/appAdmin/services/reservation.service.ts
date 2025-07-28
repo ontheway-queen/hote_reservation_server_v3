@@ -639,7 +639,8 @@ export class ReservationService extends AbstractServices {
           }
 
           const nights = sub.calculateNights(room.check_in, room.check_out);
-          const res = await reservationModel.updateSingleBookingRoom(
+
+          await reservationModel.updateSingleBookingRoom(
             {
               unit_changed_rate: change.unit_changed_rate,
               unit_base_rate: change.unit_base_rate,
@@ -1129,6 +1130,7 @@ export class ReservationService extends AbstractServices {
         (sum, e) => sum + (e.debit ?? 0),
         0
       );
+
       await reservationModel.updateRoomBooking(
         {
           total_amount: totalAmount,
@@ -2154,6 +2156,7 @@ export class ReservationService extends AbstractServices {
         remarks,
         req,
         payment_date,
+        booking_ref: checkSingleFolio.booking_ref,
       });
 
       return {

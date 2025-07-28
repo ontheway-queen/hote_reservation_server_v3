@@ -10,7 +10,6 @@ export interface AccountJournalTransactions {
   acc_head_id: number;
   voucher_no: string;
   voucher_date: string;
-  voucher_type: string;
   description: string;
   debit: number;
   credit: number;

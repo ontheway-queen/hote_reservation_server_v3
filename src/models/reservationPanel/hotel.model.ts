@@ -9,6 +9,7 @@ import {
 } from "../../appM360/utlis/interfaces/mUserHotel.interface";
 import { TDB } from "../../common/types/commontypes";
 import Schema from "../../utils/miscellaneous/schema";
+import { IAccountConfigHeads } from "../../utils/miscellaneous/constants";
 
 class HotelModel extends Schema {
   private db: TDB;
@@ -275,7 +276,7 @@ class HotelModel extends Schema {
   // Get Hotel Account config
   public async getHotelAccConfig(
     hotel_code: number,
-    configs: string[]
+    configs: IAccountConfigHeads[]
   ): Promise<
     { id: number; hotel_code: number; config: string; head_id: number }[]
   > {

@@ -320,10 +320,10 @@ class HotelInvoiceModel extends schema_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("folios as f")
                 .withSchema(this.RESERVATION_SCHEMA)
-                .select("f.id", "f.name", "f.guest_id", "f.booking_id", "booking_ref")
+                .select("f.id", "f.name", "f.guest_id", "f.booking_id", "booking_reference as booking_ref")
                 .leftJoin("bookings as b", "f.booking_id", "b.id")
-                .where("id", folio_id)
-                .andWhere("hotel_code", hotel_code)
+                .where("f.id", folio_id)
+                .andWhere("f.hotel_code", hotel_code)
                 .first();
         });
     }

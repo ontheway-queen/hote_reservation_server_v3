@@ -24,7 +24,6 @@ class ReportModel extends Schema {
         "av.acc_head_id",
         "av.voucher_no",
         "av.voucher_date",
-        "av.voucher_type",
         "av.description",
         "av.debit",
         "av.credit",

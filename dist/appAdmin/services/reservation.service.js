@@ -461,7 +461,7 @@ class ReservationService extends abstract_service_1.default {
                             yield hotelInvModel.updateFolioEntries({ is_void: true }, entryIDs);
                         }
                         const nights = sub.calculateNights(room.check_in, room.check_out);
-                        const res = yield reservationModel.updateSingleBookingRoom({
+                        yield reservationModel.updateSingleBookingRoom({
                             unit_changed_rate: change.unit_changed_rate,
                             unit_base_rate: change.unit_base_rate,
                             changed_rate: change.unit_changed_rate * nights,
@@ -1572,6 +1572,7 @@ class ReservationService extends abstract_service_1.default {
                     remarks,
                     req,
                     payment_date,
+                    booking_ref: checkSingleFolio.booking_ref,
                 });
                 return {
                     success: true,

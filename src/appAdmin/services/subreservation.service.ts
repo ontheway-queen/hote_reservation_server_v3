@@ -613,6 +613,7 @@ export class SubReservationService extends AbstractServices {
       totalDebit: number;
     };
     const child: ChildCtx[] = [];
+
     const push = (c: ChildCtx, e: IinsertFolioEntriesPayload) => {
       c.entries.push(e);
       c.totalDebit += e.debit ?? 0;
@@ -621,7 +622,7 @@ export class SubReservationService extends AbstractServices {
     for (const { rooms } of body.booked_room_types) {
       for (const room of rooms) {
         const [info] = await roomModel.getSingleRoom(hotel_code, room.room_id);
-        const folioNo = `R${info?.room_name ?? room.room_id}`;
+        const folioNo = `R${info?.room_name}`;
         const [roomFolio] = await hotelInvModel.insertInFolio({
           booking_id,
           folio_number: folioNo,
@@ -689,7 +690,6 @@ export class SubReservationService extends AbstractServices {
                 2
               ),
               credit: 0,
-              room_id: room.room_id,
               description: "Service Charge",
               rack_rate: 0,
             });
@@ -731,7 +731,7 @@ export class SubReservationService extends AbstractServices {
       {
         acc_head_id: receivable_head.head_id,
         created_by,
-        debit: body.payment.amount,
+        debit: totalDebit,
         credit: 0,
         description: `Receivable for individual room booking ${booking_ref}`,
         voucher_date: today,
@@ -741,8 +741,8 @@ export class SubReservationService extends AbstractServices {
       {
         acc_head_id: sales_head.head_id,
         created_by,
-        debit: body.payment.amount,
-        credit: 0,
+        debit: 0,
+        credit: totalDebit,
         description: `Sales for individual room booking ${booking_ref}`,
         voucher_date: today,
         voucher_no: voucher_no1,
@@ -793,6 +793,17 @@ export class SubReservationService extends AbstractServices {
 
     /*  persist entries */
     const allEntries = [...masterEntries, ...child.flatMap((c) => c.entries)];
+
+    // payment entry
+    allEntries.push({
+      folio_id: child[0].folioId,
+      date: today,
+      posting_type: "Payment",
+      credit: body.payment.amount,
+      debit: 0,
+      description: "Payment for room booking",
+    });
+
     await hotelInvModel.insertInFolioEntries(allEntries);
 
     await reservationModel.updateRoomBooking(
@@ -978,8 +989,8 @@ export class SubReservationService extends AbstractServices {
       {
         acc_head_id: sales_head.head_id,
         created_by,
-        debit: totalDebitAmount,
-        credit: 0,
+        debit: 0,
+        credit: totalDebitAmount,
         description: `Sales for individual room booking ${booking_ref}`,
         voucher_date: today,
         voucher_no: voucher_no1,
@@ -992,35 +1003,20 @@ export class SubReservationService extends AbstractServices {
 
     // payment
     if (body.is_payment_given && body.payment?.amount > 0) {
-      // const [acc] = await accountModel.getSingleAccount({
-      //   hotel_code,
-      //   id: body.payment.acc_id,
-      // });
-      // if (!acc) throw new Error("Invalid Account");
+      if (!body.payment.acc_id)
+        throw new Error("Account ID is required for payment");
 
-      // const voucher_no = await new HelperFunction().generateVoucherNo();
-      // const [voucher] = await accountModel.insertAccVoucher({
-      //   acc_head_id: acc.acc_head_id,
-      //   created_by,
-      //   debit: body.payment.amount,
-      //   credit: 0,
-      //   description: `Payment for group booking ${booking_id}`,
-      //   voucher_type: "PAYMENT",
-      //   voucher_date: today,
-      //   voucher_no,
-      // });
+      masterEntries.push({
+        folio_id: masterFolio.id,
+        date: today,
+        posting_type: "Payment",
+        debit: 0,
+        credit: body.payment.amount,
+        room_id: 0,
+        description: "Payment Received",
+        rack_rate: 0,
+      });
 
-      // masterEntries.push({
-      //   folio_id: masterFolio.id,
-      //   acc_voucher_id: voucher.id,
-      //   date: today,
-      //   posting_type: "Payment",
-      //   debit: 0,
-      //   credit: body.payment.amount,
-      //   room_id: 0,
-      //   description: "Payment Received",
-      //   rack_rate: 0,
-      // });
       const [acc] = await accountModel.getSingleAccount({
         hotel_code,
         id: body.payment.acc_id,
@@ -1206,11 +1202,12 @@ export class SubReservationService extends AbstractServices {
     req,
     payment_for,
     payment_date,
+    booking_ref,
   }: {
     acc_id: number;
     guest_id: number;
     req: Request;
-
+    booking_ref: string;
     amount: number;
     remarks: string;
     folio_id: number;
@@ -1226,23 +1223,68 @@ export class SubReservationService extends AbstractServices {
 
     if (!account) throw new Error("Invalid Account");
 
-    const voucher_no = await new HelperFunction().generateVoucherNo();
+    const helper = new HelperFunction();
+    const hotelModel = this.Model.HotelModel(this.trx);
 
-    const [voucher] = await accountModel.insertAccVoucher({
-      acc_head_id: account.acc_head_id,
-      created_by: req.hotel_admin.id,
-      debit: 0,
-      credit: amount,
-      description: remarks,
-      voucher_type: "REFUND",
-      voucher_date: payment_date,
-      voucher_no,
+    const heads = await hotelModel.getHotelAccConfig(
+      req.hotel_admin.hotel_code,
+      ["EXPENSE_HEAD_ID", "SALES_HEAD_ID"]
+    );
+
+    const expense_head = heads.find((h) => h.config === "EXPENSE_HEAD_ID");
+
+    if (!expense_head) {
+      throw new Error("EXPENSE_HEAD_ID not configured for this hotel");
+    }
+
+    const sales_head = heads.find((h) => h.config === "SALES_HEAD_ID");
+
+    if (!sales_head) {
+      throw new Error("SALES_HEAD_ID not configured for this hotel");
+    }
+
+    const [acc] = await accountModel.getSingleAccount({
+      hotel_code: req.hotel_admin.hotel_code,
+      id: acc_id,
     });
+
+    if (!acc) throw new Error("Invalid Account");
+
+    let voucher_type: "CCV" | "BCV" = "CCV";
+
+    if (acc.acc_type === "BANK") {
+      voucher_type = "BCV";
+    }
+
+    const voucher_no = await helper.generateVoucherNo(voucher_type, this.trx);
+    const today = new Date().toISOString().split("T")[0];
+
+    await accountModel.insertAccVoucher([
+      {
+        acc_head_id: sales_head.head_id,
+        created_by: req.hotel_admin.id,
+        debit: amount,
+        credit: 0,
+        description: `Refund to guest for booking ${booking_ref}`,
+        voucher_date: today,
+        voucher_no,
+        hotel_code: req.hotel_admin.hotel_code,
+      },
+      {
+        acc_head_id: acc.acc_head_id,
+        created_by: req.hotel_admin.id,
+        debit: 0,
+        credit: amount,
+        description: `Refund payment to guest for booking ${booking_ref}`,
+        voucher_date: today,
+        voucher_no,
+        hotel_code: req.hotel_admin.hotel_code,
+      },
+    ]);
 
     const hotelInvModel = this.Model.hotelInvoiceModel(this.trx);
 
     await hotelInvModel.insertInFolioEntries({
-      acc_voucher_id: voucher.id,
       debit: 0,
       credit: -amount,
       folio_id: folio_id,
