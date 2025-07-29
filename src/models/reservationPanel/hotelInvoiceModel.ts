@@ -473,7 +473,14 @@ class HotelInvoiceModel extends Schema {
     {
       id: number;
       description: string;
-      posting_type: string;
+      posting_type:
+        | "ROOM_CHARGE"
+        | "Charge"
+        | "Payment"
+        | "Refund"
+        | "Adjustment"
+        | "VAT"
+        | "SERVICE_CHARGE";
       rack_rate: number;
       folio_id: number;
       date: string;

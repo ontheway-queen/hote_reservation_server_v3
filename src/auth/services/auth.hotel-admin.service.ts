@@ -87,13 +87,10 @@ class HotelAdminAuthService extends AbstractServices {
 
   // get profile
   public async getProfile(req: Request) {
-    const { id } = req.hotel_admin;
+    const { id, hotel_code } = req.hotel_admin;
 
-    const data = await this.Model.rAdministrationModel().getSingleAdmin({
-      id,
-    });
-
-    const { password, ...rest } = data;
+    const reservationModel = this.Model.rAdministrationModel();
+    const data = await reservationModel.getSingleAdmin({ id });
 
     if (!data) {
       return {
@@ -103,11 +100,54 @@ class HotelAdminAuthService extends AbstractServices {
       };
     }
 
+    const { password, ...rest } = data;
+
+    let singleRolePermissions;
+    if (data.role_id) {
+      singleRolePermissions = await reservationModel.getSingleRoleByView({
+        id: data.role_id,
+        hotel_code,
+      });
+    }
+
+    const output_data: any[] = [];
+    const { permissions } = singleRolePermissions || {};
+
+    if (permissions?.length) {
+      for (const perm of permissions) {
+        // Find or create group
+        let group = output_data.find(
+          (g) => g.permission_group_id === perm.permission_group_id
+        );
+        if (!group) {
+          group = {
+            permission_group_id: perm.permission_group_id,
+            permission_group_name: perm.permission_group_name,
+            subModules: [],
+          };
+          output_data.push(group);
+        }
+
+        // Push permission submodule
+        group.subModules.push({
+          permission_id: perm.permission_id,
+          permission_name: perm.permission_name,
+          permissions: {
+            read: perm.read,
+            write: perm.write,
+            update: perm.update,
+            delete: perm.delete,
+          },
+        });
+      }
+    }
+
     return {
       success: true,
       code: this.StatusCode.HTTP_OK,
       data: {
         ...rest,
+        permissions: output_data,
       },
     };
   }

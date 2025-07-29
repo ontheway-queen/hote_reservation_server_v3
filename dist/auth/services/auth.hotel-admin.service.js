@@ -87,11 +87,9 @@ class HotelAdminAuthService extends abstract_service_1.default {
     // get profile
     getProfile(req) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { id } = req.hotel_admin;
-            const data = yield this.Model.rAdministrationModel().getSingleAdmin({
-                id,
-            });
-            const { password } = data, rest = __rest(data, ["password"]);
+            const { id, hotel_code } = req.hotel_admin;
+            const reservationModel = this.Model.rAdministrationModel();
+            const data = yield reservationModel.getSingleAdmin({ id });
             if (!data) {
                 return {
                     success: false,
@@ -99,10 +97,45 @@ class HotelAdminAuthService extends abstract_service_1.default {
                     message: this.ResMsg.HTTP_NOT_FOUND,
                 };
             }
+            const { password } = data, rest = __rest(data, ["password"]);
+            let singleRolePermissions;
+            if (data.role_id) {
+                singleRolePermissions = yield reservationModel.getSingleRoleByView({
+                    id: data.role_id,
+                    hotel_code,
+                });
+            }
+            const output_data = [];
+            const { permissions } = singleRolePermissions || {};
+            if (permissions === null || permissions === void 0 ? void 0 : permissions.length) {
+                for (const perm of permissions) {
+                    // Find or create group
+                    let group = output_data.find((g) => g.permission_group_id === perm.permission_group_id);
+                    if (!group) {
+                        group = {
+                            permission_group_id: perm.permission_group_id,
+                            permission_group_name: perm.permission_group_name,
+                            subModules: [],
+                        };
+                        output_data.push(group);
+                    }
+                    // Push permission submodule
+                    group.subModules.push({
+                        permission_id: perm.permission_id,
+                        permission_name: perm.permission_name,
+                        permissions: {
+                            read: perm.read,
+                            write: perm.write,
+                            update: perm.update,
+                            delete: perm.delete,
+                        },
+                    });
+                }
+            }
             return {
                 success: true,
                 code: this.StatusCode.HTTP_OK,
-                data: Object.assign({}, rest),
+                data: Object.assign(Object.assign({}, rest), { permissions: output_data }),
             };
         });
     }

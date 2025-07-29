@@ -510,6 +510,7 @@ export class ReservationModel extends Schema {
       status?: 'checked_in' | 'checked_out' | 'confirmed';
       checked_out_at?: string;
       checked_in_at?: string;
+
       check_in?: string;
       check_out?: string;
       nights?: number;
@@ -1063,6 +1064,7 @@ export class ReservationModel extends Schema {
         'b.booking_type',
         'b.status',
         'b.is_individual_booking',
+        'b.voucher_no',
         'b.source_id',
         'src.name as source_name',
         'b.total_amount',
@@ -1167,6 +1169,7 @@ export class ReservationModel extends Schema {
       pickup: boolean;
       pickup_from: string;
       pickup_time: string;
+      voucher_no?: string;
       drop: boolean;
       drop_to: string;
       drop_time: string;

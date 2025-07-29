@@ -31,13 +31,15 @@ export interface IinsertFolioEntriesPayload {
   date?: string;
   rack_rate?: number;
   posting_type:
-    | "Charge"
+    | "CHARGE"
+    | "ROOM_CHARGE"
     | "Payment"
     | "Adjustment"
     | "Refund"
     | "Discount"
-    | "Tax"
-    | "Deposit";
+    | "VAT"
+    | "Deposit"
+    | "SERVICE_CHARGE";
 }
 
 export interface IinsertFolioInvoiceReqPayload {
