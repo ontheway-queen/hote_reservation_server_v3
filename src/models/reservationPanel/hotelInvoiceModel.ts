@@ -447,14 +447,22 @@ class HotelInvoiceModel extends Schema {
         name: string;
         guest_id: number;
         booking_id: string;
+        booking_ref: string;
       }
     | undefined
   > {
-    return await this.db('folios')
+    return await this.db('folios as f')
       .withSchema(this.RESERVATION_SCHEMA)
-      .select('id', 'name', 'guest_id', 'booking_id')
-      .where('id', folio_id)
-      .andWhere('hotel_code', hotel_code)
+      .select(
+        'f.id',
+        'f.name',
+        'f.guest_id',
+        'f.booking_id',
+        'booking_reference as booking_ref'
+      )
+      .leftJoin('bookings as b', 'f.booking_id', 'b.id')
+      .where('f.id', folio_id)
+      .andWhere('f.hotel_code', hotel_code)
       .first();
   }
 
@@ -467,6 +475,7 @@ class HotelInvoiceModel extends Schema {
       description: string;
       posting_type: string;
       rack_rate: number;
+      folio_id: number;
       date: string;
       room_id: number | null;
       room_name: string | null;
@@ -479,6 +488,7 @@ class HotelInvoiceModel extends Schema {
       .select(
         'fe.id',
         'fe.description',
+        'fe.folio_id',
         'fe.posting_type',
         'fe.rack_rate',
         this.db.raw(`TO_CHAR(fe.date, 'YYYY-MM-DD') as date`),

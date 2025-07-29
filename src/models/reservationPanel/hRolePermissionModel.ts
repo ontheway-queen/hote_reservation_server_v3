@@ -1,4 +1,4 @@
-import { IcreateRolePermission } from "../../appAdmin/utlis/interfaces/admin.role-permission.interface";
+import { IcreateRolePermission } from "../../appAdmin/utlis/interfaces/reservationAdmin.interface";
 import { TDB } from "../../common/types/commontypes";
 import Schema from "../../utils/miscellaneous/schema";
 

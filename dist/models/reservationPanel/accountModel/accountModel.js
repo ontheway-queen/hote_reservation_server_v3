@@ -66,7 +66,7 @@ class AccountModel extends schema_1.default {
                     e.select(this.db.raw(`
           (
             CASE 
-              WHEN rgoup_code LIKE ? THEN 3
+              WHEN group_code LIKE ? THEN 3
               WHEN code LIKE ? THEN 2
               WHEN name LIKE ? THEN 1
               ELSE 0

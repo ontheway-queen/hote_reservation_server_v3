@@ -109,31 +109,42 @@ class HotelModel extends schema_1.default {
     // get single hotel
     getSingleHotel(payload) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { id, email } = payload;
+            const { hotel_code, email, id } = payload;
             return yield this.db('hotels as h')
                 .withSchema(this.RESERVATION_SCHEMA)
-                .select('h.id', 'h.hotel_code', 'h.name as hotel_name', 'h.address', 'h.star_category', 'h.city_code', 'h.country_code', 'h.accommodation_type_id', 'h.accommodation_type_name', 'h.created_at', 'h.latitude', 'h.longitude', 'h.chain_name', 'h.postal_code', 'h.description', 'h.star_category', 'h.created_at', 'h.status', 'h.expiry_date', 'h.created_at', 'hcd.logo', 'hcd.fax', 'hcd.website_url', 'hcd.email as hotel_email', 'hcd.phone'
-            // this.db.raw(
-            //   `(select json_agg(json_build_object('id')) from hotel_images as hi where h.hotel_code = )`
-            // )
-            )
+                .select('h.id', 'h.hotel_code', 'h.name as hotel_name', 'h.address', 'h.star_category', 'h.city_code', 'h.country_code', 'h.accommodation_type_id', 'h.accommodation_type_name', 'h.created_at', 'h.latitude', 'h.longitude', 'h.chain_name', 'h.postal_code', 'h.description', 'h.star_category', 'h.created_at', 'h.status', 'h.expiry_date', 'h.created_at', 'hcd.logo', 'hcd.fax', 'hcd.website_url', 'hcd.email as hotel_email', 'hcd.phone', 'hcd.optional_phone1', 'h.bin', this.db.raw(`(SELECT json_agg(
+      json_build_object(
+        'id', hi.id,
+        'image_url', hi.image_url,
+        'image_caption', hi.image_caption,
+        'main_image', hi.main_image
+      )
+    )
+    FROM hotel_reservation.hotel_image hi
+    WHERE hi.hotel_code = h.hotel_code
+  ) AS images`))
                 .leftJoin('hotel_contact_details as hcd', 'h.hotel_code', 'hcd.hotel_code')
                 .where(function () {
                 if (id) {
                     this.andWhere('h.id', id);
                 }
+                if (hotel_code) {
+                    this.andWhere('h.hotel_code', hotel_code);
+                }
                 if (email) {
                     this.andWhere('hcd.email', email);
                 }
-            });
+            })
+                .first();
         });
     }
     // update hotel
     updateHotel(payload, where) {
         return __awaiter(this, void 0, void 0, function* () {
             const { email, id } = where;
-            return yield this.db('hotels')
+            return yield this.db('hotels as h')
                 .withSchema(this.RESERVATION_SCHEMA)
+                .leftJoin('hotel_contact_details as hcd', 'h.hotel_code', 'hcd.hotel_code')
                 .update(payload)
                 .where(function () {
                 if (id) {

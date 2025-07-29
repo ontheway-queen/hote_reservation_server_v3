@@ -307,7 +307,7 @@ export class ReservationValidator {
     search: Joi.string().allow("").optional(),
   });
 
-  public updateSingleBookingValidator = Joi.object({
+  public updateRoomAndRateOfReservation = Joi.object({
     changed_rate_of_booking_rooms: Joi.array()
       .items(
         Joi.object({
@@ -367,6 +367,35 @@ export class ReservationValidator {
     removed_rooms: Joi.array().items(Joi.number().required()).optional(),
   });
 
+  public updateSingleReservation = Joi.object({
+    comments: Joi.string().allow("").optional(),
+    source_id: Joi.number().required(),
+    company_name: Joi.string().allow("").optional(),
+    visit_purpose: Joi.string().allow("").optional(),
+    drop: Joi.boolean().optional(),
+    drop_time: Joi.when("drop", {
+      is: true,
+      then: Joi.string().required(),
+      otherwise: Joi.forbidden(),
+    }),
+    drop_to: Joi.when("drop", {
+      is: true,
+      then: Joi.string().required(),
+      otherwise: Joi.forbidden(),
+    }),
+    pickup: Joi.boolean().optional(),
+    pickup_time: Joi.when("pickup", {
+      is: true,
+      then: Joi.string().required(),
+      otherwise: Joi.forbidden(),
+    }),
+    pickup_from: Joi.when("pickup", {
+      is: true,
+      then: Joi.string().required(),
+      otherwise: Joi.forbidden(),
+    }),
+  });
+
   public addPayment = Joi.object({
     folio_id: Joi.number().required(),
     amount: Joi.number().required(),
@@ -403,6 +432,8 @@ export class ReservationValidator {
   public changeRoomOfAReservation = Joi.object({
     previous_room_id: Joi.number().required(),
     new_room_id: Joi.number().required(),
+    base_rate: Joi.number().required(),
+    changed_rate: Joi.number().required(),
   });
 
   public updateOthersOfARoomByBookingID = Joi.object({

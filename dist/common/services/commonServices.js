@@ -42,7 +42,7 @@ class CommonService extends abstract_service_1.default {
                         const checkHotelAdmin = yield hotelUserModel.getSingleAdmin({
                             email,
                         });
-                        if (!checkHotelAdmin.length) {
+                        if (!checkHotelAdmin) {
                             return {
                                 success: false,
                                 code: this.StatusCode.HTTP_NOT_FOUND,

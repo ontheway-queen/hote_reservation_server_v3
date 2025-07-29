@@ -17,6 +17,9 @@ class RoomRouter extends abstract_router_1.default {
             .post(this.uploader.cloudUploadRaw(this.fileFolders.ROOM_FILES), this.roomController.createroom)
             .get(this.roomController.getAllRoom);
         this.router
+            .route("/multiple-rooms")
+            .post(this.roomController.createMultipleRooms);
+        this.router
             .route("/by-status")
             .get(this.roomController.getAllRoomByRoomStatus);
         this.router
@@ -36,7 +39,7 @@ class RoomRouter extends abstract_router_1.default {
             .get(this.roomController.getAllOccupiedRooms);
         // get all rooms by room type
         this.router
-            .route("/:room_type_id")
+            .route("/by/room-type/:room_type_id")
             .get(this.roomController.getAllRoomByRoomType);
     }
 }

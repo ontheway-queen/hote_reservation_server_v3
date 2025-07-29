@@ -195,23 +195,31 @@ class RoomModel extends schema_1.default {
                 .andWhere({ room_type_id });
         });
     }
-    updateInRoomAvailabilities(hotel_code, room_type_id, payload) {
+    updateInRoomAvailabilities(updates) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("room_availability")
-                .withSchema(this.RESERVATION_SCHEMA)
-                .update(payload)
-                .where({ hotel_code })
-                .andWhere({ room_type_id });
+            return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
+                for (const update of updates) {
+                    yield trx("room_availability")
+                        .withSchema(this.RESERVATION_SCHEMA)
+                        .where({
+                        id: update.id,
+                    })
+                        .update({
+                        total_rooms: update.total_rooms,
+                        available_rooms: update.available_rooms,
+                    });
+                }
+            }));
         });
     }
     getRoomAvailabilitiesByRoomTypeId(hotel_code, room_type_id) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("room_availability")
                 .withSchema(this.RESERVATION_SCHEMA)
-                .select("id", "total_rooms", "available_rooms")
+                .select("id", this.db.raw(`TO_CHAR(date, 'YYYY-MM-DD') as date`), "total_rooms", "booked_rooms", "hold_rooms", "available_rooms")
                 .where("hotel_code", hotel_code)
                 .andWhere("room_type_id", room_type_id)
-                .first();
+                .orderBy("date", "asc");
         });
     }
     updateRoom(roomId, hotel_code, payload) {
@@ -227,73 +235,6 @@ class RoomModel extends schema_1.default {
         var _a, _b;
         return __awaiter(this, void 0, void 0, function* () {
             const { hotel_code, room_type_id, status, limit, skip, current_date } = payload;
-            // old code which not suitable for sorting
-            // const dtbs = this.db("rooms as r").withSchema(this.RESERVATION_SCHEMA);
-            // const parsedLimit = parseInt(limit as string);
-            // const parsedSkip = parseInt(skip as string);
-            // if (!isNaN(parsedLimit) && !isNaN(parsedSkip)) {
-            //   dtbs.limit(parsedLimit).offset(parsedSkip);
-            // }
-            // const data = await this.db
-            //   .withSchema(this.RESERVATION_SCHEMA)
-            //   .select(
-            //     "r.floor_no",
-            //     this.db.raw(
-            //       `
-            //   JSON_AGG(
-            //     JSON_BUILD_OBJECT(
-            //       'id', r.id,
-            //       'hotel_code', r.hotel_code,
-            //       'room_no', r.room_name,
-            //       'floor_no', r.floor_no,
-            //       'room_type_id', r.room_type_id,
-            //       'status', r.status,
-            //       'room_type_name', rt.name,
-            //       'bookings', COALESCE((
-            //         SELECT JSON_AGG(
-            //           JSON_BUILD_OBJECT(
-            //             'booking_id', b.id,
-            //             'booking_reference', b.booking_reference,
-            //             'check_in', b.check_in,
-            //             'check_out', b.check_out,
-            //             'booking_type', b.booking_type,
-            //             'booking_status', b.status,
-            //             'guest_first_name', g.first_name,
-            //             'guest_last_name', g.last_name,
-            //             'guest_id', g.id
-            //           )
-            //         )
-            //         FROM hotel_reservation.booking_rooms br
-            //         JOIN hotel_reservation.bookings b ON b.id = br.booking_id
-            //         LEFT JOIN hotel_reservation.guests g ON g.id = b.guest_id
-            //         WHERE br.room_id = r.id
-            //         AND b.check_in <= ?
-            //           AND b.check_out >= ?
-            //           AND b.hotel_code = r.hotel_code
-            //           AND b.booking_type = ?
-            //           AND (b.status = ? OR b.status = ?)
-            //       ), '[]')
-            //     )
-            //     ) AS rooms
-            // `,
-            //       [current_date, current_date, "B", "confirmed", "checked_in"]
-            //     )
-            //   )
-            //   .from("rooms as r")
-            //   .join("room_types as rt", "r.room_type_id", "rt.id")
-            //   .where("r.hotel_code", hotel_code)
-            //   .andWhere("r.is_deleted", false)
-            //   .modify((qb) => {
-            //     if (status) {
-            //       qb.andWhere("r.status", status);
-            //     }
-            //     if (room_type_id) {
-            //       qb.andWhere("r.room_type_id", room_type_id);
-            //     }
-            //   })
-            //   .groupBy("r.floor_no")
-            //   .orderBy("r.floor_no", "asc");
-            // new code
             const data = yield this.db.raw(`
       SELECT
         floor_no,
@@ -403,7 +344,7 @@ class RoomModel extends schema_1.default {
             })
                 .andWhere("bk.hotel_code", hotel_code)
                 .andWhere("bk.check_in", "<=", date)
-                .andWhere("bk.check_out", ">", date)
+                .andWhere("bk.check_out", ">=", date)
                 .andWhere("r.is_deleted", false)
                 .orderBy("r.id", "asc");
             const grouped = rows.reduce((acc, row) => {

@@ -33,9 +33,9 @@ class HotelService extends abstract_service_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             const { hotel_code } = req.hotel_admin;
             const checkHotel = yield this.Model.HotelModel().getSingleHotel({
-                id: hotel_code,
+                hotel_code,
             });
-            if (!checkHotel.length) {
+            if (!checkHotel) {
                 return {
                     success: false,
                     code: this.StatusCode.HTTP_NOT_FOUND,
@@ -45,80 +45,87 @@ class HotelService extends abstract_service_1.default {
             return {
                 success: true,
                 code: this.StatusCode.HTTP_OK,
-                data: checkHotel[0],
+                data: checkHotel,
             };
         });
     }
     // update my hotel
-    updateMyHotel(req) {
+    updateHotel(req) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { hotel_code } = req.hotel_admin;
-            const model = this.Model.HotelModel();
-            const checkHotel = yield model.getSingleHotel({
-                id: hotel_code,
-            });
-            if (!checkHotel.length) {
-                return {
-                    success: false,
-                    code: this.StatusCode.HTTP_NOT_FOUND,
-                    message: this.ResMsg.HTTP_NOT_FOUND,
-                };
-            }
-            const files = req.files || [];
-            const hotelImages = [];
-            const _a = req.body, { remove_photo, hotel_amnities, remove_amnities } = _a, rest = __rest(_a, ["remove_photo", "hotel_amnities", "remove_amnities"]);
-            if (files.length) {
-                files.forEach((element) => {
-                    if (element.fieldname === "logo") {
-                        rest["logo"] = element.filename;
+            return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
+                const _a = req.body, { fax, phone, website_url, hotel_email, remove_hotel_images, expiry_date, optional_phone1, hotel_name } = _a, hotelData = __rest(_a, ["fax", "phone", "website_url", "hotel_email", "remove_hotel_images", "expiry_date", "optional_phone1", "hotel_name"]);
+                const { id } = req.params;
+                const parsedId = parseInt(id);
+                const files = req.files || [];
+                if (expiry_date && new Date(expiry_date) < new Date()) {
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_UNPROCESSABLE_ENTITY,
+                        message: "Expiry date cannot be earlier than today",
+                    };
+                }
+                const model = this.Model.HotelModel(trx);
+                const existingHotel = yield model.getSingleHotel({ id: parsedId });
+                if (!existingHotel) {
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_NOT_FOUND,
+                        message: this.ResMsg.HTTP_NOT_FOUND,
+                    };
+                }
+                const { hotel_code } = existingHotel;
+                // Filter out only defined fields for update
+                const filteredUpdateData = Object.fromEntries(Object.entries(Object.assign(Object.assign({}, hotelData), { expiry_date, name: hotel_name })).filter(([_, value]) => value !== undefined));
+                if (Object.keys(filteredUpdateData).length > 0) {
+                    yield model.updateHotel(filteredUpdateData, { id: parsedId });
+                }
+                // === Handle file uploads ===
+                let logoFilename;
+                const hotelImages = [];
+                for (const file of files) {
+                    const { fieldname, filename } = file;
+                    if (fieldname === "logo") {
+                        logoFilename = filename;
                     }
                     else {
                         hotelImages.push({
-                            hotel_code: hotel_code,
-                            photo: element.filename,
+                            hotel_code,
+                            image_url: filename,
+                            image_caption: undefined,
+                            main_image: fieldname === "main_image" ? "Y" : "N",
                         });
                     }
-                });
-            }
-            const { email } = checkHotel[0];
-            // update hotel user
-            if (Object.keys(rest).length) {
-                yield model.updateHotel(rest, { email });
-            }
-            // insert photo
-            // if (hotelImages.length) {
-            //   await model.insertHotelImage(hotelImages);
-            // }
-            const rmv_photo = remove_photo ? JSON.parse(remove_photo) : [];
-            // delete hotel image
-            if (rmv_photo.length) {
-                yield model.deleteHotelImage(rmv_photo, hotel_code);
-            }
-            const hotel_amnities_parse = hotel_amnities
-                ? JSON.parse(hotel_amnities)
-                : [];
-            // insert hotel amnities
-            if (hotel_amnities_parse.length) {
-                const hotelAmnitiesPayload = hotel_amnities_parse.map((item) => {
-                    return {
-                        hotel_code,
-                        name: item,
-                    };
-                });
-                yield model.insertHotelAmnities(hotelAmnitiesPayload);
-            }
-            const remove_amnities_parse = remove_amnities
-                ? JSON.parse(remove_amnities)
-                : [];
-            // delete hotel amnities
-            if (remove_amnities_parse.length) {
-                yield model.deleteHotelAmnities(remove_amnities_parse, hotel_code);
-            }
-            return {
-                success: true,
-                code: this.StatusCode.HTTP_OK,
-                message: "Update successfully",
-            };
+                }
+                // === Update hotel contact details ===
+                const contactUpdates = {
+                    email: hotel_email,
+                    fax,
+                    phone,
+                    website_url,
+                    optional_phone1,
+                };
+                if (logoFilename) {
+                    contactUpdates.logo = logoFilename;
+                }
+                const hasContactUpdates = Object.values(contactUpdates).some((val) => val !== undefined);
+                if (hasContactUpdates) {
+                    yield model.updateHotelContactDetails(contactUpdates, hotel_code);
+                }
+                // === Insert new hotel images ===
+                if (hotelImages.length > 0) {
+                    yield model.insertHotelImages(hotelImages);
+                }
+                // === Remove selected hotel images ===
+                if (Array.isArray(remove_hotel_images) &&
+                    remove_hotel_images.length > 0) {
+                    yield model.deleteHotelImage(remove_hotel_images, hotel_code);
+                }
+                return {
+                    success: true,
+                    code: this.StatusCode.HTTP_OK,
+                    message: "Hotel updated successfully",
+                };
+            }));
         });
     }
 }

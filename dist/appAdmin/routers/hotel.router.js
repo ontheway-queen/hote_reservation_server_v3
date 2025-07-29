@@ -16,7 +16,7 @@ class HotelRouter extends abstract_router_1.default {
         this.router
             .route("/")
             .get(this.hotelController.getMyHotel)
-            .patch(this.uploader.cloudUploadRaw(this.fileFolders.HOTEL_FILES), this.hotelController.updateMyHotel);
+            .patch(this.uploader.cloudUploadRaw(this.fileFolders.HOTEL_FILES), this.hotelController.updateHotel);
     }
 }
 exports.default = HotelRouter;

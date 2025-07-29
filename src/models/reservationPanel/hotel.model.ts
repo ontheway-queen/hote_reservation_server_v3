@@ -1,13 +1,15 @@
+import { Part } from '@aws-sdk/client-s3';
+import { ISingleHotel } from '../../appM360/utlis/interfaces/mHotel.common.interface';
 import {
   ICreateHotelPayload,
   ICreateHotelUserPayload,
   IgetAllHotelUserPayload,
   IinsertHotelsCDPayload,
-  IsingleHotelUserPayload,
   IupdateHotelUser,
 } from '../../appM360/utlis/interfaces/mUserHotel.interface';
 import { TDB } from '../../common/types/commontypes';
 import Schema from '../../utils/miscellaneous/schema';
+import { IAccountConfigHeads } from '../../utils/miscellaneous/constants';
 
 class HotelModel extends Schema {
   private db: TDB;
@@ -32,13 +34,14 @@ class HotelModel extends Schema {
   }
 
   public async updateHotelContactDetails(
-    payload: {
-      phone?: string;
-      fax?: string;
-      website_url?: string;
-      email?: string;
-      logo?: string;
-    },
+    payload: Partial<{
+      phone: string;
+      fax: string;
+      website_url: string;
+      email: string;
+      logo: string;
+      bin: string;
+    }>,
     hotel_code: number
   ) {
     return await this.db('hotel_contact_details')
@@ -52,7 +55,7 @@ class HotelModel extends Schema {
       hotel_code: number;
       image_url: string;
       image_caption?: string;
-      main_image: string;
+      main_image?: string;
     }[]
   ) {
     return await this.db('hotel_image')
@@ -151,8 +154,12 @@ class HotelModel extends Schema {
   }
 
   // get single hotel
-  public async getSingleHotel(payload: IsingleHotelUserPayload) {
-    const { id, email } = payload;
+  public async getSingleHotel(payload: {
+    id?: number;
+    email?: string;
+    hotel_code?: number;
+  }): Promise<ISingleHotel | undefined> {
+    const { hotel_code, email, id } = payload;
     return await this.db('hotels as h')
       .withSchema(this.RESERVATION_SCHEMA)
       .select(
@@ -180,10 +187,22 @@ class HotelModel extends Schema {
         'hcd.fax',
         'hcd.website_url',
         'hcd.email as hotel_email',
-        'hcd.phone'
-        // this.db.raw(
-        //   `(select json_agg(json_build_object('id')) from hotel_images as hi where h.hotel_code = )`
-        // )
+        'hcd.phone',
+        'hcd.optional_phone1',
+        'h.bin',
+        this.db.raw(
+          `(SELECT json_agg(
+      json_build_object(
+        'id', hi.id,
+        'image_url', hi.image_url,
+        'image_caption', hi.image_caption,
+        'main_image', hi.main_image
+      )
+    )
+    FROM hotel_reservation.hotel_image hi
+    WHERE hi.hotel_code = h.hotel_code
+  ) AS images`
+        )
       )
       .leftJoin(
         'hotel_contact_details as hcd',
@@ -194,10 +213,14 @@ class HotelModel extends Schema {
         if (id) {
           this.andWhere('h.id', id);
         }
+        if (hotel_code) {
+          this.andWhere('h.hotel_code', hotel_code);
+        }
         if (email) {
           this.andWhere('hcd.email', email);
         }
-      });
+      })
+      .first();
   }
 
   // update hotel
@@ -206,8 +229,13 @@ class HotelModel extends Schema {
     where: { id?: number; email?: string }
   ) {
     const { email, id } = where;
-    return await this.db('hotels')
+    return await this.db('hotels as h')
       .withSchema(this.RESERVATION_SCHEMA)
+      .leftJoin(
+        'hotel_contact_details as hcd',
+        'h.hotel_code',
+        'hcd.hotel_code'
+      )
       .update(payload)
       .where(function () {
         if (id) {
@@ -248,7 +276,7 @@ class HotelModel extends Schema {
   // Get Hotel Account config
   public async getHotelAccConfig(
     hotel_code: number,
-    configs: string[]
+    configs: IAccountConfigHeads[]
   ): Promise<
     { id: number; hotel_code: number; config: string; head_id: number }[]
   > {

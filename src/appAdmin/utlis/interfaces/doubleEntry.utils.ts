@@ -20,7 +20,7 @@ export const journalFormatter = (data: any[]) => {
     }
 
     // Separate into debit and credit entries based on amounts
-    const entryType = parseFloat(entry.debit) > 0 ? 'debit' : 'credit';
+    const entryType = parseFloat(entry.debit) > 0 ? "debit" : "credit";
     existingVoucher.entries[entryType].push({
       serial_no: entry.serial_no,
       head_group_code: entry.head_group_code,

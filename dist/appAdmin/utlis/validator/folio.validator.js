@@ -11,6 +11,12 @@ class FolioValidator {
             booking_id: joi_1.default.number().required(),
             name: joi_1.default.string().required(),
         });
+        this.splitMasterFolio = joi_1.default.object({
+            booking_id: joi_1.default.number().required(),
+            from_folio_id: joi_1.default.number().required(),
+            to_folio_ids: joi_1.default.array().items(joi_1.default.number().required()),
+            amount: joi_1.default.number().required(),
+        });
     }
 }
 exports.FolioValidator = FolioValidator;

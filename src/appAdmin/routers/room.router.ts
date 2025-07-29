@@ -18,6 +18,10 @@ class RoomRouter extends AbstractRouter {
       .get(this.roomController.getAllRoom);
 
     this.router
+      .route("/multiple-rooms")
+      .post(this.roomController.createMultipleRooms);
+
+    this.router
       .route("/by-status")
       .get(this.roomController.getAllRoomByRoomStatus);
 
@@ -46,7 +50,7 @@ class RoomRouter extends AbstractRouter {
 
     // get all rooms by room type
     this.router
-      .route("/:room_type_id")
+      .route("/by/room-type/:room_type_id")
       .get(this.roomController.getAllRoomByRoomType);
   }
 }

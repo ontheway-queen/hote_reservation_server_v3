@@ -19,4 +19,14 @@ export class FolioController extends AbstractController {
       res.status(code).json(data);
     }
   );
+
+  public splitMasterFolio = this.asyncWrapper.wrap(
+    {
+      bodySchema: this.validator.splitMasterFolio,
+    },
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.splitMasterFolio(req);
+      res.status(code).json(data);
+    }
+  );
 }

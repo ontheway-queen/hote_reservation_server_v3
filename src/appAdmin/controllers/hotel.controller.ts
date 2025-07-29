@@ -23,10 +23,10 @@ class HotelController extends AbstractController {
   );
 
   // update my hotel
-  public updateMyHotel = this.asyncWrapper.wrap(
+  public updateHotel = this.asyncWrapper.wrap(
     { bodySchema: this.hotelValidator.updateHotelValidator },
     async (req: Request, res: Response) => {
-      const { code, ...data } = await this.hotelService.updateMyHotel(req);
+      const { code, ...data } = await this.hotelService.updateHotel(req);
 
       res.status(code).json(data);
     }

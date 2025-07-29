@@ -36,8 +36,8 @@ class HotelController extends abstract_controller_1.default {
             res.status(code).json(data);
         }));
         // update my hotel
-        this.updateMyHotel = this.asyncWrapper.wrap({ bodySchema: this.hotelValidator.updateHotelValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _b = yield this.hotelService.updateMyHotel(req), { code } = _b, data = __rest(_b, ["code"]);
+        this.updateHotel = this.asyncWrapper.wrap({ bodySchema: this.hotelValidator.updateHotelValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _b = yield this.hotelService.updateHotel(req), { code } = _b, data = __rest(_b, ["code"]);
             res.status(code).json(data);
         }));
         this.hotelService = new hotel_service_1.default();

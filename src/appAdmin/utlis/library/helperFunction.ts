@@ -109,6 +109,13 @@ export class HelperFunction extends AbstractServices {
       await model.updateLastNo('Voucher', next);
     }
 
+    if (getLasVoucherId === undefined) {
+      await model.insertLastNo({ type: 'Voucher', last_no: next });
+    } else {
+      next = getLasVoucherId.last_no + 1;
+      await model.updateLastNo('Voucher', next);
+    }
+
     const padded = next.toString().padStart(4, '0');
 
     return `${prefix}-${padded}`;

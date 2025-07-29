@@ -11,6 +11,12 @@ class RoomValidator {
             floor_no: joi_1.default.number().required(),
             room_type_id: joi_1.default.number().required(),
         });
+        this.createMultipleRoomValidator = joi_1.default.object({
+            from_room: joi_1.default.number().required(),
+            to_room: joi_1.default.number().required(),
+            floor_no: joi_1.default.number().required(),
+            room_type_id: joi_1.default.number().required(),
+        });
         this.getAllHotelRoomQueryValidator = joi_1.default.object({
             search: joi_1.default.string().allow("").optional(),
             room_type_id: joi_1.default.number().allow("").optional(),

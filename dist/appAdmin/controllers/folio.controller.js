@@ -38,6 +38,12 @@ class FolioController extends abstract_controller_1.default {
             const _a = yield this.service.createFolio(req), { code } = _a, data = __rest(_a, ["code"]);
             res.status(code).json(data);
         }));
+        this.splitMasterFolio = this.asyncWrapper.wrap({
+            bodySchema: this.validator.splitMasterFolio,
+        }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _b = yield this.service.splitMasterFolio(req), { code } = _b, data = __rest(_b, ["code"]);
+            res.status(code).json(data);
+        }));
     }
 }
 exports.FolioController = FolioController;

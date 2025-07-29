@@ -38,8 +38,7 @@ class AdministrationService extends abstract_service_1.default {
             const check = yield administrationModel.getSingleAdmin({
                 email: req.body.email,
             });
-            console.log(req.body, { check });
-            if (check.length) {
+            if (check) {
                 return {
                     success: false,
                     code: this.StatusCode.HTTP_CONFLICT,
@@ -101,7 +100,7 @@ class AdministrationService extends abstract_service_1.default {
                 id: parseInt(id),
                 hotel_code,
             });
-            if (!data.length) {
+            if (!data) {
                 return {
                     success: false,
                     code: this.StatusCode.HTTP_NOT_FOUND,
@@ -111,7 +110,7 @@ class AdministrationService extends abstract_service_1.default {
             return {
                 success: true,
                 code: this.StatusCode.HTTP_OK,
-                data: data[0],
+                data,
             };
         });
     }
@@ -121,7 +120,7 @@ class AdministrationService extends abstract_service_1.default {
             const check = yield adminModel.getSingleAdmin({
                 id: parseInt(req.params.id),
             });
-            if (!check.length) {
+            if (!check) {
                 return {
                     success: false,
                     code: this.StatusCode.HTTP_NOT_FOUND,

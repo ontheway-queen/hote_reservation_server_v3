@@ -141,25 +141,6 @@ class ReservationService extends abstract_service_1.default {
                         }
                     }
                 }
-                // Find lead guest
-                // let leadGuest: IguestReqBody | null = null;
-                // outer: for (const rt of booked_room_types) {
-                //   for (const room of rt.rooms) {
-                //     for (const guest of room.guest_info) {
-                //       if (guest.is_lead_guest) {
-                //         leadGuest = guest;
-                //         break outer;
-                //       }
-                //     }
-                //   }
-                // }
-                // if (!leadGuest) {
-                //   return {
-                //     success: false,
-                //     code: this.StatusCode.HTTP_BAD_REQUEST,
-                //     message: "Lead guest information is required",
-                //   };
-                // }
                 // Insert or get lead guest
                 const guest_id = yield sub.findOrCreateGuest(body.lead_guest_info, hotel_code);
                 // Create main booking
@@ -276,25 +257,6 @@ class ReservationService extends abstract_service_1.default {
                         }
                     }
                 }
-                // Find lead guest
-                // let leadGuest: IguestReqBody | null = null;
-                // outer: for (const rt of booked_room_types) {
-                //   for (const room of rt.rooms) {
-                //     for (const guest of room.guest_info) {
-                //       if (guest.is_lead_guest) {
-                //         leadGuest = guest;
-                //         break outer;
-                //       }
-                //     }
-                //   }
-                // }
-                // if (!leadGuest) {
-                //   return {
-                //     success: false,
-                //     code: this.StatusCode.HTTP_BAD_REQUEST,
-                //     message: "Lead guest information is required",
-                //   };
-                // }
                 // Insert or get lead guest
                 const guest_id = yield sub.findOrCreateGuest(body.lead_guest_info, hotel_code);
                 // Create main booking
@@ -342,6 +304,7 @@ class ReservationService extends abstract_service_1.default {
                     guest_id,
                     booking_id: booking.id,
                     req,
+                    booking_ref: booking.booking_ref,
                 });
                 return {
                     success: true,
@@ -457,7 +420,7 @@ class ReservationService extends abstract_service_1.default {
             };
         });
     }
-    updatePartialReservation(req) {
+    updateRoomAndRateOfReservation(req) {
         return __awaiter(this, void 0, void 0, function* () {
             return this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
                 var _a, _b, _c;
@@ -498,7 +461,7 @@ class ReservationService extends abstract_service_1.default {
                             yield hotelInvModel.updateFolioEntries({ is_void: true }, entryIDs);
                         }
                         const nights = sub.calculateNights(room.check_in, room.check_out);
-                        const res = yield reservationModel.updateSingleBookingRoom({
+                        yield reservationModel.updateSingleBookingRoom({
                             unit_changed_rate: change.unit_changed_rate,
                             unit_base_rate: change.unit_base_rate,
                             changed_rate: change.unit_changed_rate * nights,
@@ -655,6 +618,42 @@ class ReservationService extends abstract_service_1.default {
                     success: true,
                     code: this.StatusCode.HTTP_OK,
                     message: 'Group reservation updated',
+                };
+            }));
+        });
+    }
+    updateSingleReservation(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
+                const { source_id } = req.body;
+                const booking_id = Number(req.params.id);
+                const { hotel_code } = req.hotel_admin;
+                const reservationModel = this.Model.reservationModel(trx);
+                const booking = yield reservationModel.getSingleBooking(hotel_code, booking_id);
+                if (!booking) {
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_NOT_FOUND,
+                        message: 'Booking not found',
+                    };
+                }
+                if (source_id) {
+                    const source = yield this.Model.settingModel().getSingleSource({
+                        id: source_id,
+                    });
+                    if (!source) {
+                        return {
+                            success: false,
+                            code: this.StatusCode.HTTP_NOT_FOUND,
+                            message: 'Source not found',
+                        };
+                    }
+                }
+                yield reservationModel.updateRoomBooking(Object.assign(Object.assign({}, req.body), { source_id }), hotel_code, booking_id);
+                return {
+                    success: true,
+                    code: this.StatusCode.HTTP_OK,
+                    message: 'Single reservation updated',
                 };
             }));
         });
@@ -834,7 +833,7 @@ class ReservationService extends abstract_service_1.default {
             return this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
                 const booking_id = Number(req.params.id);
                 const { hotel_code } = req.hotel_admin;
-                const { new_room_id, previous_room_id } = req.body;
+                const { new_room_id, previous_room_id, base_rate, changed_rate } = req.body;
                 const reservationModel = this.Model.reservationModel(trx);
                 const invoiceModel = this.Model.hotelInvoiceModel(trx);
                 const sub = new subreservation_service_1.SubReservationService(trx);
@@ -848,6 +847,7 @@ class ReservationService extends abstract_service_1.default {
                 }
                 const { booking_rooms } = booking;
                 const previouseRoom = booking_rooms.find((room) => room.room_id === previous_room_id);
+                console.log({ previouseRoom });
                 if (!previouseRoom) {
                     return {
                         success: false,
@@ -864,15 +864,16 @@ class ReservationService extends abstract_service_1.default {
                         message: 'New Room not found',
                     };
                 }
-                const { room_type_id } = checkNewRoom[0];
+                const { room_type_id: new_rooms_rm_type_id } = checkNewRoom[0];
                 const availableRoomList = yield reservationModel.getAllAvailableRoomsByRoomType({
                     hotel_code,
                     check_in: previouseRoom.check_in,
                     check_out: previouseRoom.check_out,
-                    room_type_id,
+                    room_type_id: new_rooms_rm_type_id,
                     exclude_booking_id: booking_id,
                 });
                 const isNewRoomAvailable = availableRoomList.find((room) => room.room_id === new_room_id);
+                console.log({ isNewRoomAvailable });
                 if (!isNewRoomAvailable) {
                     return {
                         success: false,
@@ -892,7 +893,6 @@ class ReservationService extends abstract_service_1.default {
                         message: 'No room-primary folios found.',
                     };
                 }
-                console.log({ roomFolios });
                 const prevRoomFolio = roomFolios.find((rf) => rf.room_id === previous_room_id);
                 if (!prevRoomFolio) {
                     return {
@@ -901,43 +901,109 @@ class ReservationService extends abstract_service_1.default {
                         message: 'Previous rooms folio not found',
                     };
                 }
+                console.log({ prevRoomFolio });
                 const folioEntriesByFolio = yield invoiceModel.getFolioEntriesbyFolioID(hotel_code, prevRoomFolio.id);
-                const folioEntryIDs = folioEntriesByFolio
-                    .filter((fe) => fe.room_id === previous_room_id)
-                    .map((fe) => fe.id);
+                console.log({ folioEntriesByFolio });
+                const folioEntryIDs = folioEntriesByFolio.map((fe) => fe.id);
+                console.log({ previous_room_id, folioEntryIDs });
                 if (!folioEntryIDs.length) {
                     return {
                         success: false,
-                        code: this.StatusCode.HTTP_NOT_FOUND,
-                        message: 'Folio entries not found by previous room ID',
+                        code: this.StatusCode.HTTP_BAD_REQUEST,
+                        message: 'Previous room folio entries not found',
                     };
                 }
-                console.log({ folioEntryIDs });
-                // update folio entries
-                yield invoiceModel.updateFolioEntries({ room_id: new_room_id }, folioEntryIDs);
+                yield invoiceModel.updateFolioEntries({ is_void: true }, folioEntryIDs);
+                // update single boooking
+                yield sub.updateRoomAvailabilityService({
+                    reservation_type: 'booked_room_decrease',
+                    rooms: [previouseRoom],
+                    hotel_code,
+                });
+                const nights = sub.calculateNights(previouseRoom.check_in, previouseRoom.check_out);
+                if (nights <= 0) {
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_BAD_REQUEST,
+                        message: 'Invalid check‑in / check‑out dates.',
+                    };
+                }
+                const folioEntries = [];
+                for (let i = 0; i < nights; i++) {
+                    const date = sub.addDays(previouseRoom.check_in, i);
+                    const tariff = changed_rate;
+                    const vat = (tariff * booking.vat_percentage) / 100;
+                    const sc = (tariff * booking.service_charge_percentage) / 100;
+                    // Tariff
+                    folioEntries.push({
+                        folio_id: prevRoomFolio.id,
+                        date,
+                        posting_type: 'Charge',
+                        debit: tariff,
+                        credit: 0,
+                        room_id: new_room_id,
+                        description: 'Room Tariff',
+                        rack_rate: base_rate,
+                    });
+                    // VAT
+                    if (vat > 0) {
+                        folioEntries.push({
+                            folio_id: prevRoomFolio.id,
+                            date,
+                            posting_type: 'Charge',
+                            debit: vat,
+                            credit: 0,
+                            description: 'VAT',
+                            rack_rate: 0,
+                        });
+                    }
+                    // Service Charge
+                    if (sc > 0) {
+                        folioEntries.push({
+                            folio_id: prevRoomFolio.id,
+                            date,
+                            posting_type: 'Charge',
+                            debit: sc,
+                            credit: 0,
+                            description: 'Service Charge',
+                            rack_rate: 0,
+                        });
+                    }
+                }
+                yield invoiceModel.insertInFolioEntries(folioEntries);
                 // update folio
                 yield invoiceModel.updateSingleFolio({
                     room_id: new_room_id,
                     name: `Room ${checkNewRoom[0].room_name} Folio`,
                 }, { hotel_code, booking_id, folio_id: prevRoomFolio.id });
                 // update single booking rooms
-                yield reservationModel.updateSingleBookingRoom({ room_id: new_room_id, room_type_id }, { booking_id, room_id: previous_room_id });
-                yield sub.updateRoomAvailabilityService({
-                    reservation_type: 'booked_room_decrease',
-                    rooms: [previouseRoom],
-                    hotel_code,
-                });
+                yield reservationModel.updateSingleBookingRoom({
+                    room_id: new_room_id,
+                    room_type_id: new_rooms_rm_type_id,
+                    unit_changed_rate: changed_rate,
+                    unit_base_rate: base_rate,
+                    changed_rate: changed_rate * nights,
+                    base_rate: base_rate * nights,
+                }, { booking_id, room_id: previous_room_id });
                 yield sub.updateRoomAvailabilityService({
                     reservation_type: 'booked_room_increase',
                     rooms: [
                         {
                             check_in: previouseRoom.check_in,
                             check_out: previouseRoom.check_out,
-                            room_type_id,
+                            room_type_id: new_rooms_rm_type_id,
                         },
                     ],
                     hotel_code,
                 });
+                //get folio entries calculation
+                const { total_debit } = yield invoiceModel.getFolioEntriesCalculationByBookingID({
+                    booking_id,
+                    hotel_code,
+                });
+                yield reservationModel.updateRoomBooking({
+                    total_amount: total_debit,
+                }, hotel_code, booking_id);
                 return {
                     success: true,
                     code: this.StatusCode.HTTP_OK,
@@ -1033,6 +1099,26 @@ class ReservationService extends abstract_service_1.default {
                         message: `Room #${room_id} is not free for the new dates.`,
                     };
                 }
+                const roomFoliosByBooking = yield invoiceModel.getFoliosbySingleBooking({
+                    booking_id,
+                    hotel_code,
+                    type: 'room_primary',
+                });
+                if (!roomFoliosByBooking.length) {
+                    return {
+                        success: false,
+                        code: 404,
+                        message: 'No room-primary folios found.',
+                    };
+                }
+                const prevRoomFolio = roomFoliosByBooking.find((rf) => rf.room_id === room_id);
+                if (!prevRoomFolio) {
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_BAD_REQUEST,
+                        message: 'Previous rooms folio not found',
+                    };
+                }
                 const folioEntries = [];
                 for (let i = 0; i < nights; i++) {
                     const date = sub.addDays(check_in, i);
@@ -1041,7 +1127,7 @@ class ReservationService extends abstract_service_1.default {
                     const sc = (tariff * service_charge_percentage) / 100;
                     // Tariff
                     folioEntries.push({
-                        folio_id: 0,
+                        folio_id: prevRoomFolio.id,
                         date,
                         posting_type: 'Charge',
                         debit: tariff,
@@ -1053,12 +1139,11 @@ class ReservationService extends abstract_service_1.default {
                     // VAT
                     if (vat > 0) {
                         folioEntries.push({
-                            folio_id: 0,
+                            folio_id: prevRoomFolio.id,
                             date,
                             posting_type: 'Charge',
                             debit: vat,
                             credit: 0,
-                            room_id,
                             description: 'VAT',
                             rack_rate: 0,
                         });
@@ -1066,38 +1151,28 @@ class ReservationService extends abstract_service_1.default {
                     // Service Charge
                     if (sc > 0) {
                         folioEntries.push({
-                            folio_id: 0,
+                            folio_id: prevRoomFolio.id,
                             date,
                             posting_type: 'Charge',
                             debit: sc,
                             credit: 0,
-                            room_id,
                             description: 'Service Charge',
                             rack_rate: 0,
                         });
                     }
                 }
-                /* ─── 5. Void OLD folio entries for this room ───────────────────────── */
-                const roomFolios = yield invoiceModel.getFolioWithEntriesbySingleBookingAndRoomID({
-                    booking_id,
-                    hotel_code,
-                    room_ids: [room_id],
-                });
-                if (!roomFolios.length) {
-                    return { success: false, code: 404, message: 'No room‑primary folio.' };
+                const folioEntriesByFolio = yield invoiceModel.getFolioEntriesbyFolioID(hotel_code, prevRoomFolio.id);
+                console.log({ folioEntriesByFolio });
+                const folioEntryIDs = folioEntriesByFolio.map((fe) => fe.id);
+                console.log({ room_id, folioEntryIDs });
+                if (!folioEntryIDs.length) {
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_NOT_FOUND,
+                        message: 'No folio entries found for the specified room.',
+                    };
                 }
-                const entryIdsToVoid = [];
-                for (const f of roomFolios) {
-                    const oldEntries = yield invoiceModel.getFolioEntriesbyFolioID(hotel_code, f.id);
-                    entryIdsToVoid.push(...oldEntries.map((fe) => fe.id));
-                    // Tag new entries with correct folio_id right here
-                    folioEntries.forEach((e) => {
-                        e.folio_id = f.id;
-                    });
-                }
-                if (entryIdsToVoid.length) {
-                    yield invoiceModel.updateFolioEntries({ is_void: true }, entryIdsToVoid);
-                }
+                yield invoiceModel.updateFolioEntries({ is_void: true }, folioEntryIDs);
                 yield sub.updateRoomAvailabilityService({
                     reservation_type: 'booked_room_decrease',
                     rooms: [bookingRoom],
@@ -1244,19 +1319,6 @@ class ReservationService extends abstract_service_1.default {
                         message: `You can only check out when the check-out date is or after ${check_out}`,
                     };
                 }
-                // check  due balance exist or not
-                // const hotelInvoiceModel = this.Model.hotelInvoiceModel(trx);
-                // const checkDueAmount = await hotelInvoiceModel.getDueAmountByBookingID({
-                //   booking_id,
-                //   hotel_code,
-                // });
-                // if (checkDueAmount > 0) {
-                //   return {
-                //     success: false,
-                //     code: this.StatusCode.HTTP_UNPROCESSABLE_ENTITY,
-                //     message: `This guest has ${checkDueAmount} due. So you cannot checkout`,
-                //   };
-                // }
                 const remainCheckOutRooms = booking_rooms === null || booking_rooms === void 0 ? void 0 : booking_rooms.filter((room) => room.status !== 'checked_out');
                 if (remainCheckOutRooms === null || remainCheckOutRooms === void 0 ? void 0 : remainCheckOutRooms.length) {
                     yield sub.updateRoomAvailabilityService({
@@ -1310,19 +1372,6 @@ class ReservationService extends abstract_service_1.default {
                         message: `You can only check out when the check-out date is or after ${check_out}`,
                     };
                 }
-                // check  due balance exist or not
-                // const hotelInvoiceModel = this.Model.hotelInvoiceModel(trx);
-                // const checkDueAmount = await hotelInvoiceModel.getDueAmountByBookingID({
-                //   booking_id,
-                //   hotel_code,
-                // });
-                // if (checkDueAmount > 0) {
-                //   return {
-                //     success: false,
-                //     code: this.StatusCode.HTTP_UNPROCESSABLE_ENTITY,
-                //     message: `This guest has ${checkDueAmount} due. So you cannot checkout`,
-                //   };
-                // }
                 const checkoutRoom = booking_rooms.find((room) => room.room_id == roomID);
                 if (!checkoutRoom) {
                     return {
@@ -1489,6 +1538,7 @@ class ReservationService extends abstract_service_1.default {
                     remarks,
                     req,
                     payment_date,
+                    booking_ref: checkSingleFolio.booking_ref,
                 });
                 return {
                     success: true,
@@ -1522,6 +1572,7 @@ class ReservationService extends abstract_service_1.default {
                     remarks,
                     req,
                     payment_date,
+                    booking_ref: checkSingleFolio.booking_ref,
                 });
                 return {
                     success: true,
@@ -1551,6 +1602,26 @@ class ReservationService extends abstract_service_1.default {
                     posting_type: 'Adjustment',
                     description: remarks,
                 });
+                const helper = new helperFunction_1.HelperFunction();
+                const hotelModel = this.Model.HotelModel(trx);
+                const heads = yield hotelModel.getHotelAccConfig(req.hotel_admin.hotel_code, ['RECEIVABLE_HEAD_ID']);
+                const receivable_head = heads.find((h) => h.config === 'RECEIVABLE_HEAD_ID');
+                if (!receivable_head) {
+                    throw new Error('RECEIVABLE_HEAD_ID not configured for this hotel');
+                }
+                const voucher_no1 = yield helper.generateVoucherNo('JV', trx);
+                yield this.Model.accountModel(trx).insertAccVoucher([
+                    {
+                        acc_head_id: receivable_head.head_id,
+                        created_by: req.hotel_admin.id,
+                        debit: 0,
+                        credit: amount,
+                        description: `Receivable for Adjusted room booking ${checkSingleFolio.booking_ref}`,
+                        voucher_date: new Date().toISOString().split('T')[0],
+                        voucher_no: voucher_no1,
+                        hotel_code: req.hotel_admin.hotel_code,
+                    },
+                ]);
                 return {
                     success: true,
                     code: this.StatusCode.HTTP_OK,
@@ -1578,6 +1649,42 @@ class ReservationService extends abstract_service_1.default {
                     posting_type: 'Charge',
                     description: remarks,
                 });
+                // insert entries
+                const helper = new helperFunction_1.HelperFunction();
+                const hotelModel = this.Model.HotelModel(trx);
+                const heads = yield hotelModel.getHotelAccConfig(req.hotel_admin.hotel_code, ['RECEIVABLE_HEAD_ID', 'SALES_HEAD_ID']);
+                const receivable_head = heads.find((h) => h.config === 'RECEIVABLE_HEAD_ID');
+                if (!receivable_head) {
+                    throw new Error('RECEIVABLE_HEAD_ID not configured for this hotel');
+                }
+                const sales_head = heads.find((h) => h.config === 'SALES_HEAD_ID');
+                if (!sales_head) {
+                    throw new Error('RECEIVABLE_HEAD_ID not configured for this hotel');
+                }
+                const voucher_no1 = yield helper.generateVoucherNo('JV', trx);
+                const today = new Date().toISOString().split('T')[0];
+                yield this.Model.accountModel(trx).insertAccVoucher([
+                    {
+                        acc_head_id: receivable_head.head_id,
+                        created_by: req.hotel_admin.id,
+                        debit: amount,
+                        credit: 0,
+                        description: `Receivable for ADD ITEM in ${checkSingleFolio.booking_ref}`,
+                        voucher_date: today,
+                        voucher_no: voucher_no1,
+                        hotel_code: req.hotel_admin.hotel_code,
+                    },
+                    {
+                        acc_head_id: sales_head.head_id,
+                        created_by: req.hotel_admin.id,
+                        debit: 0,
+                        credit: amount,
+                        description: `Sales for ADD ITEM in ${checkSingleFolio.booking_ref}`,
+                        voucher_date: today,
+                        voucher_no: voucher_no1,
+                        hotel_code: req.hotel_admin.hotel_code,
+                    },
+                ]);
                 return {
                     success: true,
                     code: this.StatusCode.HTTP_OK,
@@ -1592,7 +1699,6 @@ class ReservationService extends abstract_service_1.default {
                 const { id: booking_id, room_id } = req.params;
                 const hotel_code = req.hotel_admin.hotel_code;
                 const { add_guest, remove_guest } = req.body;
-                console.log(req.body);
                 const reservationModel = this.Model.reservationModel();
                 const guestModel = this.Model.guestModel(trx);
                 const booking = yield reservationModel.getSingleBooking(req.hotel_admin.hotel_code, parseInt(booking_id));

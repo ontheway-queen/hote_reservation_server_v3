@@ -279,7 +279,7 @@ class ReservationValidator {
             skip: joi_1.default.string().allow("").optional(),
             search: joi_1.default.string().allow("").optional(),
         });
-        this.updateSingleBookingValidator = joi_1.default.object({
+        this.updateRoomAndRateOfReservation = joi_1.default.object({
             changed_rate_of_booking_rooms: joi_1.default.array()
                 .items(joi_1.default.object({
                 room_id: joi_1.default.number().required(),
@@ -326,6 +326,34 @@ class ReservationValidator {
                 .optional(),
             removed_rooms: joi_1.default.array().items(joi_1.default.number().required()).optional(),
         });
+        this.updateSingleReservation = joi_1.default.object({
+            comments: joi_1.default.string().allow("").optional(),
+            source_id: joi_1.default.number().required(),
+            company_name: joi_1.default.string().allow("").optional(),
+            visit_purpose: joi_1.default.string().allow("").optional(),
+            drop: joi_1.default.boolean().optional(),
+            drop_time: joi_1.default.when("drop", {
+                is: true,
+                then: joi_1.default.string().required(),
+                otherwise: joi_1.default.forbidden(),
+            }),
+            drop_to: joi_1.default.when("drop", {
+                is: true,
+                then: joi_1.default.string().required(),
+                otherwise: joi_1.default.forbidden(),
+            }),
+            pickup: joi_1.default.boolean().optional(),
+            pickup_time: joi_1.default.when("pickup", {
+                is: true,
+                then: joi_1.default.string().required(),
+                otherwise: joi_1.default.forbidden(),
+            }),
+            pickup_from: joi_1.default.when("pickup", {
+                is: true,
+                then: joi_1.default.string().required(),
+                otherwise: joi_1.default.forbidden(),
+            }),
+        });
         this.addPayment = joi_1.default.object({
             folio_id: joi_1.default.number().required(),
             amount: joi_1.default.number().required(),
@@ -357,6 +385,8 @@ class ReservationValidator {
         this.changeRoomOfAReservation = joi_1.default.object({
             previous_room_id: joi_1.default.number().required(),
             new_room_id: joi_1.default.number().required(),
+            base_rate: joi_1.default.number().required(),
+            changed_rate: joi_1.default.number().required(),
         });
         this.updateOthersOfARoomByBookingID = joi_1.default.object({
             adults: joi_1.default.number().optional(),

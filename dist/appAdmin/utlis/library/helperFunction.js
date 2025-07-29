@@ -104,6 +104,13 @@ class HelperFunction extends abstract_service_1.default {
                 next = getLasVoucherId.last_no + 1;
                 yield model.updateLastNo('Voucher', next);
             }
+            if (getLasVoucherId === undefined) {
+                yield model.insertLastNo({ type: 'Voucher', last_no: next });
+            }
+            else {
+                next = getLasVoucherId.last_no + 1;
+                yield model.updateLastNo('Voucher', next);
+            }
             const padded = next.toString().padStart(4, '0');
             return `${prefix}-${padded}`;
         });

@@ -173,9 +173,7 @@ class SettingModel extends schema_1.default {
                     this.andWhere("rtc.name", "like", `%${search}%`);
                 }
                 if (exact_match) {
-                    this.andWhereRaw("LOWER(rtc.name) = ?", [
-                        exact_match.toLowerCase(),
-                    ]);
+                    this.andWhereRaw("LOWER(rtc.name) = ?", [exact_match.toLowerCase()]);
                 }
                 if (status) {
                     this.andWhere("rtc.status", status);
@@ -501,6 +499,15 @@ class SettingModel extends schema_1.default {
                     this.whereIn("id", ids);
                 }
             });
+        });
+    }
+    getSingleSource({ id }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("sources")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .select("*")
+                .where({ id })
+                .first();
         });
     }
     getChildAgePolicies(hotel_code) {
@@ -1017,9 +1024,7 @@ class SettingModel extends schema_1.default {
                 .andWhere("pm.is_deleted", false)
                 .andWhere(function () {
                 if (name) {
-                    this.andWhereRaw("months.name::text ILIKE ?", [
-                        `%${name}%`,
-                    ]);
+                    this.andWhereRaw("months.name::text ILIKE ?", [`%${name}%`]);
                 }
                 if (month_id) {
                     this.andWhere("months.id", month_id);
@@ -1037,9 +1042,7 @@ class SettingModel extends schema_1.default {
                 .andWhere("pm.is_deleted", false)
                 .andWhere(function () {
                 if (name) {
-                    this.andWhereRaw("months.name::text ILIKE ?", [
-                        `%${name}%`,
-                    ]);
+                    this.andWhereRaw("months.name::text ILIKE ?", [`%${name}%`]);
                 }
                 if (month_id) {
                     this.andWhere("months.id", month_id);

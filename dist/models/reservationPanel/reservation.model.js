@@ -19,6 +19,78 @@ class ReservationModel extends schema_1.default {
         super();
         this.db = db;
     }
+    //   public async calendar(payload: {
+    //     check_in: string;
+    //     check_out: string;
+    //     hotel_code: number;
+    //   }): Promise<CalendarRoomType[]> {
+    //     const { hotel_code, check_in, check_out } = payload;
+    //     const db = this.db;
+    //     return await db("room_types as rt")
+    //       .withSchema(this.RESERVATION_SCHEMA)
+    //       .select(
+    //         "rt.id",
+    //         "rt.name",
+    //         "rt.hotel_code",
+    //         db.raw(
+    //           `
+    //           COALESCE(
+    //             json_agg(
+    //               jsonb_build_object(
+    //                 'room_id', r.id,
+    //                 'room_name', r.room_name,
+    //                 'room_status',r.status,
+    //                 'bookings', COALESCE(
+    //                   (
+    //                     SELECT json_agg(
+    //                       jsonb_build_object(
+    //                       'booking_id',b.id,
+    //                         'check_in', br2.check_in,
+    //                         'check_out', br2.check_out,
+    //                         'booking_status', br2.status,
+    //                         'guest_id',b.guest_id,
+    //                         'guest_name', CONCAT(g.first_name, ' ', g.last_name),
+    //                         'vat',b.vat,
+    //                         'service_charge',b.service_charge,
+    //                         'discount_amount',b.discount_amount,
+    //                         'total_amount',b.total_amount
+    //                       )
+    //                     )
+    //                     FROM ?? AS br2
+    //                     JOIN ?? AS b ON br2.booking_id = b.id
+    //                     JOIN ?? AS g ON b.guest_id = g.id
+    // WHERE br2.room_id = r.id
+    // AND (
+    //   (b.booking_type = 'B' AND b.status NOT IN ('checked_out', 'pending', 'canceled', 'rejected'))
+    //   OR
+    //   (b.booking_type = 'H' AND b.status != 'canceled')
+    // )
+    //                       AND br2.check_in < ?
+    //                       AND br2.check_out > ?
+    //                       AND br2.status != ?
+    //                   ), '[]'
+    //                 )
+    //               )
+    //                 order by r.room_name::int asc
+    //             ) FILTER (WHERE r.id IS NOT NULL),
+    //             '[]'
+    //           ) AS rooms
+    //           `,
+    //           [
+    //             `${this.RESERVATION_SCHEMA}.booking_rooms`,
+    //             `${this.RESERVATION_SCHEMA}.bookings`,
+    //             `${this.RESERVATION_SCHEMA}.guests`,
+    //             check_out,
+    //             check_in,
+    //             "checkout",
+    //           ]
+    //         )
+    //       )
+    //       .leftJoin("rooms as r", "rt.id", "r.room_type_id")
+    //       .where("rt.hotel_code", hotel_code)
+    //       .groupBy("rt.id")
+    //       .orderBy("rt.name", "asc");
+    //   }
     calendar(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             const { hotel_code, check_in, check_out } = payload;
@@ -26,48 +98,56 @@ class ReservationModel extends schema_1.default {
             return yield db('room_types as rt')
                 .withSchema(this.RESERVATION_SCHEMA)
                 .select('rt.id', 'rt.name', 'rt.hotel_code', db.raw(`
-          COALESCE(
-            json_agg(
-              jsonb_build_object(
-                'room_id', r.id,
-                'room_name', r.room_name,
-                'room_status',r.status,
-                'bookings', COALESCE(
-                  (
-                    SELECT json_agg(
-                      jsonb_build_object(
-                      'booking_id',b.id,
-                        'check_in', br2.check_in,
-                        'check_out', br2.check_out,
-                        'booking_status', br2.status,
-                        'guest_id',b.guest_id,
-                        'guest_name', CONCAT(g.first_name, ' ', g.last_name),
-                        'vat',b.vat,
-                        'service_charge',b.service_charge,
-                        'discount_amount',b.discount_amount,
-                        'total_amount',b.total_amount
-                      )
+        COALESCE(
+          json_agg(
+            jsonb_build_object(
+              'room_id', r.id,
+              'room_name', r.room_name,
+              'room_status', r.status,
+              'bookings', COALESCE(
+                (
+                  SELECT json_agg(
+                    jsonb_build_object(
+                      'booking_id', b.id,
+                      'check_in', br2.check_in,
+                      'check_out', br2.check_out,
+                      'stay_nights', (
+                        SELECT json_agg(to_char(d, 'YYYY-MM-DD'))
+                        FROM generate_series(
+                          br2.check_in,
+                          br2.check_out - INTERVAL '1 day',
+                          INTERVAL '1 day'
+                        ) AS d
+                      ),
+                      'booking_status', br2.status,
+                      'guest_id', b.guest_id,
+                      'guest_name', CONCAT(g.first_name, ' ', g.last_name),
+                      'vat', b.vat,
+                      'service_charge', b.service_charge,
+                      'discount_amount', b.discount_amount,
+                      'total_amount', b.total_amount
                     )
-                    FROM ?? AS br2
-                    JOIN ?? AS b ON br2.booking_id = b.id
-                    JOIN ?? AS g ON b.guest_id = g.id
-WHERE br2.room_id = r.id
-AND (
-  (b.booking_type = 'B' AND b.status NOT IN ('checked_out', 'pending', 'canceled', 'rejected'))
-  OR
-  (b.booking_type = 'H' AND b.status != 'canceled')
-)
-                      AND br2.check_in <= ?
-                      AND br2.check_out >= ?
-                      AND br2.status != ?
-                  ), '[]'
-                )
+                  )
+                  FROM ?? AS br2
+                  JOIN ?? AS b ON br2.booking_id = b.id
+                  JOIN ?? AS g ON b.guest_id = g.id
+                  WHERE br2.room_id = r.id
+                    AND (
+                      (b.booking_type = 'B' AND b.status NOT IN ('checked_out', 'pending', 'canceled', 'rejected'))
+                      OR
+                      (b.booking_type = 'H' AND b.status != 'canceled')
+                    )
+                    AND br2.check_in < ?
+                    AND br2.check_out > ?
+                    AND br2.status != ?
+                ), '[]'
               )
-                order by r.room_name::int asc
-            ) FILTER (WHERE r.id IS NOT NULL),
-            '[]'
-          ) AS rooms
-          `, [
+            )
+            ORDER BY r.room_name::int ASC
+          ) FILTER (WHERE r.id IS NOT NULL),
+          '[]'
+        ) AS rooms
+        `, [
                 `${this.RESERVATION_SCHEMA}.booking_rooms`,
                 `${this.RESERVATION_SCHEMA}.bookings`,
                 `${this.RESERVATION_SCHEMA}.guests`,
@@ -110,7 +190,7 @@ AND (
                     this.andWhere('rt.id', room_type_id);
                 }
             })
-                .groupBy('rt.id')
+                .groupBy('rt.id', 'rt.name', 'rt.description', 'rt.hotel_code')
                 .having(this.db.raw('MIN(ra.available_rooms) > 0'));
         });
     }
@@ -603,7 +683,7 @@ AND (
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db('bookings as b')
                 .withSchema(this.RESERVATION_SCHEMA)
-                .select('b.id', 'b.booking_reference', this.db.raw(`TO_CHAR(b.check_in, 'YYYY-MM-DD') as check_in`), this.db.raw(`TO_CHAR(b.check_out, 'YYYY-MM-DD') as check_out`), this.db.raw(`TO_CHAR(b.booking_date, 'YYYY-MM-DD') as booking_date`), 'b.booking_type', 'b.status', 'b.is_individual_booking', 'src.name as source_name', 'b.total_amount', 'b.vat', 'b.discount_amount', 'b.service_charge', 'b.service_charge_percentage', 'b.vat_percentage', 'b.payment_status', 'b.comments', 'b.pickup', 'b.pickup_from', 'b.pickup_time', 'b.drop', 'b.drop_time', 'b.drop_to', 'g.id as guest_id', 'g.first_name', 'g.last_name', 'g.email as guest_email', 'g.phone', 'g.address', 'c.country_name', 'g.passport_no', 'c.nationality', this.db.raw(`(
+                .select('b.id', 'b.booking_reference', this.db.raw(`TO_CHAR(b.check_in, 'YYYY-MM-DD') as check_in`), this.db.raw(`TO_CHAR(b.check_out, 'YYYY-MM-DD') as check_out`), this.db.raw(`TO_CHAR(b.booking_date, 'YYYY-MM-DD') as booking_date`), 'b.booking_type', 'b.status', 'b.is_individual_booking', 'b.source_id', 'src.name as source_name', 'b.total_amount', 'b.vat', 'b.discount_amount', 'b.service_charge', 'b.service_charge_percentage', 'b.vat_percentage', 'b.payment_status', 'b.comments', 'b.pickup', 'b.pickup_from', 'b.pickup_time', 'b.drop', 'b.drop_time', 'b.drop_to', 'b.visit_purpose', 'g.id as guest_id', 'g.first_name', 'g.last_name', 'g.email as guest_email', 'g.phone', 'g.address', 'c.country_name', 'g.passport_no', 'c.nationality', this.db.raw(`(
             SELECT json_agg(
               json_build_object(
 

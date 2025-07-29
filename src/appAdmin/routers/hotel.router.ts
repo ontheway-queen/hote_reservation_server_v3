@@ -15,9 +15,8 @@ class HotelRouter extends AbstractRouter {
       .get(this.hotelController.getMyHotel)
       .patch(
         this.uploader.cloudUploadRaw(this.fileFolders.HOTEL_FILES),
-        this.hotelController.updateMyHotel
+        this.hotelController.updateHotel
       );
   }
-
 }
 export default HotelRouter;
