@@ -660,7 +660,7 @@ export class ReservationService extends AbstractServices {
             newEntries.push({
               folio_id: roomFolio.id,
               description: "Room Tariff",
-              posting_type: "Charge",
+              posting_type: "ROOM_CHARGE",
               debit: tariff,
               credit: 0,
               date,
@@ -672,7 +672,7 @@ export class ReservationService extends AbstractServices {
               newEntries.push({
                 folio_id: roomFolio.id,
                 description: "VAT",
-                posting_type: "Charge",
+                posting_type: "VAT",
                 debit: vat,
                 credit: 0,
                 date,
@@ -682,7 +682,7 @@ export class ReservationService extends AbstractServices {
               newEntries.push({
                 folio_id: roomFolio.id,
                 description: "Service Charge",
-                posting_type: "Charge",
+                posting_type: "SERVICE_CHARGE",
                 debit: sc,
                 credit: 0,
                 date,
@@ -822,7 +822,7 @@ export class ReservationService extends AbstractServices {
             {
               folio_id: roomFolio.id,
               description: "Room Tariff",
-              posting_type: "Charge",
+              posting_type: "ROOM_CHARGE",
               debit: tariff,
               credit: 0,
               date,
@@ -831,7 +831,7 @@ export class ReservationService extends AbstractServices {
             {
               folio_id: roomFolio.id,
               description: "VAT",
-              posting_type: "Charge",
+              posting_type: "VAT",
               debit: vat,
               credit: 0,
               date,
@@ -839,7 +839,7 @@ export class ReservationService extends AbstractServices {
             {
               folio_id: roomFolio.id,
               description: "Service Charge",
-              posting_type: "Charge",
+              posting_type: "SERVICE_CHARGE",
               debit: sc,
               credit: 0,
               date,
@@ -921,7 +921,7 @@ export class ReservationService extends AbstractServices {
   public async changeDatesOfBooking(req: Request) {
     return this.db.transaction(async (trx) => {
       const booking_id = Number(req.params.id);
-      const { hotel_code } = req.hotel_admin;
+      const { hotel_code, id: admin_id } = req.hotel_admin;
       const { check_in, check_out } = req.body as {
         check_in: string;
         check_out: string;
@@ -1008,7 +1008,7 @@ export class ReservationService extends AbstractServices {
           folioEntries.push({
             folio_id: 0,
             date,
-            posting_type: "Charge",
+            posting_type: "ROOM_CHARGE",
             debit: tariff,
             credit: 0,
             room_id: room.room_id,
@@ -1020,7 +1020,7 @@ export class ReservationService extends AbstractServices {
             folioEntries.push({
               folio_id: 0,
               date,
-              posting_type: "Charge",
+              posting_type: "VAT",
               debit: vat,
               credit: 0,
               room_id: room.room_id,
@@ -1033,7 +1033,7 @@ export class ReservationService extends AbstractServices {
             folioEntries.push({
               folio_id: 0,
               date,
-              posting_type: "Charge",
+              posting_type: "SERVICE_CHARGE",
               debit: sc,
               credit: 0,
               room_id: room.room_id,
@@ -1069,7 +1069,20 @@ export class ReservationService extends AbstractServices {
           f.id
         );
 
-        entryIdsToVoid.push(...folioEntriesByFolio.map((fe) => fe.id));
+        // entryIdsToVoid.push(...folioEntriesByFolio.map((fe) =>  fe.id));
+        entryIdsToVoid.push(
+          ...folioEntriesByFolio
+            .filter((fe) => {
+              if (
+                fe.posting_type == "ROOM_CHARGE" ||
+                fe.posting_type == "VAT" ||
+                fe.posting_type == "SERVICE_CHARGE"
+              ) {
+                return fe;
+              }
+            })
+            .map((fe) => fe.id)
+        );
       }
 
       if (entryIdsToVoid.length) {
@@ -1079,6 +1092,8 @@ export class ReservationService extends AbstractServices {
         );
       }
 
+      // now total room amount
+
       for (const e of folioEntries) {
         const fid = roomIdToFolioId.get(e.room_id as number);
         if (!fid)
@@ -1087,6 +1102,7 @@ export class ReservationService extends AbstractServices {
           );
         e.folio_id = fid;
       }
+
       await invoiceModel.insertInFolioEntries(folioEntries);
 
       await sub.updateRoomAvailabilityService({
@@ -1126,14 +1142,17 @@ export class ReservationService extends AbstractServices {
         hotel_code,
       });
 
-      const totalAmount = folioEntries.reduce(
-        (sum, e) => sum + (e.debit ?? 0),
-        0
-      );
+      //------------------ Accounting ------------------//
+
+      const { total_debit } =
+        await invoiceModel.getFolioEntriesCalculationByBookingID({
+          hotel_code,
+          booking_id,
+        });
 
       await reservationModel.updateRoomBooking(
         {
-          total_amount: totalAmount,
+          total_amount: total_debit,
           total_nights: nights,
           check_in,
           check_out,
@@ -1313,7 +1332,7 @@ export class ReservationService extends AbstractServices {
         folioEntries.push({
           folio_id: prevRoomFolio.id,
           date,
-          posting_type: "Charge",
+          posting_type: "ROOM_CHARGE",
           debit: tariff,
           credit: 0,
           room_id: new_room_id,
@@ -1326,7 +1345,7 @@ export class ReservationService extends AbstractServices {
           folioEntries.push({
             folio_id: prevRoomFolio.id,
             date,
-            posting_type: "Charge",
+            posting_type: "VAT",
             debit: vat,
             credit: 0,
             description: "VAT",
@@ -1338,7 +1357,7 @@ export class ReservationService extends AbstractServices {
           folioEntries.push({
             folio_id: prevRoomFolio.id,
             date,
-            posting_type: "Charge",
+            posting_type: "SERVICE_CHARGE",
             debit: sc,
             credit: 0,
             description: "Service Charge",
@@ -1561,7 +1580,7 @@ export class ReservationService extends AbstractServices {
         folioEntries.push({
           folio_id: prevRoomFolio.id,
           date,
-          posting_type: "Charge",
+          posting_type: "ROOM_CHARGE",
           debit: tariff,
           credit: 0,
           room_id,
@@ -1574,7 +1593,7 @@ export class ReservationService extends AbstractServices {
           folioEntries.push({
             folio_id: prevRoomFolio.id,
             date,
-            posting_type: "Charge",
+            posting_type: "VAT",
             debit: vat,
             credit: 0,
             description: "VAT",
@@ -1587,7 +1606,7 @@ export class ReservationService extends AbstractServices {
           folioEntries.push({
             folio_id: prevRoomFolio.id,
             date,
-            posting_type: "Charge",
+            posting_type: "SERVICE_CHARGE",
             debit: sc,
             credit: 0,
             description: "Service Charge",
@@ -2253,7 +2272,7 @@ export class ReservationService extends AbstractServices {
       await this.Model.hotelInvoiceModel().insertInFolioEntries({
         debit: amount,
         folio_id: folio_id,
-        posting_type: "Charge",
+        posting_type: "CHARGE",
         description: remarks,
       });
 

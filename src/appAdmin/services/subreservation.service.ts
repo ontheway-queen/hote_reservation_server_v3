@@ -468,121 +468,6 @@ export class SubReservationService extends AbstractServices {
     }
   }
 
-  public async handlePaymentAndFolioForBooking({
-    booking_id,
-    is_payment_given,
-    guest_id,
-    req,
-    total_amount,
-    payment,
-    booking_ref,
-  }: {
-    is_payment_given: boolean;
-    payment: IbookingReqPayment | undefined;
-    guest_id: number;
-    req: Request;
-    total_amount: number;
-    booking_id: number;
-    booking_ref: string;
-  }) {
-    const accountModel = this.Model.accountModel(this.trx);
-    const hotelInvModel = this.Model.hotelInvoiceModel(this.trx);
-    const [lastFolio] = await hotelInvModel.getLasFolioId();
-    const hotel_code = req.hotel_admin.hotel_code;
-
-    const folio_number = HelperFunction.generateFolioNumber(lastFolio?.id);
-
-    const [folio] = await hotelInvModel.insertInFolio({
-      booking_id,
-      folio_number,
-      guest_id,
-      hotel_code: req.hotel_admin.hotel_code,
-      name: "Reservation",
-      status: "open",
-      type: "Primary",
-    });
-
-    const helper = new HelperFunction();
-    const today = new Date().toISOString().split("T")[0];
-    const hotelModel = this.Model.HotelModel(this.trx);
-
-    const heads = await hotelModel.getHotelAccConfig(hotel_code, [
-      "RECEIVABLE_HEAD_ID",
-    ]);
-
-    const receivable_head = heads.find(
-      (h) => h.config === "RECEIVABLE_HEAD_ID"
-    );
-    if (!receivable_head) {
-      throw new Error("RECEIVABLE_HEAD_ID not configured for this hotel");
-    }
-
-    // double entry
-    if (is_payment_given && payment) {
-      const [acc] = await accountModel.getSingleAccount({
-        hotel_code,
-        id: payment.acc_id,
-      });
-
-      if (!acc) throw new Error("Invalid Account");
-
-      let voucher_type: "CCV" | "BCV" = "CCV";
-
-      if (acc.acc_type === "BANK") {
-        voucher_type = "BCV";
-      }
-
-      const voucher_no = await helper.generateVoucherNo(voucher_type, this.trx);
-
-      await accountModel.insertAccVoucher([
-        {
-          acc_head_id: acc.acc_head_id,
-          created_by: req.hotel_admin.id,
-          debit: payment.amount,
-          credit: 0,
-          description: `Payment collection for booking ${booking_ref}`,
-          voucher_date: today,
-          voucher_no,
-          hotel_code,
-        },
-        {
-          acc_head_id: receivable_head.head_id,
-          created_by: req.hotel_admin.id,
-          debit: 0,
-          credit: payment.amount,
-          description: `Payment collected for booking ${booking_ref}`,
-          voucher_date: today,
-          voucher_no,
-          hotel_code,
-        },
-      ]);
-    }
-
-    await hotelInvModel.insertInFolioEntries({
-      debit: total_amount,
-      credit: 0,
-      folio_id: folio.id,
-      posting_type: "Charge",
-      description: "room booking",
-    });
-
-    if (is_payment_given) {
-      if (!payment)
-        throw new Error(
-          "Payment data is required when is_payment_given is true"
-        );
-
-      await hotelInvModel.insertInFolioEntries({
-        debit: 0,
-        credit: payment.amount,
-        folio_id: folio.id,
-        posting_type: "Payment",
-        description: "Payment given",
-      });
-    }
-  }
-
-  // This service for individual booking
   public async createRoomBookingFolioWithEntries({
     body,
     booking_id,
@@ -659,7 +544,7 @@ export class SubReservationService extends AbstractServices {
           push(ctx, {
             folio_id: ctx.folioId,
             date,
-            posting_type: "Charge",
+            posting_type: "ROOM_CHARGE",
             debit: rate,
             credit: 0,
             description: "Room Tariff",
@@ -672,7 +557,7 @@ export class SubReservationService extends AbstractServices {
             push(ctx, {
               folio_id: ctx.folioId,
               date,
-              posting_type: "Charge",
+              posting_type: "VAT",
               debit: +((rate * body.vat_percentage) / 100).toFixed(2),
               credit: 0,
               description: "VAT",
@@ -685,7 +570,7 @@ export class SubReservationService extends AbstractServices {
             push(ctx, {
               folio_id: ctx.folioId,
               date,
-              posting_type: "Charge",
+              posting_type: "SERVICE_CHARGE",
               debit: +((rate * body.service_charge_percentage) / 100).toFixed(
                 2
               ),
@@ -908,7 +793,7 @@ export class SubReservationService extends AbstractServices {
           push(ctx, {
             folio_id: ctx.folioId,
             date,
-            posting_type: "Charge",
+            posting_type: "ROOM_CHARGE",
             debit: rate,
             credit: 0,
             description: "Room Tariff",
@@ -921,7 +806,7 @@ export class SubReservationService extends AbstractServices {
             push(ctx, {
               folio_id: ctx.folioId,
               date,
-              posting_type: "Charge",
+              posting_type: "VAT",
               debit: +((rate * body.vat_percentage) / 100).toFixed(2),
               credit: 0,
               description: "VAT",
@@ -934,7 +819,7 @@ export class SubReservationService extends AbstractServices {
             push(ctx, {
               folio_id: ctx.folioId,
               date,
-              posting_type: "Charge",
+              posting_type: "SERVICE_CHARGE",
               debit: +((rate * body.service_charge_percentage) / 100).toFixed(
                 2
               ),

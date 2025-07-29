@@ -67,22 +67,11 @@ export class FolioService extends AbstractServices {
           message: this.ResMsg.HTTP_NOT_FOUND,
         };
       }
-      const [lastFolio] = await invoiceModel.getLasFolioId();
-
-      const folio_number = HelperFunction.generateFolioNumber(lastFolio?.id);
-      await invoiceModel.insertInFolio({
-        booking_id,
-        name,
-        folio_number,
-        hotel_code,
-        type: "Custom",
-        status: "open",
-      });
 
       return {
         success: true,
         code: this.StatusCode.HTTP_SUCCESSFUL,
-        message: "Folio has been created",
+        message: "Entries has been splitted",
       };
     });
   }
