@@ -182,7 +182,7 @@ class MHotelService extends AbstractServices {
 
       // insert Role
       const roleRes = await administrationModel.createRole({
-        name: "super-admin",
+        name: "Super Admin",
         hotel_code,
         init_role: true,
       });

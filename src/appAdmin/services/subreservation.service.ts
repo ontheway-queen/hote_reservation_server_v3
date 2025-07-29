@@ -680,14 +680,15 @@ export class SubReservationService extends AbstractServices {
     const allEntries = [...masterEntries, ...child.flatMap((c) => c.entries)];
 
     // payment entry
-    allEntries.push({
-      folio_id: child[0].folioId,
-      date: today,
-      posting_type: "Payment",
-      credit: body.payment.amount,
-      debit: 0,
-      description: "Payment for room booking",
-    });
+    if (body.is_payment_given && body.payment?.amount > 0)
+      allEntries.push({
+        folio_id: child[0].folioId,
+        date: today,
+        posting_type: "Payment",
+        credit: body.payment.amount,
+        debit: 0,
+        description: "Payment for room booking",
+      });
 
     await hotelInvModel.insertInFolioEntries(allEntries);
 

@@ -144,7 +144,7 @@ class MHotelService extends abstract_service_1.default {
                 }
                 // insert Role
                 const roleRes = yield administrationModel.createRole({
-                    name: "super-admin",
+                    name: "Super Admin",
                     hotel_code,
                     init_role: true,
                 });

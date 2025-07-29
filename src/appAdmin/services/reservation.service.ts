@@ -1070,6 +1070,7 @@ export class ReservationService extends AbstractServices {
         );
 
         // entryIdsToVoid.push(...folioEntriesByFolio.map((fe) =>  fe.id));
+
         entryIdsToVoid.push(
           ...folioEntriesByFolio
             .filter((fe) => {
@@ -1277,8 +1278,6 @@ export class ReservationService extends AbstractServices {
           message: "Previous rooms folio not found",
         };
       }
-
-      console.log({ prevRoomFolio });
 
       const folioEntriesByFolio = await invoiceModel.getFolioEntriesbyFolioID(
         hotel_code,

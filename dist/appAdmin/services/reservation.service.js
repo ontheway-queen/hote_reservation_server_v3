@@ -915,7 +915,6 @@ class ReservationService extends abstract_service_1.default {
                         message: "Previous rooms folio not found",
                     };
                 }
-                console.log({ prevRoomFolio });
                 const folioEntriesByFolio = yield invoiceModel.getFolioEntriesbyFolioID(hotel_code, prevRoomFolio.id);
                 console.log({ folioEntriesByFolio });
                 const folioEntryIDs = folioEntriesByFolio.map((fe) => fe.id);

@@ -329,7 +329,7 @@ class SubReservationService extends abstract_service_1.default {
         });
     }
     createRoomBookingFolioWithEntries({ body, booking_id, guest_id, req, booking_ref, }) {
-        var _a;
+        var _a, _b;
         return __awaiter(this, void 0, void 0, function* () {
             const { hotel_code, id: created_by } = req.hotel_admin;
             const hotelInvModel = this.Model.hotelInvoiceModel(this.trx);
@@ -491,14 +491,15 @@ class SubReservationService extends abstract_service_1.default {
             /*  persist entries */
             const allEntries = [...masterEntries, ...child.flatMap((c) => c.entries)];
             // payment entry
-            allEntries.push({
-                folio_id: child[0].folioId,
-                date: today,
-                posting_type: "Payment",
-                credit: body.payment.amount,
-                debit: 0,
-                description: "Payment for room booking",
-            });
+            if (body.is_payment_given && ((_b = body.payment) === null || _b === void 0 ? void 0 : _b.amount) > 0)
+                allEntries.push({
+                    folio_id: child[0].folioId,
+                    date: today,
+                    posting_type: "Payment",
+                    credit: body.payment.amount,
+                    debit: 0,
+                    description: "Payment for room booking",
+                });
             yield hotelInvModel.insertInFolioEntries(allEntries);
             yield reservationModel.updateRoomBooking({ total_amount: totalDebit }, hotel_code, booking_id);
             return {
