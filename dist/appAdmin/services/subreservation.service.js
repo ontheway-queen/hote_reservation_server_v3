@@ -672,6 +672,25 @@ class SubReservationService extends abstract_service_1.default {
                     voucher_type = "BCV";
                 }
                 const voucher_no = yield helper.generateVoucherNo(voucher_type, this.trx);
+                // money receipt
+                const money_receipt_no = yield helper.generateMoneyReceiptNo(this.trx);
+                const mRes = yield hotelInvModel.insertMoneyReceipt({
+                    hotel_code,
+                    receipt_date: today,
+                    amount_paid: body.payment.amount,
+                    payment_method: acc.acc_type,
+                    receipt_no: money_receipt_no,
+                    received_by: req.hotel_admin.id,
+                    voucher_no,
+                    notes: "Advance Payment",
+                });
+                yield hotelInvModel.insertFolioMoneyReceipt({
+                    hotel_code,
+                    amount: body.payment.amount,
+                    money_receipt_id: mRes[0].id,
+                    folio_id: masterFolio.id,
+                });
+                // acc voucher
                 yield accountModel.insertAccVoucher([
                     {
                         acc_head_id: acc.acc_head_id,

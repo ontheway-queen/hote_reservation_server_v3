@@ -3,15 +3,15 @@ import {
   IAccountReqBody,
   IinsertLedger,
   IupdateAccount,
-} from "../../../appAdmin/utlis/interfaces/account.interface";
+} from '../../../appAdmin/utlis/interfaces/account.interface';
 import {
   IAccHeadDb,
   idType,
   IInsertVoucherPayload,
   IUpdateVoucherPayload,
-} from "../../../appAdmin/utlis/interfaces/doubleEntry.interface";
-import { TDB } from "../../../common/types/commontypes";
-import Schema from "../../../utils/miscellaneous/schema";
+} from '../../../appAdmin/utlis/interfaces/doubleEntry.interface';
+import { TDB } from '../../../common/types/commontypes';
+import Schema from '../../../utils/miscellaneous/schema';
 
 class AccountModel extends Schema {
   private db: TDB;
@@ -21,29 +21,29 @@ class AccountModel extends Schema {
   }
 
   public async allGroups() {
-    return await this.db("acc_groups")
+    return await this.db('acc_groups')
       .withSchema(this.ACC_SCHEMA)
-      .select("code", "name", "description");
+      .select('code', 'name', 'description');
   }
 
   public async insertAccHead(payload: IAccHeadDb | IAccHeadDb[]) {
-    return await this.db("acc_heads")
+    return await this.db('acc_heads')
       .withSchema(this.ACC_SCHEMA)
-      .insert(payload, "id");
+      .insert(payload, 'id');
   }
 
   public async updateAccHead(payload: any, id: idType) {
-    return await this.db("acc_heads")
+    return await this.db('acc_heads')
       .withSchema(this.ACC_SCHEMA)
       .update(payload)
-      .where("head_id", id);
+      .where('head_id', id);
   }
 
   public async deleteAccHead(id: idType) {
-    return await this.db("acc_heads")
+    return await this.db('acc_heads')
       .withSchema(this.ACC_SCHEMA)
       .del()
-      .where("id", id);
+      .where('id', id);
   }
 
   public async getAllAccHeads({
@@ -59,9 +59,9 @@ class AccountModel extends Schema {
     skip?: number;
     head_id?: idType;
   }) {
-    const data = await this.db("acc_heads")
+    const data = await this.db('acc_heads')
       .withSchema(this.ACC_SCHEMA)
-      .select("id", "group_code", "code", "name", "is_active")
+      .select('id', 'group_code', 'code', 'name', 'is_active')
       .modify((e) => {
         if (search) {
           e.select(
@@ -79,30 +79,30 @@ class AccountModel extends Schema {
               [`%${search}%`, `%${search}%`, `%${search}%`]
             )
           )
-            .orWhereRaw("group_code like ?", [`%${search}%`])
-            .orWhereRaw("code like ?", [`%${search}%`])
-            .orWhereRaw("name like ?", [`%${search}%`])
-            .orderBy("relevance_score", "desc");
+            .orWhereRaw('group_code like ?', [`%${search}%`])
+            .orWhereRaw('code like ?', [`%${search}%`])
+            .orWhereRaw('name like ?', [`%${search}%`])
+            .orderBy('relevance_score', 'desc');
         } else {
-          e.orderBy("name", order_by || "asc");
+          e.orderBy('name', order_by || 'asc');
         }
         if (head_id) {
-          e.where("id", head_id);
+          e.where('id', head_id);
         }
       })
       .limit(limit || 20)
       .offset(skip || 0);
-    const { total } = await this.db("acc_heads")
+    const { total } = await this.db('acc_heads')
       .withSchema(this.ACC_SCHEMA)
-      .count("id as total")
+      .count('id as total')
       .modify((e) => {
         if (search) {
-          e.orWhereRaw("group_code like ?", [`%${search}%`])
-            .orWhereRaw("code like ?", [`%${search}%`])
-            .orWhereRaw("name like ?", [`%${search}%`]);
+          e.orWhereRaw('group_code like ?', [`%${search}%`])
+            .orWhereRaw('code like ?', [`%${search}%`])
+            .orWhereRaw('name like ?', [`%${search}%`]);
         }
         if (head_id) {
-          e.where("id", head_id);
+          e.where('id', head_id);
         }
       })
       .first();
@@ -111,28 +111,28 @@ class AccountModel extends Schema {
   }
 
   async getAccHeadByCode(hotel_code: number, group_code: string) {
-    return await this.db("acc_heads")
-      .select("*")
+    return await this.db('acc_heads')
+      .select('*')
       .withSchema(this.ACC_SCHEMA)
-      .where("hotel_code", hotel_code)
-      .andWhere("group_code", group_code)
+      .where('hotel_code', hotel_code)
+      .andWhere('group_code', group_code)
       .first();
   }
 
   public async getHeadCodeById(id: idType) {
-    return await this.db("acc_heads")
+    return await this.db('acc_heads')
       .withSchema(this.ACC_SCHEMA)
-      .select("*")
-      .where("id", id)
+      .select('*')
+      .where('id', id)
       .first();
   }
 
   public async getLastHeadCodeByParent(id: idType) {
-    const data = (await this.db("acc_heads")
+    const data = (await this.db('acc_heads')
       .withSchema(this.ACC_SCHEMA)
-      .select("code")
-      .where("parent_id", id)
-      .orderBy("id", "desc")
+      .select('code')
+      .where('parent_id', id)
+      .orderBy('id', 'desc')
       .limit(1)
       .first()) as { head_code: string };
 
@@ -140,10 +140,10 @@ class AccountModel extends Schema {
   }
 
   public getLastGroupCode = async (groupCode: string) => {
-    return (await this.db("acc_head")
-      .select("head_code", "head_id", "head_group_code")
-      .where("head_group_code", groupCode)
-      .orderBy("head_id", "desc")
+    return (await this.db('acc_head')
+      .select('head_code', 'head_id', 'head_group_code')
+      .where('head_group_code', groupCode)
+      .orderBy('head_id', 'desc')
       .limit(1)
       .first()) as {
       head_code: string;
@@ -153,16 +153,16 @@ class AccountModel extends Schema {
   };
 
   public async allAccVouchers() {
-    return await this.db("v_acc_vouchers")
+    return await this.db('v_acc_vouchers')
       .withSchema(this.ACC_SCHEMA)
-      .select("*");
+      .select('*');
     // .where('org_id', this.org_agency);
   }
 
   public async getVoucherCount() {
-    const total = await this.db("acc_vouchers")
+    const total = await this.db('acc_vouchers')
       .withSchema(this.ACC_SCHEMA)
-      .count("id as total");
+      .count('id as total');
 
     return total.length ? total[0].total : 0;
   }
@@ -170,41 +170,41 @@ class AccountModel extends Schema {
   public async insertAccVoucher(
     payload: IInsertVoucherPayload | IInsertVoucherPayload[]
   ) {
-    return await this.db("acc_vouchers")
+    return await this.db('acc_vouchers')
       .withSchema(this.ACC_SCHEMA)
-      .insert(payload, "id");
+      .insert(payload, 'id');
   }
 
   public async updateAccVoucher(
     payload: IUpdateVoucherPayload,
     { hotel_code, id }: { hotel_code: number; id: number }
   ) {
-    return await this.db("acc_voucher")
+    return await this.db('acc_voucher')
       .update(payload)
-      .andWhere("id", id)
-      .andWhere("hotel_code", hotel_code);
+      .andWhere('id', id)
+      .andWhere('hotel_code', hotel_code);
   }
 
   public async getHeadByAccount(accountId: idType) {
-    const data = (await this.db("trabill_accounts")
-      .first("account_head_id")
-      .where("account_id", accountId)) as { account_head_id: number };
+    const data = (await this.db('trabill_accounts')
+      .first('account_head_id')
+      .where('account_id', accountId)) as { account_head_id: number };
 
     return data?.account_head_id;
   }
 
   public async deleteAccVoucherById(id: idType) {
-    return await this.db("acc_voucher").del().where("id", id);
+    return await this.db('acc_voucher').del().where('id', id);
   }
 
   public async deleteAccVoucherByVoucherNo(voucherNo: string) {
-    await this.db("acc_voucher").where("voucher_no", voucherNo).del();
+    await this.db('acc_voucher').where('voucher_no', voucherNo).del();
   }
 
   // get account group
   public async getAccountGroup(code: string, status: number) {
-    return await this.db("acc_group")
-      .select("code", "name")
+    return await this.db('acc_group')
+      .select('code', 'name')
       .where((qb) => {
         if (code) {
           qb.andWhere({ code });
@@ -231,59 +231,59 @@ class AccountModel extends Schema {
     parent_id?: number | null;
     name?: string;
     order_by?: string;
-    order_to?: "asc" | "desc";
+    order_to?: 'asc' | 'desc';
     id?: number;
     id_greater?: number;
   }) {
-    return await this.db("acc_heads AS ah")
+    return await this.db('acc_heads AS ah')
       .select(
-        "ah.id",
-        "ah.code",
-        "ah.group_code",
-        "ah.parent_id",
-        "ah.name",
-        "ag.name AS group_name"
+        'ah.id',
+        'ah.code',
+        'ah.group_code',
+        'ah.parent_id',
+        'ah.name',
+        'ag.name AS group_name'
       )
       .withSchema(this.ACC_SCHEMA)
-      .join("acc_groups AS ag", "ah.group_code", "ag.code")
+      .join('acc_groups AS ag', 'ah.group_code', 'ag.code')
       .where((qb) => {
-        qb.andWhere("ah.hotel_code", hotel_code);
+        qb.andWhere('ah.hotel_code', hotel_code);
         // qb.andWhere('ah.status', status);
         if (id_greater) {
-          qb.andWhere("ah.id", ">", id_greater);
+          qb.andWhere('ah.id', '>', id_greater);
         }
         if (id) {
-          qb.andWhere("ah.id", id);
+          qb.andWhere('ah.id', id);
         }
         if (code) {
-          qb.andWhere("ah.code", code);
+          qb.andWhere('ah.code', code);
         }
         if (group_code) {
-          qb.andWhere("ah.group_code", group_code);
+          qb.andWhere('ah.group_code', group_code);
         }
         if (parent_id) {
-          qb.andWhere("ah.parent_id", parent_id);
+          qb.andWhere('ah.parent_id', parent_id);
         } else if (parent_id === null) {
-          qb.whereNull("ah.parent_id");
+          qb.whereNull('ah.parent_id');
         }
         if (name) {
-          qb.andWhereILike("ah.name", `%${name}%`);
+          qb.andWhereILike('ah.name', `%${name}%`);
         }
       })
-      .orderBy(order_by ? order_by : "ah.code", order_to ? order_to : "asc");
+      .orderBy(order_by ? order_by : 'ah.code', order_to ? order_to : 'asc');
   }
 
   public async createAccount(payload: IAccountCreateBody) {
-    return await this.db("accounts")
+    return await this.db('accounts')
       .withSchema(this.ACC_SCHEMA)
-      .insert(payload, "id");
+      .insert(payload, 'id');
   }
 
   public async checkAccName(payload: { hotel_code: number; name: string }) {
-    return await this.db("accounts")
+    return await this.db('accounts')
       .withSchema(this.ACC_SCHEMA)
-      .andWhere("hotel_code", payload.hotel_code)
-      .andWhere("name", payload.name);
+      .andWhere('hotel_code', payload.hotel_code)
+      .andWhere('name', payload.name);
   }
 
   // update account
@@ -292,7 +292,7 @@ class AccountModel extends Schema {
     where: { hotel_code: number; id: number; res_id?: number }
   ) {
     const { hotel_code, id, res_id } = where;
-    return await this.db("account")
+    return await this.db('account')
       .withSchema(this.ACC_SCHEMA)
       .update(payload)
       .where({ hotel_code })
@@ -316,7 +316,7 @@ class AccountModel extends Schema {
   }) {
     const { status, hotel_code, ac_type, key, limit, skip, acc_ids } = payload;
 
-    const dtbs = this.db("accounts");
+    const dtbs = this.db('accounts');
 
     if (limit && skip) {
       dtbs.limit(parseInt(limit as string));
@@ -325,63 +325,63 @@ class AccountModel extends Schema {
 
     const data = await dtbs
       .select(
-        "id",
-        "hotel_code",
-        "name",
-        "acc_type",
-        "branch",
-        "acc_number",
-        "details",
-        "is_active"
+        'id',
+        'hotel_code',
+        'name',
+        'acc_type',
+        'branch',
+        'acc_number',
+        'details',
+        'is_active'
       )
       .withSchema(this.ACC_SCHEMA)
-      .where("hotel_code", hotel_code)
+      .where('hotel_code', hotel_code)
       .andWhere(function () {
         if (status) {
-          this.where("is_active", status);
+          this.where('is_active', status);
         }
 
         if (ac_type) {
-          this.andWhereRaw("LOWER(acc_type) = ?", [ac_type.toLowerCase()]);
+          this.andWhereRaw('LOWER(acc_type) = ?', [ac_type.toLowerCase()]);
         }
 
         if (acc_ids) {
-          this.whereIn("id", acc_ids);
+          this.whereIn('id', acc_ids);
         }
       })
       .andWhere(function () {
         if (key) {
-          this.andWhere("name", "like", `%${key}%`).orWhere(
-            "acc_number",
-            "like",
+          this.andWhere('name', 'like', `%${key}%`).orWhere(
+            'acc_number',
+            'like',
             `%${key}%`
           );
         }
       })
-      .orderBy("id", "desc");
+      .orderBy('id', 'desc');
 
-    const total = await this.db("accounts")
+    const total = await this.db('accounts')
       .withSchema(this.ACC_SCHEMA)
-      .count("id as total")
-      .where("hotel_code", hotel_code)
+      .count('id as total')
+      .where('hotel_code', hotel_code)
       .andWhere(function () {
         if (status) {
-          this.where("is_active", status);
+          this.where('is_active', status);
         }
 
         if (ac_type) {
-          this.andWhereRaw("LOWER(acc_type) = ?", [ac_type.toLowerCase()]);
+          this.andWhereRaw('LOWER(acc_type) = ?', [ac_type.toLowerCase()]);
         }
 
         if (acc_ids) {
-          this.whereIn("id", acc_ids);
+          this.whereIn('id', acc_ids);
         }
       })
       .andWhere(function () {
         if (key) {
-          this.andWhere("name", "like", `%${key}%`).orWhere(
-            "acc_number",
-            "like",
+          this.andWhere('name', 'like', `%${key}%`).orWhere(
+            'acc_number',
+            'like',
             `%${key}%`
           );
         }
@@ -397,44 +397,44 @@ class AccountModel extends Schema {
     type?: string;
   }) {
     const { id, type, hotel_code } = payload;
-    return await this.db("accounts")
+    return await this.db('accounts')
       .withSchema(this.ACC_SCHEMA)
       .select(
-        "id",
-        "acc_head_id",
-        "acc_type",
-        "name",
-        "branch",
-        "acc_number",
-        "is_active",
-        "acc_routing_no",
-        "details"
+        'id',
+        'acc_head_id',
+        'acc_type',
+        'name',
+        'branch',
+        'acc_number',
+        'is_active',
+        'acc_routing_no',
+        'details'
       )
-      .where("hotel_code", hotel_code)
+      .where('hotel_code', hotel_code)
       .andWhere(function () {
         if (id) {
           this.andWhere({ id });
         }
         if (type) {
-          this.andWhere("ac_type", type);
+          this.andWhere('ac_type', type);
         }
       });
   }
 
   // insert in account ledger
   public async insertAccountLedger(payload: IinsertLedger) {
-    return await this.db("acc_ledger")
+    return await this.db('acc_ledger')
       .withSchema(this.ACC_SCHEMA)
       .insert(payload);
   }
 
   // get last account ledger
   public async getLastAccountLedgerId(hotel_code: number) {
-    return await this.db("acc_ledger")
+    return await this.db('acc_ledger')
       .withSchema(this.ACC_SCHEMA)
-      .select("ledger_id")
+      .select('ledger_id')
       .where({ hotel_code })
-      .orderBy("ledger_id", "desc")
+      .orderBy('ledger_id', 'desc')
       .limit(1);
   }
 

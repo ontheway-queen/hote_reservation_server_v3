@@ -29,22 +29,22 @@ class ReservationRootRouter {
         this.callRouter();
     }
     callRouter() {
-        this.router.use("/common", this.authChecker.hotelAdminAuthChecker, new common_router_1.default().router);
-        this.router.use("/setting", this.authChecker.hotelAdminAuthChecker, new setting_router_1.default().router);
-        this.router.use("/room", this.authChecker.hotelAdminAuthChecker, new room_router_1.default().router);
-        this.router.use("/report", this.authChecker.hotelAdminAuthChecker, new reports_router_1.default().router);
-        this.router.use("/administration", this.authChecker.hotelAdminAuthChecker, new administration_router_1.default().router);
-        this.router.use("/money-receipt", this.authChecker.hotelAdminAuthChecker, new money_reciept_router_1.default().router);
-        this.router.use("/account", this.authChecker.hotelAdminAuthChecker, new account_router_1.default().router);
-        this.router.use("/folio", this.authChecker.hotelAdminAuthChecker, new folio_router_1.default().router);
-        this.router.use("/invoice", this.authChecker.hotelAdminAuthChecker, new invoice_router_1.default().router);
-        this.router.use("/expense", this.authChecker.hotelAdminAuthChecker, new expense_router_1.default().router);
-        this.router.use("/guest", this.authChecker.hotelAdminAuthChecker, new guest_router_1.default().router);
-        this.router.use("/room-guest", this.authChecker.hotelAdminAuthChecker, new room_guest_router_1.default().router);
-        this.router.use("/payroll", this.authChecker.hotelAdminAuthChecker, new payRoll_router_1.default().router);
-        this.router.use("/inventory", this.authChecker.hotelAdminAuthChecker, new inventory_app_router_1.default().router);
-        this.router.use("/employee", this.authChecker.hotelAdminAuthChecker, new employee_router_1.default().router);
-        this.router.use("/", this.authChecker.hotelAdminAuthChecker, new reservation_router_1.ReservationRouter().router);
+        this.router.use('/common', this.authChecker.hotelAdminAuthChecker, new common_router_1.default().router);
+        this.router.use('/setting', this.authChecker.hotelAdminAuthChecker, new setting_router_1.default().router);
+        this.router.use('/room', this.authChecker.hotelAdminAuthChecker, new room_router_1.default().router);
+        this.router.use('/report', this.authChecker.hotelAdminAuthChecker, new reports_router_1.default().router);
+        this.router.use('/administration', this.authChecker.hotelAdminAuthChecker, new administration_router_1.default().router);
+        this.router.use('/money-receipt', this.authChecker.hotelAdminAuthChecker, new money_reciept_router_1.default().router);
+        this.router.use('/account', this.authChecker.hotelAdminAuthChecker, new account_router_1.default().router);
+        this.router.use('/folio', this.authChecker.hotelAdminAuthChecker, new folio_router_1.default().router);
+        this.router.use('/invoice', this.authChecker.hotelAdminAuthChecker, new invoice_router_1.default().router);
+        this.router.use('/expense', this.authChecker.hotelAdminAuthChecker, new expense_router_1.default().router);
+        this.router.use('/guest', this.authChecker.hotelAdminAuthChecker, new guest_router_1.default().router);
+        this.router.use('/room-guest', this.authChecker.hotelAdminAuthChecker, new room_guest_router_1.default().router);
+        this.router.use('/payroll', this.authChecker.hotelAdminAuthChecker, new payRoll_router_1.default().router);
+        this.router.use('/inventory', this.authChecker.hotelAdminAuthChecker, new inventory_app_router_1.default().router);
+        this.router.use('/employee', this.authChecker.hotelAdminAuthChecker, new employee_router_1.default().router);
+        this.router.use('/', this.authChecker.hotelAdminAuthChecker, new reservation_router_1.ReservationRouter().router);
     }
 }
 exports.ReservationRootRouter = ReservationRootRouter;

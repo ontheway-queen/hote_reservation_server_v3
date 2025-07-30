@@ -918,6 +918,28 @@ export class SubReservationService extends AbstractServices {
 
       const voucher_no = await helper.generateVoucherNo(voucher_type, this.trx);
 
+      // money receipt
+      const money_receipt_no = await helper.generateMoneyReceiptNo(this.trx);
+
+      const mRes = await hotelInvModel.insertMoneyReceipt({
+        hotel_code,
+        receipt_date: today,
+        amount_paid: body.payment.amount,
+        payment_method: acc.acc_type,
+        receipt_no: money_receipt_no,
+        received_by: req.hotel_admin.id,
+        voucher_no,
+        notes: "Advance Payment",
+      });
+
+      await hotelInvModel.insertFolioMoneyReceipt({
+        hotel_code,
+        amount: body.payment.amount,
+        money_receipt_id: mRes[0].id,
+        folio_id: masterFolio.id,
+      });
+
+      // acc voucher
       await accountModel.insertAccVoucher([
         {
           acc_head_id: acc.acc_head_id,

@@ -130,7 +130,7 @@ export interface IguestReqBody {
 }
 
 export interface BookingRequestBody {
-  reservation_type: "hold" | "booked";
+  reservation_type: 'hold' | 'booked';
   check_in: string;
   is_checked_in: boolean;
   is_individual_booking: boolean;
@@ -178,7 +178,7 @@ export interface RoomGuest {
 }
 
 export interface IGBookingRequestBody {
-  reservation_type: "hold" | "booked";
+  reservation_type: 'hold' | 'booked';
   check_in: string;
   check_out: string;
   is_checked_in: boolean;
@@ -207,7 +207,7 @@ export interface IGBookingRequestBody {
     country_id: number;
     address: string;
     passport_no?: string;
-    type: "adult" | "child" | "infant";
+    type: 'adult' | 'child' | 'infant';
   };
   booked_room_types: IGBookedRoomTypeRequest[];
   special_requests?: string;
@@ -245,12 +245,12 @@ export interface IGBGuestInfo {
   country_id: number;
   address: string;
   passport_no?: string;
-  type: "adult" | "child" | "infant";
+  type: 'adult' | 'child' | 'infant';
   is_room_primary_guest: boolean;
 }
 
 export interface IbookingReqPayment {
-  method: "MOBILE_BANKING" | "BANK" | "CASH";
+  method: 'MOBILE_BANKING' | 'BANK' | 'CASH';
   acc_id: number;
   amount: number;
 }
@@ -262,6 +262,7 @@ export interface IRoomBooking {
   created_by: number;
   total_nights: number;
   booking_date: string;
+  voucher_no?: string;
   check_in: string;
   check_out: string;
   booking_type: string;
@@ -304,7 +305,7 @@ export interface IRoomBookingBody {
   passport_no?: string;
   rooms: IbookingRooms;
   booking_rooms: IbookingRoomItem[];
-  payment_type: "bank" | "cash" | "cheque" | "mobile-banking";
+  payment_type: 'bank' | 'cash' | 'cheque' | 'mobile-banking';
   extra_charge: number;
 }
 
@@ -319,7 +320,7 @@ export interface IbookingRooms {
   room_type_id: number;
   check_in: string;
   check_out: string;
-  status?: "checked_in" | "confirmed" | "checked_out";
+  status?: 'checked_in' | 'confirmed' | 'checked_out';
   checked_in_at?: string;
   checked_out_at?: string;
   adults: number;
@@ -429,6 +430,7 @@ export interface IBookingDetails {
   check_out: string; // YYYY-MM-DD
   booking_date: string; // YYYY-MM-DD
   booking_type: string;
+  voucher_no: string;
   status: string;
   is_individual_booking: boolean;
   source_name: string | null;
@@ -461,7 +463,7 @@ export interface IBookingDetails {
 export interface addPaymentReqBody {
   folio_id: number;
   amount: number;
-  payment_type: "MOBILE_BANKING" | "BANK" | "CASH";
+  payment_type: 'MOBILE_BANKING' | 'BANK' | 'CASH';
   acc_id: number;
   payment_date: string;
   remarks: string;
@@ -527,7 +529,7 @@ export interface IupdateRoomAndRateOfReservationRequestBody {
         phone: string;
         country_id: number;
         address: string;
-        type: "adult" | "child" | "infant";
+        type: 'adult' | 'child' | 'infant';
         is_lead_guest: boolean;
         is_room_primary_guest: boolean;
       }[];

@@ -17,10 +17,10 @@ class AccountModel extends schema_1.default {
     constructor(db) {
         super();
         this.getLastGroupCode = (groupCode) => __awaiter(this, void 0, void 0, function* () {
-            return (yield this.db("acc_head")
-                .select("head_code", "head_id", "head_group_code")
-                .where("head_group_code", groupCode)
-                .orderBy("head_id", "desc")
+            return (yield this.db('acc_head')
+                .select('head_code', 'head_id', 'head_group_code')
+                .where('head_group_code', groupCode)
+                .orderBy('head_id', 'desc')
                 .limit(1)
                 .first());
         });
@@ -28,39 +28,39 @@ class AccountModel extends schema_1.default {
     }
     allGroups() {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("acc_groups")
+            return yield this.db('acc_groups')
                 .withSchema(this.ACC_SCHEMA)
-                .select("code", "name", "description");
+                .select('code', 'name', 'description');
         });
     }
     insertAccHead(payload) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("acc_heads")
+            return yield this.db('acc_heads')
                 .withSchema(this.ACC_SCHEMA)
-                .insert(payload, "id");
+                .insert(payload, 'id');
         });
     }
     updateAccHead(payload, id) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("acc_heads")
+            return yield this.db('acc_heads')
                 .withSchema(this.ACC_SCHEMA)
                 .update(payload)
-                .where("head_id", id);
+                .where('head_id', id);
         });
     }
     deleteAccHead(id) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("acc_heads")
+            return yield this.db('acc_heads')
                 .withSchema(this.ACC_SCHEMA)
                 .del()
-                .where("id", id);
+                .where('id', id);
         });
     }
     getAllAccHeads({ limit, order_by, search, skip, head_id, }) {
         return __awaiter(this, void 0, void 0, function* () {
-            const data = yield this.db("acc_heads")
+            const data = yield this.db('acc_heads')
                 .withSchema(this.ACC_SCHEMA)
-                .select("id", "group_code", "code", "name", "is_active")
+                .select('id', 'group_code', 'code', 'name', 'is_active')
                 .modify((e) => {
                 if (search) {
                     e.select(this.db.raw(`
@@ -73,31 +73,31 @@ class AccountModel extends schema_1.default {
             END
           ) AS relevance_score
         `, [`%${search}%`, `%${search}%`, `%${search}%`]))
-                        .orWhereRaw("group_code like ?", [`%${search}%`])
-                        .orWhereRaw("code like ?", [`%${search}%`])
-                        .orWhereRaw("name like ?", [`%${search}%`])
-                        .orderBy("relevance_score", "desc");
+                        .orWhereRaw('group_code like ?', [`%${search}%`])
+                        .orWhereRaw('code like ?', [`%${search}%`])
+                        .orWhereRaw('name like ?', [`%${search}%`])
+                        .orderBy('relevance_score', 'desc');
                 }
                 else {
-                    e.orderBy("name", order_by || "asc");
+                    e.orderBy('name', order_by || 'asc');
                 }
                 if (head_id) {
-                    e.where("id", head_id);
+                    e.where('id', head_id);
                 }
             })
                 .limit(limit || 20)
                 .offset(skip || 0);
-            const { total } = yield this.db("acc_heads")
+            const { total } = yield this.db('acc_heads')
                 .withSchema(this.ACC_SCHEMA)
-                .count("id as total")
+                .count('id as total')
                 .modify((e) => {
                 if (search) {
-                    e.orWhereRaw("group_code like ?", [`%${search}%`])
-                        .orWhereRaw("code like ?", [`%${search}%`])
-                        .orWhereRaw("name like ?", [`%${search}%`]);
+                    e.orWhereRaw('group_code like ?', [`%${search}%`])
+                        .orWhereRaw('code like ?', [`%${search}%`])
+                        .orWhereRaw('name like ?', [`%${search}%`]);
                 }
                 if (head_id) {
-                    e.where("id", head_id);
+                    e.where('id', head_id);
                 }
             })
                 .first();
@@ -106,30 +106,30 @@ class AccountModel extends schema_1.default {
     }
     getAccHeadByCode(hotel_code, group_code) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("acc_heads")
-                .select("*")
+            return yield this.db('acc_heads')
+                .select('*')
                 .withSchema(this.ACC_SCHEMA)
-                .where("hotel_code", hotel_code)
-                .andWhere("group_code", group_code)
+                .where('hotel_code', hotel_code)
+                .andWhere('group_code', group_code)
                 .first();
         });
     }
     getHeadCodeById(id) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("acc_heads")
+            return yield this.db('acc_heads')
                 .withSchema(this.ACC_SCHEMA)
-                .select("*")
-                .where("id", id)
+                .select('*')
+                .where('id', id)
                 .first();
         });
     }
     getLastHeadCodeByParent(id) {
         return __awaiter(this, void 0, void 0, function* () {
-            const data = (yield this.db("acc_heads")
+            const data = (yield this.db('acc_heads')
                 .withSchema(this.ACC_SCHEMA)
-                .select("code")
-                .where("parent_id", id)
-                .orderBy("id", "desc")
+                .select('code')
+                .where('parent_id', id)
+                .orderBy('id', 'desc')
                 .limit(1)
                 .first());
             return data === null || data === void 0 ? void 0 : data.head_code;
@@ -137,58 +137,58 @@ class AccountModel extends schema_1.default {
     }
     allAccVouchers() {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("v_acc_vouchers")
+            return yield this.db('v_acc_vouchers')
                 .withSchema(this.ACC_SCHEMA)
-                .select("*");
+                .select('*');
             // .where('org_id', this.org_agency);
         });
     }
     getVoucherCount() {
         return __awaiter(this, void 0, void 0, function* () {
-            const total = yield this.db("acc_vouchers")
+            const total = yield this.db('acc_vouchers')
                 .withSchema(this.ACC_SCHEMA)
-                .count("id as total");
+                .count('id as total');
             return total.length ? total[0].total : 0;
         });
     }
     insertAccVoucher(payload) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("acc_vouchers")
+            return yield this.db('acc_vouchers')
                 .withSchema(this.ACC_SCHEMA)
-                .insert(payload, "id");
+                .insert(payload, 'id');
         });
     }
     updateAccVoucher(payload, { hotel_code, id }) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("acc_voucher")
+            return yield this.db('acc_voucher')
                 .update(payload)
-                .andWhere("id", id)
-                .andWhere("hotel_code", hotel_code);
+                .andWhere('id', id)
+                .andWhere('hotel_code', hotel_code);
         });
     }
     getHeadByAccount(accountId) {
         return __awaiter(this, void 0, void 0, function* () {
-            const data = (yield this.db("trabill_accounts")
-                .first("account_head_id")
-                .where("account_id", accountId));
+            const data = (yield this.db('trabill_accounts')
+                .first('account_head_id')
+                .where('account_id', accountId));
             return data === null || data === void 0 ? void 0 : data.account_head_id;
         });
     }
     deleteAccVoucherById(id) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("acc_voucher").del().where("id", id);
+            return yield this.db('acc_voucher').del().where('id', id);
         });
     }
     deleteAccVoucherByVoucherNo(voucherNo) {
         return __awaiter(this, void 0, void 0, function* () {
-            yield this.db("acc_voucher").where("voucher_no", voucherNo).del();
+            yield this.db('acc_voucher').where('voucher_no', voucherNo).del();
         });
     }
     // get account group
     getAccountGroup(code, status) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("acc_group")
-                .select("code", "name")
+            return yield this.db('acc_group')
+                .select('code', 'name')
                 .where((qb) => {
                 if (code) {
                     qb.andWhere({ code });
@@ -200,58 +200,58 @@ class AccountModel extends schema_1.default {
     // Get account head
     getAccountHead({ hotel_code, code, group_code, parent_id, name, order_by, order_to, id, id_greater, }) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("acc_heads AS ah")
-                .select("ah.id", "ah.code", "ah.group_code", "ah.parent_id", "ah.name", "ag.name AS group_name")
+            return yield this.db('acc_heads AS ah')
+                .select('ah.id', 'ah.code', 'ah.group_code', 'ah.parent_id', 'ah.name', 'ag.name AS group_name')
                 .withSchema(this.ACC_SCHEMA)
-                .join("acc_groups AS ag", "ah.group_code", "ag.code")
+                .join('acc_groups AS ag', 'ah.group_code', 'ag.code')
                 .where((qb) => {
-                qb.andWhere("ah.hotel_code", hotel_code);
+                qb.andWhere('ah.hotel_code', hotel_code);
                 // qb.andWhere('ah.status', status);
                 if (id_greater) {
-                    qb.andWhere("ah.id", ">", id_greater);
+                    qb.andWhere('ah.id', '>', id_greater);
                 }
                 if (id) {
-                    qb.andWhere("ah.id", id);
+                    qb.andWhere('ah.id', id);
                 }
                 if (code) {
-                    qb.andWhere("ah.code", code);
+                    qb.andWhere('ah.code', code);
                 }
                 if (group_code) {
-                    qb.andWhere("ah.group_code", group_code);
+                    qb.andWhere('ah.group_code', group_code);
                 }
                 if (parent_id) {
-                    qb.andWhere("ah.parent_id", parent_id);
+                    qb.andWhere('ah.parent_id', parent_id);
                 }
                 else if (parent_id === null) {
-                    qb.whereNull("ah.parent_id");
+                    qb.whereNull('ah.parent_id');
                 }
                 if (name) {
-                    qb.andWhereILike("ah.name", `%${name}%`);
+                    qb.andWhereILike('ah.name', `%${name}%`);
                 }
             })
-                .orderBy(order_by ? order_by : "ah.code", order_to ? order_to : "asc");
+                .orderBy(order_by ? order_by : 'ah.code', order_to ? order_to : 'asc');
         });
     }
     createAccount(payload) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("accounts")
+            return yield this.db('accounts')
                 .withSchema(this.ACC_SCHEMA)
-                .insert(payload, "id");
+                .insert(payload, 'id');
         });
     }
     checkAccName(payload) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("accounts")
+            return yield this.db('accounts')
                 .withSchema(this.ACC_SCHEMA)
-                .andWhere("hotel_code", payload.hotel_code)
-                .andWhere("name", payload.name);
+                .andWhere('hotel_code', payload.hotel_code)
+                .andWhere('name', payload.name);
         });
     }
     // update account
     upadateSingleAccount(payload, where) {
         return __awaiter(this, void 0, void 0, function* () {
             const { hotel_code, id, res_id } = where;
-            return yield this.db("account")
+            return yield this.db('account')
                 .withSchema(this.ACC_SCHEMA)
                 .update(payload)
                 .where({ hotel_code })
@@ -267,50 +267,50 @@ class AccountModel extends schema_1.default {
     getAllAccounts(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             const { status, hotel_code, ac_type, key, limit, skip, acc_ids } = payload;
-            const dtbs = this.db("accounts");
+            const dtbs = this.db('accounts');
             if (limit && skip) {
                 dtbs.limit(parseInt(limit));
                 dtbs.offset(parseInt(skip));
             }
             const data = yield dtbs
-                .select("id", "hotel_code", "name", "acc_type", "branch", "acc_number", "details", "is_active")
+                .select('id', 'hotel_code', 'name', 'acc_type', 'branch', 'acc_number', 'details', 'is_active')
                 .withSchema(this.ACC_SCHEMA)
-                .where("hotel_code", hotel_code)
+                .where('hotel_code', hotel_code)
                 .andWhere(function () {
                 if (status) {
-                    this.where("is_active", status);
+                    this.where('is_active', status);
                 }
                 if (ac_type) {
-                    this.andWhereRaw("LOWER(acc_type) = ?", [ac_type.toLowerCase()]);
+                    this.andWhereRaw('LOWER(acc_type) = ?', [ac_type.toLowerCase()]);
                 }
                 if (acc_ids) {
-                    this.whereIn("id", acc_ids);
+                    this.whereIn('id', acc_ids);
                 }
             })
                 .andWhere(function () {
                 if (key) {
-                    this.andWhere("name", "like", `%${key}%`).orWhere("acc_number", "like", `%${key}%`);
+                    this.andWhere('name', 'like', `%${key}%`).orWhere('acc_number', 'like', `%${key}%`);
                 }
             })
-                .orderBy("id", "desc");
-            const total = yield this.db("accounts")
+                .orderBy('id', 'desc');
+            const total = yield this.db('accounts')
                 .withSchema(this.ACC_SCHEMA)
-                .count("id as total")
-                .where("hotel_code", hotel_code)
+                .count('id as total')
+                .where('hotel_code', hotel_code)
                 .andWhere(function () {
                 if (status) {
-                    this.where("is_active", status);
+                    this.where('is_active', status);
                 }
                 if (ac_type) {
-                    this.andWhereRaw("LOWER(acc_type) = ?", [ac_type.toLowerCase()]);
+                    this.andWhereRaw('LOWER(acc_type) = ?', [ac_type.toLowerCase()]);
                 }
                 if (acc_ids) {
-                    this.whereIn("id", acc_ids);
+                    this.whereIn('id', acc_ids);
                 }
             })
                 .andWhere(function () {
                 if (key) {
-                    this.andWhere("name", "like", `%${key}%`).orWhere("acc_number", "like", `%${key}%`);
+                    this.andWhere('name', 'like', `%${key}%`).orWhere('acc_number', 'like', `%${key}%`);
                 }
             });
             return { total: total[0].total, data };
@@ -320,16 +320,16 @@ class AccountModel extends schema_1.default {
     getSingleAccount(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             const { id, type, hotel_code } = payload;
-            return yield this.db("accounts")
+            return yield this.db('accounts')
                 .withSchema(this.ACC_SCHEMA)
-                .select("id", "acc_head_id", "acc_type", "name", "branch", "acc_number", "is_active", "acc_routing_no", "details")
-                .where("hotel_code", hotel_code)
+                .select('id', 'acc_head_id', 'acc_type', 'name', 'branch', 'acc_number', 'is_active', 'acc_routing_no', 'details')
+                .where('hotel_code', hotel_code)
                 .andWhere(function () {
                 if (id) {
                     this.andWhere({ id });
                 }
                 if (type) {
-                    this.andWhere("ac_type", type);
+                    this.andWhere('ac_type', type);
                 }
             });
         });
@@ -337,7 +337,7 @@ class AccountModel extends schema_1.default {
     // insert in account ledger
     insertAccountLedger(payload) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("acc_ledger")
+            return yield this.db('acc_ledger')
                 .withSchema(this.ACC_SCHEMA)
                 .insert(payload);
         });
@@ -345,11 +345,11 @@ class AccountModel extends schema_1.default {
     // get last account ledger
     getLastAccountLedgerId(hotel_code) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("acc_ledger")
+            return yield this.db('acc_ledger')
                 .withSchema(this.ACC_SCHEMA)
-                .select("ledger_id")
+                .select('ledger_id')
                 .where({ hotel_code })
-                .orderBy("ledger_id", "desc")
+                .orderBy('ledger_id', 'desc')
                 .limit(1);
         });
     }

@@ -104,6 +104,31 @@ class HelperFunction extends abstract_service_1.default {
                 next = getLasVoucherId.last_no + 1;
                 yield model.updateLastNo("Voucher", next);
             }
+            if (getLasVoucherId === undefined) {
+                yield model.insertLastNo({ type: "Voucher", last_no: next });
+            }
+            else {
+                next = getLasVoucherId.last_no + 1;
+                yield model.updateLastNo("Voucher", next);
+            }
+            const padded = next.toString().padStart(4, "0");
+            return `${prefix}-${padded}`;
+        });
+    }
+    generateMoneyReceiptNo(trx) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const now = (0, moment_1.default)();
+            const prefix = `MR-${now.format("YYYY")}`;
+            const model = this.Model.DboModel(trx);
+            const getLastReceiptNo = yield model.getLastNo("MoneyReceipt");
+            let next = 1;
+            if (getLastReceiptNo === undefined) {
+                yield model.insertLastNo({ type: "MoneyReceipt", last_no: next });
+            }
+            else {
+                next = getLastReceiptNo.last_no + 1;
+                yield model.updateLastNo("MoneyReceipt", next);
+            }
             const padded = next.toString().padStart(4, "0");
             return `${prefix}-${padded}`;
         });
