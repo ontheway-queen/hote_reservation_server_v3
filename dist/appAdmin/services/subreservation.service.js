@@ -329,7 +329,7 @@ class SubReservationService extends abstract_service_1.default {
         });
     }
     createRoomBookingFolioWithEntries({ body, booking_id, guest_id, req, booking_ref, }) {
-        var _a, _b;
+        var _a;
         return __awaiter(this, void 0, void 0, function* () {
             const { hotel_code, id: created_by } = req.hotel_admin;
             const hotelInvModel = this.Model.hotelInvoiceModel(this.trx);
@@ -452,8 +452,18 @@ class SubReservationService extends abstract_service_1.default {
                     hotel_code,
                 },
             ]);
+            /*  persist entries */
+            const allEntries = [...masterEntries, ...child.flatMap((c) => c.entries)];
             // payment
             if (body.is_payment_given && ((_a = body.payment) === null || _a === void 0 ? void 0 : _a.amount) > 0) {
+                allEntries.push({
+                    folio_id: child[0].folioId,
+                    date: today,
+                    posting_type: "Payment",
+                    credit: body.payment.amount,
+                    debit: 0,
+                    description: "Payment for room booking",
+                });
                 const [acc] = yield accountModel.getSingleAccount({
                     hotel_code,
                     id: body.payment.acc_id,
@@ -465,6 +475,22 @@ class SubReservationService extends abstract_service_1.default {
                     voucher_type = "BCV";
                 }
                 const voucher_no = yield helper.generateVoucherNo(voucher_type, this.trx);
+                const money_receipt_no = yield helper.generateMoneyReceiptNo(this.trx);
+                const mRes = yield hotelInvModel.insertMoneyReceipt({
+                    hotel_code,
+                    receipt_date: today,
+                    amount_paid: body.payment.amount,
+                    payment_method: acc.acc_type,
+                    receipt_no: money_receipt_no,
+                    received_by: req.hotel_admin.id,
+                    voucher_no,
+                    notes: "Advance Payment",
+                });
+                yield hotelInvModel.insertFolioMoneyReceipt({
+                    amount: body.payment.amount,
+                    money_receipt_id: mRes[0].id,
+                    folio_id: child[0].folioId,
+                });
                 yield accountModel.insertAccVoucher([
                     {
                         acc_head_id: acc.acc_head_id,
@@ -488,19 +514,9 @@ class SubReservationService extends abstract_service_1.default {
                     },
                 ]);
             }
-            /*  persist entries */
-            const allEntries = [...masterEntries, ...child.flatMap((c) => c.entries)];
-            // payment entry
-            if (body.is_payment_given && ((_b = body.payment) === null || _b === void 0 ? void 0 : _b.amount) > 0)
-                allEntries.push({
-                    folio_id: child[0].folioId,
-                    date: today,
-                    posting_type: "Payment",
-                    credit: body.payment.amount,
-                    debit: 0,
-                    description: "Payment for room booking",
-                });
+            // insert in folio entries
             yield hotelInvModel.insertInFolioEntries(allEntries);
+            // update room booking
             yield reservationModel.updateRoomBooking({ total_amount: totalDebit }, hotel_code, booking_id);
             return {
                 childFolios: child.map((c) => ({
@@ -620,7 +636,7 @@ class SubReservationService extends abstract_service_1.default {
             }
             const sales_head = heads.find((h) => h.config === "SALES_HEAD_ID");
             if (!sales_head) {
-                throw new Error("RECEIVABLE_HEAD_ID not configured for this hotel");
+                throw new Error("SALES_HEAD_ID not configured for this hotel");
             }
             const voucher_no1 = yield helper.generateVoucherNo("JV", this.trx);
             yield accountModel.insertAccVoucher([
@@ -685,7 +701,6 @@ class SubReservationService extends abstract_service_1.default {
                     notes: "Advance Payment",
                 });
                 yield hotelInvModel.insertFolioMoneyReceipt({
-                    hotel_code,
                     amount: body.payment.amount,
                     money_receipt_id: mRes[0].id,
                     folio_id: masterFolio.id,
@@ -767,6 +782,23 @@ class SubReservationService extends abstract_service_1.default {
             }
             const voucher_no = yield helper.generateVoucherNo(voucher_type, this.trx);
             const today = new Date().toISOString().split("T")[0];
+            const money_receipt_no = yield helper.generateMoneyReceiptNo(this.trx);
+            const hotelInvModel = this.Model.hotelInvoiceModel(this.trx);
+            const mRes = yield hotelInvModel.insertMoneyReceipt({
+                hotel_code,
+                receipt_date: today,
+                amount_paid: amount,
+                payment_method: acc.acc_type,
+                receipt_no: money_receipt_no,
+                received_by: req.hotel_admin.id,
+                voucher_no,
+                notes: "Payment has been taken",
+            });
+            yield hotelInvModel.insertFolioMoneyReceipt({
+                amount,
+                money_receipt_id: mRes[0].id,
+                folio_id: folio_id,
+            });
             yield accountModel.insertAccVoucher([
                 {
                     acc_head_id: acc.acc_head_id,
@@ -789,7 +821,6 @@ class SubReservationService extends abstract_service_1.default {
                     hotel_code,
                 },
             ]);
-            const hotelInvModel = this.Model.hotelInvoiceModel(this.trx);
             yield hotelInvModel.insertInFolioEntries({
                 debit: 0,
                 credit: amount,

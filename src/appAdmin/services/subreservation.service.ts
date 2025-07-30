@@ -635,8 +635,20 @@ export class SubReservationService extends AbstractServices {
       },
     ]);
 
+    /*  persist entries */
+    const allEntries = [...masterEntries, ...child.flatMap((c) => c.entries)];
+
     // payment
     if (body.is_payment_given && body.payment?.amount > 0) {
+      allEntries.push({
+        folio_id: child[0].folioId,
+        date: today,
+        posting_type: "Payment",
+        credit: body.payment.amount,
+        debit: 0,
+        description: "Payment for room booking",
+      });
+
       const [acc] = await accountModel.getSingleAccount({
         hotel_code,
         id: body.payment.acc_id,
@@ -651,6 +663,25 @@ export class SubReservationService extends AbstractServices {
       }
 
       const voucher_no = await helper.generateVoucherNo(voucher_type, this.trx);
+
+      const money_receipt_no = await helper.generateMoneyReceiptNo(this.trx);
+
+      const mRes = await hotelInvModel.insertMoneyReceipt({
+        hotel_code,
+        receipt_date: today,
+        amount_paid: body.payment.amount,
+        payment_method: acc.acc_type,
+        receipt_no: money_receipt_no,
+        received_by: req.hotel_admin.id,
+        voucher_no,
+        notes: "Advance Payment",
+      });
+
+      await hotelInvModel.insertFolioMoneyReceipt({
+        amount: body.payment.amount,
+        money_receipt_id: mRes[0].id,
+        folio_id: child[0].folioId,
+      });
 
       await accountModel.insertAccVoucher([
         {
@@ -676,22 +707,10 @@ export class SubReservationService extends AbstractServices {
       ]);
     }
 
-    /*  persist entries */
-    const allEntries = [...masterEntries, ...child.flatMap((c) => c.entries)];
-
-    // payment entry
-    if (body.is_payment_given && body.payment?.amount > 0)
-      allEntries.push({
-        folio_id: child[0].folioId,
-        date: today,
-        posting_type: "Payment",
-        credit: body.payment.amount,
-        debit: 0,
-        description: "Payment for room booking",
-      });
-
+    // insert in folio entries
     await hotelInvModel.insertInFolioEntries(allEntries);
 
+    // update room booking
     await reservationModel.updateRoomBooking(
       { total_amount: totalDebit },
       hotel_code,
@@ -857,7 +876,7 @@ export class SubReservationService extends AbstractServices {
     const sales_head = heads.find((h) => h.config === "SALES_HEAD_ID");
 
     if (!sales_head) {
-      throw new Error("RECEIVABLE_HEAD_ID not configured for this hotel");
+      throw new Error("SALES_HEAD_ID not configured for this hotel");
     }
     const voucher_no1 = await helper.generateVoucherNo("JV", this.trx);
 
@@ -933,7 +952,6 @@ export class SubReservationService extends AbstractServices {
       });
 
       await hotelInvModel.insertFolioMoneyReceipt({
-        hotel_code,
         amount: body.payment.amount,
         money_receipt_id: mRes[0].id,
         folio_id: masterFolio.id,
@@ -1053,6 +1071,27 @@ export class SubReservationService extends AbstractServices {
     const voucher_no = await helper.generateVoucherNo(voucher_type, this.trx);
     const today = new Date().toISOString().split("T")[0];
 
+    const money_receipt_no = await helper.generateMoneyReceiptNo(this.trx);
+
+    const hotelInvModel = this.Model.hotelInvoiceModel(this.trx);
+
+    const mRes = await hotelInvModel.insertMoneyReceipt({
+      hotel_code,
+      receipt_date: today,
+      amount_paid: amount,
+      payment_method: acc.acc_type,
+      receipt_no: money_receipt_no,
+      received_by: req.hotel_admin.id,
+      voucher_no,
+      notes: "Payment has been taken",
+    });
+
+    await hotelInvModel.insertFolioMoneyReceipt({
+      amount,
+      money_receipt_id: mRes[0].id,
+      folio_id: folio_id,
+    });
+
     await accountModel.insertAccVoucher([
       {
         acc_head_id: acc.acc_head_id,
@@ -1075,8 +1114,6 @@ export class SubReservationService extends AbstractServices {
         hotel_code,
       },
     ]);
-
-    const hotelInvModel = this.Model.hotelInvoiceModel(this.trx);
 
     await hotelInvModel.insertInFolioEntries({
       debit: 0,

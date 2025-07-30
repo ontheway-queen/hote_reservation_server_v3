@@ -119,7 +119,6 @@ class HotelInvoiceModel extends Schema {
       .insert(payload, "id");
   }
   public async insertFolioMoneyReceipt(payload: {
-    hotel_code: number;
     money_receipt_id: number;
     amount: number;
     folio_id: number;
