@@ -452,7 +452,6 @@ class HotelInvoiceModel extends Schema {
       )
       .leftJoin("folio_entries as fe", "f.id", "fe.folio_id")
       .leftJoin("rooms as r", "fe.room_id", "r.id")
-
       .where("f.booking_id", booking_id)
       .andWhere("fe.is_void", false)
       .andWhere("f.hotel_code", hotel_code)

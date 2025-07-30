@@ -95,9 +95,9 @@ class ReservationModel extends schema_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             const { hotel_code, check_in, check_out } = payload;
             const db = this.db;
-            return yield db('room_types as rt')
+            return yield db("room_types as rt")
                 .withSchema(this.RESERVATION_SCHEMA)
-                .select('rt.id', 'rt.name', 'rt.hotel_code', db.raw(`
+                .select("rt.id", "rt.name", "rt.hotel_code", db.raw(`
         COALESCE(
           json_agg(
             jsonb_build_object(
@@ -153,20 +153,20 @@ class ReservationModel extends schema_1.default {
                 `${this.RESERVATION_SCHEMA}.guests`,
                 check_out,
                 check_in,
-                'checkout',
+                "checkout",
             ]))
-                .leftJoin('rooms as r', 'rt.id', 'r.room_type_id')
-                .where('rt.hotel_code', hotel_code)
-                .groupBy('rt.id')
-                .orderBy('rt.name', 'asc');
+                .leftJoin("rooms as r", "rt.id", "r.room_type_id")
+                .where("rt.hotel_code", hotel_code)
+                .groupBy("rt.id")
+                .orderBy("rt.name", "asc");
         });
     }
     getAllAvailableRoomsTypeWithAvailableRoomCount(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             const { hotel_code, check_in, check_out, room_type_id } = payload;
-            return yield this.db('room_types as rt')
+            return yield this.db("room_types as rt")
                 .withSchema(this.RESERVATION_SCHEMA)
-                .select('rt.id', 'rt.name', 'rt.description', 'rt.hotel_code', this.db.raw(`MIN(ra.available_rooms) AS available_rooms`), this.db.raw(`
+                .select("rt.id", "rt.name", "rt.description", "rt.hotel_code", this.db.raw(`MIN(ra.available_rooms) AS available_rooms`), this.db.raw(`
       COALESCE(
         json_agg(
           DISTINCT jsonb_build_object(
@@ -178,20 +178,20 @@ class ReservationModel extends schema_1.default {
         '[]'
       ) AS rate_plans
     `))
-                .leftJoin('room_availability as ra', 'rt.id', 'ra.room_type_id')
-                .leftJoin('rate_plan_details as rpd', 'rt.id', 'rpd.room_type_id')
-                .leftJoin('rate_plans as rp', 'rpd.rate_plan_id', 'rp.id')
-                .where('rt.hotel_code', hotel_code)
-                .andWhere('rt.is_deleted', false)
-                .andWhere('ra.date', '>=', check_in)
-                .andWhere('ra.date', '<', check_out)
+                .leftJoin("room_availability as ra", "rt.id", "ra.room_type_id")
+                .leftJoin("rate_plan_details as rpd", "rt.id", "rpd.room_type_id")
+                .leftJoin("rate_plans as rp", "rpd.rate_plan_id", "rp.id")
+                .where("rt.hotel_code", hotel_code)
+                .andWhere("rt.is_deleted", false)
+                .andWhere("ra.date", ">=", check_in)
+                .andWhere("ra.date", "<", check_out)
                 .andWhere(function () {
                 if (room_type_id) {
-                    this.andWhere('rt.id', room_type_id);
+                    this.andWhere("rt.id", room_type_id);
                 }
             })
-                .groupBy('rt.id', 'rt.name', 'rt.description', 'rt.hotel_code')
-                .having(this.db.raw('MIN(ra.available_rooms) > 0'));
+                .groupBy("rt.id", "rt.name", "rt.description", "rt.hotel_code")
+                .having(this.db.raw("MIN(ra.available_rooms) > 0"));
         });
     }
     getAllAvailableRoomsByRoomType(payload) {
@@ -205,10 +205,10 @@ class ReservationModel extends schema_1.default {
             FROM generate_series(?::date, (?::date - INTERVAL '1 day'), INTERVAL '1 day') AS gs1(date)
           ) d ON d.gen_date = ra.date
         `, [check_in, check_out])
-                .where('ra.hotel_code', hotel_code)
-                .andWhere('ra.room_type_id', room_type_id)
-                .andWhere('ra.available_rooms', '>', 0)
-                .groupBy('ra.room_type_id')
+                .where("ra.hotel_code", hotel_code)
+                .andWhere("ra.room_type_id", room_type_id)
+                .andWhere("ra.available_rooms", ">", 0)
+                .groupBy("ra.room_type_id")
                 .havingRaw(`
           COUNT(*) = (
             SELECT COUNT(*) FROM (
@@ -217,38 +217,38 @@ class ReservationModel extends schema_1.default {
             ) AS dd
           )
         `, [check_in, check_out])
-                .select('ra.room_type_id');
+                .select("ra.room_type_id");
             return yield this.db(`${schema}.rooms as r`)
-                .select('r.hotel_code', 'r.id as room_id', 'r.room_name', 'r.room_type_id', 'rt.name as room_type_name')
-                .leftJoin(`${schema}.room_types as rt`, 'r.room_type_id', 'rt.id')
-                .where('r.hotel_code', hotel_code)
-                .andWhere('r.is_deleted', false)
-                .andWhere('r.room_type_id', room_type_id)
+                .select("r.hotel_code", "r.id as room_id", "r.room_name", "r.room_type_id", "rt.name as room_type_name")
+                .leftJoin(`${schema}.room_types as rt`, "r.room_type_id", "rt.id")
+                .where("r.hotel_code", hotel_code)
+                .andWhere("r.is_deleted", false)
+                .andWhere("r.room_type_id", room_type_id)
                 .whereExists(availableRoomTypes())
                 .whereNotExists(function () {
-                this.select('*')
+                this.select("*")
                     .from(`${schema}.bookings as b`)
-                    .join(`${schema}.booking_rooms as br`, 'br.booking_id', 'b.id')
-                    .whereRaw('br.room_id = r.id')
+                    .join(`${schema}.booking_rooms as br`, "br.booking_id", "b.id")
+                    .whereRaw("br.room_id = r.id")
                     .andWhere(function () {
                     if (exclude_booking_id) {
-                        this.andWhere('br.booking_id', '!=', exclude_booking_id);
+                        this.andWhere("br.booking_id", "!=", exclude_booking_id);
                     }
                 })
                     .andWhere(function () {
                     this.where(function () {
-                        this.where('b.booking_type', 'B').whereNotIn('br.status', [
-                            'checked_out',
-                            'pending',
-                            'canceled',
-                            'rejected',
+                        this.where("b.booking_type", "B").whereNotIn("br.status", [
+                            "checked_out",
+                            "pending",
+                            "canceled",
+                            "rejected",
                         ]);
                     }).orWhere(function () {
-                        this.where('b.booking_type', 'H').where('br.status', '!=', 'canceled');
+                        this.where("b.booking_type", "H").where("br.status", "!=", "canceled");
                     });
                 })
-                    .andWhere('br.check_in', '<', check_out)
-                    .andWhere('br.check_out', '>', check_in);
+                    .andWhere("br.check_in", "<", check_out)
+                    .andWhere("br.check_out", ">", check_in);
             });
         });
     }
@@ -258,34 +258,34 @@ class ReservationModel extends schema_1.default {
             const schema = this.RESERVATION_SCHEMA;
             const availableRooms = yield this.db
                 .withSchema(schema)
-                .select('r.id as room_id', 'r.room_name', 'r.room_type_id', 'r.hotel_code')
-                .from('rooms as r')
-                .leftJoin('room_types as rt', 'r.room_type_id', 'rt.id')
-                .where('r.hotel_code', hotel_code)
-                .andWhere('r.room_type_id', room_type_id)
-                .andWhere('r.is_deleted', false)
+                .select("r.id as room_id", "r.room_name", "r.room_type_id", "r.hotel_code")
+                .from("rooms as r")
+                .leftJoin("room_types as rt", "r.room_type_id", "rt.id")
+                .where("r.hotel_code", hotel_code)
+                .andWhere("r.room_type_id", room_type_id)
+                .andWhere("r.is_deleted", false)
                 .whereNotExists(function () {
-                this.select('*')
+                this.select("*")
                     .from(`${schema}.bookings as b`)
-                    .join(`${schema}.booking_rooms as br`, 'br.booking_id', 'b.id')
-                    .whereRaw('br.room_id = r.id')
-                    .andWhere('br.check_in', '<', check_out)
-                    .andWhere('br.check_out', '>', check_in)
+                    .join(`${schema}.booking_rooms as br`, "br.booking_id", "b.id")
+                    .whereRaw("br.room_id = r.id")
+                    .andWhere("br.check_in", "<", check_out)
+                    .andWhere("br.check_out", ">", check_in)
                     .modify((qb) => {
                     if (exclude_booking_id) {
-                        qb.andWhere('br.booking_id', '!=', exclude_booking_id);
+                        qb.andWhere("br.booking_id", "!=", exclude_booking_id);
                     }
                 })
                     .andWhere(function () {
                     this.where(function () {
-                        this.where('b.booking_type', 'B').whereNotIn('br.status', [
-                            'checked_out',
-                            'pending',
-                            'canceled',
-                            'rejected',
+                        this.where("b.booking_type", "B").whereNotIn("br.status", [
+                            "checked_out",
+                            "pending",
+                            "canceled",
+                            "rejected",
                         ]);
                     }).orWhere(function () {
-                        this.where('b.booking_type', 'H').where('br.status', '!=', 'canceled');
+                        this.where("b.booking_type", "H").where("br.status", "!=", "canceled");
                     });
                 });
             });
@@ -297,27 +297,27 @@ class ReservationModel extends schema_1.default {
             const { hotel_code, check_in, check_out } = payload;
             console.log({ check_in, check_out });
             const db = this.db;
-            return yield db('room_availability as ra')
+            return yield db("room_availability as ra")
                 .withSchema(this.RESERVATION_SCHEMA)
-                .select('ra.room_type_id', 'ra.hotel_code', 'ra.available_rooms', db.raw('ra.date::text as date'))
-                .where('ra.hotel_code', hotel_code)
-                .andWhere('ra.date', '>=', check_in)
-                .andWhere('ra.date', '<=', check_out)
-                .orderBy('ra.date', 'asc');
+                .select("ra.room_type_id", "ra.hotel_code", "ra.available_rooms", db.raw("ra.date::text as date"))
+                .where("ra.hotel_code", hotel_code)
+                .andWhere("ra.date", ">=", check_in)
+                .andWhere("ra.date", "<=", check_out)
+                .orderBy("ra.date", "asc");
         });
     }
     insertBooking(payload) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db('bookings')
+            return yield this.db("bookings")
                 .withSchema(this.RESERVATION_SCHEMA)
-                .insert(payload, 'id');
+                .insert(payload, "id");
         });
     }
     getAllBookingRoomsByBookingId({ booking_id, hotel_code, }) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db('booking_rooms')
+            return yield this.db("booking_rooms")
                 .withSchema(this.RESERVATION_SCHEMA)
-                .select('id', 'room_id', 'unit_base_rate', 'unit_changed_rate', 'base_rate', 'changed_rate', this.db.raw(`TO_CHAR(check_in, 'YYYY-MM-DD') as check_in`), this.db.raw(`TO_CHAR(check_out, 'YYYY-MM-DD') as check_out`))
+                .select("id", "room_id", "unit_base_rate", "unit_changed_rate", "base_rate", "changed_rate", this.db.raw(`TO_CHAR(check_in, 'YYYY-MM-DD') as check_in`), this.db.raw(`TO_CHAR(check_out, 'YYYY-MM-DD') as check_out`))
                 .where({
                 booking_id,
             });
@@ -325,16 +325,16 @@ class ReservationModel extends schema_1.default {
     }
     insertBookingRoom(payload) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db('booking_rooms')
+            return yield this.db("booking_rooms")
                 .withSchema(this.RESERVATION_SCHEMA)
-                .insert(payload, 'id');
+                .insert(payload, "id");
         });
     }
     getSingleBookingRoom({ booking_id, room_id, }) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db('booking_rooms')
+            return yield this.db("booking_rooms")
                 .withSchema(this.RESERVATION_SCHEMA)
-                .select('id', 'room_id', 'unit_base_rate', 'unit_changed_rate', 'base_rate', 'changed_rate', this.db.raw(`TO_CHAR(check_in, 'YYYY-MM-DD') as check_in`), this.db.raw(`TO_CHAR(check_out, 'YYYY-MM-DD') as check_out`), 'room_type_id')
+                .select("id", "room_id", "unit_base_rate", "unit_changed_rate", "base_rate", "changed_rate", this.db.raw(`TO_CHAR(check_in, 'YYYY-MM-DD') as check_in`), this.db.raw(`TO_CHAR(check_out, 'YYYY-MM-DD') as check_out`), "room_type_id")
                 .where({
                 booking_id,
                 room_id,
@@ -345,40 +345,49 @@ class ReservationModel extends schema_1.default {
     updateSingleBookingRoom(payload, where) {
         return __awaiter(this, void 0, void 0, function* () {
             console.log({ payload });
-            return yield this.db('booking_rooms')
+            return yield this.db("booking_rooms")
                 .withSchema(this.RESERVATION_SCHEMA)
                 .update(payload)
-                .where('room_id', where.room_id)
-                .andWhere('booking_id', where.booking_id);
+                .where("room_id", where.room_id)
+                .andWhere("booking_id", where.booking_id);
         });
     }
     updateAllBookingRoomsByBookingID(payload, where) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db('booking_rooms')
+            return yield this.db("booking_rooms")
                 .withSchema(this.RESERVATION_SCHEMA)
                 .update(payload)
-                .where('booking_id', where.booking_id)
+                .where("booking_id", where.booking_id)
                 .andWhere(function () {
                 if (where.exclude_checkout) {
-                    this.andWhereNot('status', 'checked_out');
+                    this.andWhereNot("status", "checked_out");
                 }
             });
         });
     }
     insertBookingRoomGuest(payload) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db('booking_room_guest')
+            return yield this.db("booking_room_guest")
                 .withSchema(this.RESERVATION_SCHEMA)
                 .insert(payload);
         });
     }
-    deleteBookingRoomGuest({ booking_room_id, guest_ids, }) {
+    deleteBookingRoomGuest({ booking_room_id, guest_ids, booking_room_ids, }) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db('booking_room_guest')
+            return yield this.db("booking_room_guest")
                 .withSchema(this.RESERVATION_SCHEMA)
                 .del()
-                .where({ booking_room_id })
-                .whereIn('guest_id', guest_ids);
+                .where(function () {
+                if (booking_room_id) {
+                    this.where({ booking_room_id });
+                }
+                if (booking_room_ids === null || booking_room_ids === void 0 ? void 0 : booking_room_ids.length) {
+                    this.whereIn("booking_room_id", booking_room_ids);
+                }
+                if (guest_ids === null || guest_ids === void 0 ? void 0 : guest_ids.length) {
+                    this.whereIn("guest_id", guest_ids);
+                }
+            });
         });
     }
     getAllBooking({ hotel_code, checkin_from, checkin_to, checkout_from, checkout_to, booked_from, booked_to, limit, search, skip, booking_type, status, }) {
@@ -392,9 +401,9 @@ class ReservationModel extends schema_1.default {
             // if (endBookedDate) endBookedDate.setDate(endBookedDate.getDate() + 1);
             const limitNum = limit ? Number(limit) : 50;
             const offsetNum = skip ? Number(skip) : 0;
-            const data = yield this.db('bookings as b')
+            const data = yield this.db("bookings as b")
                 .withSchema(this.RESERVATION_SCHEMA)
-                .select('b.id', 'b.booking_reference', this.db.raw(`TO_CHAR(b.check_in, 'YYYY-MM-DD') as check_in`), this.db.raw(`TO_CHAR(b.check_out, 'YYYY-MM-DD') as check_out`), this.db.raw(`TO_CHAR(b.booking_date, 'YYYY-MM-DD') as booking_date`), 'b.booking_type', 'b.status', 'b.is_individual_booking', 'b.total_amount', 'b.vat', 'b.discount_amount', 'b.service_charge', 'src.name as source_name', 'g.id as guest_id', 'g.first_name', 'g.last_name', 'g.email as guest_email', 'g.phone as guest_phone', this.db.raw(`(
+                .select("b.id", "b.booking_reference", this.db.raw(`TO_CHAR(b.check_in, 'YYYY-MM-DD') as check_in`), this.db.raw(`TO_CHAR(b.check_out, 'YYYY-MM-DD') as check_out`), this.db.raw(`TO_CHAR(b.booking_date, 'YYYY-MM-DD') as booking_date`), "b.booking_type", "b.status", "b.is_individual_booking", "b.total_amount", "b.vat", "b.discount_amount", "b.service_charge", "src.name as source_name", "g.id as guest_id", "g.first_name", "g.last_name", "g.email as guest_email", "g.phone as guest_phone", this.db.raw(`(
             SELECT JSON_AGG(JSON_BUILD_OBJECT(
               'id', br.id,
               'room_type_id', br.room_type_id,
@@ -411,66 +420,66 @@ class ReservationModel extends schema_1.default {
             LEFT JOIN ?? AS r ON br.room_id = r.id
             WHERE br.booking_id = b.id
           ) AS booking_rooms`, [
-                'hotel_reservation.booking_rooms',
-                'hotel_reservation.room_types',
-                'hotel_reservation.rooms',
+                "hotel_reservation.booking_rooms",
+                "hotel_reservation.room_types",
+                "hotel_reservation.rooms",
             ]))
-                .leftJoin('sources as src', 'b.source_id', 'src.id')
-                .leftJoin('guests as g', 'b.guest_id', 'g.id')
-                .where('b.hotel_code', hotel_code)
+                .leftJoin("sources as src", "b.source_id", "src.id")
+                .leftJoin("guests as g", "b.guest_id", "g.id")
+                .where("b.hotel_code", hotel_code)
                 .andWhere(function () {
                 if (checkin_from && checkin_to) {
-                    this.andWhereBetween('b.check_in', [checkin_from, endCheckInDate]);
+                    this.andWhereBetween("b.check_in", [checkin_from, endCheckInDate]);
                 }
                 if (checkout_from && checkout_to) {
-                    this.andWhereBetween('b.check_out', [checkout_from, endCheckOutDate]);
+                    this.andWhereBetween("b.check_out", [checkout_from, endCheckOutDate]);
                 }
                 if (booked_from && booked_to) {
-                    this.andWhereBetween('b.booking_date', [booked_from, endBookedDate]);
+                    this.andWhereBetween("b.booking_date", [booked_from, endBookedDate]);
                 }
                 if (search) {
                     this.andWhere(function () {
-                        this.where('b.booking_reference', 'ilike', `%${search}%`)
-                            .orWhere('g.first_name', 'ilike', `%${search}%`)
-                            .orWhere('g.email', 'ilike', `%${search}%`);
+                        this.where("b.booking_reference", "ilike", `%${search}%`)
+                            .orWhere("g.first_name", "ilike", `%${search}%`)
+                            .orWhere("g.email", "ilike", `%${search}%`);
                     });
                 }
                 if (status) {
-                    this.andWhere('b.status', status);
+                    this.andWhere("b.status", status);
                 }
                 if (booking_type) {
-                    this.andWhere('b.booking_type', booking_type);
+                    this.andWhere("b.booking_type", booking_type);
                 }
             })
-                .orderBy('b.id', 'desc')
+                .orderBy("b.id", "desc")
                 .limit(limitNum)
                 .offset(offsetNum);
-            const total = yield this.db('bookings as b')
+            const total = yield this.db("bookings as b")
                 .withSchema(this.RESERVATION_SCHEMA)
-                .count('b.id as total')
-                .leftJoin('sources as src', 'b.source_id', 'src.id')
-                .leftJoin('guests as g', 'b.guest_id', 'g.id')
-                .where('b.hotel_code', hotel_code)
+                .count("b.id as total")
+                .leftJoin("sources as src", "b.source_id", "src.id")
+                .leftJoin("guests as g", "b.guest_id", "g.id")
+                .where("b.hotel_code", hotel_code)
                 .andWhere(function () {
                 if (checkin_from && checkin_to) {
-                    this.andWhereBetween('b.check_in', [checkin_from, endCheckInDate]);
+                    this.andWhereBetween("b.check_in", [checkin_from, endCheckInDate]);
                 }
                 if (checkout_from && checkout_to) {
-                    this.andWhereBetween('b.check_out', [checkout_from, endCheckOutDate]);
+                    this.andWhereBetween("b.check_out", [checkout_from, endCheckOutDate]);
                 }
                 if (booked_from && booked_to) {
-                    this.andWhereBetween('b.booking_date', [booked_from, endBookedDate]);
+                    this.andWhereBetween("b.booking_date", [booked_from, endBookedDate]);
                 }
                 if (search) {
-                    this.andWhere('b.booking_reference', 'ilike', `%${search}%`)
-                        .orWhere('g.first_name', 'ilike', `%${search}%`)
-                        .orWhere('g.email', 'ilike', `%${search}%`);
+                    this.andWhere("b.booking_reference", "ilike", `%${search}%`)
+                        .orWhere("g.first_name", "ilike", `%${search}%`)
+                        .orWhere("g.email", "ilike", `%${search}%`);
                 }
                 if (status) {
-                    this.andWhere('b.status', status);
+                    this.andWhere("b.status", status);
                 }
                 if (booking_type) {
-                    this.andWhere('b.booking_type', booking_type);
+                    this.andWhere("b.booking_type", booking_type);
                 }
             });
             return {
@@ -490,9 +499,9 @@ class ReservationModel extends schema_1.default {
             // if (endBookedDate) endBookedDate.setDate(endBookedDate.getDate() + 1);
             const limitNum = limit ? Number(limit) : 50;
             const offsetNum = skip ? Number(skip) : 0;
-            const data = yield this.db('bookings as b')
+            const data = yield this.db("bookings as b")
                 .withSchema(this.RESERVATION_SCHEMA)
-                .select('b.id', 'b.booking_reference', this.db.raw(`TO_CHAR(b.check_in, 'YYYY-MM-DD') as check_in`), this.db.raw(`TO_CHAR(b.check_out, 'YYYY-MM-DD') as check_out`), this.db.raw(`TO_CHAR(b.booking_date, 'YYYY-MM-DD') as booking_date`), 'b.booking_type', 'b.status', 'b.is_individual_booking', 'b.total_amount', 'b.vat', 'b.discount_amount', 'b.service_charge', 'src.name as source_name', 'g.id as guest_id', 'g.first_name', 'g.last_name', 'g.email as guest_email', 'g.phone as guest_phone', this.db.raw(`(
+                .select("b.id", "b.booking_reference", this.db.raw(`TO_CHAR(b.check_in, 'YYYY-MM-DD') as check_in`), this.db.raw(`TO_CHAR(b.check_out, 'YYYY-MM-DD') as check_out`), this.db.raw(`TO_CHAR(b.booking_date, 'YYYY-MM-DD') as booking_date`), "b.booking_type", "b.status", "b.is_individual_booking", "b.total_amount", "b.vat", "b.discount_amount", "b.service_charge", "src.name as source_name", "g.id as guest_id", "g.first_name", "g.last_name", "g.email as guest_email", "g.phone as guest_phone", this.db.raw(`(
             SELECT JSON_AGG(JSON_BUILD_OBJECT(
               'id', br.id,
               'room_type_id', br.room_type_id,
@@ -509,68 +518,68 @@ class ReservationModel extends schema_1.default {
             LEFT JOIN ?? AS r ON br.room_id = r.id
             WHERE br.booking_id = b.id
           ) AS booking_rooms`, [
-                'hotel_reservation.booking_rooms',
-                'hotel_reservation.room_types',
-                'hotel_reservation.rooms',
+                "hotel_reservation.booking_rooms",
+                "hotel_reservation.room_types",
+                "hotel_reservation.rooms",
             ]))
-                .leftJoin('sources as src', 'b.source_id', 'src.id')
-                .leftJoin('guests as g', 'b.guest_id', 'g.id')
-                .where('b.hotel_code', hotel_code)
-                .andWhere('b.is_individual_booking', true)
+                .leftJoin("sources as src", "b.source_id", "src.id")
+                .leftJoin("guests as g", "b.guest_id", "g.id")
+                .where("b.hotel_code", hotel_code)
+                .andWhere("b.is_individual_booking", true)
                 .andWhere(function () {
                 if (checkin_from && checkin_to) {
-                    this.andWhereBetween('b.check_in', [checkin_from, endCheckInDate]);
+                    this.andWhereBetween("b.check_in", [checkin_from, endCheckInDate]);
                 }
                 if (checkout_from && checkout_to) {
-                    this.andWhereBetween('b.check_out', [checkout_from, endCheckOutDate]);
+                    this.andWhereBetween("b.check_out", [checkout_from, endCheckOutDate]);
                 }
                 if (booked_from && booked_to) {
-                    this.andWhereBetween('b.booking_date', [booked_from, endBookedDate]);
+                    this.andWhereBetween("b.booking_date", [booked_from, endBookedDate]);
                 }
                 if (search) {
                     this.andWhere(function () {
-                        this.where('b.booking_reference', 'ilike', `%${search}%`)
-                            .orWhere('g.first_name', 'ilike', `%${search}%`)
-                            .orWhere('g.email', 'ilike', `%${search}%`);
+                        this.where("b.booking_reference", "ilike", `%${search}%`)
+                            .orWhere("g.first_name", "ilike", `%${search}%`)
+                            .orWhere("g.email", "ilike", `%${search}%`);
                     });
                 }
                 if (status) {
-                    this.andWhere('b.status', status);
+                    this.andWhere("b.status", status);
                 }
                 if (booking_type) {
-                    this.andWhere('b.booking_type', booking_type);
+                    this.andWhere("b.booking_type", booking_type);
                 }
             })
-                .orderBy('b.id', 'desc')
+                .orderBy("b.id", "desc")
                 .limit(limitNum)
                 .offset(offsetNum);
-            const total = yield this.db('bookings as b')
+            const total = yield this.db("bookings as b")
                 .withSchema(this.RESERVATION_SCHEMA)
-                .count('b.id as total')
-                .leftJoin('sources as src', 'b.source_id', 'src.id')
-                .leftJoin('guests as g', 'b.guest_id', 'g.id')
-                .where('b.hotel_code', hotel_code)
-                .andWhere('b.is_individual_booking', true)
+                .count("b.id as total")
+                .leftJoin("sources as src", "b.source_id", "src.id")
+                .leftJoin("guests as g", "b.guest_id", "g.id")
+                .where("b.hotel_code", hotel_code)
+                .andWhere("b.is_individual_booking", true)
                 .andWhere(function () {
                 if (checkin_from && checkin_to) {
-                    this.andWhereBetween('b.check_in', [checkin_from, endCheckInDate]);
+                    this.andWhereBetween("b.check_in", [checkin_from, endCheckInDate]);
                 }
                 if (checkout_from && checkout_to) {
-                    this.andWhereBetween('b.check_out', [checkout_from, endCheckOutDate]);
+                    this.andWhereBetween("b.check_out", [checkout_from, endCheckOutDate]);
                 }
                 if (booked_from && booked_to) {
-                    this.andWhereBetween('b.booking_date', [booked_from, endBookedDate]);
+                    this.andWhereBetween("b.booking_date", [booked_from, endBookedDate]);
                 }
                 if (search) {
-                    this.andWhere('b.booking_reference', 'ilike', `%${search}%`)
-                        .orWhere('g.first_name', 'ilike', `%${search}%`)
-                        .orWhere('g.email', 'ilike', `%${search}%`);
+                    this.andWhere("b.booking_reference", "ilike", `%${search}%`)
+                        .orWhere("g.first_name", "ilike", `%${search}%`)
+                        .orWhere("g.email", "ilike", `%${search}%`);
                 }
                 if (status) {
-                    this.andWhere('b.status', status);
+                    this.andWhere("b.status", status);
                 }
                 if (booking_type) {
-                    this.andWhere('b.booking_type', booking_type);
+                    this.andWhere("b.booking_type", booking_type);
                 }
             });
             return {
@@ -590,9 +599,9 @@ class ReservationModel extends schema_1.default {
             // if (endBookedDate) endBookedDate.setDate(endBookedDate.getDate() + 1);
             const limitNum = limit ? Number(limit) : 50;
             const offsetNum = skip ? Number(skip) : 0;
-            const data = yield this.db('bookings as b')
+            const data = yield this.db("bookings as b")
                 .withSchema(this.RESERVATION_SCHEMA)
-                .select('b.id', 'b.booking_reference', this.db.raw(`TO_CHAR(b.check_in, 'YYYY-MM-DD') as check_in`), this.db.raw(`TO_CHAR(b.check_out, 'YYYY-MM-DD') as check_out`), this.db.raw(`TO_CHAR(b.booking_date, 'YYYY-MM-DD') as booking_date`), 'b.booking_type', 'b.status', 'b.is_individual_booking', 'b.total_amount', 'b.vat', 'b.discount_amount', 'b.service_charge', 'src.name as source_name', 'g.id as guest_id', 'g.first_name', 'g.last_name', 'g.email as guest_email', 'g.phone as guest_phone', this.db.raw(`(
+                .select("b.id", "b.booking_reference", this.db.raw(`TO_CHAR(b.check_in, 'YYYY-MM-DD') as check_in`), this.db.raw(`TO_CHAR(b.check_out, 'YYYY-MM-DD') as check_out`), this.db.raw(`TO_CHAR(b.booking_date, 'YYYY-MM-DD') as booking_date`), "b.booking_type", "b.status", "b.is_individual_booking", "b.total_amount", "b.vat", "b.discount_amount", "b.service_charge", "src.name as source_name", "g.id as guest_id", "g.first_name", "g.last_name", "g.email as guest_email", "g.phone as guest_phone", this.db.raw(`(
             SELECT JSON_AGG(JSON_BUILD_OBJECT(
               'id', br.id,
               'room_type_id', br.room_type_id,
@@ -609,68 +618,68 @@ class ReservationModel extends schema_1.default {
             LEFT JOIN ?? AS r ON br.room_id = r.id
             WHERE br.booking_id = b.id
           ) AS booking_rooms`, [
-                'hotel_reservation.booking_rooms',
-                'hotel_reservation.room_types',
-                'hotel_reservation.rooms',
+                "hotel_reservation.booking_rooms",
+                "hotel_reservation.room_types",
+                "hotel_reservation.rooms",
             ]))
-                .leftJoin('sources as src', 'b.source_id', 'src.id')
-                .leftJoin('guests as g', 'b.guest_id', 'g.id')
-                .where('b.hotel_code', hotel_code)
-                .andWhere('b.is_individual_booking', false)
+                .leftJoin("sources as src", "b.source_id", "src.id")
+                .leftJoin("guests as g", "b.guest_id", "g.id")
+                .where("b.hotel_code", hotel_code)
+                .andWhere("b.is_individual_booking", false)
                 .andWhere(function () {
                 if (checkin_from && checkin_to) {
-                    this.andWhereBetween('b.check_in', [checkin_from, endCheckInDate]);
+                    this.andWhereBetween("b.check_in", [checkin_from, endCheckInDate]);
                 }
                 if (checkout_from && checkout_to) {
-                    this.andWhereBetween('b.check_out', [checkout_from, endCheckOutDate]);
+                    this.andWhereBetween("b.check_out", [checkout_from, endCheckOutDate]);
                 }
                 if (booked_from && booked_to) {
-                    this.andWhereBetween('b.booking_date', [booked_from, endBookedDate]);
+                    this.andWhereBetween("b.booking_date", [booked_from, endBookedDate]);
                 }
                 if (search) {
                     this.andWhere(function () {
-                        this.where('b.booking_reference', 'ilike', `%${search}%`)
-                            .orWhere('g.first_name', 'ilike', `%${search}%`)
-                            .orWhere('g.email', 'ilike', `%${search}%`);
+                        this.where("b.booking_reference", "ilike", `%${search}%`)
+                            .orWhere("g.first_name", "ilike", `%${search}%`)
+                            .orWhere("g.email", "ilike", `%${search}%`);
                     });
                 }
                 if (status) {
-                    this.andWhere('b.status', status);
+                    this.andWhere("b.status", status);
                 }
                 if (booking_type) {
-                    this.andWhere('b.booking_type', booking_type);
+                    this.andWhere("b.booking_type", booking_type);
                 }
             })
-                .orderBy('b.id', 'desc')
+                .orderBy("b.id", "desc")
                 .limit(limitNum)
                 .offset(offsetNum);
-            const total = yield this.db('bookings as b')
+            const total = yield this.db("bookings as b")
                 .withSchema(this.RESERVATION_SCHEMA)
-                .count('b.id as total')
-                .leftJoin('sources as src', 'b.source_id', 'src.id')
-                .leftJoin('guests as g', 'b.guest_id', 'g.id')
-                .where('b.hotel_code', hotel_code)
-                .andWhere('b.is_individual_booking', false)
+                .count("b.id as total")
+                .leftJoin("sources as src", "b.source_id", "src.id")
+                .leftJoin("guests as g", "b.guest_id", "g.id")
+                .where("b.hotel_code", hotel_code)
+                .andWhere("b.is_individual_booking", false)
                 .andWhere(function () {
                 if (checkin_from && checkin_to) {
-                    this.andWhereBetween('b.check_in', [checkin_from, endCheckInDate]);
+                    this.andWhereBetween("b.check_in", [checkin_from, endCheckInDate]);
                 }
                 if (checkout_from && checkout_to) {
-                    this.andWhereBetween('b.check_out', [checkout_from, endCheckOutDate]);
+                    this.andWhereBetween("b.check_out", [checkout_from, endCheckOutDate]);
                 }
                 if (booked_from && booked_to) {
-                    this.andWhereBetween('b.booking_date', [booked_from, endBookedDate]);
+                    this.andWhereBetween("b.booking_date", [booked_from, endBookedDate]);
                 }
                 if (search) {
-                    this.andWhere('b.booking_reference', 'ilike', `%${search}%`)
-                        .orWhere('g.first_name', 'ilike', `%${search}%`)
-                        .orWhere('g.email', 'ilike', `%${search}%`);
+                    this.andWhere("b.booking_reference", "ilike", `%${search}%`)
+                        .orWhere("g.first_name", "ilike", `%${search}%`)
+                        .orWhere("g.email", "ilike", `%${search}%`);
                 }
                 if (status) {
-                    this.andWhere('b.status', status);
+                    this.andWhere("b.status", status);
                 }
                 if (booking_type) {
-                    this.andWhere('b.booking_type', booking_type);
+                    this.andWhere("b.booking_type", booking_type);
                 }
             });
             return {
@@ -681,9 +690,9 @@ class ReservationModel extends schema_1.default {
     }
     getSingleBooking(hotel_code, booking_id) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db('bookings as b')
+            return yield this.db("bookings as b")
                 .withSchema(this.RESERVATION_SCHEMA)
-                .select('b.id', 'b.booking_reference', this.db.raw(`TO_CHAR(b.check_in, 'YYYY-MM-DD') as check_in`), this.db.raw(`TO_CHAR(b.check_out, 'YYYY-MM-DD') as check_out`), this.db.raw(`TO_CHAR(b.booking_date, 'YYYY-MM-DD') as booking_date`), 'b.booking_type', 'b.status', 'b.is_individual_booking', 'b.voucher_no', 'b.source_id', 'src.name as source_name', 'b.total_amount', 'b.vat', 'b.discount_amount', 'b.service_charge', 'b.service_charge_percentage', 'b.vat_percentage', 'b.payment_status', 'b.comments', 'b.pickup', 'b.pickup_from', 'b.pickup_time', 'b.drop', 'b.drop_time', 'b.drop_to', 'b.visit_purpose', 'g.id as guest_id', 'g.first_name', 'g.last_name', 'g.email as guest_email', 'g.phone', 'g.address', 'c.country_name', 'g.passport_no', 'c.nationality', this.db.raw(`(
+                .select("b.id", "b.booking_reference", this.db.raw(`TO_CHAR(b.check_in, 'YYYY-MM-DD') as check_in`), this.db.raw(`TO_CHAR(b.check_out, 'YYYY-MM-DD') as check_out`), this.db.raw(`TO_CHAR(b.booking_date, 'YYYY-MM-DD') as booking_date`), "b.booking_type", "b.status", "b.is_individual_booking", "b.voucher_no", "b.source_id", "src.name as source_name", "b.total_amount", "b.vat", "b.discount_amount", "b.service_charge", "b.service_charge_percentage", "b.vat_percentage", "b.payment_status", "b.comments", "b.pickup", "b.pickup_from", "b.pickup_time", "b.drop", "b.drop_time", "b.drop_to", "b.visit_purpose", "g.id as guest_id", "g.first_name", "g.last_name", "g.email as guest_email", "g.phone", "g.address", "c.country_name", "g.passport_no", "c.nationality", this.db.raw(`(
             SELECT json_agg(
               json_build_object(
 
@@ -736,59 +745,60 @@ class ReservationModel extends schema_1.default {
                 `${this.RESERVATION_SCHEMA}.room_types`,
                 `${this.RESERVATION_SCHEMA}.rooms`,
             ]))
-                .leftJoin('sources as src', 'b.source_id', 'src.id')
-                .leftJoin('guests as g', 'b.guest_id', 'g.id')
-                .joinRaw('left join public.country c on g.country_id = c.id')
-                .where('b.hotel_code', hotel_code)
-                .andWhere('b.id', booking_id)
+                .leftJoin("sources as src", "b.source_id", "src.id")
+                .leftJoin("guests as g", "b.guest_id", "g.id")
+                .joinRaw("left join public.country c on g.country_id = c.id")
+                .where("b.hotel_code", hotel_code)
+                .andWhere("b.id", booking_id)
                 .first();
         });
     }
     updateRoomBooking(payload, hotel_code, booking_id) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db('bookings')
+            return yield this.db("bookings")
                 .withSchema(this.RESERVATION_SCHEMA)
                 .update(payload)
                 .where({ hotel_code })
                 .andWhere({ id: booking_id });
         });
     }
-    deleteBookingRooms(room_ids) {
+    deleteBookingRooms(room_ids, booking_id) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db('booking_rooms')
+            return yield this.db("booking_rooms")
                 .withSchema(this.RESERVATION_SCHEMA)
                 .del()
-                .whereIn('room_id', room_ids);
+                .whereIn("room_id", room_ids)
+                .andWhere("booking_id", booking_id);
         });
     }
     getLastBooking() {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db('bookings')
+            return yield this.db("bookings")
                 .withSchema(this.RESERVATION_SCHEMA)
-                .select('id')
+                .select("id")
                 .limit(1)
-                .orderBy('id', 'desc');
+                .orderBy("id", "desc");
         });
     }
     updateRoomAvailabilityHold({ hotel_code, room_type_id, date, rooms_to_book, type, }) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (type == 'hold_increase') {
-                return yield this.db('room_availability')
+            if (type == "hold_increase") {
+                return yield this.db("room_availability")
                     .withSchema(this.RESERVATION_SCHEMA)
                     .where({ hotel_code, room_type_id, date })
                     .update({
-                    available_rooms: this.db.raw('available_rooms - ?', [rooms_to_book]),
-                    hold_rooms: this.db.raw('hold_rooms + ?', [rooms_to_book]),
+                    available_rooms: this.db.raw("available_rooms - ?", [rooms_to_book]),
+                    hold_rooms: this.db.raw("hold_rooms + ?", [rooms_to_book]),
                     updated_at: this.db.fn.now(),
                 });
             }
             else {
-                return yield this.db('room_availability')
+                return yield this.db("room_availability")
                     .withSchema(this.RESERVATION_SCHEMA)
                     .where({ hotel_code, room_type_id, date })
                     .update({
-                    available_rooms: this.db.raw('available_rooms + ?', [rooms_to_book]),
-                    hold_rooms: this.db.raw('hold_rooms - ?', [rooms_to_book]),
+                    available_rooms: this.db.raw("available_rooms + ?", [rooms_to_book]),
+                    hold_rooms: this.db.raw("hold_rooms - ?", [rooms_to_book]),
                     updated_at: this.db.fn.now(),
                 });
             }
@@ -796,23 +806,23 @@ class ReservationModel extends schema_1.default {
     }
     updateRoomAvailability({ type, hotel_code, room_type_id, date, rooms_to_book, }) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (type === 'booked_room_increase') {
-                return yield this.db('room_availability')
+            if (type === "booked_room_increase") {
+                return yield this.db("room_availability")
                     .withSchema(this.RESERVATION_SCHEMA)
                     .where({ hotel_code, room_type_id, date })
                     .update({
-                    available_rooms: this.db.raw('available_rooms - ?', [rooms_to_book]),
-                    booked_rooms: this.db.raw('booked_rooms + ?', [rooms_to_book]),
+                    available_rooms: this.db.raw("available_rooms - ?", [rooms_to_book]),
+                    booked_rooms: this.db.raw("booked_rooms + ?", [rooms_to_book]),
                     updated_at: this.db.fn.now(),
                 });
             }
             else {
-                return yield this.db('room_availability')
+                return yield this.db("room_availability")
                     .withSchema(this.RESERVATION_SCHEMA)
                     .where({ hotel_code, room_type_id, date })
                     .update({
-                    available_rooms: this.db.raw('available_rooms + ?', [rooms_to_book]),
-                    booked_rooms: this.db.raw('booked_rooms - ?', [rooms_to_book]),
+                    available_rooms: this.db.raw("available_rooms + ?", [rooms_to_book]),
+                    booked_rooms: this.db.raw("booked_rooms - ?", [rooms_to_book]),
                     updated_at: this.db.fn.now(),
                 });
             }
@@ -820,25 +830,25 @@ class ReservationModel extends schema_1.default {
     }
     getArrivalDepStayBookings({ current_date, hotel_code, booking_mode, limit, skip, search, }) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (booking_mode == 'arrival') {
-                const total = yield this.db('bookings as b')
+            if (booking_mode == "arrival") {
+                const total = yield this.db("bookings as b")
                     .withSchema(this.RESERVATION_SCHEMA)
-                    .count('b.id as total')
-                    .leftJoin('guests as g', 'b.guest_id', 'g.id')
-                    .where('b.hotel_code', hotel_code)
-                    .andWhere('b.check_in', current_date)
-                    .andWhere('b.status', 'confirmed')
+                    .count("b.id as total")
+                    .leftJoin("guests as g", "b.guest_id", "g.id")
+                    .where("b.hotel_code", hotel_code)
+                    .andWhere("b.check_in", current_date)
+                    .andWhere("b.status", "confirmed")
                     .andWhere(function () {
                     if (search) {
-                        this.andWhere('b.booking_reference', 'ilike', `%${search}%`)
-                            .orWhere('g.first_name', 'ilike', `%${search}%`)
-                            .orWhere('g.email', 'ilike', `%${search}%`);
+                        this.andWhere("b.booking_reference", "ilike", `%${search}%`)
+                            .orWhere("g.first_name", "ilike", `%${search}%`)
+                            .orWhere("g.email", "ilike", `%${search}%`);
                     }
                 })
                     .first();
-                const data = yield this.db('bookings as b')
+                const data = yield this.db("bookings as b")
                     .withSchema(this.RESERVATION_SCHEMA)
-                    .select('b.id', 'b.booking_reference', this.db.raw(`TO_CHAR(b.check_in, 'YYYY-MM-DD') as check_in`), this.db.raw(`TO_CHAR(b.check_out, 'YYYY-MM-DD') as check_out`), this.db.raw(`TO_CHAR(b.booking_date, 'YYYY-MM-DD') as booking_date`), 'b.booking_type', 'b.status', 'src.name as source_name', 'b.total_amount', 'b.vat', 'b.discount_amount', 'b.service_charge', 'g.id as guest_id', 'g.first_name', 'g.last_name', 'g.email as guest_email', this.db.raw(`
+                    .select("b.id", "b.booking_reference", this.db.raw(`TO_CHAR(b.check_in, 'YYYY-MM-DD') as check_in`), this.db.raw(`TO_CHAR(b.check_out, 'YYYY-MM-DD') as check_out`), this.db.raw(`TO_CHAR(b.booking_date, 'YYYY-MM-DD') as booking_date`), "b.booking_type", "b.status", "src.name as source_name", "b.total_amount", "b.vat", "b.discount_amount", "b.service_charge", "g.id as guest_id", "g.first_name", "g.last_name", "g.email as guest_email", this.db.raw(`
             (
               SELECT COALESCE(JSON_AGG(JSON_BUILD_OBJECT(
                 'id', br.id,
@@ -855,34 +865,34 @@ class ReservationModel extends schema_1.default {
               LEFT JOIN ?? AS r ON br.room_id = r.id
               WHERE br.booking_id = b.id
             ) AS booking_rooms`, [
-                    'hotel_reservation.booking_rooms',
-                    'hotel_reservation.room_types',
-                    'hotel_reservation.rooms',
+                    "hotel_reservation.booking_rooms",
+                    "hotel_reservation.room_types",
+                    "hotel_reservation.rooms",
                 ]))
-                    .leftJoin('sources as src', 'b.source_id', 'src.id')
-                    .leftJoin('guests as g', 'b.guest_id', 'g.id')
-                    .where('b.hotel_code', hotel_code)
-                    .andWhere('b.check_in', current_date)
-                    .andWhere('b.status', 'confirmed')
+                    .leftJoin("sources as src", "b.source_id", "src.id")
+                    .leftJoin("guests as g", "b.guest_id", "g.id")
+                    .where("b.hotel_code", hotel_code)
+                    .andWhere("b.check_in", current_date)
+                    .andWhere("b.status", "confirmed")
                     .andWhere(function () {
                     if (search) {
-                        this.andWhere('b.booking_reference', 'ilike', `%${search}%`)
-                            .orWhere('g.first_name', 'ilike', `%${search}%`)
-                            .orWhere('g.email', 'ilike', `%${search}%`);
+                        this.andWhere("b.booking_reference", "ilike", `%${search}%`)
+                            .orWhere("g.first_name", "ilike", `%${search}%`)
+                            .orWhere("g.email", "ilike", `%${search}%`);
                     }
                 })
                     .limit(limit ? parseInt(limit) : 50)
                     .offset(skip ? parseInt(skip) : 0)
-                    .orderBy('b.id', 'desc');
+                    .orderBy("b.id", "desc");
                 return {
                     data,
                     total: total ? parseInt(total.total) : 0,
                 };
             }
-            else if (booking_mode == 'departure') {
-                const data = yield this.db('bookings as b')
+            else if (booking_mode == "departure") {
+                const data = yield this.db("bookings as b")
                     .withSchema(this.RESERVATION_SCHEMA)
-                    .select('b.id', 'b.booking_reference', this.db.raw(`TO_CHAR(b.check_in, 'YYYY-MM-DD') as check_in`), this.db.raw(`TO_CHAR(b.check_out, 'YYYY-MM-DD') as check_out`), this.db.raw(`TO_CHAR(b.booking_date, 'YYYY-MM-DD') as booking_date`), 'b.booking_type', 'b.status', 'src.name as source_name', 'b.total_amount', 'b.vat', 'b.discount_amount', 'b.service_charge', 'g.id as guest_id', 'g.first_name', 'g.last_name', 'g.email as guest_email', this.db.raw(`
+                    .select("b.id", "b.booking_reference", this.db.raw(`TO_CHAR(b.check_in, 'YYYY-MM-DD') as check_in`), this.db.raw(`TO_CHAR(b.check_out, 'YYYY-MM-DD') as check_out`), this.db.raw(`TO_CHAR(b.booking_date, 'YYYY-MM-DD') as booking_date`), "b.booking_type", "b.status", "src.name as source_name", "b.total_amount", "b.vat", "b.discount_amount", "b.service_charge", "g.id as guest_id", "g.first_name", "g.last_name", "g.email as guest_email", this.db.raw(`
             (
               SELECT COALESCE(JSON_AGG(JSON_BUILD_OBJECT(
                 'id', br.id,
@@ -899,37 +909,37 @@ class ReservationModel extends schema_1.default {
               LEFT JOIN ?? AS r ON br.room_id = r.id
               WHERE br.booking_id = b.id
             ) AS booking_rooms`, [
-                    'hotel_reservation.booking_rooms',
-                    'hotel_reservation.room_types',
-                    'hotel_reservation.rooms',
+                    "hotel_reservation.booking_rooms",
+                    "hotel_reservation.room_types",
+                    "hotel_reservation.rooms",
                 ]))
-                    .leftJoin('sources as src', 'b.source_id', 'src.id')
-                    .leftJoin('guests as g', 'b.guest_id', 'g.id')
-                    .where('b.hotel_code', hotel_code)
-                    .andWhere('b.check_out', current_date)
-                    .andWhere('b.status', 'checked_in')
+                    .leftJoin("sources as src", "b.source_id", "src.id")
+                    .leftJoin("guests as g", "b.guest_id", "g.id")
+                    .where("b.hotel_code", hotel_code)
+                    .andWhere("b.check_out", current_date)
+                    .andWhere("b.status", "checked_in")
                     .andWhere(function () {
                     if (search) {
-                        this.andWhere('b.booking_reference', 'ilike', `%${search}%`)
-                            .orWhere('g.first_name', 'ilike', `%${search}%`)
-                            .orWhere('g.email', 'ilike', `%${search}%`);
+                        this.andWhere("b.booking_reference", "ilike", `%${search}%`)
+                            .orWhere("g.first_name", "ilike", `%${search}%`)
+                            .orWhere("g.email", "ilike", `%${search}%`);
                     }
                 })
                     .limit(limit ? parseInt(limit) : 50)
                     .offset(skip ? parseInt(skip) : 0)
-                    .orderBy('b.id', 'desc');
-                const total = yield this.db('bookings as b')
+                    .orderBy("b.id", "desc");
+                const total = yield this.db("bookings as b")
                     .withSchema(this.RESERVATION_SCHEMA)
-                    .count('b.id as total')
-                    .leftJoin('guests as g', 'b.guest_id', 'g.id')
-                    .where('b.hotel_code', hotel_code)
-                    .andWhere('b.status', 'checked_in')
-                    .andWhere('b.check_out', current_date)
+                    .count("b.id as total")
+                    .leftJoin("guests as g", "b.guest_id", "g.id")
+                    .where("b.hotel_code", hotel_code)
+                    .andWhere("b.status", "checked_in")
+                    .andWhere("b.check_out", current_date)
                     .andWhere(function () {
                     if (search) {
-                        this.andWhere('b.booking_reference', 'ilike', `%${search}%`)
-                            .orWhere('g.first_name', 'ilike', `%${search}%`)
-                            .orWhere('g.email', 'ilike', `%${search}%`);
+                        this.andWhere("b.booking_reference", "ilike", `%${search}%`)
+                            .orWhere("g.first_name", "ilike", `%${search}%`)
+                            .orWhere("g.email", "ilike", `%${search}%`);
                     }
                 })
                     .first();
@@ -939,9 +949,9 @@ class ReservationModel extends schema_1.default {
                 };
             }
             else {
-                const data = yield this.db('bookings as b')
+                const data = yield this.db("bookings as b")
                     .withSchema(this.RESERVATION_SCHEMA)
-                    .select('b.id', 'b.booking_reference', this.db.raw(`TO_CHAR(b.check_in, 'YYYY-MM-DD') as check_in`), this.db.raw(`TO_CHAR(b.check_out, 'YYYY-MM-DD') as check_out`), this.db.raw(`TO_CHAR(b.booking_date, 'YYYY-MM-DD') as booking_date`), 'b.booking_type', 'b.status', 'src.name as source_name', 'b.total_amount', 'b.vat', 'b.discount_amount', 'b.service_charge', 'g.id as guest_id', 'g.first_name', 'g.last_name', 'g.email as guest_email', this.db.raw(`
+                    .select("b.id", "b.booking_reference", this.db.raw(`TO_CHAR(b.check_in, 'YYYY-MM-DD') as check_in`), this.db.raw(`TO_CHAR(b.check_out, 'YYYY-MM-DD') as check_out`), this.db.raw(`TO_CHAR(b.booking_date, 'YYYY-MM-DD') as booking_date`), "b.booking_type", "b.status", "src.name as source_name", "b.total_amount", "b.vat", "b.discount_amount", "b.service_charge", "g.id as guest_id", "g.first_name", "g.last_name", "g.email as guest_email", this.db.raw(`
             (
               SELECT COALESCE(JSON_AGG(JSON_BUILD_OBJECT(
                 'id', br.id,
@@ -958,43 +968,43 @@ class ReservationModel extends schema_1.default {
               LEFT JOIN ?? AS r ON br.room_id = r.id
               WHERE br.booking_id = b.id
             ) AS booking_rooms`, [
-                    'hotel_reservation.booking_rooms',
-                    'hotel_reservation.room_types',
-                    'hotel_reservation.rooms',
+                    "hotel_reservation.booking_rooms",
+                    "hotel_reservation.room_types",
+                    "hotel_reservation.rooms",
                 ]))
-                    .leftJoin('sources as src', 'b.source_id', 'src.id')
-                    .leftJoin('guests as g', 'b.guest_id', 'g.id')
-                    .where('b.hotel_code', hotel_code)
+                    .leftJoin("sources as src", "b.source_id", "src.id")
+                    .leftJoin("guests as g", "b.guest_id", "g.id")
+                    .where("b.hotel_code", hotel_code)
                     .andWhere(function () {
-                    this.where('b.check_out', '>', current_date).andWhere('b.check_in', '<=', current_date);
+                    this.where("b.check_out", ">", current_date).andWhere("b.check_in", "<=", current_date);
                 })
                     .andWhere(function () {
                     if (search) {
-                        this.andWhere('b.booking_reference', 'ilike', `%${search}%`)
-                            .orWhere('g.first_name', 'ilike', `%${search}%`)
-                            .orWhere('g.email', 'ilike', `%${search}%`);
+                        this.andWhere("b.booking_reference", "ilike", `%${search}%`)
+                            .orWhere("g.first_name", "ilike", `%${search}%`)
+                            .orWhere("g.email", "ilike", `%${search}%`);
                     }
                 })
-                    .andWhere('b.status', 'checked_in')
+                    .andWhere("b.status", "checked_in")
                     .limit(limit ? parseInt(limit) : 50)
                     .offset(skip ? parseInt(skip) : 0)
-                    .orderBy('b.id', 'desc');
-                const total = yield this.db('bookings as b')
+                    .orderBy("b.id", "desc");
+                const total = yield this.db("bookings as b")
                     .withSchema(this.RESERVATION_SCHEMA)
-                    .count('b.id as total')
-                    .leftJoin('guests as g', 'b.guest_id', 'g.id')
-                    .where('b.hotel_code', hotel_code)
+                    .count("b.id as total")
+                    .leftJoin("guests as g", "b.guest_id", "g.id")
+                    .where("b.hotel_code", hotel_code)
                     .andWhere(function () {
-                    this.where('b.check_out', '>', current_date).andWhere('b.check_in', '<=', current_date);
+                    this.where("b.check_out", ">", current_date).andWhere("b.check_in", "<=", current_date);
                 })
                     .andWhere(function () {
                     if (search) {
-                        this.andWhere('b.booking_reference', 'ilike', `%${search}%`)
-                            .orWhere('g.first_name', 'ilike', `%${search}%`)
-                            .orWhere('g.email', 'ilike', `%${search}%`);
+                        this.andWhere("b.booking_reference", "ilike", `%${search}%`)
+                            .orWhere("g.first_name", "ilike", `%${search}%`)
+                            .orWhere("g.email", "ilike", `%${search}%`);
                     }
                 })
-                    .andWhere('b.status', 'checked_in')
+                    .andWhere("b.status", "checked_in")
                     .first();
                 return {
                     data,

@@ -20,6 +20,17 @@ export interface IinsertFolioPayload {
   status: "open" | "closed";
 }
 
+export type IfolioEntriesPostingType =
+  | "CHARGE"
+  | "ROOM_CHARGE"
+  | "Payment"
+  | "Adjustment"
+  | "Refund"
+  | "Discount"
+  | "VAT"
+  | "Deposit"
+  | "SERVICE_CHARGE";
+
 export interface IinsertFolioEntriesPayload {
   folio_id: number;
   acc_voucher_id?: number;
@@ -30,16 +41,7 @@ export interface IinsertFolioEntriesPayload {
   window_no?: number;
   date?: string;
   rack_rate?: number;
-  posting_type:
-    | "CHARGE"
-    | "ROOM_CHARGE"
-    | "Payment"
-    | "Adjustment"
-    | "Refund"
-    | "Discount"
-    | "VAT"
-    | "Deposit"
-    | "SERVICE_CHARGE";
+  posting_type: IfolioEntriesPostingType;
 }
 
 export interface IinsertFolioInvoiceReqPayload {
@@ -133,7 +135,7 @@ export type ISingleFolioInvoice = {
 export interface IFolioEntry {
   entries_id: number;
   description: string | null;
-  posting_type: string;
+  posting_type: IfolioEntriesPostingType;
   debit: number | null;
   credit: number | null;
   created_at: Date;
@@ -148,5 +150,5 @@ export interface IFolioWithEntries {
   id: number;
   name: string;
   is_void: boolean;
-  folio_entries: IFolioEntry[]; // comes from JSON_AGG
+  folio_entries: IFolioEntry[];
 }

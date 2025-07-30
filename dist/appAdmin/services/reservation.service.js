@@ -423,9 +423,9 @@ class ReservationService extends abstract_service_1.default {
     updateRoomAndRateOfReservation(req) {
         return __awaiter(this, void 0, void 0, function* () {
             return this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
-                var _a, _b, _c;
+                var _a;
                 const booking_id = Number(req.params.id);
-                const { hotel_code } = req.hotel_admin;
+                const { hotel_code, id: admin_id } = req.hotel_admin;
                 const body = req.body;
                 const reservationModel = this.Model.reservationModel(trx);
                 const hotelInvModel = this.Model.hotelInvoiceModel(trx);
@@ -439,6 +439,21 @@ class ReservationService extends abstract_service_1.default {
                         message: this.ResMsg.HTTP_NOT_FOUND,
                     };
                 }
+                const hotelModel = this.Model.HotelModel(trx);
+                const heads = yield hotelModel.getHotelAccConfig(hotel_code, [
+                    "RECEIVABLE_HEAD_ID",
+                    "SALES_HEAD_ID",
+                ]);
+                const receivable_head = heads.find((h) => h.config === "RECEIVABLE_HEAD_ID");
+                if (!receivable_head) {
+                    throw new Error("RECEIVABLE_HEAD_ID not configured for this hotel");
+                }
+                const sales_head = heads.find((h) => h.config === "SALES_HEAD_ID");
+                if (!sales_head) {
+                    throw new Error("SALES_HEAD_ID not configured for this hotel");
+                }
+                const accountModel = this.Model.accountModel(trx);
+                const today = new Date().toISOString().split("T")[0];
                 const { vat_percentage: bookingVatPct = 0, service_charge_percentage: bookingScPct = 0, booking_rooms, guest_id, } = booking;
                 if (Array.isArray(body.changed_rate_of_booking_rooms) &&
                     body.changed_rate_of_booking_rooms.length) {
@@ -456,9 +471,21 @@ class ReservationService extends abstract_service_1.default {
                         });
                         if (!roomFolio)
                             continue;
-                        const entryIDs = (_b = (_a = roomFolio.folio_entries) === null || _a === void 0 ? void 0 : _a.map((e) => e.entries_id)) !== null && _b !== void 0 ? _b : [];
-                        if (entryIDs.length) {
-                            yield hotelInvModel.updateFolioEntries({ is_void: true }, entryIDs);
+                        // const entryIDs =
+                        //   roomFolio.folio_entries?.map((e) => e.entries_id) ?? [];
+                        let prevRoomAmount = 0;
+                        const folioEntryIDs = roomFolio.folio_entries
+                            .filter((fe) => {
+                            if (fe.posting_type == "ROOM_CHARGE" ||
+                                fe.posting_type == "VAT" ||
+                                fe.posting_type == "SERVICE_CHARGE") {
+                                prevRoomAmount += Number(fe.debit);
+                                return fe;
+                            }
+                        })
+                            .map((fe) => fe.entries_id);
+                        if (folioEntryIDs.length) {
+                            yield hotelInvModel.updateFolioEntries({ is_void: true }, folioEntryIDs);
                         }
                         const nights = sub.calculateNights(room.check_in, room.check_out);
                         yield reservationModel.updateSingleBookingRoom({
@@ -504,15 +531,49 @@ class ReservationService extends abstract_service_1.default {
                                 });
                             }
                         }
+                        // insert new folio entries
+                        let newTotalAmount = newEntries.reduce((ac, cu) => { var _a; return ac + Number((_a = cu === null || cu === void 0 ? void 0 : cu.debit) !== null && _a !== void 0 ? _a : 0); }, 0);
                         if (newEntries.length) {
                             yield hotelInvModel.insertInFolioEntries(newEntries);
                         }
+                        //------------------ Accounting ------------------//
+                        const difference = Math.abs(newTotalAmount - prevRoomAmount);
+                        const isIncrease = newTotalAmount > prevRoomAmount;
+                        const actionText = isIncrease ? "Increased rate" : "Decreased rate";
+                        const receivableEntry = {
+                            acc_head_id: receivable_head.head_id,
+                            created_by: admin_id,
+                            debit: isIncrease ? difference : 0,
+                            credit: isIncrease ? 0 : difference,
+                            description: `Receivable for ${actionText} of single room. Booking ref ${booking.booking_reference}`,
+                            voucher_date: today,
+                            voucher_no: booking.voucher_no,
+                            hotel_code,
+                        };
+                        const salesEntry = {
+                            acc_head_id: sales_head.head_id,
+                            created_by: admin_id,
+                            debit: isIncrease ? 0 : difference,
+                            credit: isIncrease ? difference : 0,
+                            description: `Sales for ${actionText} of single room. Booking ref ${booking.booking_reference}`,
+                            voucher_date: today,
+                            voucher_no: booking.voucher_no,
+                            hotel_code,
+                        };
+                        yield accountModel.insertAccVoucher([receivableEntry, salesEntry]);
                     }
                 }
                 if (Array.isArray(body.removed_rooms) && body.removed_rooms.length) {
                     const removedIDs = [...new Set(body.removed_rooms)];
                     const roomsBeingRemoved = booking_rooms.filter((br) => removedIDs.includes(br.room_id));
-                    yield reservationModel.deleteBookingRooms(removedIDs);
+                    console.log({ removedIDs });
+                    // delete booking room guest
+                    const res = yield reservationModel.deleteBookingRoomGuest({
+                        booking_room_ids: removedIDs,
+                    });
+                    console.log({ res });
+                    // delete booking rooms
+                    yield reservationModel.deleteBookingRooms(removedIDs, booking_id);
                     yield sub.updateRoomAvailabilityService({
                         reservation_type: "booked_room_decrease",
                         rooms: roomsBeingRemoved,
@@ -523,16 +584,50 @@ class ReservationService extends abstract_service_1.default {
                         booking_id,
                         room_ids: removedIDs,
                     });
-                    const allEntryIDs = roomFolios.flatMap((f) => { var _a, _b; return (_b = (_a = f === null || f === void 0 ? void 0 : f.folio_entries) === null || _a === void 0 ? void 0 : _a.map((e) => e.entries_id)) !== null && _b !== void 0 ? _b : []; });
+                    // const allEntryIDs = roomFolios.flatMap(
+                    //   (f) => f?.folio_entries?.map((e) => e.entries_id) ?? []
+                    // );
+                    let total_debit_amount = 0;
+                    let total_credit_amount = 0;
+                    const folioEntryIDs = roomFolios.flatMap((f) => f.folio_entries
+                        .filter((fe) => {
+                        var _a, _b;
+                        total_credit_amount += Number((_a = fe.credit) !== null && _a !== void 0 ? _a : 0);
+                        total_debit_amount += Number((_b = fe.debit) !== null && _b !== void 0 ? _b : 0);
+                        return fe;
+                    })
+                        .map((fe) => fe.entries_id));
                     const allFolioIDs = roomFolios
                         .filter((f) => !(f === null || f === void 0 ? void 0 : f.is_void))
                         .map((f) => f.id);
-                    if (allEntryIDs.length) {
-                        yield hotelInvModel.updateFolioEntries({ is_void: true }, allEntryIDs);
+                    if (folioEntryIDs.length) {
+                        yield hotelInvModel.updateFolioEntries({ is_void: true }, folioEntryIDs);
                     }
                     if (allFolioIDs.length) {
                         yield hotelInvModel.updateSingleFolio({ is_void: true }, { folioIds: allFolioIDs, booking_id, hotel_code });
                     }
+                    yield accountModel.insertAccVoucher([
+                        {
+                            acc_head_id: receivable_head.head_id,
+                            created_by: admin_id,
+                            debit: 0,
+                            credit: total_debit_amount - total_credit_amount,
+                            description: `Receivable for remove room. Booking Ref ${booking.booking_reference}`,
+                            voucher_date: today,
+                            voucher_no: booking.voucher_no,
+                            hotel_code,
+                        },
+                        {
+                            acc_head_id: sales_head.head_id,
+                            created_by: admin_id,
+                            debit: total_credit_amount,
+                            credit: 0,
+                            description: `Sale for remove room. Booking Ref ${booking.booking_reference}`,
+                            voucher_date: today,
+                            voucher_no: booking.voucher_no,
+                            hotel_code,
+                        },
+                    ]);
                 }
                 /***********************************************************************
                  * 4. ADD NEW ROOMS
@@ -563,7 +658,7 @@ class ReservationService extends abstract_service_1.default {
                 }
                 for (const br of newlyAddedRooms) {
                     const [roomRow] = yield roomModel.getSingleRoom(hotel_code, br.room_id);
-                    const roomName = (_c = roomRow === null || roomRow === void 0 ? void 0 : roomRow.room_name) !== null && _c !== void 0 ? _c : br.room_id.toString();
+                    const roomName = (_a = roomRow === null || roomRow === void 0 ? void 0 : roomRow.room_name) !== null && _a !== void 0 ? _a : br.room_id.toString();
                     const [lastFolio] = yield hotelInvModel.getLasFolioId();
                     const folio_number = helperFunction_1.HelperFunction.generateFolioNumber(lastFolio === null || lastFolio === void 0 ? void 0 : lastFolio.id);
                     const [roomFolio] = yield hotelInvModel.insertInFolio({
@@ -608,6 +703,30 @@ class ReservationService extends abstract_service_1.default {
                         });
                     }
                     yield hotelInvModel.insertInFolioEntries(entries);
+                    const newTotalAmount = entries.reduce((acc, cu) => acc + Number(cu.debit), 0);
+                    // acc voucher
+                    yield accountModel.insertAccVoucher([
+                        {
+                            acc_head_id: receivable_head.head_id,
+                            created_by: admin_id,
+                            debit: newTotalAmount,
+                            credit: 0,
+                            description: `Receivable for add new room in reservation. Booking Ref ${booking.booking_reference}`,
+                            voucher_date: today,
+                            voucher_no: booking.voucher_no,
+                            hotel_code,
+                        },
+                        {
+                            acc_head_id: sales_head.head_id,
+                            created_by: admin_id,
+                            debit: 0,
+                            credit: newTotalAmount,
+                            description: `Sales for add new room in reservation. Booking Ref ${booking.booking_reference}`,
+                            voucher_date: today,
+                            voucher_no: booking.voucher_no,
+                            hotel_code,
+                        },
+                    ]);
                 }
                 const { total_debit } = yield hotelInvModel.getFolioEntriesCalculationByBookingID({
                     hotel_code,

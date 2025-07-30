@@ -583,7 +583,7 @@ export class ReservationService extends AbstractServices {
   public async updateRoomAndRateOfReservation(req: Request) {
     return this.db.transaction(async (trx) => {
       const booking_id = Number(req.params.id);
-      const { hotel_code } = req.hotel_admin;
+      const { hotel_code, id: admin_id } = req.hotel_admin;
       const body = req.body as IupdateRoomAndRateOfReservationRequestBody;
       const reservationModel = this.Model.reservationModel(trx);
       const hotelInvModel = this.Model.hotelInvoiceModel(trx);
@@ -602,6 +602,30 @@ export class ReservationService extends AbstractServices {
           message: this.ResMsg.HTTP_NOT_FOUND,
         };
       }
+
+      const hotelModel = this.Model.HotelModel(trx);
+
+      const heads = await hotelModel.getHotelAccConfig(hotel_code, [
+        "RECEIVABLE_HEAD_ID",
+        "SALES_HEAD_ID",
+      ]);
+
+      const receivable_head = heads.find(
+        (h) => h.config === "RECEIVABLE_HEAD_ID"
+      );
+
+      if (!receivable_head) {
+        throw new Error("RECEIVABLE_HEAD_ID not configured for this hotel");
+      }
+
+      const sales_head = heads.find((h) => h.config === "SALES_HEAD_ID");
+
+      if (!sales_head) {
+        throw new Error("SALES_HEAD_ID not configured for this hotel");
+      }
+
+      const accountModel = this.Model.accountModel(trx);
+      const today = new Date().toISOString().split("T")[0];
 
       const {
         vat_percentage: bookingVatPct = 0,
@@ -631,11 +655,27 @@ export class ReservationService extends AbstractServices {
 
           if (!roomFolio) continue;
 
-          const entryIDs =
-            roomFolio.folio_entries?.map((e) => e.entries_id) ?? [];
+          // const entryIDs =
+          //   roomFolio.folio_entries?.map((e) => e.entries_id) ?? [];
+          let prevRoomAmount = 0;
+          const folioEntryIDs = roomFolio.folio_entries
+            .filter((fe) => {
+              if (
+                fe.posting_type == "ROOM_CHARGE" ||
+                fe.posting_type == "VAT" ||
+                fe.posting_type == "SERVICE_CHARGE"
+              ) {
+                prevRoomAmount += Number(fe.debit);
+                return fe;
+              }
+            })
+            .map((fe) => fe.entries_id);
 
-          if (entryIDs.length) {
-            await hotelInvModel.updateFolioEntries({ is_void: true }, entryIDs);
+          if (folioEntryIDs.length) {
+            await hotelInvModel.updateFolioEntries(
+              { is_void: true },
+              folioEntryIDs
+            );
           }
 
           const nights = sub.calculateNights(room.check_in, room.check_out);
@@ -689,9 +729,46 @@ export class ReservationService extends AbstractServices {
               });
             }
           }
+
+          // insert new folio entries
+          let newTotalAmount = newEntries.reduce(
+            (ac, cu) => ac + Number(cu?.debit ?? 0),
+            0
+          );
+
           if (newEntries.length) {
             await hotelInvModel.insertInFolioEntries(newEntries);
           }
+
+          //------------------ Accounting ------------------//
+
+          const difference = Math.abs(newTotalAmount - prevRoomAmount);
+          const isIncrease = newTotalAmount > prevRoomAmount;
+          const actionText = isIncrease ? "Increased rate" : "Decreased rate";
+
+          const receivableEntry = {
+            acc_head_id: receivable_head.head_id,
+            created_by: admin_id,
+            debit: isIncrease ? difference : 0,
+            credit: isIncrease ? 0 : difference,
+            description: `Receivable for ${actionText} of single room. Booking ref ${booking.booking_reference}`,
+            voucher_date: today,
+            voucher_no: booking.voucher_no,
+            hotel_code,
+          };
+
+          const salesEntry = {
+            acc_head_id: sales_head.head_id,
+            created_by: admin_id,
+            debit: isIncrease ? 0 : difference,
+            credit: isIncrease ? difference : 0,
+            description: `Sales for ${actionText} of single room. Booking ref ${booking.booking_reference}`,
+            voucher_date: today,
+            voucher_no: booking.voucher_no,
+            hotel_code,
+          };
+
+          await accountModel.insertAccVoucher([receivableEntry, salesEntry]);
         }
       }
 
@@ -702,7 +779,15 @@ export class ReservationService extends AbstractServices {
           removedIDs.includes(br.room_id)
         );
 
-        await reservationModel.deleteBookingRooms(removedIDs);
+        console.log({ removedIDs });
+        // delete booking room guest
+        const res = await reservationModel.deleteBookingRoomGuest({
+          booking_room_ids: removedIDs,
+        });
+        console.log({ res });
+
+        // delete booking rooms
+        await reservationModel.deleteBookingRooms(removedIDs, booking_id);
 
         await sub.updateRoomAvailabilityService({
           reservation_type: "booked_room_decrease",
@@ -717,17 +802,31 @@ export class ReservationService extends AbstractServices {
             room_ids: removedIDs,
           });
 
-        const allEntryIDs = roomFolios.flatMap(
-          (f) => f?.folio_entries?.map((e) => e.entries_id) ?? []
+        // const allEntryIDs = roomFolios.flatMap(
+        //   (f) => f?.folio_entries?.map((e) => e.entries_id) ?? []
+        // );
+
+        let total_debit_amount = 0;
+        let total_credit_amount = 0;
+
+        const folioEntryIDs = roomFolios.flatMap((f) =>
+          f.folio_entries
+            .filter((fe) => {
+              total_credit_amount += Number(fe.credit ?? 0);
+              total_debit_amount += Number(fe.debit ?? 0);
+              return fe;
+            })
+            .map((fe) => fe.entries_id)
         );
+
         const allFolioIDs: number[] = roomFolios
           .filter((f) => !f?.is_void)
           .map((f) => f.id);
 
-        if (allEntryIDs.length) {
+        if (folioEntryIDs.length) {
           await hotelInvModel.updateFolioEntries(
             { is_void: true },
-            allEntryIDs
+            folioEntryIDs
           );
         }
         if (allFolioIDs.length) {
@@ -736,6 +835,29 @@ export class ReservationService extends AbstractServices {
             { folioIds: allFolioIDs, booking_id, hotel_code }
           );
         }
+
+        await accountModel.insertAccVoucher([
+          {
+            acc_head_id: receivable_head.head_id,
+            created_by: admin_id,
+            debit: 0,
+            credit: total_debit_amount - total_credit_amount,
+            description: `Receivable for remove room. Booking Ref ${booking.booking_reference}`,
+            voucher_date: today,
+            voucher_no: booking.voucher_no,
+            hotel_code,
+          },
+          {
+            acc_head_id: sales_head.head_id,
+            created_by: admin_id,
+            debit: total_credit_amount,
+            credit: 0,
+            description: `Sale for remove room. Booking Ref ${booking.booking_reference}`,
+            voucher_date: today,
+            voucher_no: booking.voucher_no,
+            hotel_code,
+          },
+        ]);
       }
 
       /***********************************************************************
@@ -847,6 +969,35 @@ export class ReservationService extends AbstractServices {
           );
         }
         await hotelInvModel.insertInFolioEntries(entries);
+
+        const newTotalAmount = entries.reduce(
+          (acc, cu) => acc + Number(cu.debit),
+          0
+        );
+
+        // acc voucher
+        await accountModel.insertAccVoucher([
+          {
+            acc_head_id: receivable_head.head_id,
+            created_by: admin_id,
+            debit: newTotalAmount,
+            credit: 0,
+            description: `Receivable for add new room in reservation. Booking Ref ${booking.booking_reference}`,
+            voucher_date: today,
+            voucher_no: booking.voucher_no,
+            hotel_code,
+          },
+          {
+            acc_head_id: sales_head.head_id,
+            created_by: admin_id,
+            debit: 0,
+            credit: newTotalAmount,
+            description: `Sales for add new room in reservation. Booking Ref ${booking.booking_reference}`,
+            voucher_date: today,
+            voucher_no: booking.voucher_no,
+            hotel_code,
+          },
+        ]);
       }
 
       const { total_debit } =
