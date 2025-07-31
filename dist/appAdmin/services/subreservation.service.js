@@ -517,7 +517,7 @@ class SubReservationService extends abstract_service_1.default {
             // insert in folio entries
             yield hotelInvModel.insertInFolioEntries(allEntries);
             // update room booking
-            yield reservationModel.updateRoomBooking({ total_amount: totalDebit }, hotel_code, booking_id);
+            yield reservationModel.updateRoomBooking({ total_amount: totalDebit, voucher_no: voucher_no1 }, hotel_code, booking_id);
             return {
                 childFolios: child.map((c) => ({
                     id: c.folioId,
@@ -734,7 +734,7 @@ class SubReservationService extends abstract_service_1.default {
             yield hotelInvModel.insertInFolioEntries(allEntries);
             /*  update booking total (only debits) */
             const totalDebit = child.reduce((s, c) => s + c.totalDebit, 0);
-            yield reservationModel.updateRoomBooking({ total_amount: totalDebit }, hotel_code, booking_id);
+            yield reservationModel.updateRoomBooking({ total_amount: totalDebit, voucher_no: voucher_no1 }, hotel_code, booking_id);
             return {
                 masterFolio,
                 childFolios: child.map((c) => ({

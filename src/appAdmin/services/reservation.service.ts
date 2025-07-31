@@ -780,10 +780,13 @@ export class ReservationService extends AbstractServices {
         );
 
         console.log({ removedIDs });
+
+        const bookingRoomIds = roomsBeingRemoved.map((br) => br.id);
         // delete booking room guest
         const res = await reservationModel.deleteBookingRoomGuest({
-          booking_room_ids: removedIDs,
+          booking_room_ids: bookingRoomIds,
         });
+
         console.log({ res });
 
         // delete booking rooms

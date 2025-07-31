@@ -567,9 +567,10 @@ class ReservationService extends abstract_service_1.default {
                     const removedIDs = [...new Set(body.removed_rooms)];
                     const roomsBeingRemoved = booking_rooms.filter((br) => removedIDs.includes(br.room_id));
                     console.log({ removedIDs });
+                    const bookingRoomIds = roomsBeingRemoved.map((br) => br.id);
                     // delete booking room guest
                     const res = yield reservationModel.deleteBookingRoomGuest({
-                        booking_room_ids: removedIDs,
+                        booking_room_ids: bookingRoomIds,
                     });
                     console.log({ res });
                     // delete booking rooms

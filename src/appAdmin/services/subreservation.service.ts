@@ -712,7 +712,7 @@ export class SubReservationService extends AbstractServices {
 
     // update room booking
     await reservationModel.updateRoomBooking(
-      { total_amount: totalDebit },
+      { total_amount: totalDebit, voucher_no: voucher_no1 },
       hotel_code,
       booking_id
     );
@@ -989,7 +989,7 @@ export class SubReservationService extends AbstractServices {
     /*  update booking total (only debits) */
     const totalDebit = child.reduce((s, c) => s + c.totalDebit, 0);
     await reservationModel.updateRoomBooking(
-      { total_amount: totalDebit },
+      { total_amount: totalDebit, voucher_no: voucher_no1 },
       hotel_code,
       booking_id
     );
