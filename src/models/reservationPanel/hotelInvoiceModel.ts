@@ -110,6 +110,7 @@ class HotelInvoiceModel extends Schema {
     receipt_date: string;
     amount_paid: number;
     received_by: number;
+    acc_id: number;
     payment_method: string;
     notes?: string;
     voucher_no: string;
@@ -691,7 +692,6 @@ class HotelInvoiceModel extends Schema {
   }
 
   // ------------------ Money receipt -------------------//
-
   public async getMoneyReceiptByFolio({
     folio_id,
     hotel_code,
@@ -708,10 +708,12 @@ class HotelInvoiceModel extends Schema {
         "mr.amount_paid",
         "mr.payment_method",
         "mr.notes",
+        "ac.name as account_name",
         "ua.id as received_by_id",
         "ua.name as received_by_name"
       )
       .join("folio_money_receipt as fmr", "mr.id", "fmr.money_receipt_id")
+      .joinRaw("left join acc.accounts as ac on mr.acc_id =ac.id")
       .leftJoin("user_admin as ua", "mr.received_by", "ua.id")
       .where("fmr.folio_id", folio_id)
       .andWhere("mr.hotel_code", hotel_code);

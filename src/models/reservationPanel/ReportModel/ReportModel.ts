@@ -17,13 +17,14 @@ class ReportModel extends Schema {
     headIds,
     from_date,
     to_date,
+    hotel_code,
   }: AccTransactionParams): Promise<AccountJournalTransactions[]> {
     return await this.db(`${this.ACC_SCHEMA}.acc_vouchers AS av`)
       .select(
         "av.id",
         "av.acc_head_id",
         "av.voucher_no",
-        "av.voucher_date",
+        this.db.raw("DATE(av.voucher_date)"),
         "av.description",
         "av.debit",
         "av.credit",
@@ -50,6 +51,7 @@ class ReportModel extends Schema {
         "ag.code"
       )
       .where("av.is_deleted", false)
+      .andWhere("av.hotel_code", hotel_code)
       .andWhere((qb) => {
         if (Array.isArray(headIds) && headIds.length) {
           qb.whereIn("av.acc_head_id", headIds);
@@ -61,10 +63,11 @@ class ReportModel extends Schema {
             to_date,
           ]);
         }
-      });
+      })
+      .orderBy("av.id", "asc");
   }
 
-  public async getAccHeadInfo(head_id: idType) {
+  public async getAccHeadInfo(head_id: idType, hotel_code: number) {
     return await this.db("acc_heads AS ah")
       .withSchema(this.ACC_SCHEMA)
       .select(
@@ -76,13 +79,15 @@ class ReportModel extends Schema {
         "ah.hotel_code"
       )
       .where("id", head_id)
+      .andWhere("ah.hotel_code", hotel_code)
       .first();
   }
 
-  public async getAccHeads() {
+  public async getAccHeads(hotel_code: number) {
     return (await this.db("acc_heads AS ah")
       .withSchema(this.ACC_SCHEMA)
-      .select("ah.id", "ah.name", "ah.parent_id")) as {
+      .select("ah.id", "ah.name", "ah.parent_id")
+      .where("ah.hotel_code", hotel_code)) as {
       id: number;
       name: string;
       parent_id: number;

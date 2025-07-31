@@ -621,7 +621,7 @@ class ReservationService extends abstract_service_1.default {
                         {
                             acc_head_id: sales_head.head_id,
                             created_by: admin_id,
-                            debit: total_credit_amount,
+                            debit: total_debit_amount - total_credit_amount,
                             credit: 0,
                             description: `Sale for remove room. Booking Ref ${booking.booking_reference}`,
                             voucher_date: today,
@@ -879,7 +879,7 @@ class ReservationService extends abstract_service_1.default {
                         }
                     }
                 }
-                let newTotalAmount = folioEntries.reduce((ac, cu) => { var _a; return ac + ((_a = cu === null || cu === void 0 ? void 0 : cu.debit) !== null && _a !== void 0 ? _a : 0); }, 0);
+                let newTotalAmount = folioEntries.reduce((ac, cu) => { var _a; return ac + Number((_a = cu === null || cu === void 0 ? void 0 : cu.debit) !== null && _a !== void 0 ? _a : 0); }, 0);
                 const roomFolios = yield invoiceModel.getFoliosbySingleBooking({
                     booking_id,
                     hotel_code,
@@ -904,7 +904,7 @@ class ReservationService extends abstract_service_1.default {
                         if (fe.posting_type == "ROOM_CHARGE" ||
                             fe.posting_type == "VAT" ||
                             fe.posting_type == "SERVICE_CHARGE") {
-                            prevRoomAmount += fe.debit;
+                            prevRoomAmount += Number(fe.debit);
                             return fe;
                         }
                     })
@@ -967,27 +967,29 @@ class ReservationService extends abstract_service_1.default {
                 const actionText = isIncrease
                     ? "Increased Reservation Date"
                     : "Decreased Reservation Date";
-                const receivableEntry = {
-                    acc_head_id: receivable_head.head_id,
-                    created_by: admin_id,
-                    debit: isIncrease ? difference : 0,
-                    credit: isIncrease ? 0 : difference,
-                    description: `Receivable for ${actionText} of overall room booking ${booking.booking_reference}`,
-                    voucher_date: today,
-                    voucher_no: booking.voucher_no,
-                    hotel_code,
-                };
-                const salesEntry = {
-                    acc_head_id: sales_head.head_id,
-                    created_by: admin_id,
-                    debit: isIncrease ? 0 : difference,
-                    credit: isIncrease ? difference : 0,
-                    description: `Sales for ${actionText} of overall room booking ${booking.booking_reference}`,
-                    voucher_date: today,
-                    voucher_no: booking.voucher_no,
-                    hotel_code,
-                };
-                yield accountModel.insertAccVoucher([receivableEntry, salesEntry]);
+                if (difference !== 0) {
+                    const receivableEntry = {
+                        acc_head_id: receivable_head.head_id,
+                        created_by: admin_id,
+                        debit: isIncrease ? difference : 0,
+                        credit: isIncrease ? 0 : difference,
+                        description: `Receivable for ${actionText} of overall room booking ${booking.booking_reference}`,
+                        voucher_date: today,
+                        voucher_no: booking.voucher_no,
+                        hotel_code,
+                    };
+                    const salesEntry = {
+                        acc_head_id: sales_head.head_id,
+                        created_by: admin_id,
+                        debit: isIncrease ? 0 : difference,
+                        credit: isIncrease ? difference : 0,
+                        description: `Sales for ${actionText} of overall room booking ${booking.booking_reference}`,
+                        voucher_date: today,
+                        voucher_no: booking.voucher_no,
+                        hotel_code,
+                    };
+                    yield accountModel.insertAccVoucher([receivableEntry, salesEntry]);
+                }
                 const { total_debit } = yield invoiceModel.getFolioEntriesCalculationByBookingID({
                     hotel_code,
                     booking_id,
@@ -1822,6 +1824,7 @@ class ReservationService extends abstract_service_1.default {
                     req,
                     payment_date,
                     booking_ref: checkSingleFolio.booking_ref,
+                    booking_id: Number(checkSingleFolio.booking_id),
                 });
                 return {
                     success: true,
@@ -1855,6 +1858,7 @@ class ReservationService extends abstract_service_1.default {
                     remarks,
                     req,
                     payment_date,
+                    booking_id: Number(checkSingleFolio.booking_id),
                     booking_ref: checkSingleFolio.booking_ref,
                 });
                 return {
@@ -1878,6 +1882,8 @@ class ReservationService extends abstract_service_1.default {
                         message: this.ResMsg.HTTP_NOT_FOUND,
                     };
                 }
+                // check booking
+                const booking = yield this.Model.reservationModel(trx).getSingleBooking(req.hotel_admin.hotel_code, Number(checkSingleFolio.booking_id));
                 yield this.Model.hotelInvoiceModel().insertInFolioEntries({
                     debit: -amount,
                     credit: 0,
@@ -1885,7 +1891,6 @@ class ReservationService extends abstract_service_1.default {
                     posting_type: "Adjustment",
                     description: remarks,
                 });
-                const helper = new helperFunction_1.HelperFunction();
                 const hotelModel = this.Model.HotelModel(trx);
                 const heads = yield hotelModel.getHotelAccConfig(req.hotel_admin.hotel_code, ["RECEIVABLE_HEAD_ID", "SALES_HEAD_ID"]);
                 const receivable_head = heads.find((h) => h.config === "RECEIVABLE_HEAD_ID");
@@ -1896,30 +1901,30 @@ class ReservationService extends abstract_service_1.default {
                 if (!sales_head) {
                     throw new Error("SALES_HEAD_ID not configured for this hotel");
                 }
-                const voucher_no1 = yield helper.generateVoucherNo("JV", trx);
                 const today = new Date().toISOString().split("T")[0];
-                yield this.Model.accountModel(trx).insertAccVoucher([
-                    {
-                        acc_head_id: receivable_head.head_id,
-                        created_by: req.hotel_admin.id,
-                        debit: 0,
-                        credit: amount,
-                        description: `Receivable for Adjusted amount, Booking Ref ${checkSingleFolio.booking_ref}`,
-                        voucher_date: today,
-                        voucher_no: voucher_no1,
-                        hotel_code: req.hotel_admin.hotel_code,
-                    },
-                    {
-                        acc_head_id: sales_head.head_id,
-                        created_by: req.hotel_admin.id,
-                        debit: amount,
-                        credit: 0,
-                        description: `Sales for Adjusted amount, Booking ref ${checkSingleFolio.booking_ref}`,
-                        voucher_date: today,
-                        voucher_no: voucher_no1,
-                        hotel_code: req.hotel_admin.hotel_code,
-                    },
-                ]);
+                if (booking === null || booking === void 0 ? void 0 : booking.voucher_no)
+                    yield this.Model.accountModel(trx).insertAccVoucher([
+                        {
+                            acc_head_id: receivable_head.head_id,
+                            created_by: req.hotel_admin.id,
+                            debit: 0,
+                            credit: amount,
+                            description: `Receivable for Adjusted amount, Booking Ref ${checkSingleFolio.booking_ref}`,
+                            voucher_date: today,
+                            voucher_no: booking === null || booking === void 0 ? void 0 : booking.voucher_no,
+                            hotel_code: req.hotel_admin.hotel_code,
+                        },
+                        {
+                            acc_head_id: sales_head.head_id,
+                            created_by: req.hotel_admin.id,
+                            debit: amount,
+                            credit: 0,
+                            description: `Sales for Adjusted amount, Booking ref ${checkSingleFolio.booking_ref}`,
+                            voucher_date: today,
+                            voucher_no: booking === null || booking === void 0 ? void 0 : booking.voucher_no,
+                            hotel_code: req.hotel_admin.hotel_code,
+                        },
+                    ]);
                 return {
                     success: true,
                     code: this.StatusCode.HTTP_OK,
@@ -1941,7 +1946,7 @@ class ReservationService extends abstract_service_1.default {
                         message: this.ResMsg.HTTP_NOT_FOUND,
                     };
                 }
-                yield this.Model.hotelInvoiceModel().insertInFolioEntries({
+                yield this.Model.hotelInvoiceModel(trx).insertInFolioEntries({
                     debit: amount,
                     folio_id: folio_id,
                     posting_type: "CHARGE",
@@ -1959,30 +1964,33 @@ class ReservationService extends abstract_service_1.default {
                 if (!sales_head) {
                     throw new Error("RECEIVABLE_HEAD_ID not configured for this hotel");
                 }
-                const voucher_no1 = yield helper.generateVoucherNo("JV", trx);
+                // const voucher_no1 = await helper.generateVoucherNo("JV", trx);
+                // check booking
+                const booking = yield this.Model.reservationModel(trx).getSingleBooking(req.hotel_admin.hotel_code, Number(checkSingleFolio.booking_id));
                 const today = new Date().toISOString().split("T")[0];
-                yield this.Model.accountModel(trx).insertAccVoucher([
-                    {
-                        acc_head_id: receivable_head.head_id,
-                        created_by: req.hotel_admin.id,
-                        debit: amount,
-                        credit: 0,
-                        description: `Receivable for ADD ITEM in ${checkSingleFolio.booking_ref}`,
-                        voucher_date: today,
-                        voucher_no: voucher_no1,
-                        hotel_code: req.hotel_admin.hotel_code,
-                    },
-                    {
-                        acc_head_id: sales_head.head_id,
-                        created_by: req.hotel_admin.id,
-                        debit: 0,
-                        credit: amount,
-                        description: `Sales for ADD ITEM in ${checkSingleFolio.booking_ref}`,
-                        voucher_date: today,
-                        voucher_no: voucher_no1,
-                        hotel_code: req.hotel_admin.hotel_code,
-                    },
-                ]);
+                if (booking === null || booking === void 0 ? void 0 : booking.voucher_no)
+                    yield this.Model.accountModel(trx).insertAccVoucher([
+                        {
+                            acc_head_id: receivable_head.head_id,
+                            created_by: req.hotel_admin.id,
+                            debit: amount,
+                            credit: 0,
+                            description: `Receivable for ADD ITEM in ${checkSingleFolio.booking_ref}`,
+                            voucher_date: today,
+                            voucher_no: booking.voucher_no,
+                            hotel_code: req.hotel_admin.hotel_code,
+                        },
+                        {
+                            acc_head_id: sales_head.head_id,
+                            created_by: req.hotel_admin.id,
+                            debit: 0,
+                            credit: amount,
+                            description: `Sales for ADD ITEM in ${checkSingleFolio.booking_ref}`,
+                            voucher_date: today,
+                            voucher_no: booking.voucher_no,
+                            hotel_code: req.hotel_admin.hotel_code,
+                        },
+                    ]);
                 return {
                     success: true,
                     code: this.StatusCode.HTTP_OK,

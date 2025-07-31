@@ -22,8 +22,7 @@ class AccountReportService extends abstract_service_1.default {
         //<sabbir.m360ict@gmail.com> ---- Sabbir Hosen;
         // Account Reports
         this.getJournalReport = (req) => __awaiter(this, void 0, void 0, function* () {
-            const conn = this.Model.reportModel();
-            const journals = yield conn.getAccountsTransactions(req.query);
+            const journals = yield this.Model.reportModel().getAccountsTransactions(Object.assign(Object.assign({}, req.query), { hotel_code: req.hotel_admin.hotel_code }));
             const data = account_utils_1.default.formatJournal(journals);
             return {
                 success: true,
@@ -34,10 +33,11 @@ class AccountReportService extends abstract_service_1.default {
         });
         this.getAccLedger = (req) => __awaiter(this, void 0, void 0, function* () {
             const { from_date, to_date, head_id } = req.query;
+            const hotel_code = req.hotel_admin.hotel_code;
             const headSet = new Set();
             const headIds = [];
-            const conn = this.Model.reportModel();
-            const headInfo = yield conn.getAccHeadInfo(+head_id);
+            const model = this.Model.reportModel();
+            const headInfo = yield model.getAccHeadInfo(Number(head_id), hotel_code);
             if (!headInfo) {
                 return {
                     success: false,
@@ -45,19 +45,20 @@ class AccountReportService extends abstract_service_1.default {
                     message: "No Account Found",
                 };
             }
-            headIds.push(+head_id);
-            headSet.add(+head_id);
-            const heads = yield conn.getAccHeads();
+            headIds.push(Number(head_id));
+            headSet.add(Number(head_id));
+            const heads = yield model.getAccHeads(hotel_code);
             for (const head of heads) {
                 if (headSet.has(head.parent_id)) {
                     headSet.add(head.id);
                     headIds.push(head.id);
                 }
             }
-            const ledgers = yield conn.getAccountsTransactions({
+            const ledgers = yield model.getAccountsTransactions({
                 headIds,
                 from_date,
                 to_date,
+                hotel_code: req.hotel_admin.hotel_code,
             });
             return {
                 success: true,
@@ -84,6 +85,7 @@ class AccountReportService extends abstract_service_1.default {
                 from_date,
                 to_date,
                 group_code: constants_1.INCOME_GROUP,
+                hotel_code: req.hotel_admin.hotel_code,
             });
             const formattedIncomeData = account_utils_1.default.formatTrialBalance(incomeData);
             let incomeDebit = 0;
@@ -96,6 +98,7 @@ class AccountReportService extends abstract_service_1.default {
                 group_code: constants_1.EXPENSE_GROUP,
                 from_date,
                 to_date,
+                hotel_code: req.hotel_admin.hotel_code,
             });
             const formattedExpenseData = account_utils_1.default.formatTrialBalance(expenseData);
             let expenseDebit = 0;

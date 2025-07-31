@@ -18,10 +18,10 @@ class ReportModel extends schema_1.default {
         super();
         this.db = db;
     }
-    getAccountsTransactions({ headIds, from_date, to_date, }) {
+    getAccountsTransactions({ headIds, from_date, to_date, hotel_code, }) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db(`${this.ACC_SCHEMA}.acc_vouchers AS av`)
-                .select("av.id", "av.acc_head_id", "av.voucher_no", "av.voucher_date", "av.description", "av.debit", "av.credit", "ah.code AS acc_head_code", "ah.name AS acc_head_name", "ah.parent_id", "aph.name AS parent_acc_head_name", "ua.name AS created_by", "ag.name AS group_name", "av.created_at")
+                .select("av.id", "av.acc_head_id", "av.voucher_no", this.db.raw("DATE(av.voucher_date)"), "av.description", "av.debit", "av.credit", "ah.code AS acc_head_code", "ah.name AS acc_head_name", "ah.parent_id", "aph.name AS parent_acc_head_name", "ua.name AS created_by", "ag.name AS group_name", "av.created_at")
                 .leftJoin(`${this.ACC_SCHEMA}.acc_heads AS ah`, "av.acc_head_id", "ah.id")
                 .leftJoin(`${this.ACC_SCHEMA}.acc_heads AS aph`, {
                 "aph.id": "ah.parent_id",
@@ -29,6 +29,7 @@ class ReportModel extends schema_1.default {
                 .leftJoin(`${this.RESERVATION_SCHEMA}.user_admin AS ua`, "av.created_by", "ua.id")
                 .leftJoin(`${this.ACC_SCHEMA}.acc_groups AS ag`, "ah.group_code", "ag.code")
                 .where("av.is_deleted", false)
+                .andWhere("av.hotel_code", hotel_code)
                 .andWhere((qb) => {
                 if (Array.isArray(headIds) && headIds.length) {
                     qb.whereIn("av.acc_head_id", headIds);
@@ -39,23 +40,26 @@ class ReportModel extends schema_1.default {
                         to_date,
                     ]);
                 }
-            });
+            })
+                .orderBy("av.id", "asc");
         });
     }
-    getAccHeadInfo(head_id) {
+    getAccHeadInfo(head_id, hotel_code) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("acc_heads AS ah")
                 .withSchema(this.ACC_SCHEMA)
                 .select("ah.id", "ah.parent_id", "ah.code", "ah.group_code", "ah.name", "ah.hotel_code")
                 .where("id", head_id)
+                .andWhere("ah.hotel_code", hotel_code)
                 .first();
         });
     }
-    getAccHeads() {
+    getAccHeads(hotel_code) {
         return __awaiter(this, void 0, void 0, function* () {
             return (yield this.db("acc_heads AS ah")
                 .withSchema(this.ACC_SCHEMA)
-                .select("ah.id", "ah.name", "ah.parent_id"));
+                .select("ah.id", "ah.name", "ah.parent_id")
+                .where("ah.hotel_code", hotel_code));
         });
     }
     getTrialBalanceReport({ from_date, to_date, group_code, }) {

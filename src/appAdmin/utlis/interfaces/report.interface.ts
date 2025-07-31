@@ -3,6 +3,7 @@ export type AccTransactionParams = {
   to_date?: string;
   headIds?: number[] | null;
   group_code?: string;
+  hotel_code: number;
 };
 
 export interface AccountJournalTransactions {

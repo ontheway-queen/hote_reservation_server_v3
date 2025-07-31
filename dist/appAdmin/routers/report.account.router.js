@@ -12,8 +12,6 @@ class AccountReportRouter extends abstract_router_1.default {
         this.callRouter();
     }
     callRouter() {
-        //<sabbir.m360ict@gmail.com> ---- Sabbir Hosen;
-        // Account Reports
         this.router.get("/journal", this.reportController.getJournalReport);
         this.router.get("/ledger", this.reportController.getAccLedger);
         this.router.get("/trail-balance", this.reportController.getTrialBalanceReport);

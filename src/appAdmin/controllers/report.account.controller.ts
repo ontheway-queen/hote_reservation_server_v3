@@ -10,9 +10,6 @@ class AccountReportController extends AbstractController {
     super();
   }
 
-  //<sabbir.m360ict@gmail.com> ---- Sabbir Hosen;
-  // Account Reports
-
   public getJournalReport = this.asyncWrapper.wrap(
     { querySchema: this.reportValidator.accountJournalReportQueryValidator },
     async (req: Request, res: Response) => {

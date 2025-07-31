@@ -23,9 +23,10 @@ export class AccountReportService extends AbstractServices {
   // Account Reports
 
   public getJournalReport = async (req: Request) => {
-    const conn = this.Model.reportModel();
-
-    const journals = await conn.getAccountsTransactions(req.query);
+    const journals = await this.Model.reportModel().getAccountsTransactions({
+      ...req.query,
+      hotel_code: req.hotel_admin.hotel_code,
+    });
 
     const data = ReportUtils.formatJournal(journals);
 
@@ -44,11 +45,14 @@ export class AccountReportService extends AbstractServices {
       head_id: string;
     };
 
+    const hotel_code = req.hotel_admin.hotel_code;
+
     const headSet = new Set<number>();
+
     const headIds: number[] = [];
 
-    const conn = this.Model.reportModel();
-    const headInfo = await conn.getAccHeadInfo(+head_id);
+    const model = this.Model.reportModel();
+    const headInfo = await model.getAccHeadInfo(Number(head_id), hotel_code);
     if (!headInfo) {
       return {
         success: false,
@@ -57,9 +61,9 @@ export class AccountReportService extends AbstractServices {
       };
     }
 
-    headIds.push(+head_id);
-    headSet.add(+head_id);
-    const heads = await conn.getAccHeads();
+    headIds.push(Number(head_id));
+    headSet.add(Number(head_id));
+    const heads = await model.getAccHeads(hotel_code);
 
     for (const head of heads) {
       if (headSet.has(head.parent_id)) {
@@ -68,10 +72,11 @@ export class AccountReportService extends AbstractServices {
       }
     }
 
-    const ledgers = await conn.getAccountsTransactions({
+    const ledgers = await model.getAccountsTransactions({
       headIds,
       from_date,
       to_date,
+      hotel_code: req.hotel_admin.hotel_code,
     });
 
     return {
@@ -105,6 +110,7 @@ export class AccountReportService extends AbstractServices {
       from_date,
       to_date,
       group_code: INCOME_GROUP,
+      hotel_code: req.hotel_admin.hotel_code,
     });
 
     const formattedIncomeData = ReportUtils.formatTrialBalance(incomeData);
@@ -120,6 +126,7 @@ export class AccountReportService extends AbstractServices {
       group_code: EXPENSE_GROUP,
       from_date,
       to_date,
+      hotel_code: req.hotel_admin.hotel_code,
     });
 
     const formattedExpenseData = ReportUtils.formatTrialBalance(expenseData);

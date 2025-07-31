@@ -31,8 +31,6 @@ class AccountReportController extends abstract_controller_1.default {
         super();
         this.accountReportService = new report_account_service_1.default();
         this.reportValidator = new reports_validator_1.default();
-        //<sabbir.m360ict@gmail.com> ---- Sabbir Hosen;
-        // Account Reports
         this.getJournalReport = this.asyncWrapper.wrap({ querySchema: this.reportValidator.accountJournalReportQueryValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
             const _a = yield this.accountReportService.getJournalReport(req), { code } = _a, data = __rest(_a, ["code"]);
             res.status(code).json(data);
