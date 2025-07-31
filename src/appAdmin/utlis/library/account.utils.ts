@@ -16,10 +16,19 @@ export default class ReportUtils {
   ): IStructuredJournal[] => {
     const structureData: IStructuredJournal[] = [];
 
+    const heads = {
+      "1000": "Assets",
+      "2000": "Liabilities",
+      "3000": "Equity",
+      "4000": "Income",
+      "5000": "Expenses",
+    };
+
     for (const [index, item] of payload.entries()) {
       const {
         acc_head_code,
         acc_head_name,
+        group_name,
         parent_acc_head_name,
         voucher_date,
         credit,
@@ -37,7 +46,7 @@ export default class ReportUtils {
       if (found) {
         if (Number(credit) === 0) {
           found.entries.debits.push({
-            parenHead: parent_acc_head_name,
+            parenHead: parent_acc_head_name || group_name,
             acc_head_name,
             acc_head_code,
             debit: debit,
@@ -45,7 +54,7 @@ export default class ReportUtils {
           });
         } else {
           found.entries.credits.push({
-            parenHead: parent_acc_head_name,
+            parenHead: parent_acc_head_name || group_name,
             acc_head_name,
             acc_head_code,
             debit: debit,
@@ -64,7 +73,7 @@ export default class ReportUtils {
             entries: {
               debits: [
                 {
-                  parenHead: parent_acc_head_name,
+                  parenHead: parent_acc_head_name || group_name,
                   acc_head_name,
                   acc_head_code,
                   debit: debit,
@@ -86,7 +95,7 @@ export default class ReportUtils {
               debits: [],
               credits: [
                 {
-                  parenHead: parent_acc_head_name,
+                  parenHead: parent_acc_head_name || group_name,
                   acc_head_name,
                   acc_head_code,
                   debit: debit,

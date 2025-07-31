@@ -61,13 +61,20 @@ class ReportUtils {
 }
 ReportUtils.formatJournal = (payload) => {
     const structureData = [];
+    const heads = {
+        "1000": "Assets",
+        "2000": "Liabilities",
+        "3000": "Equity",
+        "4000": "Income",
+        "5000": "Expenses",
+    };
     for (const [index, item] of payload.entries()) {
-        const { acc_head_code, acc_head_name, parent_acc_head_name, voucher_date, credit, debit, description, created_at, created_by, voucher_no, } = item;
+        const { acc_head_code, acc_head_name, group_name, parent_acc_head_name, voucher_date, credit, debit, description, created_at, created_by, voucher_no, } = item;
         const found = structureData.find((sItem) => voucher_no === sItem.voucher_no);
         if (found) {
             if (Number(credit) === 0) {
                 found.entries.debits.push({
-                    parenHead: parent_acc_head_name,
+                    parenHead: parent_acc_head_name || group_name,
                     acc_head_name,
                     acc_head_code,
                     debit: debit,
@@ -76,7 +83,7 @@ ReportUtils.formatJournal = (payload) => {
             }
             else {
                 found.entries.credits.push({
-                    parenHead: parent_acc_head_name,
+                    parenHead: parent_acc_head_name || group_name,
                     acc_head_name,
                     acc_head_code,
                     debit: debit,
@@ -96,7 +103,7 @@ ReportUtils.formatJournal = (payload) => {
                     entries: {
                         debits: [
                             {
-                                parenHead: parent_acc_head_name,
+                                parenHead: parent_acc_head_name || group_name,
                                 acc_head_name,
                                 acc_head_code,
                                 debit: debit,
@@ -119,7 +126,7 @@ ReportUtils.formatJournal = (payload) => {
                         debits: [],
                         credits: [
                             {
-                                parenHead: parent_acc_head_name,
+                                parenHead: parent_acc_head_name || group_name,
                                 acc_head_name,
                                 acc_head_code,
                                 debit: debit,
