@@ -2,15 +2,19 @@ import AbstractRouter from "../../abstarcts/abstract.router";
 import MoneyRecieptController from "../controllers/money-reciept.controller";
 
 class MoneyRecieptRouter extends AbstractRouter {
-  public moneyRecieptController;
+  public controller;
 
   constructor() {
     super();
-    this.moneyRecieptController = new MoneyRecieptController();
+    this.controller = new MoneyRecieptController();
     this.callRouter();
   }
 
-  private callRouter() {}
+  private callRouter() {
+    this.router
+      .route("/by-folio-id/:id")
+      .get(this.controller.getMoneyReceiptByFolio);
+  }
 }
 
 export default MoneyRecieptRouter;

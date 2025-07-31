@@ -387,8 +387,10 @@ class RAdministrationModel extends Schema {
           'fax', hcd.fax,
           'address',h.address,
           'website_url', hcd.website_url,
+          'optional_phone1',hcd.optional_phone1,
           'email', hcd.email,
-          'logo',hcd.logo
+          'logo',hcd.logo,
+          'bin',h.bin
         ) as hotel_contact_details
       `)
       )

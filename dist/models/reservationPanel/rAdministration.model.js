@@ -248,8 +248,10 @@ class RAdministrationModel extends schema_1.default {
           'fax', hcd.fax,
           'address',h.address,
           'website_url', hcd.website_url,
+          'optional_phone1',hcd.optional_phone1,
           'email', hcd.email,
-          'logo',hcd.logo
+          'logo',hcd.logo,
+          'bin',h.bin
         ) as hotel_contact_details
       `))
                 .join("hotels as h", "ua.hotel_code", "h.hotel_code")
