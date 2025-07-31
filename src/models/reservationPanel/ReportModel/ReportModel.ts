@@ -2,6 +2,7 @@ import { idType } from "../../../appAdmin/utlis/interfaces/doubleEntry.interface
 import {
   AccountJournalTransactions,
   AccTransactionParams,
+  AccTransactionPayload,
 } from "../../../appAdmin/utlis/interfaces/report.interface";
 import { TDB } from "../../../common/types/commontypes";
 import Schema from "../../../utils/miscellaneous/schema";
@@ -18,7 +19,7 @@ class ReportModel extends Schema {
     from_date,
     to_date,
     hotel_code,
-  }: AccTransactionParams): Promise<AccountJournalTransactions[]> {
+  }: AccTransactionPayload): Promise<AccountJournalTransactions[]> {
     return await this.db(`${this.ACC_SCHEMA}.acc_vouchers AS av`)
       .select(
         "av.id",
@@ -98,12 +99,34 @@ class ReportModel extends Schema {
     from_date,
     to_date,
     group_code,
-  }: AccTransactionParams) {
-    let subQueryDebit = `(SELECT SUM(COALESCE(av.debit, 0)) from ${this.ACC_SCHEMA}.acc_vouchers AS av where av.acc_head_id = ah.id and av.is_deleted = false) as debit`;
-    let subQueryCredit = `(SELECT SUM(COALESCE(av.credit, 0)) from ${this.ACC_SCHEMA}.acc_vouchers AS av where av.acc_head_id = ah.id and av.is_deleted = false) as credit`;
+    hotel_code,
+  }: AccTransactionPayload) {
+    let subQueryDebit = `(SELECT SUM(COALESCE(av.debit, 0)) 
+    FROM ${this.ACC_SCHEMA}.acc_vouchers AS av 
+    WHERE av.acc_head_id = ah.id 
+      AND av.is_deleted = false 
+      AND av.hotel_code = ${hotel_code}) AS debit`;
+
+    let subQueryCredit = `(SELECT SUM(COALESCE(av.credit, 0)) 
+    FROM ${this.ACC_SCHEMA}.acc_vouchers AS av 
+    WHERE av.acc_head_id = ah.id 
+      AND av.is_deleted = false 
+      AND av.hotel_code = ${hotel_code}) AS credit`;
+
     if (from_date && to_date) {
-      subQueryDebit = `(SELECT SUM(COALESCE(av.debit, 0)) from ${this.ACC_SCHEMA}.acc_vouchers AS av where av.acc_head_id = ah.id and av.is_deleted = false and av.voucher_date between '${from_date}' and '${to_date}') as debit`;
-      subQueryCredit = `(SELECT SUM(COALESCE(av.credit, 0)) from ${this.ACC_SCHEMA}.acc_vouchers AS av where av.acc_head_id = ah.id and av.is_deleted = false and av.voucher_date between '${from_date}' and '${to_date}') as credit`;
+      subQueryDebit = `(SELECT SUM(COALESCE(av.debit, 0)) 
+      FROM ${this.ACC_SCHEMA}.acc_vouchers AS av 
+      WHERE av.acc_head_id = ah.id 
+        AND av.is_deleted = false 
+        AND av.hotel_code = ${hotel_code} 
+        AND av.voucher_date BETWEEN '${from_date}' AND '${to_date}') AS debit`;
+
+      subQueryCredit = `(SELECT SUM(COALESCE(av.credit, 0)) 
+      FROM ${this.ACC_SCHEMA}.acc_vouchers AS av 
+      WHERE av.acc_head_id = ah.id 
+        AND av.is_deleted = false 
+        AND av.hotel_code = ${hotel_code} 
+        AND av.voucher_date BETWEEN '${from_date}' AND '${to_date}') AS credit`;
     }
 
     return await this.db("acc_heads AS ah")
@@ -118,7 +141,9 @@ class ReportModel extends Schema {
         this.db.raw(subQueryDebit),
         this.db.raw(subQueryCredit)
       )
+
       .leftJoin("acc_groups AS ag", { "ag.code": "ah.group_code" })
+      .where("ah.hotel_code", hotel_code)
       .where((qb) => {
         if (group_code) {
           qb.andWhere("ah.group_code", group_code);
@@ -126,7 +151,7 @@ class ReportModel extends Schema {
       });
   }
 
-  public async getAccHeadsForSelect() {
+  public async getAccHeadsForSelect(hotel_code: number) {
     return await this.db("acc_heads AS ah")
       .withSchema(this.ACC_SCHEMA)
       .select(
@@ -140,6 +165,7 @@ class ReportModel extends Schema {
       )
       .leftJoin("acc_heads AS aph", { "aph.id": "ah.parent_id" })
       .where("ah.is_deleted", 0)
+      .andWhere("ah.hotel_code", hotel_code)
       .andWhere("ah.is_active", 1)
       .orderBy("ah.id", "asc");
   }

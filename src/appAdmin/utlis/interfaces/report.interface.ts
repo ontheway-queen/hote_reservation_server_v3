@@ -3,6 +3,12 @@ export type AccTransactionParams = {
   to_date?: string;
   headIds?: number[] | null;
   group_code?: string;
+};
+export type AccTransactionPayload = {
+  from_date?: string;
+  to_date?: string;
+  headIds?: number[] | null;
+  group_code?: string;
   hotel_code: number;
 };
 

@@ -19,8 +19,6 @@ const constants_1 = require("../../utils/miscellaneous/constants");
 class AccountReportService extends abstract_service_1.default {
     constructor() {
         super();
-        //<sabbir.m360ict@gmail.com> ---- Sabbir Hosen;
-        // Account Reports
         this.getJournalReport = (req) => __awaiter(this, void 0, void 0, function* () {
             const journals = yield this.Model.reportModel().getAccountsTransactions(Object.assign(Object.assign({}, req.query), { hotel_code: req.hotel_admin.hotel_code }));
             const data = account_utils_1.default.formatJournal(journals);
@@ -68,8 +66,7 @@ class AccountReportService extends abstract_service_1.default {
             };
         });
         this.getTrialBalanceReport = (req) => __awaiter(this, void 0, void 0, function* () {
-            const conn = this.Model.reportModel();
-            const payload = yield conn.getTrialBalanceReport(req.query);
+            const payload = yield this.Model.reportModel().getTrialBalanceReport(Object.assign(Object.assign({}, req.query), { hotel_code: req.hotel_admin.hotel_code }));
             const data = account_utils_1.default.formatTrialBalance(payload);
             return {
                 success: true,
@@ -80,8 +77,8 @@ class AccountReportService extends abstract_service_1.default {
         });
         this.getIncomeStatement = (req) => __awaiter(this, void 0, void 0, function* () {
             const { from_date, to_date } = req.query;
-            const conn = this.Model.reportModel();
-            const incomeData = yield conn.getTrialBalanceReport({
+            const model = this.Model.reportModel();
+            const incomeData = yield model.getTrialBalanceReport({
                 from_date,
                 to_date,
                 group_code: constants_1.INCOME_GROUP,
@@ -94,7 +91,7 @@ class AccountReportService extends abstract_service_1.default {
                 incomeDebit += item.debit_balance;
                 incomeCredit += item.credit_balance;
             });
-            const expenseData = yield conn.getTrialBalanceReport({
+            const expenseData = yield model.getTrialBalanceReport({
                 group_code: constants_1.EXPENSE_GROUP,
                 from_date,
                 to_date,
@@ -128,7 +125,7 @@ class AccountReportService extends abstract_service_1.default {
         });
         this.getBalanceSheet = (req) => __awaiter(this, void 0, void 0, function* () {
             const conn = this.Model.reportModel();
-            const data = yield conn.getTrialBalanceReport(req.query);
+            const data = yield conn.getTrialBalanceReport(Object.assign(Object.assign({}, req.query), { hotel_code: req.hotel_admin.hotel_code }));
             const formattedData = account_utils_1.default.formatTrialBalance(data);
             const assets = [];
             const liabilities = [];
@@ -171,8 +168,8 @@ class AccountReportService extends abstract_service_1.default {
             };
         });
         this.getAccHeadsForSelect = (req) => __awaiter(this, void 0, void 0, function* () {
-            const conn = this.Model.reportModel();
-            const data = yield conn.getAccHeadsForSelect();
+            const model = this.Model.reportModel();
+            const data = yield model.getAccHeadsForSelect(req.hotel_admin.hotel_code);
             const headMap = new Map();
             // Step 2: Populate the map with heads
             for (const item of data) {

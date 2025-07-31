@@ -19,9 +19,6 @@ export class AccountReportService extends AbstractServices {
     super();
   }
 
-  //<sabbir.m360ict@gmail.com> ---- Sabbir Hosen;
-  // Account Reports
-
   public getJournalReport = async (req: Request) => {
     const journals = await this.Model.reportModel().getAccountsTransactions({
       ...req.query,
@@ -88,9 +85,10 @@ export class AccountReportService extends AbstractServices {
   };
 
   public getTrialBalanceReport = async (req: Request) => {
-    const conn = this.Model.reportModel();
-
-    const payload = await conn.getTrialBalanceReport(req.query);
+    const payload = await this.Model.reportModel().getTrialBalanceReport({
+      ...req.query,
+      hotel_code: req.hotel_admin.hotel_code,
+    });
 
     const data = ReportUtils.formatTrialBalance(payload);
 
@@ -104,9 +102,9 @@ export class AccountReportService extends AbstractServices {
 
   public getIncomeStatement = async (req: Request) => {
     const { from_date, to_date } = req.query as AccTransactionParams;
-    const conn = this.Model.reportModel();
+    const model = this.Model.reportModel();
 
-    const incomeData = await conn.getTrialBalanceReport({
+    const incomeData = await model.getTrialBalanceReport({
       from_date,
       to_date,
       group_code: INCOME_GROUP,
@@ -122,7 +120,7 @@ export class AccountReportService extends AbstractServices {
       incomeCredit += item.credit_balance;
     });
 
-    const expenseData = await conn.getTrialBalanceReport({
+    const expenseData = await model.getTrialBalanceReport({
       group_code: EXPENSE_GROUP,
       from_date,
       to_date,
@@ -162,7 +160,10 @@ export class AccountReportService extends AbstractServices {
   public getBalanceSheet = async (req: Request) => {
     const conn = this.Model.reportModel();
 
-    const data = await conn.getTrialBalanceReport(req.query);
+    const data = await conn.getTrialBalanceReport({
+      ...req.query,
+      hotel_code: req.hotel_admin.hotel_code,
+    });
 
     const formattedData = ReportUtils.formatTrialBalance(data);
 
@@ -205,9 +206,9 @@ export class AccountReportService extends AbstractServices {
   };
 
   public getAccHeadsForSelect = async (req: Request) => {
-    const conn = this.Model.reportModel();
+    const model = this.Model.reportModel();
 
-    const data = await conn.getAccHeadsForSelect();
+    const data = await model.getAccHeadsForSelect(req.hotel_admin.hotel_code);
 
     const headMap = new Map<number, AccountHead>();
 
