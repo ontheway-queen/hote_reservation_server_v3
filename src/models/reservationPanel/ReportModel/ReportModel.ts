@@ -32,6 +32,7 @@ class ReportModel extends Schema {
         "ah.parent_id",
         "aph.name AS parent_acc_head_name",
         "ua.name AS created_by",
+        "ag.name AS group_name",
         "av.created_at"
       )
       .leftJoin(`${this.ACC_SCHEMA}.acc_heads AS ah`, "av.acc_head_id", "ah.id")
@@ -42,6 +43,11 @@ class ReportModel extends Schema {
         `${this.RESERVATION_SCHEMA}.user_admin AS ua`,
         "av.created_by",
         "ua.id"
+      )
+      .leftJoin(
+        `${this.ACC_SCHEMA}.acc_groups AS ag`,
+        "ah.group_code",
+        "ag.code"
       )
       .where("av.is_deleted", false)
       .andWhere((qb) => {

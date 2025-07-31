@@ -21,12 +21,13 @@ class ReportModel extends schema_1.default {
     getAccountsTransactions({ headIds, from_date, to_date, }) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db(`${this.ACC_SCHEMA}.acc_vouchers AS av`)
-                .select("av.id", "av.acc_head_id", "av.voucher_no", "av.voucher_date", "av.description", "av.debit", "av.credit", "ah.code AS acc_head_code", "ah.name AS acc_head_name", "ah.parent_id", "aph.name AS parent_acc_head_name", "ua.name AS created_by", "av.created_at")
+                .select("av.id", "av.acc_head_id", "av.voucher_no", "av.voucher_date", "av.description", "av.debit", "av.credit", "ah.code AS acc_head_code", "ah.name AS acc_head_name", "ah.parent_id", "aph.name AS parent_acc_head_name", "ua.name AS created_by", "ag.name AS group_name", "av.created_at")
                 .leftJoin(`${this.ACC_SCHEMA}.acc_heads AS ah`, "av.acc_head_id", "ah.id")
                 .leftJoin(`${this.ACC_SCHEMA}.acc_heads AS aph`, {
                 "aph.id": "ah.parent_id",
             })
                 .leftJoin(`${this.RESERVATION_SCHEMA}.user_admin AS ua`, "av.created_by", "ua.id")
+                .leftJoin(`${this.ACC_SCHEMA}.acc_groups AS ag`, "ah.group_code", "ag.code")
                 .where("av.is_deleted", false)
                 .andWhere((qb) => {
                 if (Array.isArray(headIds) && headIds.length) {

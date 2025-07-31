@@ -15,6 +15,7 @@ export interface AccountJournalTransactions {
   credit: number;
   acc_head_code: string;
   acc_head_name: string;
+  group_name: string;
   parent_id: number;
   parent_acc_head_name: string;
   created_by: string;
