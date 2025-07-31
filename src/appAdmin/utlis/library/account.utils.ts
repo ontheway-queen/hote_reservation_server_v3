@@ -31,7 +31,7 @@ export default class ReportUtils {
       } = item;
 
       const found = structureData.find(
-        (sItem) => voucher_date === sItem.voucher_no
+        (sItem) => voucher_no === sItem.voucher_no
       );
 
       if (found) {

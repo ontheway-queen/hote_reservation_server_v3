@@ -63,7 +63,7 @@ ReportUtils.formatJournal = (payload) => {
     const structureData = [];
     for (const [index, item] of payload.entries()) {
         const { acc_head_code, acc_head_name, parent_acc_head_name, voucher_date, credit, debit, description, created_at, created_by, voucher_no, } = item;
-        const found = structureData.find((sItem) => voucher_date === sItem.voucher_no);
+        const found = structureData.find((sItem) => voucher_no === sItem.voucher_no);
         if (found) {
             if (Number(credit) === 0) {
                 found.entries.debits.push({

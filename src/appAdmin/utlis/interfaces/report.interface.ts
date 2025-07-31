@@ -73,3 +73,14 @@ export interface AccountTrialBalance {
   balance: number;
   children?: AccountTrialBalance[];
 }
+
+export interface AccountHead {
+  head_id: number;
+  head_parent_id: number | null;
+  head_code: string;
+  head_group_code: string;
+  head_name: string;
+  parent_head_code: string | null;
+  parent_head_name: string | null;
+  children?: AccountHead[];
+}

@@ -26,6 +26,8 @@ class AccountReportRouter extends AbstractRouter {
     );
 
     this.router.get("/balance-sheet", this.reportController.getBalanceSheet);
+
+    this.router.get("/head-select", this.reportController.getAccHeadsForSelect);
   }
 }
 export default AccountReportRouter;

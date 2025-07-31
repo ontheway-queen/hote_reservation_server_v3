@@ -167,6 +167,46 @@ class AccountReportService extends abstract_service_1.default {
                 },
             };
         });
+        this.getAccHeadsForSelect = (req) => __awaiter(this, void 0, void 0, function* () {
+            const conn = this.Model.reportModel();
+            const data = yield conn.getAccHeadsForSelect();
+            const headMap = new Map();
+            // Step 2: Populate the map with heads
+            for (const item of data) {
+                headMap.set(item.head_id, {
+                    head_id: item.head_id,
+                    head_parent_id: item.head_parent_id,
+                    head_code: item.head_code,
+                    head_group_code: item.head_group_code,
+                    head_name: item.head_name,
+                    parent_head_code: item.parent_head_code,
+                    parent_head_name: item.parent_head_name,
+                    children: [],
+                });
+            }
+            // Step 3: Build the hierarchy
+            const rootHeads = [];
+            for (const head of headMap.values()) {
+                if (head.head_parent_id === null) {
+                    // This is a root-level head
+                    rootHeads.push(head);
+                }
+                else {
+                    // Find the parent head
+                    const parentHead = headMap.get(head.head_parent_id);
+                    if (parentHead) {
+                        // Add this head as a child of the parent
+                        parentHead.children.push(head);
+                    }
+                }
+            }
+            return {
+                success: true,
+                code: this.StatusCode.HTTP_OK,
+                message: this.ResMsg.HTTP_OK,
+                data: rootHeads,
+            };
+        });
     }
 }
 exports.AccountReportService = AccountReportService;

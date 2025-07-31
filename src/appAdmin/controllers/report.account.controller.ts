@@ -64,5 +64,15 @@ class AccountReportController extends AbstractController {
       res.status(code).json(data);
     }
   );
+
+  public getAccHeadsForSelect = this.asyncWrapper.wrap(
+    null,
+    async (req: Request, res: Response) => {
+      const { code, ...data } =
+        await this.accountReportService.getAccHeadsForSelect(req);
+
+      res.status(code).json(data);
+    }
+  );
 }
 export default AccountReportController;

@@ -53,6 +53,10 @@ class AccountReportController extends abstract_controller_1.default {
             const _e = yield this.accountReportService.getBalanceSheet(req), { code } = _e, data = __rest(_e, ["code"]);
             res.status(code).json(data);
         }));
+        this.getAccHeadsForSelect = this.asyncWrapper.wrap(null, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _f = yield this.accountReportService.getAccHeadsForSelect(req), { code } = _f, data = __rest(_f, ["code"]);
+            res.status(code).json(data);
+        }));
     }
 }
 exports.default = AccountReportController;
