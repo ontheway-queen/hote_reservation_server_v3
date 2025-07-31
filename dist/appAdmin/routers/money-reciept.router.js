@@ -8,10 +8,14 @@ const money_reciept_controller_1 = __importDefault(require("../controllers/money
 class MoneyRecieptRouter extends abstract_router_1.default {
     constructor() {
         super();
-        this.moneyRecieptController = new money_reciept_controller_1.default();
+        this.controller = new money_reciept_controller_1.default();
         this.callRouter();
     }
-    callRouter() { }
+    callRouter() {
+        this.router
+            .route("/by-folio-id/:id")
+            .get(this.controller.getMoneyReceiptByFolio);
+    }
 }
 exports.default = MoneyRecieptRouter;
 //# sourceMappingURL=money-reciept.router.js.map

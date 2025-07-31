@@ -4,11 +4,19 @@ import MoneyRecieptService from "../services/money-reciept.service";
 import MoneyRecieptValidator from "../utlis/validator/money-reciept.validator";
 
 class MoneyRecieptController extends AbstractController {
-  private moneyRecieptService = new MoneyRecieptService();
+  private service = new MoneyRecieptService();
   private moneyRecieptValidator = new MoneyRecieptValidator();
   constructor() {
     super();
   }
+
+  public getMoneyReceiptByFolio = this.asyncWrapper.wrap(
+    {},
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.getMoneyReceiptByFolio(req);
+      res.status(code).json(data);
+    }
+  );
 }
 
 export default MoneyRecieptController;

@@ -689,6 +689,33 @@ class HotelInvoiceModel extends Schema {
       total_credit: Number(data?.total_credit || 0),
     };
   }
+
+  // ------------------ Money receipt -------------------//
+
+  public async getMoneyReceiptByFolio({
+    folio_id,
+    hotel_code,
+  }: {
+    folio_id: number;
+    hotel_code: number;
+  }) {
+    return await this.db("money_receipts as mr")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .select(
+        "mr.id",
+        "mr.receipt_no",
+        "mr.receipt_date",
+        "mr.amount_paid",
+        "mr.payment_method",
+        "mr.notes",
+        "ua.id as received_by_id",
+        "ua.name as received_by_name"
+      )
+      .join("folio_money_receipt as fmr", "mr.id", "fmr.money_receipt_id")
+      .leftJoin("user_admin as ua", "mr.received_by", "ua.id")
+      .where("fmr.folio_id", folio_id)
+      .andWhere("mr.hotel_code", hotel_code);
+  }
 }
 
 export default HotelInvoiceModel;

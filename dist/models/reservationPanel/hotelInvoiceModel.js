@@ -446,6 +446,18 @@ class HotelInvoiceModel extends schema_1.default {
             };
         });
     }
+    // ------------------ Money receipt -------------------//
+    getMoneyReceiptByFolio({ folio_id, hotel_code, }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("money_receipts as mr")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .select("mr.id", "mr.receipt_no", "mr.receipt_date", "mr.amount_paid", "mr.payment_method", "mr.notes", "ua.id as received_by_id", "ua.name as received_by_name")
+                .join("folio_money_receipt as fmr", "mr.id", "fmr.money_receipt_id")
+                .leftJoin("user_admin as ua", "mr.received_by", "ua.id")
+                .where("fmr.folio_id", folio_id)
+                .andWhere("mr.hotel_code", hotel_code);
+        });
+    }
 }
 exports.default = HotelInvoiceModel;
 //# sourceMappingURL=hotelInvoiceModel.js.map
