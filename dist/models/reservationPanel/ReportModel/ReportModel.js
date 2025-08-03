@@ -116,9 +116,6 @@ class ReportModel extends schema_1.default {
         var _a;
         return __awaiter(this, void 0, void 0, function* () {
             const dtbs = this.db("booking_rooms AS br");
-            if (limit && skip) {
-                dtbs.limit(parseInt(limit)).offset(parseInt(skip));
-            }
             const data = yield dtbs
                 .withSchema(this.RESERVATION_SCHEMA)
                 .select("br.id", "b.id as booking_id", "b.booking_reference", this.db.raw(`TO_CHAR(br.check_in, 'YYYY-MM-DD') as check_in`), this.db.raw(`TO_CHAR(br.check_out, 'YYYY-MM-DD') as check_out`), this.db.raw(`TO_CHAR(b.booking_date, 'YYYY-MM-DD') as booking_date`), "b.booking_type", "b.is_individual_booking", "b.status", "b.comments", "b.company_name", "b.visit_purpose", "r.id as room_id", "r.room_name as room_no", "r.floor_no", "br.cbf", "br.adults", "br.children as child_count", "br.infant", this.db.raw("COALESCE(brg.guest_id, b.guest_id) AS guest_id"), this.db.raw("COALESCE(brg.is_room_primary_guest, false) AS is_room_primary_guest"), this.db.raw("COALESCE(g.first_name, g2.first_name) AS first_name"), this.db.raw("COALESCE(g.last_name, g2.last_name) AS last_name"), this.db.raw("COALESCE(g.passport_no, g2.passport_no) AS passport_no"), this.db.raw("COALESCE(g.address, g2.address) AS address"), this.db.raw("COALESCE(g.email, g2.email) AS guest_email"), this.db.raw("COALESCE(g.phone, g2.phone) AS phone"), this.db.raw("COALESCE(c.country_name, c2.country_name) AS country"), this.db.raw("COALESCE(c.nationality, c2.nationality) AS nationality"))
@@ -210,16 +207,63 @@ class ReportModel extends schema_1.default {
                     qb.andWhere("br.room_id", room_id);
                 }
             });
+            // const [info] = await this.db("booking_rooms AS br")
+            //   .withSchema(this.RESERVATION_SCHEMA)
+            //   .select(
+            //     this.db.raw("SUM(br.cbf) AS total_cbf"),
+            //     this.db.raw("SUM(br.adults) AS total_adults"),
+            //     this.db.raw("SUM(br.children) AS total_children"),
+            //     this.db.raw("SUM(br.infant) AS total_infant"),
+            //     this.db.raw("SUM(br.adults + br.children + br.infant) AS total_person")
+            //   )
+            //   .leftJoin("bookings AS b", "br.booking_id", "b.id")
+            //   .leftJoin("booking_room_guest as brg", "br.id", "brg.booking_room_id")
+            //   .leftJoin("guests AS g", "brg.guest_id", "g.id")
+            //   .leftJoin("guests as g2", "b.guest_id", "g2.id")
+            //   .leftJoin("rooms AS r", "br.room_id", "r.id")
+            //   .joinRaw("Left Join public.country as c on g.country_id = c.id")
+            //   .joinRaw("Left Join public.country as c2 on g2.country_id = c2.id")
+            //   .where("b.hotel_code", hotel_code)
+            //   .andWhere((qb) => {
+            //     qb.whereRaw("Date(br.check_in) <= ?", [current_date]).andWhereRaw(
+            //       "Date(br.check_out) >= ?",
+            //       [current_date]
+            //     );
+            //     qb.andWhere("b.booking_type", "B");
+            //     qb.andWhere("br.status", "checked_in");
+            //     if (search) {
+            //       qb.andWhere((sub) => {
+            //         const like = `${search.replace(/[\\%_]/g, "\\$&")}%`;
+            //         sub
+            //           .whereRaw("b.company_name ILIKE ?", [like])
+            //           .orWhereRaw("COALESCE(g.first_name, g2.first_name) ILIKE ?", [
+            //             like,
+            //           ])
+            //           .orWhereRaw("COALESCE(g.last_name,  g2.last_name)  ILIKE ?", [
+            //             like,
+            //           ])
+            //           .orWhereRaw(
+            //             `(
+            //        COALESCE(g.first_name, g2.first_name, '')
+            //        || ' ' ||
+            //        COALESCE(g.last_name,  g2.last_name,  '')
+            //      ) ILIKE ?`,
+            //             [like]
+            //           )
+            //           .orWhereRaw("COALESCE(g.email, g2.email) ILIKE ?", [like])
+            //           .orWhereRaw("COALESCE(g.phone, g2.phone) ILIKE ?", [like])
+            //           .orWhereILike("r.room_name", like);
+            //       });
+            //     }
+            //     if (room_id) {
+            //       qb.andWhere("br.room_id", room_id);
+            //     }
+            //   });
             const [info] = yield this.db("booking_rooms AS br")
                 .withSchema(this.RESERVATION_SCHEMA)
                 .select(this.db.raw("SUM(br.cbf) AS total_cbf"), this.db.raw("SUM(br.adults) AS total_adults"), this.db.raw("SUM(br.children) AS total_children"), this.db.raw("SUM(br.infant) AS total_infant"), this.db.raw("SUM(br.adults + br.children + br.infant) AS total_person"))
                 .leftJoin("bookings AS b", "br.booking_id", "b.id")
-                .leftJoin("booking_room_guest as brg", "br.id", "brg.booking_room_id")
-                .leftJoin("guests AS g", "brg.guest_id", "g.id")
-                .leftJoin("guests as g2", "b.guest_id", "g2.id")
                 .leftJoin("rooms AS r", "br.room_id", "r.id")
-                .joinRaw("Left Join public.country as c on g.country_id = c.id")
-                .joinRaw("Left Join public.country as c2 on g2.country_id = c2.id")
                 .where("b.hotel_code", hotel_code)
                 .andWhere((qb) => {
                 qb.whereRaw("Date(br.check_in) <= ?", [current_date]).andWhereRaw("Date(br.check_out) >= ?", [current_date]);
@@ -230,20 +274,7 @@ class ReportModel extends schema_1.default {
                         const like = `${search.replace(/[\\%_]/g, "\\$&")}%`;
                         sub
                             .whereRaw("b.company_name ILIKE ?", [like])
-                            .orWhereRaw("COALESCE(g.first_name, g2.first_name) ILIKE ?", [
-                            like,
-                        ])
-                            .orWhereRaw("COALESCE(g.last_name,  g2.last_name)  ILIKE ?", [
-                            like,
-                        ])
-                            .orWhereRaw(`(
-           COALESCE(g.first_name, g2.first_name, '')
-           || ' ' ||
-           COALESCE(g.last_name,  g2.last_name,  '')
-         ) ILIKE ?`, [like])
-                            .orWhereRaw("COALESCE(g.email, g2.email) ILIKE ?", [like])
-                            .orWhereRaw("COALESCE(g.phone, g2.phone) ILIKE ?", [like])
-                            .orWhereILike("r.room_name", like);
+                            .orWhereRaw("r.room_name ILIKE ?", [like]);
                     });
                 }
                 if (room_id) {
