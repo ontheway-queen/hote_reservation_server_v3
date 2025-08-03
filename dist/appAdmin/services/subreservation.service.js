@@ -797,7 +797,7 @@ class SubReservationService extends abstract_service_1.default {
                 received_by: req.hotel_admin.id,
                 voucher_no: booking === null || booking === void 0 ? void 0 : booking.voucher_no,
                 notes: "Payment has been taken",
-                acc_id: acc.acc_id,
+                acc_id,
             });
             yield hotelInvModel.insertFolioMoneyReceipt({
                 amount,
