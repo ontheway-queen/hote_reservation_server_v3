@@ -221,14 +221,14 @@ export class AccountService extends AbstractServices {
         parent_head = configData[0].head_id;
       }
 
-      // Create new account head for this account ==================
-
+      console.log({ parent_head });
       const newHeadCode = await subService.createAccHeadCode({
         hotel_code,
         group_code: ASSET_GROUP,
         parent_id: parent_head,
       });
 
+      console.log({ newHeadCode });
       if (!newHeadCode) {
         return {
           success: false,

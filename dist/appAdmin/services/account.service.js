@@ -211,12 +211,13 @@ class AccountService extends abstract_service_1.default {
                     ]);
                     parent_head = configData[0].head_id;
                 }
-                // Create new account head for this account ==================
+                console.log({ parent_head });
                 const newHeadCode = yield subService.createAccHeadCode({
                     hotel_code,
                     group_code: constants_1.ASSET_GROUP,
                     parent_id: parent_head,
                 });
+                console.log({ newHeadCode });
                 if (!newHeadCode) {
                     return {
                         success: false,

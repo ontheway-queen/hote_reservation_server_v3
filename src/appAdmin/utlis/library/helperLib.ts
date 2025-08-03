@@ -1,5 +1,5 @@
-import { Knex } from 'knex';
-import AccountModel from '../../../models/reservationPanel/accountModel/accountModel';
+import { Knex } from "knex";
+import AccountModel from "../../../models/reservationPanel/accountModel/accountModel";
 
 export default class HelperLib {
   private trx: Knex.Transaction;
@@ -18,7 +18,7 @@ export default class HelperLib {
   }): Promise<string | false> {
     const accHeadModel = new AccountModel(this.trx);
 
-    let newHeadCode = '';
+    let newHeadCode = "";
 
     if (parent_id) {
       const parentHead = await accHeadModel.getAccountHead({
@@ -27,6 +27,7 @@ export default class HelperLib {
         id: parent_id,
       });
 
+      console.log({ parentHead });
       if (!parentHead.length) {
         return false;
       }
@@ -37,42 +38,42 @@ export default class HelperLib {
         hotel_code,
         group_code,
         parent_id,
-        order_by: 'ah.code',
-        order_to: 'desc',
+        order_by: "ah.code",
+        order_to: "desc",
       });
 
       if (heads.length) {
         const { code: child_code } = heads[0];
 
-        const lastHeadCodeNum = child_code.split('.');
+        const lastHeadCodeNum = child_code.split(".");
         const newNum = Number(lastHeadCodeNum[lastHeadCodeNum.length - 1]) + 1;
 
         newHeadCode = lastHeadCodeNum.pop();
-        newHeadCode = lastHeadCodeNum.join('.');
+        newHeadCode = lastHeadCodeNum.join(".");
 
         if (newNum < 10) {
-          newHeadCode += '.00' + newNum;
+          newHeadCode += ".00" + newNum;
         } else if (newNum < 100) {
-          newHeadCode += '.0' + newNum;
+          newHeadCode += ".0" + newNum;
         } else {
-          newHeadCode += '.' + newNum;
+          newHeadCode += "." + newNum;
         }
       } else {
-        newHeadCode = parent_head_code + '.001';
+        newHeadCode = parent_head_code + ".001";
       }
     } else {
       const checkHead = await accHeadModel.getAccountHead({
         hotel_code,
         group_code,
         parent_id: null,
-        order_by: 'ah.id',
-        order_to: 'desc',
+        order_by: "ah.id",
+        order_to: "desc",
       });
 
       if (checkHead.length) {
-        newHeadCode = Number(checkHead[0].code) + 1 + '';
+        newHeadCode = Number(checkHead[0].code) + 1 + "";
       } else {
-        newHeadCode = Number(group_code) + 1 + '';
+        newHeadCode = Number(group_code) + 1 + "";
       }
     }
 
