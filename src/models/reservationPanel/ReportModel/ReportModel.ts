@@ -223,10 +223,6 @@ class ReportModel extends Schema {
         this.db.raw("COALESCE(c.nationality, c2.nationality) AS nationality")
       )
       .leftJoin("bookings AS b", "br.booking_id", "b.id")
-      // .leftJoin("booking_room_guest as brg", "br.id", "brg.booking_room_id")
-      // .leftJoin("guests AS g", "brg.guest_id", "g.id")
-      // .leftJoin("guests as g2", "b.guest_id", "g2.id")
-
       .leftJoin("booking_room_guest as brg", function () {
         this.on("br.id", "=", "brg.booking_room_id").andOnVal(
           "brg.is_room_primary_guest",
@@ -286,9 +282,6 @@ class ReportModel extends Schema {
       .withSchema(this.RESERVATION_SCHEMA)
       .count("br.id as total")
       .leftJoin("bookings AS b", "br.booking_id", "b.id")
-      // .leftJoin("booking_room_guest as brg", "br.id", "brg.booking_room_id")
-      // .leftJoin("guests AS g", "brg.guest_id", "g.id")
-      // .leftJoin("guests as g2", "b.guest_id", "g2.id")
       .leftJoin("booking_room_guest as brg", function () {
         this.on("br.id", "=", "brg.booking_room_id").andOnVal(
           "brg.is_room_primary_guest",
