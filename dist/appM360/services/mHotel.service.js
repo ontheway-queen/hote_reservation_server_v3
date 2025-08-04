@@ -115,6 +115,8 @@ class MHotelService extends abstract_service_1.default {
                     hotel_code,
                     website_url,
                 });
+                // Insert hotel accounts head
+                yield lib_1.default.insertHotelCOA(trx, hotel_code);
                 if (hotelImages.length)
                     yield model.insertHotelImages(hotelImages);
                 // ============ create hotel admin step ==============//

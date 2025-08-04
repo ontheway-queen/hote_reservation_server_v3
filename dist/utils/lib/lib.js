@@ -17,6 +17,9 @@ const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const config_1 = __importDefault(require("../../config/config"));
 const nodemailer_1 = __importDefault(require("nodemailer"));
+const chartOfAcc_1 = require("../miscellaneous/chartOfAcc");
+const accountModel_1 = __importDefault(require("../../models/reservationPanel/accountModel/accountModel"));
+const hotel_model_1 = __importDefault(require("../../models/reservationPanel/hotel.model"));
 class Lib {
     // make hashed password
     static hashPass(password) {
@@ -99,6 +102,44 @@ class Lib {
                 console.log({ err });
                 return false;
             }
+        });
+    }
+    // insert account heads
+    static insertHotelCOA(trx, hotel_code) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const accModel = new accountModel_1.default(trx);
+            const hotelModel = new hotel_model_1.default(trx);
+            function insetFunc(payload, parent_head) {
+                return __awaiter(this, void 0, void 0, function* () {
+                    const promises = payload.map((item) => __awaiter(this, void 0, void 0, function* () {
+                        // insert head
+                        var _a;
+                        const accPayload = {
+                            code: item.code,
+                            hotel_code,
+                            created_by: 1,
+                            group_code: item.group_code,
+                            name: item.name,
+                        };
+                        if (parent_head) {
+                            accPayload.parent_id = parent_head;
+                        }
+                        const head_id = yield accModel.insertAccHead(accPayload);
+                        if (item.config) {
+                            yield hotelModel.insertHotelAccConfig({
+                                config: item.config,
+                                head_id: head_id[0].id,
+                                hotel_code,
+                            });
+                        }
+                        if ((_a = item.child) === null || _a === void 0 ? void 0 : _a.length) {
+                            yield insetFunc(item.child, head_id[0].id);
+                        }
+                    }));
+                    yield Promise.all(promises);
+                });
+            }
+            yield insetFunc(chartOfAcc_1.defaultChartOfAcc);
         });
     }
 }

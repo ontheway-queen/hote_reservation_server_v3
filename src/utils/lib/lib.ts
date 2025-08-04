@@ -4,6 +4,14 @@ import bcrypt from "bcryptjs";
 import config from "../../config/config";
 import nodemailer from "nodemailer";
 import * as crypto from "crypto";
+import { TDB } from "../../common/types/commontypes";
+import {
+  defaultChartOfAcc,
+  IDefaultChartOfAcc,
+} from "../miscellaneous/chartOfAcc";
+import AccountModel from "../../models/reservationPanel/accountModel/accountModel";
+import HotelModel from "../../models/reservationPanel/hotel.model";
+import { IAccHeadDb } from "../../appAdmin/utlis/interfaces/doubleEntry.interface";
 
 class Lib {
   // make hashed password
@@ -110,6 +118,49 @@ class Lib {
       console.log({ err });
       return false;
     }
+  }
+
+  // insert account heads
+  public static async insertHotelCOA(trx: TDB, hotel_code: number) {
+    const accModel = new AccountModel(trx);
+    const hotelModel = new HotelModel(trx);
+    async function insetFunc(
+      payload: IDefaultChartOfAcc[],
+      parent_head?: number
+    ) {
+      const promises = payload.map(async (item) => {
+        // insert head
+
+        const accPayload: IAccHeadDb = {
+          code: item.code,
+          hotel_code,
+          created_by: 1,
+          group_code: item.group_code,
+          name: item.name,
+        };
+
+        if (parent_head) {
+          accPayload.parent_id = parent_head;
+        }
+
+        const head_id = await accModel.insertAccHead(accPayload);
+
+        if (item.config) {
+          await hotelModel.insertHotelAccConfig({
+            config: item.config,
+            head_id: head_id[0].id,
+            hotel_code,
+          });
+        }
+        if (item.child?.length) {
+          await insetFunc(item.child, head_id[0].id);
+        }
+      });
+
+      await Promise.all(promises);
+    }
+
+    await insetFunc(defaultChartOfAcc);
   }
 }
 export default Lib;

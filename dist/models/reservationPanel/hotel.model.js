@@ -194,6 +194,13 @@ class HotelModel extends schema_1.default {
                 .whereIn("config", configs);
         });
     }
+    insertHotelAccConfig(payload) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("acc_head_config")
+                .withSchema(this.ACC_SCHEMA)
+                .insert(payload, "id");
+        });
+    }
 }
 exports.default = HotelModel;
 //# sourceMappingURL=hotel.model.js.map

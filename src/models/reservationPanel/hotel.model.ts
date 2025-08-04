@@ -284,6 +284,16 @@ class HotelModel extends Schema {
       .andWhere("hotel_code", hotel_code)
       .whereIn("config", configs);
   }
+
+  public async insertHotelAccConfig(payload: {
+    hotel_code: number;
+    config: string;
+    head_id: number;
+  }) {
+    return await this.db("acc_head_config")
+      .withSchema(this.ACC_SCHEMA)
+      .insert(payload, "id");
+  }
 }
 
 export default HotelModel;
