@@ -141,6 +141,9 @@ class MHotelService extends AbstractServices {
         website_url,
       });
 
+      // Insert hotel accounts head
+      await Lib.insertHotelCOA(trx, hotel_code);
+
       if (hotelImages.length) await model.insertHotelImages(hotelImages);
 
       // ============ create hotel admin step ==============//

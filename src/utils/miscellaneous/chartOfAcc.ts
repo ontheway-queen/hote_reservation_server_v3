@@ -126,3 +126,14 @@ export interface IDefaultChartOfAcc {
   config?: string;
   child?: IDefaultChartOfAcc[];
 }
+
+function insertFunc(payload: IDefaultChartOfAcc[], parent_head?: number) {
+  for (const item of payload) {
+    // insert head
+    if (item.child?.length) {
+      return insertFunc(item.child);
+    } else {
+      // insert
+    }
+  }
+}

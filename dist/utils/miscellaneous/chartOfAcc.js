@@ -121,4 +121,16 @@ exports.defaultChartOfAcc = [
         ],
     },
 ];
+function insertFunc(payload, parent_head) {
+    var _a;
+    for (const item of payload) {
+        // insert head
+        if ((_a = item.child) === null || _a === void 0 ? void 0 : _a.length) {
+            return insertFunc(item.child);
+        }
+        else {
+            // insert
+        }
+    }
+}
 //# sourceMappingURL=chartOfAcc.js.map
