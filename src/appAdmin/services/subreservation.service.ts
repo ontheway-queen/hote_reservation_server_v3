@@ -1093,7 +1093,7 @@ export class SubReservationService extends AbstractServices {
       received_by: req.hotel_admin.id,
       voucher_no: booking?.voucher_no as string,
       notes: "Payment has been taken",
-      acc_id: acc.acc_id,
+      acc_id,
     });
 
     await hotelInvModel.insertFolioMoneyReceipt({

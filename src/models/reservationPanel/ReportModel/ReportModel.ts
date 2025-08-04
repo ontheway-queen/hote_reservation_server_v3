@@ -187,10 +187,6 @@ class ReportModel extends Schema {
   }) {
     const dtbs = this.db("booking_rooms AS br");
 
-    if (limit && skip) {
-      dtbs.limit(parseInt(limit)).offset(parseInt(skip));
-    }
-
     const data = await dtbs
       .withSchema(this.RESERVATION_SCHEMA)
       .select(
@@ -227,10 +223,6 @@ class ReportModel extends Schema {
         this.db.raw("COALESCE(c.nationality, c2.nationality) AS nationality")
       )
       .leftJoin("bookings AS b", "br.booking_id", "b.id")
-      // .leftJoin("booking_room_guest as brg", "br.id", "brg.booking_room_id")
-      // .leftJoin("guests AS g", "brg.guest_id", "g.id")
-      // .leftJoin("guests as g2", "b.guest_id", "g2.id")
-
       .leftJoin("booking_room_guest as brg", function () {
         this.on("br.id", "=", "brg.booking_room_id").andOnVal(
           "brg.is_room_primary_guest",
@@ -290,9 +282,6 @@ class ReportModel extends Schema {
       .withSchema(this.RESERVATION_SCHEMA)
       .count("br.id as total")
       .leftJoin("bookings AS b", "br.booking_id", "b.id")
-      // .leftJoin("booking_room_guest as brg", "br.id", "brg.booking_room_id")
-      // .leftJoin("guests AS g", "brg.guest_id", "g.id")
-      // .leftJoin("guests as g2", "b.guest_id", "g2.id")
       .leftJoin("booking_room_guest as brg", function () {
         this.on("br.id", "=", "brg.booking_room_id").andOnVal(
           "brg.is_room_primary_guest",
@@ -347,6 +336,63 @@ class ReportModel extends Schema {
         }
       });
 
+    // const [info] = await this.db("booking_rooms AS br")
+    //   .withSchema(this.RESERVATION_SCHEMA)
+    //   .select(
+    //     this.db.raw("SUM(br.cbf) AS total_cbf"),
+    //     this.db.raw("SUM(br.adults) AS total_adults"),
+    //     this.db.raw("SUM(br.children) AS total_children"),
+    //     this.db.raw("SUM(br.infant) AS total_infant"),
+    //     this.db.raw("SUM(br.adults + br.children + br.infant) AS total_person")
+    //   )
+    //   .leftJoin("bookings AS b", "br.booking_id", "b.id")
+    //   .leftJoin("booking_room_guest as brg", "br.id", "brg.booking_room_id")
+    //   .leftJoin("guests AS g", "brg.guest_id", "g.id")
+    //   .leftJoin("guests as g2", "b.guest_id", "g2.id")
+    //   .leftJoin("rooms AS r", "br.room_id", "r.id")
+    //   .joinRaw("Left Join public.country as c on g.country_id = c.id")
+    //   .joinRaw("Left Join public.country as c2 on g2.country_id = c2.id")
+    //   .where("b.hotel_code", hotel_code)
+    //   .andWhere((qb) => {
+    //     qb.whereRaw("Date(br.check_in) <= ?", [current_date]).andWhereRaw(
+    //       "Date(br.check_out) >= ?",
+    //       [current_date]
+    //     );
+    //     qb.andWhere("b.booking_type", "B");
+    //     qb.andWhere("br.status", "checked_in");
+
+    //     if (search) {
+    //       qb.andWhere((sub) => {
+    //         const like = `${search.replace(/[\\%_]/g, "\\$&")}%`;
+
+    //         sub
+    //           .whereRaw("b.company_name ILIKE ?", [like])
+
+    //           .orWhereRaw("COALESCE(g.first_name, g2.first_name) ILIKE ?", [
+    //             like,
+    //           ])
+    //           .orWhereRaw("COALESCE(g.last_name,  g2.last_name)  ILIKE ?", [
+    //             like,
+    //           ])
+    //           .orWhereRaw(
+    //             `(
+    //        COALESCE(g.first_name, g2.first_name, '')
+    //        || ' ' ||
+    //        COALESCE(g.last_name,  g2.last_name,  '')
+    //      ) ILIKE ?`,
+    //             [like]
+    //           )
+    //           .orWhereRaw("COALESCE(g.email, g2.email) ILIKE ?", [like])
+    //           .orWhereRaw("COALESCE(g.phone, g2.phone) ILIKE ?", [like])
+    //           .orWhereILike("r.room_name", like);
+    //       });
+    //     }
+
+    //     if (room_id) {
+    //       qb.andWhere("br.room_id", room_id);
+    //     }
+    //   });
+
     const [info] = await this.db("booking_rooms AS br")
       .withSchema(this.RESERVATION_SCHEMA)
       .select(
@@ -357,12 +403,7 @@ class ReportModel extends Schema {
         this.db.raw("SUM(br.adults + br.children + br.infant) AS total_person")
       )
       .leftJoin("bookings AS b", "br.booking_id", "b.id")
-      .leftJoin("booking_room_guest as brg", "br.id", "brg.booking_room_id")
-      .leftJoin("guests AS g", "brg.guest_id", "g.id")
-      .leftJoin("guests as g2", "b.guest_id", "g2.id")
       .leftJoin("rooms AS r", "br.room_id", "r.id")
-      .joinRaw("Left Join public.country as c on g.country_id = c.id")
-      .joinRaw("Left Join public.country as c2 on g2.country_id = c2.id")
       .where("b.hotel_code", hotel_code)
       .andWhere((qb) => {
         qb.whereRaw("Date(br.check_in) <= ?", [current_date]).andWhereRaw(
@@ -375,27 +416,9 @@ class ReportModel extends Schema {
         if (search) {
           qb.andWhere((sub) => {
             const like = `${search.replace(/[\\%_]/g, "\\$&")}%`;
-
             sub
               .whereRaw("b.company_name ILIKE ?", [like])
-
-              .orWhereRaw("COALESCE(g.first_name, g2.first_name) ILIKE ?", [
-                like,
-              ])
-              .orWhereRaw("COALESCE(g.last_name,  g2.last_name)  ILIKE ?", [
-                like,
-              ])
-              .orWhereRaw(
-                `(
-           COALESCE(g.first_name, g2.first_name, '')
-           || ' ' ||
-           COALESCE(g.last_name,  g2.last_name,  '')
-         ) ILIKE ?`,
-                [like]
-              )
-              .orWhereRaw("COALESCE(g.email, g2.email) ILIKE ?", [like])
-              .orWhereRaw("COALESCE(g.phone, g2.phone) ILIKE ?", [like])
-              .orWhereILike("r.room_name", like);
+              .orWhereRaw("r.room_name ILIKE ?", [like]);
           });
         }
 

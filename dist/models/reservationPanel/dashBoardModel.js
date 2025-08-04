@@ -134,6 +134,7 @@ class DashBoardModel extends schema_1.default {
                 .withSchema(this.RESERVATION_SCHEMA)
                 .count("id as total")
                 .where({ hotel_code })
+                .andWhere("is_deleted", false)
                 .first();
             return {
                 totalRooms: (roomCount === null || roomCount === void 0 ? void 0 : roomCount.total) ? parseInt(roomCount.total) : 0,

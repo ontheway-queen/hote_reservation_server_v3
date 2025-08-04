@@ -1,15 +1,15 @@
-import { Part } from '@aws-sdk/client-s3';
-import { ISingleHotel } from '../../appM360/utlis/interfaces/mHotel.common.interface';
+import { Part } from "@aws-sdk/client-s3";
+import { ISingleHotel } from "../../appM360/utlis/interfaces/mHotel.common.interface";
 import {
   ICreateHotelPayload,
   ICreateHotelUserPayload,
   IgetAllHotelUserPayload,
   IinsertHotelsCDPayload,
   IupdateHotelUser,
-} from '../../appM360/utlis/interfaces/mUserHotel.interface';
-import { TDB } from '../../common/types/commontypes';
-import Schema from '../../utils/miscellaneous/schema';
-import { IAccountConfigHeads } from '../../utils/miscellaneous/constants';
+} from "../../appM360/utlis/interfaces/mUserHotel.interface";
+import { TDB } from "../../common/types/commontypes";
+import Schema from "../../utils/miscellaneous/schema";
+import { IAccountConfigHeads } from "../../utils/miscellaneous/constants";
 
 class HotelModel extends Schema {
   private db: TDB;
@@ -22,13 +22,13 @@ class HotelModel extends Schema {
   // create hotel
   public async createHotel(payload: ICreateHotelPayload) {
     console.log(payload);
-    return await this.db('hotels')
+    return await this.db("hotels")
       .withSchema(this.RESERVATION_SCHEMA)
-      .insert(payload, 'id');
+      .insert(payload, "id");
   }
 
   public async insertHotelContactDetails(payload: IinsertHotelsCDPayload) {
-    return await this.db('hotel_contact_details')
+    return await this.db("hotel_contact_details")
       .withSchema(this.RESERVATION_SCHEMA)
       .insert(payload);
   }
@@ -44,7 +44,7 @@ class HotelModel extends Schema {
     }>,
     hotel_code: number
   ) {
-    return await this.db('hotel_contact_details')
+    return await this.db("hotel_contact_details")
       .withSchema(this.RESERVATION_SCHEMA)
       .update(payload)
       .where({ hotel_code });
@@ -58,7 +58,7 @@ class HotelModel extends Schema {
       main_image?: string;
     }[]
   ) {
-    return await this.db('hotel_image')
+    return await this.db("hotel_image")
       .withSchema(this.RESERVATION_SCHEMA)
       .insert(body);
   }
@@ -70,7 +70,7 @@ class HotelModel extends Schema {
     const endDate = new Date(to_date as string);
     endDate.setDate(endDate.getDate() + 1);
 
-    const dtbs = this.db('hotels as h');
+    const dtbs = this.db("hotels as h");
 
     if (limit && skip) {
       dtbs.limit(parseInt(limit as string));
@@ -80,60 +80,60 @@ class HotelModel extends Schema {
     const data = await dtbs
       .withSchema(this.RESERVATION_SCHEMA)
       .select(
-        'h.id',
-        'h.hotel_code',
-        'h.name',
-        'h.address',
-        'h.star_category',
-        'h.city_code',
-        'h.country_code',
-        'h.accommodation_type_id',
-        'h.accommodation_type_name',
-        'h.created_at',
-        'hcd.email',
-        'h.status',
-        'hcd.logo',
-        'h.expiry_date',
-        'h.created_at'
+        "h.id",
+        "h.hotel_code",
+        "h.name",
+        "h.address",
+        "h.star_category",
+        "h.city_code",
+        "h.country_code",
+        "h.accommodation_type_id",
+        "h.accommodation_type_name",
+        "h.created_at",
+        "hcd.email",
+        "h.status",
+        "hcd.logo",
+        "h.expiry_date",
+        "h.created_at"
       )
       .leftJoin(
-        'hotel_contact_details as hcd',
-        'h.hotel_code',
-        'hcd.hotel_code'
+        "hotel_contact_details as hcd",
+        "h.hotel_code",
+        "hcd.hotel_code"
       )
       .where(function () {
         if (from_date && to_date) {
-          this.andWhereBetween('h.created_at', [from_date, endDate]);
+          this.andWhereBetween("h.created_at", [from_date, endDate]);
         }
         if (name) {
-          this.andWhere('h.name', 'like', `%${name}%`).orWhere(
-            'h.chain_name',
-            'like',
+          this.andWhere("h.name", "like", `%${name}%`).orWhere(
+            "h.chain_name",
+            "like",
             `%${name}%`
           );
         }
         if (status) {
-          this.andWhere('hoi.status', status);
+          this.andWhere("hoi.status", status);
         }
       })
-      .orderBy('id', 'desc');
+      .orderBy("id", "desc");
 
-    const total = await this.db('hotels as h')
+    const total = await this.db("hotels as h")
       .withSchema(this.RESERVATION_SCHEMA)
-      .count('h.id AS total')
+      .count("h.id AS total")
       .where(function () {
         if (from_date && to_date) {
-          this.andWhereBetween('h.created_at', [from_date, endDate]);
+          this.andWhereBetween("h.created_at", [from_date, endDate]);
         }
         if (name) {
-          this.andWhere('h.name', 'like', `%${name}%`).orWhere(
-            'h.chain_name',
-            'like',
+          this.andWhere("h.name", "like", `%${name}%`).orWhere(
+            "h.chain_name",
+            "like",
             `%${name}%`
           );
         }
         if (status) {
-          this.andWhere('hoi.status', status);
+          this.andWhere("hoi.status", status);
         }
       });
 
@@ -144,11 +144,11 @@ class HotelModel extends Schema {
   }
 
   public async getHotelLastId() {
-    const hotels = await this.db('hotels')
+    const hotels = await this.db("hotels")
       .withSchema(this.RESERVATION_SCHEMA)
-      .select('id')
+      .select("id")
       .limit(1)
-      .orderBy('id', 'desc');
+      .orderBy("id", "desc");
 
     return hotels.length ? hotels[0].id : 1;
   }
@@ -160,36 +160,36 @@ class HotelModel extends Schema {
     hotel_code?: number;
   }): Promise<ISingleHotel | undefined> {
     const { hotel_code, email, id } = payload;
-    return await this.db('hotels as h')
+    return await this.db("hotels as h")
       .withSchema(this.RESERVATION_SCHEMA)
       .select(
-        'h.id',
-        'h.hotel_code',
-        'h.name as hotel_name',
-        'h.address',
-        'h.star_category',
-        'h.city_code',
-        'h.country_code',
-        'h.accommodation_type_id',
-        'h.accommodation_type_name',
-        'h.created_at',
-        'h.latitude',
-        'h.longitude',
-        'h.chain_name',
-        'h.postal_code',
-        'h.description',
-        'h.star_category',
-        'h.created_at',
-        'h.status',
-        'h.expiry_date',
-        'h.created_at',
-        'hcd.logo',
-        'hcd.fax',
-        'hcd.website_url',
-        'hcd.email as hotel_email',
-        'hcd.phone',
-        'hcd.optional_phone1',
-        'h.bin',
+        "h.id",
+        "h.hotel_code",
+        "h.name as hotel_name",
+        "h.address",
+        "h.star_category",
+        "h.city_code",
+        "h.country_code",
+        "h.accommodation_type_id",
+        "h.accommodation_type_name",
+        "h.created_at",
+        "h.latitude",
+        "h.longitude",
+        "h.chain_name",
+        "h.postal_code",
+        "h.description",
+        "h.star_category",
+        "h.created_at",
+        "h.status",
+        "h.expiry_date",
+        "h.created_at",
+        "hcd.logo",
+        "hcd.fax",
+        "hcd.website_url",
+        "hcd.email as hotel_email",
+        "hcd.phone",
+        "hcd.optional_phone1",
+        "h.bin",
         this.db.raw(
           `(SELECT json_agg(
       json_build_object(
@@ -205,19 +205,19 @@ class HotelModel extends Schema {
         )
       )
       .leftJoin(
-        'hotel_contact_details as hcd',
-        'h.hotel_code',
-        'hcd.hotel_code'
+        "hotel_contact_details as hcd",
+        "h.hotel_code",
+        "hcd.hotel_code"
       )
       .where(function () {
         if (id) {
-          this.andWhere('h.id', id);
+          this.andWhere("h.id", id);
         }
         if (hotel_code) {
-          this.andWhere('h.hotel_code', hotel_code);
+          this.andWhere("h.hotel_code", hotel_code);
         }
         if (email) {
-          this.andWhere('hcd.email', email);
+          this.andWhere("hcd.email", email);
         }
       })
       .first();
@@ -229,13 +229,9 @@ class HotelModel extends Schema {
     where: { id?: number; email?: string }
   ) {
     const { email, id } = where;
-    return await this.db('hotels as h')
+
+    const res = await this.db("hotels as h")
       .withSchema(this.RESERVATION_SCHEMA)
-      .leftJoin(
-        'hotel_contact_details as hcd',
-        'h.hotel_code',
-        'hcd.hotel_code'
-      )
       .update(payload)
       .where(function () {
         if (id) {
@@ -244,33 +240,35 @@ class HotelModel extends Schema {
           this.where({ email });
         }
       });
+
+    return res;
   }
 
   // delete hotel images
   public async deleteHotelImage(payload: number[], hotel_code: number) {
-    return await this.db('hotel_images')
+    return await this.db("hotel_images")
       .withSchema(this.RESERVATION_SCHEMA)
       .delete()
-      .whereIn('id', payload)
-      .andWhere('hotel_code', hotel_code);
+      .whereIn("id", payload)
+      .andWhere("hotel_code", hotel_code);
   }
 
   // insert hotel amnities
   public async insertHotelAmnities(
     payload: { name: string; hotel_code: number }[]
   ) {
-    return await this.db('hotel_aminities')
+    return await this.db("hotel_aminities")
       .withSchema(this.RESERVATION_SCHEMA)
       .insert(payload);
   }
 
   // delete hotel amnities
   public async deleteHotelAmnities(payload: [], hotel_code: number) {
-    return await this.db('hotel_aminities')
+    return await this.db("hotel_aminities")
       .withSchema(this.RESERVATION_SCHEMA)
       .delete()
-      .whereIn('id', payload)
-      .andWhere('hotel_code', hotel_code);
+      .whereIn("id", payload)
+      .andWhere("hotel_code", hotel_code);
   }
 
   // Get Hotel Account config
@@ -280,11 +278,11 @@ class HotelModel extends Schema {
   ): Promise<
     { id: number; hotel_code: number; config: string; head_id: number }[]
   > {
-    return await this.db('acc_head_config')
+    return await this.db("acc_head_config")
       .withSchema(this.ACC_SCHEMA)
-      .select('*')
-      .andWhere('hotel_code', hotel_code)
-      .whereIn('config', configs);
+      .select("*")
+      .andWhere("hotel_code", hotel_code)
+      .whereIn("config", configs);
   }
 }
 
