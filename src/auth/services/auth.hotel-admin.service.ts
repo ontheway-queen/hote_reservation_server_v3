@@ -74,7 +74,6 @@ class HotelAdminAuthService extends AbstractServices {
       success: true,
       code: this.StatusCode.HTTP_OK,
       message: this.ResMsg.LOGIN_SUCCESSFUL,
-
       data: {
         id,
         ...rest,

@@ -1,5 +1,7 @@
 export const origin: string[] = [
   "http://localhost:3000",
+  "http://10.10.220.47:3030",
+  "http://10.10.220.47:3000",
   "http://localhost:4050",
   "http://10.10.220.47:4050",
   "https://admin-v3.hotel360.world",

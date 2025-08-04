@@ -239,7 +239,7 @@ class RAdministrationModel extends schema_1.default {
     }
     getSingleAdmin(where) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { email, id, hotel_code } = where;
+            const { email, id, hotel_code, owner } = where;
             return yield this.db("user_admin AS ua")
                 .withSchema(this.RESERVATION_SCHEMA)
                 .select("ua.id", "ua.email", "ua.hotel_code", "h.name as hotel_name", "h.status as hotel_status", "ua.phone", "ua.password", "ua.photo", "ua.name", "ua.status", "r.id as role_id", "r.name as role_name", "ua.created_at", this.db.raw(`
@@ -266,6 +266,9 @@ class RAdministrationModel extends schema_1.default {
                 }
                 if (hotel_code) {
                     queryBuilder.where("ua.hotel_code", hotel_code);
+                }
+                if (owner) {
+                    queryBuilder.where("ua.owner", owner);
                 }
             })
                 .first();

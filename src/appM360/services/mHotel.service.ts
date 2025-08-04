@@ -7,6 +7,7 @@ import {
   IhotelCreateRequestBodyPayload,
   IUpdateHotelReqBody,
 } from "../utlis/interfaces/mHotel.common.interface";
+import config from "../../config/config";
 
 class MHotelService extends AbstractServices {
   constructor() {
@@ -431,6 +432,62 @@ class MHotelService extends AbstractServices {
         message: "Hotel updated successfully",
       };
     });
+  }
+
+  public async directLogin(req: Request) {
+    const data = await this.Model.HotelModel().getSingleHotel({
+      id: parseInt(req.params.id),
+    });
+
+    if (!data) {
+      return {
+        success: false,
+        code: this.StatusCode.HTTP_NOT_FOUND,
+        message: this.ResMsg.HTTP_NOT_FOUND,
+      };
+    }
+
+    const model = this.Model.rAdministrationModel();
+    const checkUser = await model.getSingleAdmin({
+      owner: "true",
+      hotel_code: data.hotel_code,
+    });
+
+    if (!checkUser) {
+      return {
+        success: false,
+        code: this.StatusCode.HTTP_BAD_REQUEST,
+        message: this.ResMsg.WRONG_CREDENTIALS,
+      };
+    }
+    const {
+      password: hashPass,
+      id,
+      status,
+      hotel_status,
+      hotel_contact_details,
+      ...rest
+    } = checkUser;
+
+    const token = Lib.createToken(
+      { status, ...rest, id, type: "admin" },
+      config.JWT_SECRET_HOTEL_ADMIN,
+      "24h"
+    );
+
+    return {
+      success: true,
+      code: this.StatusCode.HTTP_OK,
+      message: this.ResMsg.LOGIN_SUCCESSFUL,
+
+      data: {
+        id,
+        ...rest,
+        status,
+        hotel_contact_details,
+      },
+      token,
+    };
   }
 }
 

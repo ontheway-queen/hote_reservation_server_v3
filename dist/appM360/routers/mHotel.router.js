@@ -20,6 +20,10 @@ class MHotelRouter extends abstract_router_1.default {
             .route("/:id")
             .get(this.hotelController.getSingleHotel)
             .patch(this.uploader.cloudUploadRaw(this.fileFolders.HOTEL_FILES), this.hotelController.updateHotel);
+        // direct login
+        this.router
+            .route("/direct-login/:id")
+            .post(this.hotelController.directLogin);
     }
 }
 exports.default = MHotelRouter;

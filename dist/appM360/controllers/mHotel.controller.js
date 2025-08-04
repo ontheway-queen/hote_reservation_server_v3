@@ -58,6 +58,11 @@ class MHotelController extends abstract_controller_1.default {
                 this.error(data.message, code);
             }
         }));
+        //direct login
+        this.directLogin = this.asyncWrapper.wrap({ paramSchema: this.commonValidator.singleParamValidator() }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _e = yield this.mUserService.directLogin(req), { code } = _e, data = __rest(_e, ["code"]);
+            res.status(code).json(data);
+        }));
     }
 }
 exports.default = MHotelController;

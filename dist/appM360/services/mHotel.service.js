@@ -27,6 +27,7 @@ const abstract_service_1 = __importDefault(require("../../abstarcts/abstract.ser
 const mHotelUserCredentials_template_1 = require("../../templates/mHotelUserCredentials.template");
 const lib_1 = __importDefault(require("../../utils/lib/lib"));
 const constants_1 = require("../../utils/miscellaneous/constants");
+const config_1 = __importDefault(require("../../config/config"));
 class MHotelService extends abstract_service_1.default {
     constructor() {
         super();
@@ -324,6 +325,42 @@ class MHotelService extends abstract_service_1.default {
                     message: "Hotel updated successfully",
                 };
             }));
+        });
+    }
+    directLogin(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const data = yield this.Model.HotelModel().getSingleHotel({
+                id: parseInt(req.params.id),
+            });
+            if (!data) {
+                return {
+                    success: false,
+                    code: this.StatusCode.HTTP_NOT_FOUND,
+                    message: this.ResMsg.HTTP_NOT_FOUND,
+                };
+            }
+            const model = this.Model.rAdministrationModel();
+            const checkUser = yield model.getSingleAdmin({
+                owner: "true",
+                hotel_code: data.hotel_code,
+            });
+            if (!checkUser) {
+                return {
+                    success: false,
+                    code: this.StatusCode.HTTP_BAD_REQUEST,
+                    message: this.ResMsg.WRONG_CREDENTIALS,
+                };
+            }
+            const { password: hashPass, id, status, hotel_status, hotel_contact_details } = checkUser, rest = __rest(checkUser, ["password", "id", "status", "hotel_status", "hotel_contact_details"]);
+            const token = lib_1.default.createToken(Object.assign(Object.assign({ status }, rest), { id, type: "admin" }), config_1.default.JWT_SECRET_HOTEL_ADMIN, "24h");
+            return {
+                success: true,
+                code: this.StatusCode.HTTP_OK,
+                message: this.ResMsg.LOGIN_SUCCESSFUL,
+                data: Object.assign(Object.assign({ id }, rest), { status,
+                    hotel_contact_details }),
+                token,
+            };
         });
     }
 }

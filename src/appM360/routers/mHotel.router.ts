@@ -25,6 +25,11 @@ class MHotelRouter extends AbstractRouter {
         this.uploader.cloudUploadRaw(this.fileFolders.HOTEL_FILES),
         this.hotelController.updateHotel
       );
+
+    // direct login
+    this.router
+      .route("/direct-login/:id")
+      .post(this.hotelController.directLogin);
   }
 }
 
