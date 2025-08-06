@@ -758,7 +758,7 @@ class ReportModel extends Schema {
         this.db.raw(`
   COALESCE(
     JSON_AGG(
-      DISTINCT JSONB_BUILD_OBJECT('changed_rate', br.changed_rate)
+      DISTINCT JSONB_BUILD_OBJECT('changed_rate', br.unit_changed_rate)
     ) FILTER (WHERE br.unit_changed_rate IS NOT NULL),
     '[]'
   ) as "changed_rates"
