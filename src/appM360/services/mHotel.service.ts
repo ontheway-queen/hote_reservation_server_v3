@@ -8,6 +8,11 @@ import {
   IUpdateHotelReqBody,
 } from "../utlis/interfaces/mHotel.common.interface";
 import config from "../../config/config";
+import { AccountHead } from "../../appAdmin/utlis/interfaces/report.interface";
+import {
+  IinsertAccHeadReqBody,
+  IinsertAccHeadReqBodyForMpanel,
+} from "../../appAdmin/utlis/interfaces/doubleEntry.interface";
 
 class MHotelService extends AbstractServices {
   constructor() {
@@ -491,6 +496,158 @@ class MHotelService extends AbstractServices {
       },
       token,
     };
+  }
+
+  public async getAllAccHeads(req: Request) {
+    const data = await this.Model.accountModel().getAccHeadsForSelect(
+      Number(req.params.h_code)
+    );
+
+    const headMap = new Map<number, AccountHead>();
+
+    for (const item of data) {
+      headMap.set(item.head_id, {
+        head_id: item.head_id,
+        head_parent_id: item.head_parent_id,
+        head_code: item.head_code,
+        head_group_code: item.head_group_code,
+        head_name: item.head_name,
+        parent_head_code: item.parent_head_code,
+        parent_head_name: item.parent_head_name,
+        children: [],
+      });
+    }
+
+    // Step 3: Build the hierarchy
+    const rootHeads: AccountHead[] = [];
+
+    for (const head of headMap.values()) {
+      if (head.head_parent_id === null) {
+        // This is a root-level head
+        rootHeads.push(head);
+      } else {
+        // Find the parent head
+        const parentHead = headMap.get(head.head_parent_id);
+        if (parentHead) {
+          // Add this head as a child of the parent
+          parentHead.children!.push(head);
+        }
+      }
+    }
+
+    return {
+      success: true,
+      code: this.StatusCode.HTTP_OK,
+      data: rootHeads,
+    };
+  }
+
+  public async allGroups(req: Request) {
+    const data = await this.Model.accountModel().allGroups();
+
+    return {
+      success: true,
+      code: this.StatusCode.HTTP_OK,
+      data,
+    };
+  }
+
+  public async insertAccHead(req: Request) {
+    return await this.db.transaction(async (trx) => {
+      const hotel_code = Number(req.params.h_code);
+      const { group_code, name, parent_id } =
+        req.body as IinsertAccHeadReqBodyForMpanel;
+
+      const model = this.Model.accountModel(trx);
+
+      for (const head of name) {
+        let newHeadCode = "";
+        if (parent_id) {
+          const parentHead = await model.getAccountHead({
+            hotel_code,
+            group_code,
+            id: parent_id,
+          });
+
+          if (!parentHead.length) {
+            return {
+              success: false,
+              code: this.StatusCode.HTTP_NOT_FOUND,
+              message: "Parent head not found!",
+            };
+          }
+
+          const { code: parent_head_code } = parentHead[0];
+
+          const heads = await model.getAccountHead({
+            hotel_code,
+            group_code,
+            parent_id,
+            order_by: "ah.code",
+            order_to: "desc",
+          });
+
+          if (heads.length) {
+            const { code: child_code } = heads[0];
+
+            const lastHeadCodeNum = child_code.split(".");
+            const newNum =
+              Number(lastHeadCodeNum[lastHeadCodeNum.length - 1]) + 1;
+
+            newHeadCode = lastHeadCodeNum.pop();
+            newHeadCode = lastHeadCodeNum.join(".");
+
+            if (newNum < 10) {
+              newHeadCode += ".00" + newNum;
+            } else if (newNum < 100) {
+              newHeadCode += ".0" + newNum;
+            } else {
+              newHeadCode += "." + newNum;
+            }
+          } else {
+            newHeadCode = parent_head_code + ".001";
+          }
+        } else {
+          const checkHead = await model.getAccountHead({
+            hotel_code,
+            group_code,
+            parent_id: null,
+            order_by: "ah.id",
+            order_to: "desc",
+          });
+
+          if (checkHead.length) {
+            newHeadCode = Number(checkHead[0].code) + 1 + "";
+          } else {
+            newHeadCode = Number(group_code) + 1 + "";
+          }
+        }
+
+        await model.insertAccHead({
+          code: newHeadCode,
+
+          group_code,
+          hotel_code,
+          name: head,
+          parent_id,
+        });
+      }
+
+      return {
+        success: true,
+        code: this.StatusCode.HTTP_SUCCESSFUL,
+        message: "Account head created successfully.",
+      };
+    });
+  }
+
+  public async updateAccHead(req: Request) {
+    const body = req.body;
+    const id = req.params.id;
+
+    const data = await this.Model.accountModel().updateAccHead(body, id);
+
+    return { success: true, data };
   }
 }
 

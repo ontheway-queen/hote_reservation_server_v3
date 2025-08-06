@@ -46,6 +46,25 @@ class AccountModel extends Schema {
       .where("id", id);
   }
 
+  public async getAccHeadsForSelect(hotel_code: number) {
+    return await this.db("acc_heads AS ah")
+      .withSchema(this.ACC_SCHEMA)
+      .select(
+        "ah.id AS head_id",
+        "ah.parent_id AS head_parent_id",
+        "ah.code AS head_code",
+        "ah.group_code AS head_group_code",
+        "ah.name AS head_name",
+        "aph.code AS parent_head_code",
+        "aph.name AS parent_head_name"
+      )
+      .leftJoin("acc_heads AS aph", { "aph.id": "ah.parent_id" })
+      .where("ah.is_deleted", 0)
+      .andWhere("ah.hotel_code", hotel_code)
+      .andWhere("ah.is_active", 1)
+      .orderBy("ah.id", "asc");
+  }
+
   public async getAllAccHeads({
     limit,
     order_by,

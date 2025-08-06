@@ -56,11 +56,29 @@ class MHotelController extends AbstractController {
     }
   );
 
-  //direct login
   public directLogin = this.asyncWrapper.wrap(
     { paramSchema: this.commonValidator.singleParamValidator() },
     async (req: Request, res: Response) => {
       const { code, ...data } = await this.mUserService.directLogin(req);
+      res.status(code).json(data);
+    }
+  );
+
+  public insertAccHead = this.asyncWrapper.wrap(
+    {
+      bodySchema: this.mHotelValidator.insertAccHeadValidator,
+    },
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.mUserService.insertAccHead(req);
+
+      res.status(code).json(data);
+    }
+  );
+
+  public getAllAccHeads = this.asyncWrapper.wrap(
+    { paramSchema: this.commonValidator.singleParamValidator("h_code") },
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.mUserService.getAllAccHeads(req);
       res.status(code).json(data);
     }
   );

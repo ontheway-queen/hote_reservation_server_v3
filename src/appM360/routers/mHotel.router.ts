@@ -26,10 +26,14 @@ class MHotelRouter extends AbstractRouter {
         this.hotelController.updateHotel
       );
 
-    // direct login
     this.router
       .route("/direct-login/:id")
       .post(this.hotelController.directLogin);
+
+    this.router
+      .route("/acc-heads/by-hc/:h_code")
+      .get(this.hotelController.getAllAccHeads)
+      .post(this.hotelController.insertAccHead);
   }
 }
 

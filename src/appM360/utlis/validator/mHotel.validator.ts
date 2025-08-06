@@ -65,6 +65,12 @@ class MHotelValidator {
     from_date: Joi.date().optional(),
     to_date: Joi.date().optional(),
   });
+
+  public insertAccHeadValidator = Joi.object({
+    parent_id: Joi.number().required(),
+    group_code: Joi.number().required(),
+    name: Joi.array().items(Joi.string().required()).required(),
+  });
 }
 
 export default MHotelValidator;
