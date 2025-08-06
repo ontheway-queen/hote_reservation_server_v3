@@ -230,6 +230,8 @@ class HotelModel extends Schema {
   ) {
     const { email, id } = where;
 
+    console.log({ payload, id });
+
     const res = await this.db("hotels as h")
       .withSchema(this.RESERVATION_SCHEMA)
       .update(payload)

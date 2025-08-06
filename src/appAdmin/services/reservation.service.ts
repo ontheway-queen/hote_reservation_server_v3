@@ -607,7 +607,7 @@ export class ReservationService extends AbstractServices {
 
       const heads = await hotelModel.getHotelAccConfig(hotel_code, [
         "RECEIVABLE_HEAD_ID",
-        "SALES_HEAD_ID",
+        "HOTEL_REVENUE_HEAD_ID",
       ]);
 
       const receivable_head = heads.find(
@@ -618,10 +618,12 @@ export class ReservationService extends AbstractServices {
         throw new Error("RECEIVABLE_HEAD_ID not configured for this hotel");
       }
 
-      const sales_head = heads.find((h) => h.config === "SALES_HEAD_ID");
+      const sales_head = heads.find(
+        (h) => h.config === "HOTEL_REVENUE_HEAD_ID"
+      );
 
       if (!sales_head) {
-        throw new Error("SALES_HEAD_ID not configured for this hotel");
+        throw new Error("HOTEL_REVENUE_HEAD_ID not configured for this hotel");
       }
 
       const accountModel = this.Model.accountModel(trx);
@@ -1310,7 +1312,7 @@ export class ReservationService extends AbstractServices {
 
       const heads = await hotelModel.getHotelAccConfig(hotel_code, [
         "RECEIVABLE_HEAD_ID",
-        "SALES_HEAD_ID",
+        "HOTEL_REVENUE_HEAD_ID",
       ]);
 
       const receivable_head = heads.find(
@@ -1321,10 +1323,12 @@ export class ReservationService extends AbstractServices {
         throw new Error("RECEIVABLE_HEAD_ID not configured for this hotel");
       }
 
-      const sales_head = heads.find((h) => h.config === "SALES_HEAD_ID");
+      const sales_head = heads.find(
+        (h) => h.config === "HOTEL_REVENUE_HEAD_ID"
+      );
 
       if (!sales_head) {
-        throw new Error("SALES_HEAD_ID not configured for this hotel");
+        throw new Error("HOTEL_REVENUE_HEAD_ID not configured for this hotel");
       }
 
       const accountModel = this.Model.accountModel(trx);
@@ -1650,7 +1654,7 @@ export class ReservationService extends AbstractServices {
 
       const heads = await hotelModel.getHotelAccConfig(hotel_code, [
         "RECEIVABLE_HEAD_ID",
-        "SALES_HEAD_ID",
+        "HOTEL_REVENUE_HEAD_ID",
       ]);
 
       const receivable_head = heads.find(
@@ -1661,10 +1665,12 @@ export class ReservationService extends AbstractServices {
         throw new Error("RECEIVABLE_HEAD_ID not configured for this hotel");
       }
 
-      const sales_head = heads.find((h) => h.config === "SALES_HEAD_ID");
+      const sales_head = heads.find(
+        (h) => h.config === "HOTEL_REVENUE_HEAD_ID"
+      );
 
       if (!sales_head) {
-        throw new Error("SALES_HEAD_ID not configured for this hotel");
+        throw new Error("HOTEL_REVENUE_HEAD_ID not configured for this hotel");
       }
 
       const accountModel = this.Model.accountModel(trx);
@@ -1963,7 +1969,7 @@ export class ReservationService extends AbstractServices {
 
       const heads = await hotelModel.getHotelAccConfig(hotel_code, [
         "RECEIVABLE_HEAD_ID",
-        "SALES_HEAD_ID",
+        "HOTEL_REVENUE_HEAD_ID",
       ]);
 
       const receivable_head = heads.find(
@@ -1974,10 +1980,12 @@ export class ReservationService extends AbstractServices {
         throw new Error("RECEIVABLE_HEAD_ID not configured for this hotel");
       }
 
-      const sales_head = heads.find((h) => h.config === "SALES_HEAD_ID");
+      const sales_head = heads.find(
+        (h) => h.config === "HOTEL_REVENUE_HEAD_ID"
+      );
 
       if (!sales_head) {
-        throw new Error("SALES_HEAD_ID not configured for this hotel");
+        throw new Error("HOTEL_REVENUE_HEAD_ID not configured for this hotel");
       }
 
       const accountModel = this.Model.accountModel(trx);
@@ -2586,7 +2594,7 @@ export class ReservationService extends AbstractServices {
 
       const heads = await hotelModel.getHotelAccConfig(
         req.hotel_admin.hotel_code,
-        ["RECEIVABLE_HEAD_ID", "SALES_HEAD_ID"]
+        ["RECEIVABLE_HEAD_ID", "HOTEL_REVENUE_HEAD_ID"]
       );
 
       const receivable_head = heads.find(
@@ -2596,10 +2604,12 @@ export class ReservationService extends AbstractServices {
         throw new Error("RECEIVABLE_HEAD_ID not configured for this hotel");
       }
 
-      const sales_head = heads.find((h) => h.config === "SALES_HEAD_ID");
+      const sales_head = heads.find(
+        (h) => h.config === "HOTEL_REVENUE_HEAD_ID"
+      );
 
       if (!sales_head) {
-        throw new Error("SALES_HEAD_ID not configured for this hotel");
+        throw new Error("HOTEL_REVENUE_HEAD_ID not configured for this hotel");
       }
 
       const today = new Date().toISOString().split("T")[0];
@@ -2668,7 +2678,7 @@ export class ReservationService extends AbstractServices {
 
       const heads = await hotelModel.getHotelAccConfig(
         req.hotel_admin.hotel_code,
-        ["RECEIVABLE_HEAD_ID", "SALES_HEAD_ID"]
+        ["RECEIVABLE_HEAD_ID", "HOTEL_REVENUE_HEAD_ID"]
       );
 
       const receivable_head = heads.find(
@@ -2679,7 +2689,9 @@ export class ReservationService extends AbstractServices {
         throw new Error("RECEIVABLE_HEAD_ID not configured for this hotel");
       }
 
-      const sales_head = heads.find((h) => h.config === "SALES_HEAD_ID");
+      const sales_head = heads.find(
+        (h) => h.config === "HOTEL_REVENUE_HEAD_ID"
+      );
 
       if (!sales_head) {
         throw new Error("RECEIVABLE_HEAD_ID not configured for this hotel");

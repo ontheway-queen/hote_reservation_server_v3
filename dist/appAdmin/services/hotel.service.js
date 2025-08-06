@@ -54,8 +54,7 @@ class HotelService extends abstract_service_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
                 const _a = req.body, { fax, phone, website_url, hotel_email, remove_hotel_images, expiry_date, optional_phone1, hotel_name } = _a, hotelData = __rest(_a, ["fax", "phone", "website_url", "hotel_email", "remove_hotel_images", "expiry_date", "optional_phone1", "hotel_name"]);
-                const { id } = req.params;
-                const parsedId = parseInt(id);
+                const hotel_code = req.hotel_admin.hotel_code;
                 const files = req.files || [];
                 if (expiry_date && new Date(expiry_date) < new Date()) {
                     return {
@@ -65,7 +64,7 @@ class HotelService extends abstract_service_1.default {
                     };
                 }
                 const model = this.Model.HotelModel(trx);
-                const existingHotel = yield model.getSingleHotel({ id: parsedId });
+                const existingHotel = yield model.getSingleHotel({ hotel_code });
                 if (!existingHotel) {
                     return {
                         success: false,
@@ -73,11 +72,10 @@ class HotelService extends abstract_service_1.default {
                         message: this.ResMsg.HTTP_NOT_FOUND,
                     };
                 }
-                const { hotel_code } = existingHotel;
                 // Filter out only defined fields for update
                 const filteredUpdateData = Object.fromEntries(Object.entries(Object.assign(Object.assign({}, hotelData), { expiry_date, name: hotel_name })).filter(([_, value]) => value !== undefined));
                 if (Object.keys(filteredUpdateData).length > 0) {
-                    yield model.updateHotel(filteredUpdateData, { id: parsedId });
+                    yield model.updateHotel(filteredUpdateData, { id: existingHotel.id });
                 }
                 // === Handle file uploads ===
                 let logoFilename;
