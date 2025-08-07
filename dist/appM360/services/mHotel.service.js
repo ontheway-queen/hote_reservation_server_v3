@@ -502,6 +502,23 @@ class MHotelService extends abstract_service_1.default {
             return { success: true, data };
         });
     }
+    renewAccHead(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
+                const hotel_code = Number(req.params.h_code);
+                const accModel = this.Model.accountModel(trx);
+                yield accModel.deleteAccHeadConfig({ hotel_code });
+                yield accModel.deleteAccHeads({ hotel_code });
+                // Insert hotel accounts head
+                yield lib_1.default.insertHotelCOA(trx, hotel_code);
+                return {
+                    success: true,
+                    code: this.StatusCode.HTTP_OK,
+                    message: "Setup new COA",
+                };
+            }));
+        });
+    }
 }
 exports.default = MHotelService;
 //# sourceMappingURL=mHotel.service.js.map

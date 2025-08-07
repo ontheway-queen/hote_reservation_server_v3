@@ -34,6 +34,10 @@ class MHotelRouter extends AbstractRouter {
       .route("/acc-heads/by-hc/:h_code")
       .get(this.hotelController.getAllAccHeads)
       .post(this.hotelController.insertAccHead);
+
+    this.router
+      .route("/acc-heads/renew/by-hc/:h_code")
+      .post(this.hotelController.renewAccHead);
   }
 }
 

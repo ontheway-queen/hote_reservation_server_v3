@@ -48,6 +48,36 @@ class AccountModel extends schema_1.default {
                 .where("head_id", id);
         });
     }
+    deleteAccHeadConfig({ id, hotel_code, }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("acc_head_config")
+                .withSchema(this.ACC_SCHEMA)
+                .update({ is_deleted: true })
+                .where(function () {
+                if (id) {
+                    this.where("id", id);
+                }
+                if (hotel_code) {
+                    this.andWhere("hotel_code", hotel_code);
+                }
+            });
+        });
+    }
+    deleteAccHeads({ id, hotel_code, }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("acc_heads")
+                .withSchema(this.ACC_SCHEMA)
+                .update({ is_deleted: true })
+                .where(function () {
+                if (id) {
+                    this.where("head_id", id);
+                }
+                if (hotel_code) {
+                    this.andWhere("hotel_code", hotel_code);
+                }
+            });
+        });
+    }
     deleteAccHead(id) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("acc_heads")
@@ -62,7 +92,7 @@ class AccountModel extends schema_1.default {
                 .withSchema(this.ACC_SCHEMA)
                 .select("ah.id AS head_id", "ah.parent_id AS head_parent_id", "ah.code AS head_code", "ah.group_code AS head_group_code", "ah.name AS head_name", "aph.code AS parent_head_code", "aph.name AS parent_head_name")
                 .leftJoin("acc_heads AS aph", { "aph.id": "ah.parent_id" })
-                .where("ah.is_deleted", 0)
+                .where("ah.is_deleted", false)
                 .andWhere("ah.hotel_code", hotel_code)
                 .andWhere("ah.is_active", 1)
                 .orderBy("ah.id", "asc");
@@ -73,9 +103,10 @@ class AccountModel extends schema_1.default {
             const data = yield this.db("acc_heads")
                 .withSchema(this.ACC_SCHEMA)
                 .select("id", "group_code", "code", "name", "is_active")
-                .modify((e) => {
+                .modify((qb) => {
+                qb.andWhere("is_deleted", false);
                 if (search) {
-                    e.select(this.db.raw(`
+                    qb.select(this.db.raw(`
           (
             CASE 
               WHEN group_code LIKE ? THEN 3
@@ -91,10 +122,10 @@ class AccountModel extends schema_1.default {
                         .orderBy("relevance_score", "desc");
                 }
                 else {
-                    e.orderBy("name", order_by || "asc");
+                    qb.orderBy("name", order_by || "asc");
                 }
                 if (head_id) {
-                    e.where("id", head_id);
+                    qb.where("id", head_id);
                 }
             })
                 .limit(limit || 20)
@@ -102,14 +133,14 @@ class AccountModel extends schema_1.default {
             const { total } = yield this.db("acc_heads")
                 .withSchema(this.ACC_SCHEMA)
                 .count("id as total")
-                .modify((e) => {
+                .modify((qb) => {
                 if (search) {
-                    e.orWhereRaw("group_code like ?", [`%${search}%`])
+                    qb.orWhereRaw("group_code like ?", [`%${search}%`])
                         .orWhereRaw("code like ?", [`%${search}%`])
                         .orWhereRaw("name like ?", [`%${search}%`]);
                 }
                 if (head_id) {
-                    e.where("id", head_id);
+                    qb.where("id", head_id);
                 }
             })
                 .first();
@@ -122,6 +153,7 @@ class AccountModel extends schema_1.default {
                 .select("*")
                 .withSchema(this.ACC_SCHEMA)
                 .where("hotel_code", hotel_code)
+                .andWhere("is_deleted", false)
                 .andWhere("group_code", group_code)
                 .first();
         });
@@ -132,6 +164,7 @@ class AccountModel extends schema_1.default {
                 .withSchema(this.ACC_SCHEMA)
                 .select("*")
                 .where("id", id)
+                .andWhere("is_deleted", false)
                 .first();
         });
     }
@@ -210,6 +243,7 @@ class AccountModel extends schema_1.default {
                 .join("acc_groups AS ag", "ah.group_code", "ag.code")
                 .where((qb) => {
                 qb.andWhere("ah.hotel_code", hotel_code);
+                qb.andWhere("ah.is_deleted", false);
                 // qb.andWhere('ah.status', status);
                 if (id_greater) {
                     qb.andWhere("ah.id", ">", id_greater);

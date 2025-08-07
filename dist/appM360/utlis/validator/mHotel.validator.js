@@ -35,7 +35,7 @@ class MHotelValidator {
         this.updateHotelValidator = joi_1.default.object({
             hotel_name: joi_1.default.string().optional(),
             expiry_date: joi_1.default.date().optional(),
-            status: joi_1.default.bool().optional(),
+            status: joi_1.default.string().optional(),
             hotel_email: joi_1.default.string()
                 .email()
                 .lowercase()

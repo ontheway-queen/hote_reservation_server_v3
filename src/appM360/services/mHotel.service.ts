@@ -649,6 +649,27 @@ class MHotelService extends AbstractServices {
 
     return { success: true, data };
   }
+
+  public async renewAccHead(req: Request) {
+    return await this.db.transaction(async (trx) => {
+      const hotel_code = Number(req.params.h_code);
+
+      const accModel = this.Model.accountModel(trx);
+
+      await accModel.deleteAccHeadConfig({ hotel_code });
+
+      await accModel.deleteAccHeads({ hotel_code });
+
+      // Insert hotel accounts head
+      await Lib.insertHotelCOA(trx, hotel_code);
+
+      return {
+        success: true,
+        code: this.StatusCode.HTTP_OK,
+        message: "Setup new COA",
+      };
+    });
+  }
 }
 
 export default MHotelService;
