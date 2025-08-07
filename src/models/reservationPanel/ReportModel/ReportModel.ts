@@ -20,6 +20,7 @@ class ReportModel extends Schema {
     to_date,
     hotel_code,
   }: AccTransactionPayload): Promise<AccountJournalTransactions[]> {
+    console.log({ headIds });
     return await this.db(`${this.ACC_SCHEMA}.acc_vouchers AS av`)
       .select(
         "av.id",

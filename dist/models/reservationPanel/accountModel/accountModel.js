@@ -314,6 +314,7 @@ class AccountModel extends schema_1.default {
                 .select("id", "hotel_code", "name", "acc_type", "branch", "acc_number", "details", "is_active")
                 .withSchema(this.ACC_SCHEMA)
                 .where("hotel_code", hotel_code)
+                .andWhere("is_deleted", false)
                 .andWhere(function () {
                 if (status) {
                     this.where("is_active", status);
@@ -335,6 +336,7 @@ class AccountModel extends schema_1.default {
                 .withSchema(this.ACC_SCHEMA)
                 .count("id as total")
                 .where("hotel_code", hotel_code)
+                .andWhere("is_deleted", false)
                 .andWhere(function () {
                 if (status) {
                     this.where("is_active", status);
@@ -362,6 +364,7 @@ class AccountModel extends schema_1.default {
                 .withSchema(this.ACC_SCHEMA)
                 .select("id", "acc_head_id", "acc_type", "name", "branch", "acc_number", "is_active", "acc_routing_no", "details")
                 .where("hotel_code", hotel_code)
+                .andWhere("is_deleted", false)
                 .andWhere(function () {
                 if (id) {
                     this.andWhere({ id });

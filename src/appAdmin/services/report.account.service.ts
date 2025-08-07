@@ -75,7 +75,7 @@ export class AccountReportService extends AbstractServices {
       to_date,
       hotel_code: req.hotel_admin.hotel_code,
     });
-
+    console.log({ ledgers });
     return {
       success: true,
       code: this.StatusCode.HTTP_OK,

@@ -391,6 +391,7 @@ class AccountModel extends Schema {
       )
       .withSchema(this.ACC_SCHEMA)
       .where("hotel_code", hotel_code)
+      .andWhere("is_deleted", false)
       .andWhere(function () {
         if (status) {
           this.where("is_active", status);
@@ -419,6 +420,7 @@ class AccountModel extends Schema {
       .withSchema(this.ACC_SCHEMA)
       .count("id as total")
       .where("hotel_code", hotel_code)
+      .andWhere("is_deleted", false)
       .andWhere(function () {
         if (status) {
           this.where("is_active", status);
@@ -466,6 +468,7 @@ class AccountModel extends Schema {
         "details"
       )
       .where("hotel_code", hotel_code)
+      .andWhere("is_deleted", false)
       .andWhere(function () {
         if (id) {
           this.andWhere({ id });

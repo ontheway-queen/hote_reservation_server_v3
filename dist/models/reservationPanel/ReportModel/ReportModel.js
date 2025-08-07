@@ -20,6 +20,7 @@ class ReportModel extends schema_1.default {
     }
     getAccountsTransactions({ headIds, from_date, to_date, hotel_code, }) {
         return __awaiter(this, void 0, void 0, function* () {
+            console.log({ headIds });
             return yield this.db(`${this.ACC_SCHEMA}.acc_vouchers AS av`)
                 .select("av.id", "av.acc_head_id", "av.voucher_no", this.db.raw("DATE(av.voucher_date)"), "av.description", "av.debit", "av.credit", "ah.code AS acc_head_code", "ah.name AS acc_head_name", "ah.parent_id", "aph.name AS parent_acc_head_name", "ua.name AS created_by", "ag.name AS group_name", "av.created_at")
                 .leftJoin(`${this.ACC_SCHEMA}.acc_heads AS ah`, "av.acc_head_id", "ah.id")
