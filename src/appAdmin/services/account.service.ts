@@ -198,6 +198,8 @@ export class AccountService extends AbstractServices {
         };
       }
 
+      console.log(req.body);
+
       // Get parent head===========================================
       let parent_head = 0;
 
@@ -206,6 +208,7 @@ export class AccountService extends AbstractServices {
           ACC_HEAD_CONFIG.CASH_HEAD_ID,
         ]);
 
+        console.log({ configData });
         parent_head = configData[0].head_id;
       } else if (acc_type === "BANK") {
         const configData = await hotelModel.getHotelAccConfig(hotel_code, [

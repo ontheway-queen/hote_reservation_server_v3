@@ -192,6 +192,7 @@ class HotelModel extends schema_1.default {
                 .withSchema(this.ACC_SCHEMA)
                 .select("*")
                 .andWhere("hotel_code", hotel_code)
+                .andWhere("is_deleted", false)
                 .whereIn("config", configs);
         });
     }

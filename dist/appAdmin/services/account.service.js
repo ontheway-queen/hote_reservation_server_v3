@@ -191,12 +191,14 @@ class AccountService extends abstract_service_1.default {
                         message: "Account name already exist!",
                     };
                 }
+                console.log(req.body);
                 // Get parent head===========================================
                 let parent_head = 0;
                 if (acc_type === "CASH") {
                     const configData = yield hotelModel.getHotelAccConfig(hotel_code, [
                         constants_1.ACC_HEAD_CONFIG.CASH_HEAD_ID,
                     ]);
+                    console.log({ configData });
                     parent_head = configData[0].head_id;
                 }
                 else if (acc_type === "BANK") {

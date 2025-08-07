@@ -284,6 +284,7 @@ class HotelModel extends Schema {
       .withSchema(this.ACC_SCHEMA)
       .select("*")
       .andWhere("hotel_code", hotel_code)
+      .andWhere("is_deleted", false)
       .whereIn("config", configs);
   }
 
