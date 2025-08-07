@@ -142,6 +142,7 @@ class HotelModel extends schema_1.default {
     updateHotel(payload, where) {
         return __awaiter(this, void 0, void 0, function* () {
             const { email, id } = where;
+            console.log({ payload, id });
             const res = yield this.db("hotels as h")
                 .withSchema(this.RESERVATION_SCHEMA)
                 .update(payload)

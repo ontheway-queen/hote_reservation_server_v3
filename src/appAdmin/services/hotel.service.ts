@@ -46,8 +46,7 @@ class HotelService extends AbstractServices {
         ...hotelData
       } = req.body as Partial<IupdateHotelBodyPayload>;
 
-      const { id } = req.params;
-      const parsedId = parseInt(id);
+      const hotel_code = req.hotel_admin.hotel_code;
       const files = (req.files as Express.Multer.File[]) || [];
 
       if (expiry_date && new Date(expiry_date) < new Date()) {
@@ -59,7 +58,7 @@ class HotelService extends AbstractServices {
       }
 
       const model = this.Model.HotelModel(trx);
-      const existingHotel = await model.getSingleHotel({ id: parsedId });
+      const existingHotel = await model.getSingleHotel({ hotel_code });
 
       if (!existingHotel) {
         return {
@@ -68,8 +67,6 @@ class HotelService extends AbstractServices {
           message: this.ResMsg.HTTP_NOT_FOUND,
         };
       }
-
-      const { hotel_code } = existingHotel;
 
       // Filter out only defined fields for update
       const filteredUpdateData: Partial<IupdateHotelBodyPayload> =
@@ -82,7 +79,7 @@ class HotelService extends AbstractServices {
         );
 
       if (Object.keys(filteredUpdateData).length > 0) {
-        await model.updateHotel(filteredUpdateData, { id: parsedId });
+        await model.updateHotel(filteredUpdateData, { id: existingHotel.id });
       }
 
       // === Handle file uploads ===

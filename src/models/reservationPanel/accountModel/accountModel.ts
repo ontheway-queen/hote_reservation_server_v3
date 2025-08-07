@@ -39,11 +39,70 @@ class AccountModel extends Schema {
       .where("head_id", id);
   }
 
+  public async deleteAccHeadConfig({
+    id,
+    hotel_code,
+  }: {
+    id?: number;
+    hotel_code?: number;
+  }) {
+    return await this.db("acc_head_config")
+      .withSchema(this.ACC_SCHEMA)
+      .update({ is_deleted: true })
+      .where(function () {
+        if (id) {
+          this.where("id", id);
+        }
+        if (hotel_code) {
+          this.andWhere("hotel_code", hotel_code);
+        }
+      });
+  }
+
+  public async deleteAccHeads({
+    id,
+    hotel_code,
+  }: {
+    id?: number;
+    hotel_code?: number;
+  }) {
+    return await this.db("acc_heads")
+      .withSchema(this.ACC_SCHEMA)
+      .update({ is_deleted: true })
+      .where(function () {
+        if (id) {
+          this.where("head_id", id);
+        }
+        if (hotel_code) {
+          this.andWhere("hotel_code", hotel_code);
+        }
+      });
+  }
+
   public async deleteAccHead(id: idType) {
     return await this.db("acc_heads")
       .withSchema(this.ACC_SCHEMA)
       .del()
       .where("id", id);
+  }
+
+  public async getAccHeadsForSelect(hotel_code: number) {
+    return await this.db("acc_heads AS ah")
+      .withSchema(this.ACC_SCHEMA)
+      .select(
+        "ah.id AS head_id",
+        "ah.parent_id AS head_parent_id",
+        "ah.code AS head_code",
+        "ah.group_code AS head_group_code",
+        "ah.name AS head_name",
+        "aph.code AS parent_head_code",
+        "aph.name AS parent_head_name"
+      )
+      .leftJoin("acc_heads AS aph", { "aph.id": "ah.parent_id" })
+      .where("ah.is_deleted", false)
+      .andWhere("ah.hotel_code", hotel_code)
+      .andWhere("ah.is_active", 1)
+      .orderBy("ah.id", "asc");
   }
 
   public async getAllAccHeads({
@@ -62,9 +121,10 @@ class AccountModel extends Schema {
     const data = await this.db("acc_heads")
       .withSchema(this.ACC_SCHEMA)
       .select("id", "group_code", "code", "name", "is_active")
-      .modify((e) => {
+      .modify((qb) => {
+        qb.andWhere("is_deleted", false);
         if (search) {
-          e.select(
+          qb.select(
             this.db.raw(
               `
           (
@@ -84,10 +144,10 @@ class AccountModel extends Schema {
             .orWhereRaw("name like ?", [`%${search}%`])
             .orderBy("relevance_score", "desc");
         } else {
-          e.orderBy("name", order_by || "asc");
+          qb.orderBy("name", order_by || "asc");
         }
         if (head_id) {
-          e.where("id", head_id);
+          qb.where("id", head_id);
         }
       })
       .limit(limit || 20)
@@ -95,14 +155,14 @@ class AccountModel extends Schema {
     const { total } = await this.db("acc_heads")
       .withSchema(this.ACC_SCHEMA)
       .count("id as total")
-      .modify((e) => {
+      .modify((qb) => {
         if (search) {
-          e.orWhereRaw("group_code like ?", [`%${search}%`])
+          qb.orWhereRaw("group_code like ?", [`%${search}%`])
             .orWhereRaw("code like ?", [`%${search}%`])
             .orWhereRaw("name like ?", [`%${search}%`]);
         }
         if (head_id) {
-          e.where("id", head_id);
+          qb.where("id", head_id);
         }
       })
       .first();
@@ -115,6 +175,7 @@ class AccountModel extends Schema {
       .select("*")
       .withSchema(this.ACC_SCHEMA)
       .where("hotel_code", hotel_code)
+      .andWhere("is_deleted", false)
       .andWhere("group_code", group_code)
       .first();
   }
@@ -124,6 +185,7 @@ class AccountModel extends Schema {
       .withSchema(this.ACC_SCHEMA)
       .select("*")
       .where("id", id)
+      .andWhere("is_deleted", false)
       .first();
   }
 
@@ -240,6 +302,7 @@ class AccountModel extends Schema {
       .join("acc_groups AS ag", "ah.group_code", "ag.code")
       .where((qb) => {
         qb.andWhere("ah.hotel_code", hotel_code);
+        qb.andWhere("ah.is_deleted", false);
         // qb.andWhere('ah.status', status);
         if (id_greater) {
           qb.andWhere("ah.id", ">", id_greater);

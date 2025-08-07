@@ -58,9 +58,23 @@ class MHotelController extends abstract_controller_1.default {
                 this.error(data.message, code);
             }
         }));
-        //direct login
         this.directLogin = this.asyncWrapper.wrap({ paramSchema: this.commonValidator.singleParamValidator() }, (req, res) => __awaiter(this, void 0, void 0, function* () {
             const _e = yield this.mUserService.directLogin(req), { code } = _e, data = __rest(_e, ["code"]);
+            res.status(code).json(data);
+        }));
+        this.insertAccHead = this.asyncWrapper.wrap({
+            bodySchema: this.mHotelValidator.insertAccHeadValidator,
+            paramSchema: this.commonValidator.singleParamValidator("h_code"),
+        }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _f = yield this.mUserService.insertAccHead(req), { code } = _f, data = __rest(_f, ["code"]);
+            res.status(code).json(data);
+        }));
+        this.getAllAccHeads = this.asyncWrapper.wrap({ paramSchema: this.commonValidator.singleParamValidator("h_code") }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _g = yield this.mUserService.getAllAccHeads(req), { code } = _g, data = __rest(_g, ["code"]);
+            res.status(code).json(data);
+        }));
+        this.renewAccHead = this.asyncWrapper.wrap({}, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _h = yield this.mUserService.renewAccHead(req), { code } = _h, data = __rest(_h, ["code"]);
             res.status(code).json(data);
         }));
     }

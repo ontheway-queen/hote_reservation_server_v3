@@ -35,7 +35,7 @@ class MHotelValidator {
         this.updateHotelValidator = joi_1.default.object({
             hotel_name: joi_1.default.string().optional(),
             expiry_date: joi_1.default.date().optional(),
-            status: joi_1.default.bool().optional(),
+            status: joi_1.default.string().optional(),
             hotel_email: joi_1.default.string()
                 .email()
                 .lowercase()
@@ -67,6 +67,11 @@ class MHotelValidator {
             status: joi_1.default.string().optional(),
             from_date: joi_1.default.date().optional(),
             to_date: joi_1.default.date().optional(),
+        });
+        this.insertAccHeadValidator = joi_1.default.object({
+            parent_id: joi_1.default.number().required(),
+            group_code: joi_1.default.number().required(),
+            name: joi_1.default.array().items(joi_1.default.string().required()).required(),
         });
     }
 }

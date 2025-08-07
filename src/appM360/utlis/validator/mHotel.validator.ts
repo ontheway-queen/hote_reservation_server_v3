@@ -31,7 +31,7 @@ class MHotelValidator {
   public updateHotelValidator = Joi.object({
     hotel_name: Joi.string().optional(),
     expiry_date: Joi.date().optional(),
-    status: Joi.bool().optional(),
+    status: Joi.string().optional(),
     hotel_email: Joi.string()
       .email()
       .lowercase()
@@ -64,6 +64,12 @@ class MHotelValidator {
     status: Joi.string().optional(),
     from_date: Joi.date().optional(),
     to_date: Joi.date().optional(),
+  });
+
+  public insertAccHeadValidator = Joi.object({
+    parent_id: Joi.number().required(),
+    group_code: Joi.number().required(),
+    name: Joi.array().items(Joi.string().required()).required(),
   });
 }
 

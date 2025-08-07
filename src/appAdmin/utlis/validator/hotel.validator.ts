@@ -12,6 +12,8 @@ class HotelValidator {
       .allow("")
       .regex(/^\S/)
       .optional(),
+    latitude: Joi.string().allow("").optional(),
+    longitude: Joi.string().allow("").optional(),
     zip_code: Joi.string().trim().allow("").optional(),
     fax: Joi.string().trim().allow("").optional(),
     website_url: Joi.string().trim().allow("").optional(),

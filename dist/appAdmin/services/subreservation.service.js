@@ -337,7 +337,6 @@ class SubReservationService extends abstract_service_1.default {
             const reservationModel = this.Model.reservationModel(this.trx);
             const roomModel = this.Model.RoomModel(this.trx);
             const today = new Date().toISOString().split("T")[0];
-            const [lastFolio] = yield hotelInvModel.getLasFolioId();
             const child = [];
             const push = (c, e) => {
                 var _a;
@@ -419,15 +418,16 @@ class SubReservationService extends abstract_service_1.default {
             const hotelModel = this.Model.HotelModel(this.trx);
             const heads = yield hotelModel.getHotelAccConfig(hotel_code, [
                 "RECEIVABLE_HEAD_ID",
-                "SALES_HEAD_ID",
+                "HOTEL_REVENUE_HEAD_ID",
             ]);
+            console.log({ heads, hotel_code });
             const receivable_head = heads.find((h) => h.config === "RECEIVABLE_HEAD_ID");
             if (!receivable_head) {
                 throw new Error("RECEIVABLE_HEAD_ID not configured for this hotel");
             }
-            const sales_head = heads.find((h) => h.config === "SALES_HEAD_ID");
+            const sales_head = heads.find((h) => h.config === "HOTEL_REVENUE_HEAD_ID");
             if (!sales_head) {
-                throw new Error("RECEIVABLE_HEAD_ID not configured for this hotel");
+                throw new Error("HOTEL_REVENUE_HEAD_ID not configured for this hotel");
             }
             const voucher_no1 = yield helper.generateVoucherNo("JV", this.trx);
             yield accountModel.insertAccVoucher([
@@ -629,15 +629,15 @@ class SubReservationService extends abstract_service_1.default {
             const hotelModel = this.Model.HotelModel(this.trx);
             const heads = yield hotelModel.getHotelAccConfig(hotel_code, [
                 "RECEIVABLE_HEAD_ID",
-                "SALES_HEAD_ID",
+                "HOTEL_REVENUE_HEAD_ID",
             ]);
             const receivable_head = heads.find((h) => h.config === "RECEIVABLE_HEAD_ID");
             if (!receivable_head) {
                 throw new Error("RECEIVABLE_HEAD_ID not configured for this hotel");
             }
-            const sales_head = heads.find((h) => h.config === "SALES_HEAD_ID");
+            const sales_head = heads.find((h) => h.config === "HOTEL_REVENUE_HEAD_ID");
             if (!sales_head) {
-                throw new Error("SALES_HEAD_ID not configured for this hotel");
+                throw new Error("HOTEL_REVENUE_HEAD_ID not configured for this hotel");
             }
             const voucher_no1 = yield helper.generateVoucherNo("JV", this.trx);
             yield accountModel.insertAccVoucher([
@@ -762,13 +762,13 @@ class SubReservationService extends abstract_service_1.default {
             const hotelModel = this.Model.HotelModel(this.trx);
             const heads = yield hotelModel.getHotelAccConfig(hotel_code, [
                 "RECEIVABLE_HEAD_ID",
-                "SALES_HEAD_ID",
+                "HOTEL_REVENUE_HEAD_ID",
             ]);
             const receivable_head = heads.find((h) => h.config === "RECEIVABLE_HEAD_ID");
             if (!receivable_head) {
                 throw new Error("RECEIVABLE_HEAD_ID not configured for this hotel");
             }
-            const sales_head = heads.find((h) => h.config === "SALES_HEAD_ID");
+            const sales_head = heads.find((h) => h.config === "HOTEL_REVENUE_HEAD_ID");
             if (!sales_head) {
                 throw new Error("RECEIVABLE_HEAD_ID not configured for this hotel");
             }
@@ -846,14 +846,14 @@ class SubReservationService extends abstract_service_1.default {
             if (!account)
                 throw new Error("Invalid Account");
             const hotelModel = this.Model.HotelModel(this.trx);
-            const heads = yield hotelModel.getHotelAccConfig(req.hotel_admin.hotel_code, ["EXPENSE_HEAD_ID", "SALES_HEAD_ID"]);
-            const expense_head = heads.find((h) => h.config === "EXPENSE_HEAD_ID");
+            const heads = yield hotelModel.getHotelAccConfig(req.hotel_admin.hotel_code, ["HOTEL_EXPENSE_HEAD_ID", "HOTEL_REVENUE_HEAD_ID"]);
+            const expense_head = heads.find((h) => h.config === "HOTEL_EXPENSE_HEAD_ID");
             if (!expense_head) {
-                throw new Error("EXPENSE_HEAD_ID not configured for this hotel");
+                throw new Error("HOTEL_EXPENSE_HEAD_ID not configured for this hotel");
             }
-            const sales_head = heads.find((h) => h.config === "SALES_HEAD_ID");
+            const sales_head = heads.find((h) => h.config === "HOTEL_REVENUE_HEAD_ID");
             if (!sales_head) {
-                throw new Error("SALES_HEAD_ID not configured for this hotel");
+                throw new Error("HOTEL_REVENUE_HEAD_ID not configured for this hotel");
             }
             const [acc] = yield accountModel.getSingleAccount({
                 hotel_code: req.hotel_admin.hotel_code,

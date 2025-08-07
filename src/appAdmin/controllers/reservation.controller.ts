@@ -1,7 +1,7 @@
-import { Request, Response } from 'express';
-import AbstractController from '../../abstarcts/abstract.controller';
-import ReservationService from '../services/reservation.service';
-import { ReservationValidator } from '../utlis/validator/reservation.validator';
+import { Request, Response } from "express";
+import AbstractController from "../../abstarcts/abstract.controller";
+import ReservationService from "../services/reservation.service";
+import { ReservationValidator } from "../utlis/validator/reservation.validator";
 
 export class ReservationController extends AbstractController {
   private service = new ReservationService();
@@ -174,8 +174,8 @@ export class ReservationController extends AbstractController {
   public updateOthersOfARoomByBookingID = this.asyncWrapper.wrap(
     {
       paramSchema: this.commonValidator.doubleParamValidator(
-        'booking_id',
-        'room_id'
+        "booking_id",
+        "room_id"
       ),
       bodySchema: this.validator.updateOthersOfARoomByBookingID,
     },
@@ -207,7 +207,7 @@ export class ReservationController extends AbstractController {
   );
 
   public individualRoomCheckIn = this.asyncWrapper.wrap(
-    { paramSchema: this.commonValidator.doubleParamValidator('id', 'room_id') },
+    { paramSchema: this.commonValidator.doubleParamValidator("id", "room_id") },
     async (req: Request, res: Response) => {
       const { code, ...data } = await this.service.individualRoomCheckIn(req);
       res.status(code).json(data);
@@ -223,7 +223,7 @@ export class ReservationController extends AbstractController {
   );
 
   public individualCheckOut = this.asyncWrapper.wrap(
-    { paramSchema: this.commonValidator.doubleParamValidator('id', 'room_id') },
+    { paramSchema: this.commonValidator.doubleParamValidator("id", "room_id") },
     async (req: Request, res: Response) => {
       const { code, ...data } = await this.service.individualCheckOut(req);
       res.status(code).json(data);
@@ -314,7 +314,7 @@ export class ReservationController extends AbstractController {
 
   public updateOrRemoveGuestFromRoom = this.asyncWrapper.wrap(
     {
-      paramSchema: this.commonValidator.doubleParamValidator('id', 'room_id'),
+      paramSchema: this.commonValidator.doubleParamValidator("id", "room_id"),
       querySchema: this.validator.updateOrRemoveGuestFromRoom,
     },
     async (req: Request, res: Response) => {

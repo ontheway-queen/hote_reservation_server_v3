@@ -1,5 +1,11 @@
 export type idType = number | string;
 
+export interface IinsertAccHeadReqBodyForMpanel {
+  group_code: string;
+  hotel_code: number;
+  parent_id?: number;
+  name: string[];
+}
 export interface IinsertAccHeadReqBody {
   group_code: string;
   parent_id?: number;
@@ -12,7 +18,7 @@ export interface IAccHeadDb {
   parent_id?: number;
   code: idType;
   hotel_code: number;
-  created_by: number;
+  created_by?: number;
 }
 
 export interface IInsertVoucherPayload {
