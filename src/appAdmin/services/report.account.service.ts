@@ -212,6 +212,8 @@ export class AccountReportService extends AbstractServices {
 
     const headMap = new Map<number, AccountHead>();
 
+    console.log({ data });
+
     // Step 2: Populate the map with heads
     for (const item of data) {
       headMap.set(item.head_id, {

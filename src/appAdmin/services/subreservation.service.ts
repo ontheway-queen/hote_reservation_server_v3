@@ -683,6 +683,7 @@ export class SubReservationService extends AbstractServices {
         amount: body.payment.amount,
         money_receipt_id: mRes[0].id,
         folio_id: child[0].folioId,
+        booking_ref,
       });
 
       await accountModel.insertAccVoucher([
@@ -958,6 +959,7 @@ export class SubReservationService extends AbstractServices {
         amount: body.payment.amount,
         money_receipt_id: mRes[0].id,
         folio_id: masterFolio.id,
+        booking_ref,
       });
 
       // acc voucher
@@ -1016,7 +1018,9 @@ export class SubReservationService extends AbstractServices {
     req,
     booking_ref,
     booking_id,
+    room_id,
   }: {
+    room_id: number;
     acc_id: number;
     guest_id: number;
     req: Request;
@@ -1101,6 +1105,8 @@ export class SubReservationService extends AbstractServices {
       amount,
       money_receipt_id: mRes[0].id,
       folio_id: folio_id,
+      room_id,
+      booking_ref,
     });
 
     if (booking?.voucher_no)

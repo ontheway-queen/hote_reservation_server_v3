@@ -124,6 +124,14 @@ export class ReservationController extends AbstractController {
     }
   );
 
+  public cancelBooking = this.asyncWrapper.wrap(
+    { paramSchema: this.commonValidator.singleParamValidator() },
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.cancelBooking(req);
+      res.status(code).json(data);
+    }
+  );
+
   public updateRoomAndRateOfReservation = this.asyncWrapper.wrap(
     {
       paramSchema: this.commonValidator.singleParamValidator(),

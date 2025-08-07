@@ -50,6 +50,10 @@ export class ReservationRouter {
       .patch(this.controller.updateSingleReservation);
 
     this.router
+      .route("/booking/cancel/:id")
+      .delete(this.controller.cancelBooking);
+
+    this.router
       .route("/booking/update-room-and-rate/:id")
       .patch(this.controller.updateRoomAndRateOfReservation);
 

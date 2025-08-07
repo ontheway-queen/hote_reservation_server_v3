@@ -580,6 +580,120 @@ export class ReservationService extends AbstractServices {
     };
   }
 
+  public async cancelBooking(req: Request) {
+    return await this.db.transaction(async (trx) => {
+      const hotel_code = req.hotel_admin.hotel_code;
+      const created_by = req.hotel_admin.id;
+      const booking_id = parseInt(req.params.id);
+
+      const reservationModel = this.Model.reservationModel(trx);
+      const invModel = this.Model.hotelInvoiceModel(trx);
+      const booking = await reservationModel.getSingleBooking(
+        req.hotel_admin.hotel_code,
+        booking_id
+      );
+
+      if (!booking) {
+        return {
+          success: false,
+          code: this.StatusCode.HTTP_NOT_FOUND,
+          message: this.ResMsg.HTTP_NOT_FOUND,
+        };
+      }
+
+      const {
+        booking_rooms,
+        voucher_no,
+        booking_reference: booking_ref,
+      } = booking;
+
+      // update booking by Booking Type C
+      await reservationModel.updateRoomBooking(
+        { booking_type: "C" },
+        hotel_code,
+        booking_id
+      );
+      const sub = new SubReservationService(trx);
+
+      // update availability
+      const remainCheckOutRooms: BookingRoom[] = booking_rooms?.filter(
+        (room) => room.status !== "checked_out"
+      );
+
+      if (remainCheckOutRooms?.length) {
+        await sub.updateRoomAvailabilityService({
+          reservation_type: "booked_room_decrease",
+          rooms: remainCheckOutRooms,
+          hotel_code,
+        });
+      }
+
+      // Accounting
+      const { total_debit, total_credit } =
+        await invModel.getFolioEntriesCalculationByBookingID({
+          hotel_code,
+          booking_id,
+        });
+
+      const helper = new HelperFunction();
+      const hotelModel = this.Model.HotelModel(trx);
+      const accountModel = this.Model.accountModel(trx);
+      const today = new Date().toISOString().split("T")[0];
+
+      const heads = await hotelModel.getHotelAccConfig(hotel_code, [
+        "RECEIVABLE_HEAD_ID",
+        "HOTEL_REVENUE_HEAD_ID",
+      ]);
+
+      const voucher_no1 = await helper.generateVoucherNo("JV", trx);
+      console.log({ heads, hotel_code });
+
+      const receivable_head = heads.find(
+        (h) => h.config === "RECEIVABLE_HEAD_ID"
+      );
+
+      if (!receivable_head) {
+        throw new Error("RECEIVABLE_HEAD_ID not configured for this hotel");
+      }
+
+      const sales_head = heads.find(
+        (h) => h.config === "HOTEL_REVENUE_HEAD_ID"
+      );
+      if (!sales_head) {
+        throw new Error("HOTEL_REVENUE_HEAD_ID not configured for this hotel");
+      }
+
+      await accountModel.insertAccVoucher([
+        {
+          acc_head_id: receivable_head.head_id,
+          created_by,
+          debit: 0,
+          credit: total_debit - total_credit,
+          description: `Receivable for Cancel a reservation. Booking Ref ${booking_ref}`,
+          voucher_date: today,
+          voucher_no: voucher_no1,
+          hotel_code,
+        },
+        {
+          acc_head_id: sales_head.head_id,
+          created_by,
+          debit: total_debit - total_credit,
+          credit: 0,
+          description: `Sales for Cancel a reservation ${booking_ref}`,
+          voucher_date: today,
+          voucher_no: voucher_no1,
+          hotel_code,
+        },
+      ]);
+
+      return {
+        success: true,
+        code: this.StatusCode.HTTP_OK,
+        message: "Successfully Canceled",
+      };
+    });
+  }
+
   public async updateRoomAndRateOfReservation(req: Request) {
     return this.db.transaction(async (trx) => {
       const booking_id = Number(req.params.id);
@@ -2504,6 +2618,7 @@ export class ReservationService extends AbstractServices {
         payment_date,
         booking_ref: checkSingleFolio.booking_ref,
         booking_id: Number(checkSingleFolio.booking_id),
+        room_id: checkSingleFolio?.room_id,
       });
 
       return {

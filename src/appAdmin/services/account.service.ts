@@ -212,6 +212,7 @@ export class AccountService extends AbstractServices {
       }
 
       console.log({ parent_head });
+
       const newHeadCode = await subService.createAccHeadCode({
         hotel_code,
         group_code: ASSET_GROUP,

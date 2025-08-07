@@ -172,6 +172,7 @@ class AccountReportService extends abstract_service_1.default {
             const model = this.Model.reportModel();
             const data = yield model.getAccHeadsForSelect(req.hotel_admin.hotel_code);
             const headMap = new Map();
+            console.log({ data });
             // Step 2: Populate the map with heads
             for (const item of data) {
                 headMap.set(item.head_id, {

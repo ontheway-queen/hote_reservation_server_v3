@@ -491,6 +491,7 @@ class SubReservationService extends abstract_service_1.default {
                     amount: body.payment.amount,
                     money_receipt_id: mRes[0].id,
                     folio_id: child[0].folioId,
+                    booking_ref,
                 });
                 yield accountModel.insertAccVoucher([
                     {
@@ -706,6 +707,7 @@ class SubReservationService extends abstract_service_1.default {
                     amount: body.payment.amount,
                     money_receipt_id: mRes[0].id,
                     folio_id: masterFolio.id,
+                    booking_ref,
                 });
                 // acc voucher
                 yield accountModel.insertAccVoucher([
@@ -748,7 +750,7 @@ class SubReservationService extends abstract_service_1.default {
             };
         });
     }
-    handlePaymentAndFolioForAddPayment({ acc_id, amount, folio_id, remarks, req, booking_ref, booking_id, }) {
+    handlePaymentAndFolioForAddPayment({ acc_id, amount, folio_id, remarks, req, booking_ref, booking_id, room_id, }) {
         return __awaiter(this, void 0, void 0, function* () {
             const accountModel = this.Model.accountModel(this.trx);
             const hotel_code = req.hotel_admin.hotel_code;
@@ -803,6 +805,8 @@ class SubReservationService extends abstract_service_1.default {
                 amount,
                 money_receipt_id: mRes[0].id,
                 folio_id: folio_id,
+                room_id,
+                booking_ref,
             });
             if (booking === null || booking === void 0 ? void 0 : booking.voucher_no)
                 yield accountModel.insertAccVoucher([

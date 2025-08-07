@@ -119,10 +119,13 @@ class HotelInvoiceModel extends Schema {
       .withSchema(this.RESERVATION_SCHEMA)
       .insert(payload, "id");
   }
+
   public async insertFolioMoneyReceipt(payload: {
     money_receipt_id: number;
     amount: number;
     folio_id: number;
+    room_id?: number;
+    booking_ref?: string;
   }) {
     return await this.db("folio_money_receipt")
       .withSchema(this.RESERVATION_SCHEMA)
@@ -470,6 +473,7 @@ class HotelInvoiceModel extends Schema {
         id: number;
         name: string;
         guest_id: number;
+        room_id: number;
         booking_id: string;
         booking_ref: string;
       }
@@ -482,7 +486,8 @@ class HotelInvoiceModel extends Schema {
         "f.name",
         "f.guest_id",
         "f.booking_id",
-        "booking_reference as booking_ref"
+        "f.room_id",
+        "b.booking_reference as booking_ref"
       )
       .leftJoin("bookings as b", "f.booking_id", "b.id")
       .where("f.id", folio_id)
@@ -708,11 +713,14 @@ class HotelInvoiceModel extends Schema {
         "mr.amount_paid",
         "mr.payment_method",
         "mr.notes",
+        "r.room_name",
+        "fmr.booking_ref",
         "ac.name as account_name",
         "ua.id as received_by_id",
         "ua.name as received_by_name"
       )
       .join("folio_money_receipt as fmr", "mr.id", "fmr.money_receipt_id")
+      .leftJoin("rooms as r", "fmr.room_id", "r.id")
       .joinRaw("left join acc.accounts as ac on mr.acc_id =ac.id")
       .leftJoin("user_admin as ua", "mr.received_by", "ua.id")
       .where("fmr.folio_id", folio_id)
