@@ -183,14 +183,6 @@ class AccountService extends abstract_service_1.default {
                 const accModel = this.Model.accountModel(trx);
                 const hotelModel = this.Model.HotelModel(trx);
                 const subService = new helperLib_1.default(trx);
-                const checkName = yield accModel.checkAccName({ name, hotel_code });
-                if (checkName.length) {
-                    return {
-                        success: false,
-                        code: this.StatusCode.HTTP_CONFLICT,
-                        message: "Account name already exist!",
-                    };
-                }
                 console.log(req.body);
                 // Get parent head===========================================
                 let parent_head = 0;

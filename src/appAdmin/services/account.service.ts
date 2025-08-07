@@ -188,16 +188,6 @@ export class AccountService extends AbstractServices {
       const hotelModel = this.Model.HotelModel(trx);
       const subService = new HelperLib(trx);
 
-      const checkName = await accModel.checkAccName({ name, hotel_code });
-
-      if (checkName.length) {
-        return {
-          success: false,
-          code: this.StatusCode.HTTP_CONFLICT,
-          message: "Account name already exist!",
-        };
-      }
-
       console.log(req.body);
 
       // Get parent head===========================================
