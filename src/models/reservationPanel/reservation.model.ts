@@ -8,6 +8,7 @@ import {
   IgetChildRateGroups,
   IRoomBooking,
   ISearchAvailableRoom,
+  IsingleRoomOfBooking,
 } from "../../appAdmin/utlis/interfaces/reservation.interface";
 
 import { TDB } from "../../common/types/commontypes";
@@ -468,17 +469,7 @@ export class ReservationModel extends Schema {
   }: {
     booking_id: number;
     room_id: number;
-  }): Promise<{
-    id: number;
-    room_id: number;
-    unit_base_rate: number;
-    unit_changed_rate: number;
-    base_rate: number;
-    changed_rate: number;
-    check_in: string;
-    check_out: string;
-    room_type_id: number;
-  }> {
+  }): Promise<IsingleRoomOfBooking> {
     return await this.db("booking_rooms")
       .withSchema(this.RESERVATION_SCHEMA)
       .select(

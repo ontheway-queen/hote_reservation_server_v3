@@ -58,6 +58,18 @@ export class ReservationRouter {
       .patch(this.controller.updateRoomAndRateOfReservation);
 
     this.router
+      .route("/booking/change-rate-for-room/by-booking/:id")
+      .patch(this.controller.changedRateOfARoomInReservation);
+
+    this.router
+      .route("/booking/add-room/by-booking/:id")
+      .patch(this.controller.addRoomInReservation);
+
+    this.router
+      .route("/booking/remove-room/by-booking/:id")
+      .delete(this.controller.deleteRoomInReservation);
+
+    this.router
       .route("/booking/change-dates/by-booking/:id")
       .patch(this.controller.changeDatesOfBooking);
 

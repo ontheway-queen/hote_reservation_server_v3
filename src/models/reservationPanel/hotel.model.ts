@@ -10,6 +10,7 @@ import {
 import { TDB } from "../../common/types/commontypes";
 import Schema from "../../utils/miscellaneous/schema";
 import { IAccountConfigHeads } from "../../utils/miscellaneous/constants";
+import { IgetHotelAccConfig } from "../../appAdmin/utlis/interfaces/account.interface";
 
 class HotelModel extends Schema {
   private db: TDB;
@@ -278,7 +279,7 @@ class HotelModel extends Schema {
     hotel_code: number,
     configs: IAccountConfigHeads[]
   ): Promise<
-    { id: number; hotel_code: number; config: string; head_id: number }[]
+    IgetHotelAccConfig[]
   > {
     return await this.db("acc_head_config")
       .withSchema(this.ACC_SCHEMA)

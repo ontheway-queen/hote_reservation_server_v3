@@ -326,6 +326,57 @@ class ReservationValidator {
                 .optional(),
             removed_rooms: joi_1.default.array().items(joi_1.default.number().required()).optional(),
         });
+        this.deleteRoomInReservation = joi_1.default.object({
+            removed_rooms: joi_1.default.array().items(joi_1.default.number().required()).required(),
+        });
+        this.addRoomInReservation = joi_1.default.object({
+            add_room_types: joi_1.default.array()
+                .items(joi_1.default.object({
+                room_type_id: joi_1.default.number().required(),
+                rate_plan_id: joi_1.default.number().required(),
+                rooms: joi_1.default.array()
+                    .items(joi_1.default.object({
+                    check_in: joi_1.default.date().iso().required(),
+                    check_out: joi_1.default.date().iso().required(),
+                    room_id: joi_1.default.number().required(),
+                    cbf: joi_1.default.number().required().default(0),
+                    adults: joi_1.default.number().min(1).required(),
+                    children: joi_1.default.number().min(0).required(),
+                    infant: joi_1.default.number().min(0).required(),
+                    rate: joi_1.default.object({
+                        base_rate: joi_1.default.number().required(),
+                        changed_rate: joi_1.default.number().required(),
+                    }).required(),
+                    guest_info: joi_1.default.array().items(joi_1.default.object({
+                        first_name: joi_1.default.string().optional(),
+                        last_name: joi_1.default.string().allow("").optional(),
+                        email: joi_1.default.string().allow("").optional(),
+                        phone: joi_1.default.string().allow("").optional(),
+                        country_id: joi_1.default.number().required(),
+                        address: joi_1.default.string().allow("").optional(),
+                        passport_no: joi_1.default.string().allow("").optional(),
+                        type: joi_1.default.string()
+                            .allow("adult", "child", "infant")
+                            .required(),
+                        is_room_primary_guest: joi_1.default.boolean().required(),
+                    })),
+                }))
+                    .min(1)
+                    .required(),
+                meal_plans_ids: joi_1.default.array().items(joi_1.default.number()).optional(),
+            }))
+                .min(1)
+                .required(),
+        });
+        this.changedRateOfARoomInReservation = joi_1.default.object({
+            changed_rate_of_booking_rooms: joi_1.default.array()
+                .items(joi_1.default.object({
+                room_id: joi_1.default.number().required(),
+                unit_base_rate: joi_1.default.number().required(),
+                unit_changed_rate: joi_1.default.number().required(),
+            }))
+                .required(),
+        });
         this.updateSingleReservation = joi_1.default.object({
             comments: joi_1.default.string().allow("").optional(),
             source_id: joi_1.default.number().required(),

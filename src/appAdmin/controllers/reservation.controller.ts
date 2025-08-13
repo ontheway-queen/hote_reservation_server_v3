@@ -144,6 +144,40 @@ export class ReservationController extends AbstractController {
     }
   );
 
+  public changedRateOfARoomInReservation = this.asyncWrapper.wrap(
+    {
+      paramSchema: this.commonValidator.singleParamValidator(),
+      bodySchema: this.validator.changedRateOfARoomInReservation,
+    },
+    async (req: Request, res: Response) => {
+      const { code, ...data } =
+        await this.service.changedRateOfARoomInReservation(req);
+      res.status(code).json(data);
+    }
+  );
+
+  public addRoomInReservation = this.asyncWrapper.wrap(
+    {
+      paramSchema: this.commonValidator.singleParamValidator(),
+      bodySchema: this.validator.addRoomInReservation,
+    },
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.addRoomInReservation(req);
+      res.status(code).json(data);
+    }
+  );
+
+  public deleteRoomInReservation = this.asyncWrapper.wrap(
+    {
+      paramSchema: this.commonValidator.singleParamValidator(),
+      bodySchema: this.validator.deleteRoomInReservation,
+    },
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.deleteRoomInReservation(req);
+      res.status(code).json(data);
+    }
+  );
+
   public updateSingleReservation = this.asyncWrapper.wrap(
     {
       paramSchema: this.commonValidator.singleParamValidator(),

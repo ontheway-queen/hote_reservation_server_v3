@@ -93,3 +93,5 @@ export interface IupdateAccount {
   details?: string;
   last_balance?: number;
 }
+
+export interface IgetHotelAccConfig { id: number; hotel_code: number; config: string; head_id: number }

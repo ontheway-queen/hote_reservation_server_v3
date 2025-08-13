@@ -130,7 +130,7 @@ export interface IguestReqBody {
 }
 
 export interface BookingRequestBody {
-  reservation_type: 'hold' | 'booked';
+  reservation_type: "hold" | "booked";
   check_in: string;
   is_checked_in: boolean;
   is_individual_booking: boolean;
@@ -178,7 +178,7 @@ export interface RoomGuest {
 }
 
 export interface IGBookingRequestBody {
-  reservation_type: 'hold' | 'booked';
+  reservation_type: "hold" | "booked";
   check_in: string;
   check_out: string;
   is_checked_in: boolean;
@@ -207,7 +207,7 @@ export interface IGBookingRequestBody {
     country_id: number;
     address: string;
     passport_no?: string;
-    type: 'adult' | 'child' | 'infant';
+    type: "adult" | "child" | "infant";
   };
   booked_room_types: IGBookedRoomTypeRequest[];
   special_requests?: string;
@@ -245,12 +245,12 @@ export interface IGBGuestInfo {
   country_id: number;
   address: string;
   passport_no?: string;
-  type: 'adult' | 'child' | 'infant';
+  type: "adult" | "child" | "infant";
   is_room_primary_guest: boolean;
 }
 
 export interface IbookingReqPayment {
-  method: 'MOBILE_BANKING' | 'BANK' | 'CASH';
+  method: "MOBILE_BANKING" | "BANK" | "CASH";
   acc_id: number;
   amount: number;
 }
@@ -305,7 +305,7 @@ export interface IRoomBookingBody {
   passport_no?: string;
   rooms: IbookingRooms;
   booking_rooms: IbookingRoomItem[];
-  payment_type: 'bank' | 'cash' | 'cheque' | 'mobile-banking';
+  payment_type: "bank" | "cash" | "cheque" | "mobile-banking";
   extra_charge: number;
 }
 
@@ -320,7 +320,7 @@ export interface IbookingRooms {
   room_type_id: number;
   check_in: string;
   check_out: string;
-  status?: 'checked_in' | 'confirmed' | 'checked_out';
+  status?: "checked_in" | "confirmed" | "checked_out";
   checked_in_at?: string;
   checked_out_at?: string;
   adults: number;
@@ -333,6 +333,17 @@ export interface IbookingRooms {
   cbf?: number; //breakfast coupon
 }
 
+export interface IsingleRoomOfBooking {
+  id: number;
+  room_id: number;
+  unit_base_rate: number;
+  unit_changed_rate: number;
+  base_rate: number;
+  changed_rate: number;
+  check_in: string;
+  check_out: string;
+  room_type_id: number;
+}
 // ------------------------ single booking ----------------------//
 
 // export interface BookingRoom {
@@ -463,7 +474,7 @@ export interface IBookingDetails {
 export interface addPaymentReqBody {
   folio_id: number;
   amount: number;
-  payment_type: 'MOBILE_BANKING' | 'BANK' | 'CASH';
+  payment_type: "MOBILE_BANKING" | "BANK" | "CASH";
   acc_id: number;
   payment_date: string;
   remarks: string;
@@ -529,7 +540,7 @@ export interface IupdateRoomAndRateOfReservationRequestBody {
         phone: string;
         country_id: number;
         address: string;
-        type: 'adult' | 'child' | 'infant';
+        type: "adult" | "child" | "infant";
         is_lead_guest: boolean;
         is_room_primary_guest: boolean;
       }[];
@@ -537,4 +548,41 @@ export interface IupdateRoomAndRateOfReservationRequestBody {
   }[];
 
   removed_rooms?: number[];
+}
+export interface IchangedRateOfARoomInReservationRequestBody {
+  changed_rate_of_booking_rooms: {
+    room_id: number;
+    unit_base_rate: number;
+    unit_changed_rate: number;
+  }[];
+}
+export interface IaddRoomInReservationRequestBody {
+  add_room_types: {
+    room_type_id: number;
+    rate_plan_id: number;
+    rooms: {
+      room_id: number;
+      check_in: string;
+      check_out: string;
+      cbf: number;
+      adults: number;
+      children: number;
+      infant: number;
+      rate: {
+        base_rate: number;
+        changed_rate: number;
+      };
+      guest_info: {
+        first_name: string;
+        last_name: string;
+        email: string;
+        phone: string;
+        country_id: number;
+        address: string;
+        type: "adult" | "child" | "infant";
+        is_lead_guest: boolean;
+        is_room_primary_guest: boolean;
+      }[];
+    }[];
+  }[];
 }

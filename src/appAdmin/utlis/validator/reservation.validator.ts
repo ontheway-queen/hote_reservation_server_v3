@@ -367,6 +367,70 @@ export class ReservationValidator {
     removed_rooms: Joi.array().items(Joi.number().required()).optional(),
   });
 
+  public deleteRoomInReservation = Joi.object({
+    removed_rooms: Joi.array().items(Joi.number().required()).required(),
+  });
+
+  public addRoomInReservation = Joi.object({
+    add_room_types: Joi.array()
+      .items(
+        Joi.object({
+          room_type_id: Joi.number().required(),
+          rate_plan_id: Joi.number().required(),
+          rooms: Joi.array()
+            .items(
+              Joi.object({
+                check_in: Joi.date().iso().required(),
+                check_out: Joi.date().iso().required(),
+                room_id: Joi.number().required(),
+                cbf: Joi.number().required().default(0),
+                adults: Joi.number().min(1).required(),
+                children: Joi.number().min(0).required(),
+                infant: Joi.number().min(0).required(),
+                rate: Joi.object({
+                  base_rate: Joi.number().required(),
+                  changed_rate: Joi.number().required(),
+                }).required(),
+
+                guest_info: Joi.array().items(
+                  Joi.object({
+                    first_name: Joi.string().optional(),
+                    last_name: Joi.string().allow("").optional(),
+                    email: Joi.string().allow("").optional(),
+                    phone: Joi.string().allow("").optional(),
+                    country_id: Joi.number().required(),
+                    address: Joi.string().allow("").optional(),
+                    passport_no: Joi.string().allow("").optional(),
+                    type: Joi.string()
+                      .allow("adult", "child", "infant")
+                      .required(),
+                    is_room_primary_guest: Joi.boolean().required(),
+                  })
+                ),
+              })
+            )
+            .min(1)
+            .required(),
+
+          meal_plans_ids: Joi.array().items(Joi.number()).optional(),
+        })
+      )
+      .min(1)
+      .required(),
+  });
+
+  public changedRateOfARoomInReservation = Joi.object({
+    changed_rate_of_booking_rooms: Joi.array()
+      .items(
+        Joi.object({
+          room_id: Joi.number().required(),
+          unit_base_rate: Joi.number().required(),
+          unit_changed_rate: Joi.number().required(),
+        })
+      )
+      .required(),
+  });
+
   public updateSingleReservation = Joi.object({
     comments: Joi.string().allow("").optional(),
     source_id: Joi.number().required(),
