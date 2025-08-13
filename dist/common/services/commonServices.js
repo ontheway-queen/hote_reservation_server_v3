@@ -52,7 +52,7 @@ class CommonService extends abstract_service_1.default {
                         }
                         break;
                     case constants_1.OTP_TYPE_FORGET_M_ADMIN:
-                        const btocUserModel = this.Model.btocModel().UserModel();
+                        const btocUserModel = this.Model.btocModel().UserProfileModel();
                         const user = yield btocUserModel.checkUser({ email });
                         if (!user) {
                             throw new customEror_1.default(this.ResMsg.NOT_FOUND_USER_WITH_EMAIL, this.StatusCode.HTTP_NOT_FOUND);

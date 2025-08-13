@@ -1,9 +1,9 @@
 import AbstractRouter from "../../abstarcts/abstract.router";
 import AuthChecker from "../../common/middleware/authChecker/authChecker";
-import UseController from "../controller/user.controller";
+import UseProfileController from "../controller/userProfile.controller";
 
-class UserRouter extends AbstractRouter {
-	private controller = new UseController();
+class UserProfileRouter extends AbstractRouter {
+	private useProfileController = new UseProfileController();
 	private authChecker = new AuthChecker();
 
 	constructor() {
@@ -17,13 +17,13 @@ class UserRouter extends AbstractRouter {
 			.route("/profile")
 			.get(
 				this.authChecker.btocUserAuthChecker,
-				this.controller.getProfile
+				this.useProfileController.getProfile
 			)
 			.patch(
 				this.authChecker.btocUserAuthChecker,
 				this.uploader.cloudUploadRaw(this.fileFolders.BTOC_USERS_FILES),
-				this.controller.updateProfile
+				this.useProfileController.updateProfile
 			);
 	}
 }
-export default UserRouter;
+export default UserProfileRouter;

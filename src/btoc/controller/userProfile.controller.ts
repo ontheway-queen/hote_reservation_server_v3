@@ -1,10 +1,10 @@
 import { Request, Response } from "express";
 import AbstractController from "../../abstarcts/abstract.controller";
-import UserService from "../services/user.service";
 import BtocUserValidator from "../utils/validator/user.validator";
+import UserProfileService from "../services/userProfile.service";
 
-class UseController extends AbstractController {
-	private userService = new UserService();
+class UseProfileController extends AbstractController {
+	private userProfileService = new UserProfileService();
 	private userValidator = new BtocUserValidator();
 
 	constructor() {
@@ -15,7 +15,9 @@ class UseController extends AbstractController {
 	public getProfile = this.asyncWrapper.wrap(
 		null,
 		async (req: Request, res: Response) => {
-			const { code, ...data } = await this.userService.getProfile(req);
+			const { code, ...data } = await this.userProfileService.getProfile(
+				req
+			);
 			res.status(code).json(data);
 		}
 	);
@@ -24,10 +26,11 @@ class UseController extends AbstractController {
 	public updateProfile = this.asyncWrapper.wrap(
 		{ bodySchema: this.userValidator.updateProfile },
 		async (req: Request, res: Response) => {
-			const { code, ...data } = await this.userService.updateProfile(req);
+			const { code, ...data } =
+				await this.userProfileService.updateProfile(req);
 			res.status(code).json(data);
 		}
 	);
 }
 
-export default UseController;
+export default UseProfileController;

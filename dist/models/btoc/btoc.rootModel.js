@@ -4,13 +4,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.BtocModel = void 0;
-const userModel_1 = __importDefault(require("./userModel/userModel"));
+const userProfileModel_1 = __importDefault(require("./userProfileModel/userProfileModel"));
 class BtocModel {
     constructor(db) {
         this.db = db;
     }
-    UserModel(trx) {
-        return new userModel_1.default(trx || this.db);
+    UserProfileModel(trx) {
+        return new userProfileModel_1.default(trx || this.db);
     }
 }
 exports.BtocModel = BtocModel;

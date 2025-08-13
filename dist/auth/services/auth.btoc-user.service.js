@@ -36,7 +36,7 @@ class BtocUserAuthService extends abstract_service_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             const _a = req.body, { email, password } = _a, rest = __rest(_a, ["email", "password"]);
             const files = req.upFiles;
-            const model = this.Model.btocModel().UserModel();
+            const model = this.Model.btocModel().UserProfileModel();
             const isUserExists = yield model.checkUser({ email });
             if (isUserExists) {
                 return {
@@ -67,7 +67,7 @@ class BtocUserAuthService extends abstract_service_1.default {
     login(req) {
         return __awaiter(this, void 0, void 0, function* () {
             const { email, password } = req.body;
-            const model = this.Model.btocModel().UserModel();
+            const model = this.Model.btocModel().UserProfileModel();
             const user = yield model.checkUser({ email });
             if (!user) {
                 return {
@@ -127,7 +127,7 @@ class BtocUserAuthService extends abstract_service_1.default {
             const { email: verifyEmail, type } = tokenVerify;
             if (email === verifyEmail && type === constants_1.OTP_TYPE_FORGET_BTOC_USER) {
                 const hashPass = yield lib_1.default.hashPass(password);
-                const model = this.Model.btocModel().UserModel();
+                const model = this.Model.btocModel().UserProfileModel();
                 yield model.updateProfile({
                     payload: { password: hashPass },
                     email,

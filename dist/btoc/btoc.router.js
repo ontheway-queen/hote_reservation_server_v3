@@ -4,14 +4,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
-const user_router_1 = __importDefault(require("./router/user.router"));
+const userProfile_router_1 = __importDefault(require("./router/userProfile.router"));
 class BtocRouter {
     constructor() {
         this.BtocRouter = (0, express_1.Router)();
         this.callRouter();
     }
     callRouter() {
-        this.BtocRouter.use("/user", new user_router_1.default().router);
+        this.BtocRouter.use("/user", new userProfile_router_1.default().router);
     }
 }
 exports.default = BtocRouter;

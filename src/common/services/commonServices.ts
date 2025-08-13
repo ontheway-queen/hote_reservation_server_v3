@@ -55,7 +55,8 @@ class CommonService extends AbstractServices {
 					}
 					break;
 				case OTP_TYPE_FORGET_M_ADMIN:
-					const btocUserModel = this.Model.btocModel().UserModel();
+					const btocUserModel =
+						this.Model.btocModel().UserProfileModel();
 					const user = await btocUserModel.checkUser({ email });
 					if (!user) {
 						throw new CustomError(

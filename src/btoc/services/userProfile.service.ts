@@ -2,7 +2,7 @@ import { Request } from "express";
 import AbstractServices from "../../abstarcts/abstract.service";
 import CustomError from "../../utils/lib/customEror";
 
-class UserService extends AbstractServices {
+class UserProfileService extends AbstractServices {
 	constructor() {
 		super();
 	}
@@ -10,7 +10,7 @@ class UserService extends AbstractServices {
 	// registration
 	public async getProfile(req: Request) {
 		const { user_id } = req.btoc_user;
-		const model = this.Model.btocModel().UserModel();
+		const model = this.Model.btocModel().UserProfileModel();
 
 		const userProfile = await model.getProfile({ id: user_id });
 		if (!userProfile) {
@@ -34,7 +34,7 @@ class UserService extends AbstractServices {
 		const { email } = req.btoc_user;
 		const payload = req.body;
 		const files = req.upFiles;
-		const model = this.Model.btocModel().UserModel();
+		const model = this.Model.btocModel().UserProfileModel();
 		const isUserExists = await model.checkUser({ email });
 		if (!isUserExists) {
 			throw new CustomError(
@@ -61,4 +61,4 @@ class UserService extends AbstractServices {
 	}
 }
 
-export default UserService;
+export default UserProfileService;

@@ -13,7 +13,7 @@ class BtocUserAuthService extends AbstractServices {
 	public async registration(req: Request) {
 		const { email, password, ...rest } = req.body;
 		const files = req.upFiles;
-		const model = this.Model.btocModel().UserModel();
+		const model = this.Model.btocModel().UserProfileModel();
 
 		const isUserExists = await model.checkUser({ email });
 		if (isUserExists) {
@@ -53,7 +53,7 @@ class BtocUserAuthService extends AbstractServices {
 	// Login
 	public async login(req: Request) {
 		const { email, password } = req.body;
-		const model = this.Model.btocModel().UserModel();
+		const model = this.Model.btocModel().UserProfileModel();
 		const user = await model.checkUser({ email });
 		if (!user) {
 			return {
@@ -127,7 +127,7 @@ class BtocUserAuthService extends AbstractServices {
 		const { email: verifyEmail, type } = tokenVerify;
 		if (email === verifyEmail && type === OTP_TYPE_FORGET_BTOC_USER) {
 			const hashPass = await Lib.hashPass(password);
-			const model = this.Model.btocModel().UserModel();
+			const model = this.Model.btocModel().UserProfileModel();
 			await model.updateProfile({
 				payload: { password: hashPass },
 				email,

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import UserRouter from "./router/user.router";
+import UserProfileRouter from "./router/userProfile.router";
 
 class BtocRouter {
 	public BtocRouter = Router();
@@ -9,7 +9,7 @@ class BtocRouter {
 	}
 
 	private callRouter() {
-		this.BtocRouter.use("/user", new UserRouter().router);
+		this.BtocRouter.use("/user", new UserProfileRouter().router);
 	}
 }
 

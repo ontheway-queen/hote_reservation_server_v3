@@ -1,5 +1,5 @@
 import { Knex } from "knex";
-import UserModel from "./userModel/userModel";
+import UserProfileModel from "./userProfileModel/userProfileModel";
 
 export class BtocModel {
 	private db: Knex;
@@ -8,7 +8,7 @@ export class BtocModel {
 		this.db = db;
 	}
 
-	public UserModel(trx?: Knex.Transaction) {
-		return new UserModel(trx || this.db);
+	public UserProfileModel(trx?: Knex.Transaction) {
+		return new UserProfileModel(trx || this.db);
 	}
 }
