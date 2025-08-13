@@ -23,6 +23,7 @@ const ReportModel_1 = __importDefault(require("./reservationPanel/ReportModel/Re
 const Room_Model_1 = __importDefault(require("./reservationPanel/Room.Model"));
 const Setting_Model_1 = __importDefault(require("./reservationPanel/Setting.Model"));
 const reservation_model_1 = require("./reservationPanel/reservation.model");
+const btoc_rootModel_1 = require("./btoc/btoc.rootModel");
 class Models {
     constructor(db) {
         this.db = db;
@@ -94,6 +95,9 @@ class Models {
     // configuration model
     mConfigurationModel(trx) {
         return new mConfigurationModel_1.default(trx || this.db);
+    }
+    btocModel(trx) {
+        return new btoc_rootModel_1.BtocModel(trx || this.db);
     }
 }
 exports.default = Models;

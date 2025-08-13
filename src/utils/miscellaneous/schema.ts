@@ -7,10 +7,13 @@ class Schema {
 	public readonly FLEET_SCHEMA = "fleet_management";
 	public readonly ACC_SCHEMA = "acc";
 	public readonly HOTEL_INVENTORY_SCHEMA = "hotel_inventory";
+	public readonly BTOC = "btoc";
 	public readonly TABLES = {
 		blood_group: "blood_group",
 		months: "months",
 		accounts: "accounts",
+		city: "city",
+		country: "country",
 	};
 }
 export default Schema;

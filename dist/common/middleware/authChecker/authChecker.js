@@ -164,15 +164,17 @@ class AuthChecker extends abstract_service_1.default {
             try {
                 const web_token = req.headers.web_token;
                 if (!web_token) {
-                    return res
-                        .status(statusCode_1.default.HTTP_UNAUTHORIZED)
-                        .json({ success: false, message: responseMessage_1.default.HTTP_UNAUTHORIZED });
+                    return res.status(statusCode_1.default.HTTP_UNAUTHORIZED).json({
+                        success: false,
+                        message: responseMessage_1.default.HTTP_UNAUTHORIZED,
+                    });
                 }
                 const verify = new crypto_1.SyncCryptoService().decrypt(web_token);
                 if (!verify.success) {
-                    return res
-                        .status(statusCode_1.default.HTTP_UNAUTHORIZED)
-                        .json({ success: false, message: responseMessage_1.default.HTTP_UNAUTHORIZED });
+                    return res.status(statusCode_1.default.HTTP_UNAUTHORIZED).json({
+                        success: false,
+                        message: responseMessage_1.default.HTTP_UNAUTHORIZED,
+                    });
                 }
                 else {
                     req.web_token = { id: parseInt(verify.data) };
@@ -180,12 +182,46 @@ class AuthChecker extends abstract_service_1.default {
                 }
             }
             catch (err) {
-                res
-                    .status(statusCode_1.default.HTTP_BAD_REQUEST)
-                    .json({
+                res.status(statusCode_1.default.HTTP_BAD_REQUEST).json({
                     success: false,
                     message: err.reason ? err.reason : responseMessage_1.default.HTTP_UNAUTHORIZED,
                 });
+            }
+        });
+        // btoc user auth checker
+        this.btocUserAuthChecker = (req, res, next) => __awaiter(this, void 0, void 0, function* () {
+            const { authorization } = req.headers;
+            if (!authorization) {
+                return res
+                    .status(statusCode_1.default.HTTP_UNAUTHORIZED)
+                    .json({ success: false, message: responseMessage_1.default.HTTP_UNAUTHORIZED });
+            }
+            const authSplit = authorization.split(" ");
+            if (authSplit.length !== 2) {
+                return res.status(statusCode_1.default.HTTP_UNAUTHORIZED).json({
+                    success: false,
+                    message: responseMessage_1.default.HTTP_UNAUTHORIZED,
+                });
+            }
+            const verify = lib_1.default.verifyToken(authSplit[1], config_1.default.JWT_SECRET_BTOC_USER);
+            if (!verify) {
+                return res
+                    .status(statusCode_1.default.HTTP_UNAUTHORIZED)
+                    .json({ success: false, message: responseMessage_1.default.HTTP_UNAUTHORIZED });
+            }
+            else {
+                if (verify.type !== "btoc_user" ||
+                    verify.status === "blocked" ||
+                    verify.status === "inactive") {
+                    return res.status(statusCode_1.default.HTTP_UNAUTHORIZED).json({
+                        success: false,
+                        message: responseMessage_1.default.HTTP_UNAUTHORIZED,
+                    });
+                }
+                else {
+                    req.btoc_user = verify;
+                    next();
+                }
             }
         });
     }

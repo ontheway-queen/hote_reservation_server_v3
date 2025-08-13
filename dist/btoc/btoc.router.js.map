@@ -1,0 +1,1 @@
+{"version":3,"file":"btoc.router.js","sourceRoot":"","sources":["../../src/btoc/btoc.router.ts"],"names":[],"mappings":";;;;;AAAA,qCAAiC;AACjC,uEAA8C;AAE9C,MAAM,UAAU;IAGf;QAFO,eAAU,GAAG,IAAA,gBAAM,GAAE,CAAC;QAG5B,IAAI,CAAC,UAAU,EAAE,CAAC;IACnB,CAAC;IAEO,UAAU;QACjB,IAAI,CAAC,UAAU,CAAC,GAAG,CAAC,OAAO,EAAE,IAAI,qBAAU,EAAE,CAAC,MAAM,CAAC,CAAC;IACvD,CAAC;CACD;AAED,kBAAe,UAAU,CAAC"}

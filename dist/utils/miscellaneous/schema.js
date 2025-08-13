@@ -10,10 +10,13 @@ class Schema {
         this.FLEET_SCHEMA = "fleet_management";
         this.ACC_SCHEMA = "acc";
         this.HOTEL_INVENTORY_SCHEMA = "hotel_inventory";
+        this.BTOC = "btoc";
         this.TABLES = {
             blood_group: "blood_group",
             months: "months",
             accounts: "accounts",
+            city: "city",
+            country: "country",
         };
     }
 }

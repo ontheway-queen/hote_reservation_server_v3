@@ -17,6 +17,7 @@ const lib_1 = __importDefault(require("../../utils/lib/lib"));
 const sendEmailOtp_1 = require("../../templates/sendEmailOtp");
 const config_1 = __importDefault(require("../../config/config"));
 const constants_1 = require("../../utils/miscellaneous/constants");
+const customEror_1 = __importDefault(require("../../utils/lib/customEror"));
 class CommonService extends abstract_service_1.default {
     constructor() {
         super();
@@ -48,6 +49,13 @@ class CommonService extends abstract_service_1.default {
                                 code: this.StatusCode.HTTP_NOT_FOUND,
                                 message: this.ResMsg.NOT_FOUND_USER_WITH_EMAIL,
                             };
+                        }
+                        break;
+                    case constants_1.OTP_TYPE_FORGET_M_ADMIN:
+                        const btocUserModel = this.Model.btocModel().UserModel();
+                        const user = yield btocUserModel.checkUser({ email });
+                        if (!user) {
+                            throw new customEror_1.default(this.ResMsg.NOT_FOUND_USER_WITH_EMAIL, this.StatusCode.HTTP_NOT_FOUND);
                         }
                         break;
                     default:
@@ -136,6 +144,9 @@ class CommonService extends abstract_service_1.default {
                             break;
                         case constants_1.OTP_TYPE_FORGET_RES_ADMIN:
                             secret = config_1.default.JWT_SECRET_H_RESTURANT;
+                            break;
+                        case constants_1.OTP_TYPE_FORGET_BTOC_USER:
+                            secret = config_1.default.JWT_SECRET_BTOC_USER;
                             break;
                         default:
                             break;

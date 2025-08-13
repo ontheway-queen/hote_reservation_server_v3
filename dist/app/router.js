@@ -8,6 +8,7 @@ const reservationRoot_router_1 = require("../appAdmin/reservationRoot.router");
 const managementRoot_router_1 = __importDefault(require("../appM360/routers/managementRoot.router"));
 const auth_router_1 = __importDefault(require("../auth/auth.router"));
 const common_router_1 = __importDefault(require("../common/router/common.router"));
+const btoc_router_1 = __importDefault(require("../btoc/btoc.router"));
 class RootRouter {
     constructor() {
         this.v1Router = (0, express_1.Router)();
@@ -18,6 +19,7 @@ class RootRouter {
         this.v1Router.use("/auth", new auth_router_1.default().AuthRouter);
         this.v1Router.use("/reservation", new reservationRoot_router_1.ReservationRootRouter().router);
         this.v1Router.use("/management", new managementRoot_router_1.default().managementRouter);
+        this.v1Router.use("/btoc", new btoc_router_1.default().BtocRouter);
     }
 }
 exports.default = RootRouter;

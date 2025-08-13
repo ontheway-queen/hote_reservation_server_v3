@@ -4,6 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const authChecker_1 = __importDefault(require("../common/middleware/authChecker/authChecker"));
+const auth_btoc_user_router_1 = __importDefault(require("./router/auth.btoc-user.router"));
 const auth_hotel_admin_router_1 = __importDefault(require("./router/auth.hotel-admin.router"));
 const mAuth_admin_router_1 = __importDefault(require("./router/mAuth.admin.router"));
 const express_1 = require("express");
@@ -18,6 +19,7 @@ class AuthRouter {
         this.AuthRouter.use("/reservation", new auth_hotel_admin_router_1.default().router);
         // ================== m360ict admin panel auth ================== //
         this.AuthRouter.use("/m-admin", new mAuth_admin_router_1.default().router);
+        this.AuthRouter.use("/btoc", new auth_btoc_user_router_1.default().router);
     }
 }
 exports.default = AuthRouter;

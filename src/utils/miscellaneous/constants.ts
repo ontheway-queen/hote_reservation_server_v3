@@ -108,6 +108,7 @@ export const DIVIDEND_GROUP = "6000";
 export const OTP_TYPE_FORGET_M_ADMIN = "forget_m_admin";
 export const OTP_TYPE_FORGET_HOTEL_ADMIN = "forget_h_admin";
 export const OTP_TYPE_FORGET_RES_ADMIN = "forget_res_admin";
+export const OTP_TYPE_FORGET_BTOC_USER = "forget_btoc_user";
 
 // Send OTP Email subject
 export const OTP_EMAIL_SUBJECT =

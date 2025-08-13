@@ -24,8 +24,8 @@ class TokenService {
     getTokenSecretById(id) {
         return __awaiter(this, void 0, void 0, function* () {
             const secret = yield this.db(this.table)
-                .select('access_token_secret', 'refresh_token_secret')
-                .where('id', id);
+                .select("access_token_secret", "refresh_token_secret")
+                .where("id", id);
             if (secret.length) {
                 return secret[0];
             }
@@ -39,8 +39,8 @@ class TokenService {
         return __awaiter(this, void 0, void 0, function* () {
             const access_token_secret = (0, uuid_1.v4)();
             const refresh_token_secret = (0, uuid_1.v4)();
-            const accessToken = lib_1.default.createToken(Object.assign(Object.assign({}, data), { type: 'access_token', userType: type }), access_token_secret, '1h');
-            const refreshToken = lib_1.default.createToken(Object.assign(Object.assign({}, data), { type: 'refresh_token', userType: type }), refresh_token_secret, '1d');
+            const accessToken = lib_1.default.createToken(Object.assign(Object.assign({}, data), { type: "access_token", userType: type }), access_token_secret, "1h");
+            const refreshToken = lib_1.default.createToken(Object.assign(Object.assign({}, data), { type: "refresh_token", userType: type }), refresh_token_secret, "1d");
             const insertSecret = yield this.db(this.table).insert({
                 access_token_secret,
                 refresh_token_secret,
@@ -55,7 +55,7 @@ class TokenService {
             else {
                 return {
                     success: false,
-                    message: 'Cannot create token!',
+                    message: "Cannot create token!",
                 };
             }
         });
@@ -65,14 +65,14 @@ class TokenService {
         return __awaiter(this, void 0, void 0, function* () {
             const access_token_secret = (0, uuid_1.v4)();
             const refresh_token_secret = (0, uuid_1.v4)();
-            const accessToken = lib_1.default.createToken(Object.assign(Object.assign({}, data), { type: 'access_token' }), access_token_secret, '1h');
-            const refreshToken = lib_1.default.createToken(Object.assign(Object.assign({}, data), { type: 'refresh_token' }), refresh_token_secret, '1d');
+            const accessToken = lib_1.default.createToken(Object.assign(Object.assign({}, data), { type: "access_token" }), access_token_secret, "1h");
+            const refreshToken = lib_1.default.createToken(Object.assign(Object.assign({}, data), { type: "refresh_token" }), refresh_token_secret, "1d");
             const update = yield this.db(this.table)
                 .update({
                 access_token_secret,
                 refresh_token_secret,
             })
-                .where('id', id);
+                .where("id", id);
             if (update) {
                 return {
                     success: true,
@@ -82,7 +82,7 @@ class TokenService {
             else {
                 return {
                     success: false,
-                    message: 'Cannot update token!',
+                    message: "Cannot update token!",
                 };
             }
         });
@@ -90,17 +90,17 @@ class TokenService {
     // delete secret by id
     deleteTokenSecretById(id) {
         return __awaiter(this, void 0, void 0, function* () {
-            const secret = yield this.db(this.table).delete().where('id', id);
+            const secret = yield this.db(this.table).delete().where("id", id);
             if (secret) {
                 return {
                     success: true,
-                    message: 'Secret deleted',
+                    message: "Secret deleted",
                 };
             }
             else {
                 return {
                     success: false,
-                    message: 'No secret of this id',
+                    message: "No secret of this id",
                 };
             }
         });
@@ -108,17 +108,19 @@ class TokenService {
     // delete all secret of an user
     deleteAllTokenSecretOfUser(id) {
         return __awaiter(this, void 0, void 0, function* () {
-            const secret = yield this.db(this.table).delete().andWhere('user_id', id);
+            const secret = yield this.db(this.table)
+                .delete()
+                .andWhere("user_id", id);
             if (secret) {
                 return {
                     success: true,
-                    message: 'Secret deleted',
+                    message: "Secret deleted",
                 };
             }
             else {
                 return {
                     success: false,
-                    message: 'No secret of this id',
+                    message: "No secret of this id",
                 };
             }
         });

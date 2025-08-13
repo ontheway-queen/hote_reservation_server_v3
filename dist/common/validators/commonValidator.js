@@ -26,7 +26,7 @@ class CommonValidator {
         };
         // change password validator
         this.changePasswordValidator = joi_1.default.object({
-            old_password: joi_1.default.string().required(),
+            old_password: joi_1.default.string().min(6).required(),
             new_password: joi_1.default.string().min(6).required(),
         });
         // forget password validator
@@ -39,7 +39,7 @@ class CommonValidator {
         this.sendEmailOtpValidator = joi_1.default.object({
             email: joi_1.default.string().email().required(),
             type: joi_1.default.string()
-                .valid("forget_m_admin", "forget_h_admin", "forget_res_admin")
+                .valid("forget_m_admin", "forget_h_admin", "forget_res_admin", "forget_btoc_user")
                 .required(),
         });
         // match email otp validator
@@ -47,7 +47,7 @@ class CommonValidator {
             email: joi_1.default.string().email().required(),
             otp: joi_1.default.string().required(),
             type: joi_1.default.string()
-                .valid("forget_h_admin", "forget_m_admin", "forget_h_user", "forget_r_admin")
+                .valid("forget_h_admin", "forget_m_admin", "forget_h_user", "forget_r_admin", "forget_btoc_user")
                 .required(),
         });
         // login validator

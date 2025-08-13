@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.STOCK_STATUS = exports.ACC_HEAD_CONFIG = exports.ERROR_LEVEL_CRITICAL = exports.ERROR_LEVEL_ERROR = exports.ERROR_LEVEL_WARNING = exports.ERROR_LEVEL_INFO = exports.ERROR_LEVEL_DEBUG = exports.OTP_FOR_CREDENTIALS = exports.OTP_FOR = exports.OTP_EMAIL_SUBJECT = exports.OTP_TYPE_FORGET_RES_ADMIN = exports.OTP_TYPE_FORGET_HOTEL_ADMIN = exports.OTP_TYPE_FORGET_M_ADMIN = exports.DIVIDEND_GROUP = exports.EXPENSE_GROUP = exports.INCOME_GROUP = exports.CAPITAL_GROUP = exports.LIABILITY_GROUP = exports.ASSET_GROUP = exports.allStrings = exports.origin = void 0;
+exports.STOCK_STATUS = exports.ACC_HEAD_CONFIG = exports.ERROR_LEVEL_CRITICAL = exports.ERROR_LEVEL_ERROR = exports.ERROR_LEVEL_WARNING = exports.ERROR_LEVEL_INFO = exports.ERROR_LEVEL_DEBUG = exports.OTP_FOR_CREDENTIALS = exports.OTP_FOR = exports.OTP_EMAIL_SUBJECT = exports.OTP_TYPE_FORGET_BTOC_USER = exports.OTP_TYPE_FORGET_RES_ADMIN = exports.OTP_TYPE_FORGET_HOTEL_ADMIN = exports.OTP_TYPE_FORGET_M_ADMIN = exports.DIVIDEND_GROUP = exports.EXPENSE_GROUP = exports.INCOME_GROUP = exports.CAPITAL_GROUP = exports.LIABILITY_GROUP = exports.ASSET_GROUP = exports.allStrings = exports.origin = void 0;
 exports.origin = [
     "http://localhost:3000",
     "http://localhost:3030",
@@ -107,6 +107,7 @@ exports.DIVIDEND_GROUP = "6000";
 exports.OTP_TYPE_FORGET_M_ADMIN = "forget_m_admin";
 exports.OTP_TYPE_FORGET_HOTEL_ADMIN = "forget_h_admin";
 exports.OTP_TYPE_FORGET_RES_ADMIN = "forget_res_admin";
+exports.OTP_TYPE_FORGET_BTOC_USER = "forget_btoc_user";
 // Send OTP Email subject
 exports.OTP_EMAIL_SUBJECT = "Your One Time Password For Reservation Verification";
 // OTP for
