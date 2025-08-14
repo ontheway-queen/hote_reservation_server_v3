@@ -28,13 +28,14 @@ export interface IhAdmin {
 }
 
 // hotel user types
-export interface IhotelUser {
+export interface IGBtocUser {
   id: number;
   hotel_code: number;
-  name: string;
-  city: string;
+  first_name: string;
+  last_name: string;
   email: string;
-  logo: string | null;
+  city_id: string;
+  country_id: string;
   status: "active" | "blocked" | "expired";
   type: string;
 }
@@ -51,7 +52,7 @@ export interface IrestUser {
 }
 
 export interface IWebToken {
-  id: number;
+  hotel_code: number;
 }
 
 // user member types

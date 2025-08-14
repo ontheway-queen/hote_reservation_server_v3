@@ -14,5 +14,6 @@ FileFolder.HOTEL_USER_FILES = "hotel-user-files";
 FileFolder.HOTEL_PAYROLL_FILES = "hotel-payroll-files";
 FileFolder.FLEET_FILES = "fleet-files";
 FileFolder.INVENTORY_FILES = "inventory-files";
+FileFolder.BTOC_USERS_FILES = "btoc-user-files";
 exports.default = FileFolder;
 //# sourceMappingURL=fileFolders.js.map

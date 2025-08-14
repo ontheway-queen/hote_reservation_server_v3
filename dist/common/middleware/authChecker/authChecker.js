@@ -90,7 +90,7 @@ class AuthChecker extends abstract_service_1.default {
             }
         });
         // hotel user auth checker
-        this.hotelUserAuthChecker = (req, res, next) => __awaiter(this, void 0, void 0, function* () {
+        this.btocUserAuthChecker = (req, res, next) => __awaiter(this, void 0, void 0, function* () {
             const { authorization } = req.headers;
             if (!authorization) {
                 return res
@@ -111,7 +111,7 @@ class AuthChecker extends abstract_service_1.default {
                     .json({ success: false, message: responseMessage_1.default.HTTP_UNAUTHORIZED });
             }
             else {
-                if (verify.type !== "hotel_user" ||
+                if (verify.type !== "btoc_user" ||
                     verify.status === "blocked" ||
                     verify.status === "expired") {
                     return res.status(statusCode_1.default.HTTP_UNAUTHORIZED).json({
@@ -120,7 +120,7 @@ class AuthChecker extends abstract_service_1.default {
                     });
                 }
                 else {
-                    req.hotel_user = verify;
+                    req.btoc_user = verify;
                     next();
                 }
             }
@@ -175,7 +175,7 @@ class AuthChecker extends abstract_service_1.default {
                         .json({ success: false, message: responseMessage_1.default.HTTP_UNAUTHORIZED });
                 }
                 else {
-                    req.web_token = { id: parseInt(verify.data) };
+                    req.web_token = { hotel_code: parseInt(verify.data) };
                     next();
                 }
             }

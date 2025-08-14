@@ -11,5 +11,6 @@ class FileFolder {
   static readonly HOTEL_PAYROLL_FILES = "hotel-payroll-files";
   static readonly FLEET_FILES = "fleet-files";
   static readonly INVENTORY_FILES = "inventory-files";
+  static readonly BTOC_USERS_FILES = "btoc-user-files";
 }
 export default FileFolder;

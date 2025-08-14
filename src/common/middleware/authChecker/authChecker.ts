@@ -7,8 +7,8 @@ import ResMsg from "../../../utils/miscellaneous/responseMessage";
 import StatusCode from "../../../utils/miscellaneous/statusCode";
 import {
   IAdmin,
+  IGBtocUser,
   IhAdmin,
-  IhotelUser,
   IrestUser,
 } from "../../types/commontypes";
 
@@ -107,7 +107,7 @@ class AuthChecker extends AbstractServices {
   };
 
   // hotel user auth checker
-  public hotelUserAuthChecker = async (
+  public btocUserAuthChecker = async (
     req: Request,
     res: Response,
     next: NextFunction
@@ -132,7 +132,7 @@ class AuthChecker extends AbstractServices {
     const verify = Lib.verifyToken(
       authSplit[1],
       config.JWT_SECRET_H_USER
-    ) as IhotelUser;
+    ) as IGBtocUser;
 
     if (!verify) {
       return res
@@ -140,7 +140,7 @@ class AuthChecker extends AbstractServices {
         .json({ success: false, message: ResMsg.HTTP_UNAUTHORIZED });
     } else {
       if (
-        verify.type !== "hotel_user" ||
+        verify.type !== "btoc_user" ||
         verify.status === "blocked" ||
         verify.status === "expired"
       ) {
@@ -149,7 +149,7 @@ class AuthChecker extends AbstractServices {
           message: ResMsg.HTTP_UNAUTHORIZED,
         });
       } else {
-        req.hotel_user = verify as IhotelUser;
+        req.btoc_user = verify as IGBtocUser;
         next();
       }
     }
@@ -222,7 +222,7 @@ class AuthChecker extends AbstractServices {
           .status(StatusCode.HTTP_UNAUTHORIZED)
           .json({ success: false, message: ResMsg.HTTP_UNAUTHORIZED });
       } else {
-        req.web_token = { id: parseInt(verify.data as string) };
+        req.web_token = { hotel_code: parseInt(verify.data as string) };
         next();
       }
     } catch (err: any) {

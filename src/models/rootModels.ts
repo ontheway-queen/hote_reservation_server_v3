@@ -1,28 +1,29 @@
-import { Knex } from 'knex';
-import ClientModel from './ClientModel/client.Model';
-import CommonModel from './commonModel/commonModel';
-import MAdministrationModel from './managementsModel/mAdministrationModel/mAdministration.model';
-import MConfigurationModel from './managementsModel/mConfigurationModel/mConfigurationModel';
-import AccountModel from './reservationPanel/accountModel/accountModel';
-import DashBoardModel from './reservationPanel/dashBoardModel';
-import EmployeeModel from './reservationPanel/employeeModel';
-import ExpenseModel from './reservationPanel/expenseModel';
-import GuestModel from './reservationPanel/guestModel';
-import HotelModel from './reservationPanel/hotel.model';
+import { Knex } from "knex";
+import ClientModel from "./ClientModel/client.Model";
+import CommonModel from "./commonModel/commonModel";
+import MAdministrationModel from "./managementsModel/mAdministrationModel/mAdministration.model";
+import MConfigurationModel from "./managementsModel/mConfigurationModel/mConfigurationModel";
+import AccountModel from "./reservationPanel/accountModel/accountModel";
+import DashBoardModel from "./reservationPanel/dashBoardModel";
+import EmployeeModel from "./reservationPanel/employeeModel";
+import ExpenseModel from "./reservationPanel/expenseModel";
+import GuestModel from "./reservationPanel/guestModel";
+import HotelModel from "./reservationPanel/hotel.model";
 
-import HotelInvoiceModel from './reservationPanel/hotelInvoiceModel';
-import CommonInventoryModel from './reservationPanel/inventoryModel/common.inventory.model';
-import ProductInventoryModel from './reservationPanel/inventoryModel/product.inventory.model';
-import PurchaseInventoryModel from './reservationPanel/inventoryModel/puschase.inventory.model';
-import StockInventoryModel from './reservationPanel/inventoryModel/stock.inventory.model';
-import PayRollModel from './reservationPanel/payRollModel';
-import RAdministrationModel from './reservationPanel/rAdministration.model';
-import ReportModel from './reservationPanel/ReportModel/ReportModel';
-import RoomModel from './reservationPanel/Room.Model';
+import HotelInvoiceModel from "./reservationPanel/hotelInvoiceModel";
+import CommonInventoryModel from "./reservationPanel/inventoryModel/common.inventory.model";
+import ProductInventoryModel from "./reservationPanel/inventoryModel/product.inventory.model";
+import PurchaseInventoryModel from "./reservationPanel/inventoryModel/puschase.inventory.model";
+import StockInventoryModel from "./reservationPanel/inventoryModel/stock.inventory.model";
+import PayRollModel from "./reservationPanel/payRollModel";
+import RAdministrationModel from "./reservationPanel/rAdministration.model";
+import ReportModel from "./reservationPanel/ReportModel/ReportModel";
+import RoomModel from "./reservationPanel/Room.Model";
 
-import SettingModel from './reservationPanel/Setting.Model';
-import { ReservationModel } from './reservationPanel/reservation.model';
-import DboModel from './commonModel/dboModel';
+import SettingModel from "./reservationPanel/Setting.Model";
+import { ReservationModel } from "./reservationPanel/reservation.model";
+import DboModel from "./commonModel/dboModel";
+import { BtocUserModel } from "./btocModels/btoc.model";
 
 class Models {
   private db: Knex;
@@ -123,6 +124,11 @@ class Models {
 
   public DboModel(trx?: Knex.Transaction) {
     return new DboModel(trx || this.db);
+  }
+
+  //--------------------- Btoc Model ---------------------------//
+  public btocUserModel(trx?: Knex.Transaction) {
+    return new BtocUserModel(trx || this.db);
   }
 }
 export default Models;
