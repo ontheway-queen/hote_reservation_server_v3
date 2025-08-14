@@ -2,10 +2,15 @@ import { Request, Response } from "express";
 import AbstractController from "../../abstarcts/abstract.controller";
 import ReservationService from "../services/reservation.service";
 import { ReservationValidator } from "../utlis/validator/reservation.validator";
+import { ReservationService2 } from "../services/reservation.service2";
+import { ReservationService3 } from "../services/reservation.service3";
 
 export class ReservationController extends AbstractController {
   private service = new ReservationService();
+  private service2 = new ReservationService2();
+  private service3 = new ReservationService3();
   private validator = new ReservationValidator();
+
   constructor() {
     super();
   }
@@ -139,7 +144,7 @@ export class ReservationController extends AbstractController {
     },
     async (req: Request, res: Response) => {
       const { code, ...data } =
-        await this.service.updateRoomAndRateOfReservation(req);
+        await this.service2.updateRoomAndRateOfReservation(req);
       res.status(code).json(data);
     }
   );
@@ -151,7 +156,7 @@ export class ReservationController extends AbstractController {
     },
     async (req: Request, res: Response) => {
       const { code, ...data } =
-        await this.service.changedRateOfARoomInReservation(req);
+        await this.service2.changedRateOfARoomInReservation(req);
       res.status(code).json(data);
     }
   );
@@ -162,7 +167,7 @@ export class ReservationController extends AbstractController {
       bodySchema: this.validator.addRoomInReservation,
     },
     async (req: Request, res: Response) => {
-      const { code, ...data } = await this.service.addRoomInReservation(req);
+      const { code, ...data } = await this.service2.addRoomInReservation(req);
       res.status(code).json(data);
     }
   );
@@ -173,7 +178,9 @@ export class ReservationController extends AbstractController {
       bodySchema: this.validator.deleteRoomInReservation,
     },
     async (req: Request, res: Response) => {
-      const { code, ...data } = await this.service.deleteRoomInReservation(req);
+      const { code, ...data } = await this.service2.deleteRoomInReservation(
+        req
+      );
       res.status(code).json(data);
     }
   );
@@ -184,7 +191,9 @@ export class ReservationController extends AbstractController {
       bodySchema: this.validator.updateSingleReservation,
     },
     async (req: Request, res: Response) => {
-      const { code, ...data } = await this.service.updateSingleReservation(req);
+      const { code, ...data } = await this.service2.updateSingleReservation(
+        req
+      );
       res.status(code).json(data);
     }
   );
@@ -195,7 +204,7 @@ export class ReservationController extends AbstractController {
       bodySchema: this.validator.changeDatesOfBooking,
     },
     async (req: Request, res: Response) => {
-      const { code, ...data } = await this.service.changeDatesOfBooking(req);
+      const { code, ...data } = await this.service2.changeDatesOfBooking(req);
       res.status(code).json(data);
     }
   );
@@ -206,7 +215,7 @@ export class ReservationController extends AbstractController {
       bodySchema: this.validator.changeRoomOfAReservation,
     },
     async (req: Request, res: Response) => {
-      const { code, ...data } = await this.service.changeRoomOfAReservation(
+      const { code, ...data } = await this.service2.changeRoomOfAReservation(
         req
       );
       res.status(code).json(data);
@@ -223,7 +232,7 @@ export class ReservationController extends AbstractController {
     },
     async (req: Request, res: Response) => {
       const { code, ...data } =
-        await this.service.updateOthersOfARoomByBookingID(req);
+        await this.service2.updateOthersOfARoomByBookingID(req);
       res.status(code).json(data);
     }
   );
@@ -235,7 +244,7 @@ export class ReservationController extends AbstractController {
     },
     async (req: Request, res: Response) => {
       const { code, ...data } =
-        await this.service.individualRoomDatesChangeOfBooking(req);
+        await this.service2.individualRoomDatesChangeOfBooking(req);
       res.status(code).json(data);
     }
   );
@@ -288,7 +297,7 @@ export class ReservationController extends AbstractController {
   public getFoliosbySingleBooking = this.asyncWrapper.wrap(
     { paramSchema: this.commonValidator.singleParamValidator() },
     async (req: Request, res: Response) => {
-      const { code, ...data } = await this.service.getFoliosbySingleBooking(
+      const { code, ...data } = await this.service3.getFoliosbySingleBooking(
         req
       );
       res.status(code).json(data);
@@ -299,7 +308,7 @@ export class ReservationController extends AbstractController {
     { paramSchema: this.commonValidator.singleParamValidator() },
     async (req: Request, res: Response) => {
       const { code, ...data } =
-        await this.service.getFoliosWithEntriesbySingleBooking(req);
+        await this.service3.getFoliosWithEntriesbySingleBooking(req);
       res.status(code).json(data);
     }
   );
@@ -309,7 +318,7 @@ export class ReservationController extends AbstractController {
       bodySchema: this.validator.addPayment,
     },
     async (req: Request, res: Response) => {
-      const { code, ...data } = await this.service.addPaymentByFolioID(req);
+      const { code, ...data } = await this.service3.addPaymentByFolioID(req);
       res.status(code).json(data);
     }
   );
@@ -319,7 +328,7 @@ export class ReservationController extends AbstractController {
       bodySchema: this.validator.addPayment,
     },
     async (req: Request, res: Response) => {
-      const { code, ...data } = await this.service.refundPaymentByFolioID(req);
+      const { code, ...data } = await this.service3.refundPaymentByFolioID(req);
       res.status(code).json(data);
     }
   );
@@ -329,7 +338,7 @@ export class ReservationController extends AbstractController {
       bodySchema: this.validator.adjustBalance,
     },
     async (req: Request, res: Response) => {
-      const { code, ...data } = await this.service.adjustAmountByFolioID(req);
+      const { code, ...data } = await this.service3.adjustAmountByFolioID(req);
       res.status(code).json(data);
     }
   );
@@ -339,7 +348,7 @@ export class ReservationController extends AbstractController {
       bodySchema: this.validator.addItemByFolioID,
     },
     async (req: Request, res: Response) => {
-      const { code, ...data } = await this.service.addItemByFolioID(req);
+      const { code, ...data } = await this.service3.addItemByFolioID(req);
       res.status(code).json(data);
     }
   );
@@ -347,7 +356,7 @@ export class ReservationController extends AbstractController {
   public getFolioEntriesbyFolioID = this.asyncWrapper.wrap(
     { paramSchema: this.commonValidator.singleParamValidator() },
     async (req: Request, res: Response) => {
-      const { code, ...data } = await this.service.getFolioEntriesbyFolioID(
+      const { code, ...data } = await this.service3.getFolioEntriesbyFolioID(
         req
       );
       res.status(code).json(data);
@@ -360,7 +369,7 @@ export class ReservationController extends AbstractController {
       querySchema: this.validator.updateOrRemoveGuestFromRoom,
     },
     async (req: Request, res: Response) => {
-      const { code, ...data } = await this.service.updateOrRemoveGuestFromRoom(
+      const { code, ...data } = await this.service2.updateOrRemoveGuestFromRoom(
         req
       );
       res.status(code).json(data);

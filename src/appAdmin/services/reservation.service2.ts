@@ -12,8 +12,9 @@ import {
 } from "../utlis/interfaces/reservation.interface";
 import { HelperFunction } from "../utlis/library/helperFunction";
 import { SubReservationService } from "./subreservation.service";
+import { SubDerivedReservationService } from "./subDerived.reservation.service";
 
-export class DerivedReservationService1 extends AbstractServices {
+export class ReservationService2 extends AbstractServices {
   constructor() {
     super();
   }
@@ -646,7 +647,7 @@ export class DerivedReservationService1 extends AbstractServices {
 
       const reservationModel = this.Model.reservationModel(trx);
       const invoiceModel = this.Model.hotelInvoiceModel(trx);
-      const sub = new SubReservationService(trx);
+      const subDerived = new SubDerivedReservationService(trx);
 
       const booking = await reservationModel.getSingleBooking(
         hotel_code,
@@ -676,7 +677,7 @@ export class DerivedReservationService1 extends AbstractServices {
         };
       }
 
-      const nights = sub.calculateNights(check_in, check_out);
+      const nights = HelperFunction.calculateNights(check_in, check_out);
       if (nights <= 0) {
         return {
           success: false,
@@ -730,7 +731,7 @@ export class DerivedReservationService1 extends AbstractServices {
       const folioEntries: IinsertFolioEntriesPayload[] = [];
 
       if (booking.is_individual_booking) {
-        await sub.changeDateOfBookingForIndividual({
+        await subDerived.changeDateOfBookingForIndividual({
           booking,
           nights,
           booking_id,
@@ -743,7 +744,7 @@ export class DerivedReservationService1 extends AbstractServices {
           vat_percentage,
         });
       } else {
-        await sub.changeDateOfBookingForGroupReservation({
+        await subDerived.changeDateOfBookingForGroupReservation({
           booking,
           nights,
           booking_id,
@@ -796,7 +797,7 @@ export class DerivedReservationService1 extends AbstractServices {
 
       const reservationModel = this.Model.reservationModel(trx);
       const invoiceModel = this.Model.hotelInvoiceModel(trx);
-      const sub = new SubReservationService(trx);
+      const subDerived = new SubDerivedReservationService(trx);
 
       const booking = await reservationModel.getSingleBooking(
         hotel_code,
@@ -862,16 +863,13 @@ export class DerivedReservationService1 extends AbstractServices {
         };
       }
 
-      const nights = sub.calculateNights(
+      const nights = HelperFunction.calculateNights(
         previouseRoom.check_in,
         previouseRoom.check_out
       );
 
-      let prevRoomAmount = 0;
-      let newTotalAmount = 0;
-
       if (booking.is_individual_booking) {
-        await sub.changeRoomOfAIndividualReservation({
+        await subDerived.changeRoomOfAIndividualReservation({
           body: req.body,
           booking,
           booking_id,
@@ -881,7 +879,7 @@ export class DerivedReservationService1 extends AbstractServices {
           req,
         });
       } else {
-        await sub.changeRoomOfAGroupReservation({
+        await subDerived.changeRoomOfAGroupReservation({
           body: req.body,
           booking,
           booking_id,
@@ -947,7 +945,7 @@ export class DerivedReservationService1 extends AbstractServices {
 
       const reservationModel = this.Model.reservationModel(trx);
       const invoiceModel = this.Model.hotelInvoiceModel(trx);
-      const sub = new SubReservationService(trx);
+      const subDerived = new SubDerivedReservationService(trx);
 
       const booking = await reservationModel.getSingleBooking(
         hotel_code,
@@ -993,9 +991,7 @@ export class DerivedReservationService1 extends AbstractServices {
         };
       }
 
-      //
-
-      const nights = sub.calculateNights(check_in, check_out);
+      const nights = HelperFunction.calculateNights(check_in, check_out);
       if (nights <= 0) {
         return {
           success: false,
@@ -1021,8 +1017,9 @@ export class DerivedReservationService1 extends AbstractServices {
         };
       }
 
+      console.log({ booking });
       if (booking.is_individual_booking) {
-        sub.individualRoomDatesChangeOfBookingForIndividual({
+        await subDerived.individualRoomDatesChangeOfBookingForIndividual({
           booking,
           booking_id,
           bookingRoom,
@@ -1035,7 +1032,7 @@ export class DerivedReservationService1 extends AbstractServices {
           vat_percentage,
         });
       } else {
-        sub.individualRoomDatesChangeOfBookingForGroup({
+        await subDerived.individualRoomDatesChangeOfBookingForGroup({
           booking,
           booking_id,
           bookingRoom,
