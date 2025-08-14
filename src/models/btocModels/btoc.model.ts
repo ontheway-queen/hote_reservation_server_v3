@@ -1,6 +1,7 @@
 import {
   IBtocUser,
   IBtocUserProfile,
+  IBtocUserRegistration,
 } from "../../btoc/utills/interfaces/user.interface";
 import { TDB } from "../../common/types/commontypes";
 import Schema from "../../utils/miscellaneous/schema";
@@ -24,7 +25,7 @@ export class BtocUserModel extends Schema {
   }
 
   // create user
-  public async createUser(payload: any) {
+  public async createUser(payload: IBtocUserRegistration) {
     return await this.db("users")
       .withSchema(this.BTOC_SCHEMA)
       .insert(payload)

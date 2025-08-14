@@ -200,39 +200,40 @@ class AuthChecker extends AbstractServices {
     }
   };
 
-  // web token verify checker
-  public webTokenVerfiyChecker = async (
+  // white label token verify
+  public whiteLabelTokenVerfiy = async (
     req: Request,
     res: Response,
     next: NextFunction
   ) => {
     try {
-      const web_token: string = req.headers.web_token as string;
+      const wl_token: string = req.headers.wl_token as string;
 
-      if (!web_token) {
+      if (!wl_token) {
         return res
           .status(StatusCode.HTTP_UNAUTHORIZED)
           .json({ success: false, message: ResMsg.HTTP_UNAUTHORIZED });
       }
 
-      const verify = new SyncCryptoService().decrypt(web_token);
+      // get hotel by web token
+      const hotel = await this.Model.HotelModel().getSingleHotel({ wl_token });
 
-      if (!verify.success) {
+      if (!hotel) {
         return res
           .status(StatusCode.HTTP_UNAUTHORIZED)
           .json({ success: false, message: ResMsg.HTTP_UNAUTHORIZED });
       } else {
-        req.web_token = { hotel_code: parseInt(verify.data as string) };
+        req.web_token = {
+          hotel_code: hotel.hotel_code,
+          hotel_name: hotel.hotel_name,
+        };
         next();
       }
     } catch (err: any) {
-      res
-        .status(StatusCode.HTTP_BAD_REQUEST)
-
-        .json({
-          success: false,
-          message: err.reason ? err.reason : ResMsg.HTTP_UNAUTHORIZED,
-        });
+      res.status(StatusCode.HTTP_BAD_REQUEST).json({
+        success: false,
+        message: err.reason ? err.reason : ResMsg.HTTP_UNAUTHORIZED,
+      });
     }
   };
 }

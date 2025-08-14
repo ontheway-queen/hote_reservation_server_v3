@@ -105,12 +105,14 @@ export interface IhotelCreateRequestBodyPayload {
   user_name: string;
   fax: string;
   phone: string;
+  white_label: boolean;
   website_url: string;
   permission?: string;
 }
 export interface IUpdateHotelReqBody {
   hotel_name: string;
   expiry_date: string | Date;
+  white_label: boolean;
   status: boolean;
   hotel_email: string;
   description: string;
@@ -162,6 +164,8 @@ export interface ISingleHotel {
   hotel_email: string | null;
   phone: string | null;
   optional_phone1: string | null;
+  white_label_token: string | null;
+  white_label: boolean;
   bin: string | null;
   images: IHotelImage[] | null; // json_agg can be null if no rows
 }

@@ -26,6 +26,7 @@ class MHotelValidator {
     user_name: Joi.string().lowercase().trim().regex(/^\S/).required(),
     password: Joi.string().trim().regex(/^\S/).required(),
     permission: Joi.string().lowercase().optional(),
+    white_label: Joi.bool().optional(),
   });
 
   public updateHotelValidator = Joi.object({
@@ -53,6 +54,7 @@ class MHotelValidator {
     fax: Joi.string().allow("").optional(),
     remove_hotel_images: Joi.array().items(Joi.number().required()).optional(),
     permission: Joi.string().lowercase().optional(),
+    white_label: Joi.bool().optional(),
   });
 
   public getAllHotelValidator = Joi.object({

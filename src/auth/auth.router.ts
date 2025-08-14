@@ -16,7 +16,11 @@ class AuthRouter {
     // admin auth for hotel
     this.AuthRouter.use("/reservation", new HotelAdminAuthRouter().router);
 
-    this.AuthRouter.use("/btoc", new BtocUserAuthRouter().router);
+    this.AuthRouter.use(
+      "/btoc",
+      this.authChecker.whiteLabelTokenVerfiy,
+      new BtocUserAuthRouter().router
+    );
 
     this.AuthRouter.use("/m-admin", new MAdminAuthRouter().router);
   }

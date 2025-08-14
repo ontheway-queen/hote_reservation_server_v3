@@ -13,7 +13,7 @@ export class BtocRootRouter {
   private callRouter() {
     this.router.use(
       "/hotel",
-      this.authChecker.webTokenVerfiyChecker,
+      this.authChecker.whiteLabelTokenVerfiy,
       new BtocHotelRouter().router
     );
   }

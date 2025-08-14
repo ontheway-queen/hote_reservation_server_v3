@@ -159,8 +159,9 @@ class HotelModel extends Schema {
     id?: number;
     email?: string;
     hotel_code?: number;
+    wl_token?: string;
   }): Promise<ISingleHotel | undefined> {
-    const { hotel_code, email, id } = payload;
+    const { hotel_code, email, id, wl_token } = payload;
     return await this.db("hotels as h")
       .withSchema(this.RESERVATION_SCHEMA)
       .select(
@@ -220,6 +221,9 @@ class HotelModel extends Schema {
         if (email) {
           this.andWhere("hcd.email", email);
         }
+        if (wl_token) {
+          this.andWhere("h.white_label_token", wl_token);
+        }
       })
       .first();
   }
@@ -278,9 +282,7 @@ class HotelModel extends Schema {
   public async getHotelAccConfig(
     hotel_code: number,
     configs: IAccountConfigHeads[]
-  ): Promise<
-    IgetHotelAccConfig[]
-  > {
+  ): Promise<IgetHotelAccConfig[]> {
     return await this.db("acc_head_config")
       .withSchema(this.ACC_SCHEMA)
       .select("*")

@@ -16,6 +16,8 @@ export interface ICreateHotelPayload {
   longitude: string;
   country_code: string;
   expiry_date: Date;
+  white_label_token: string;
+  white_label: boolean;
 }
 
 export interface IUpdateHotelPayload {

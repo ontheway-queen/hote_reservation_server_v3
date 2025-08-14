@@ -53,6 +53,7 @@ export interface IrestUser {
 
 export interface IWebToken {
   hotel_code: number;
+  hotel_name: string;
 }
 
 // user member types

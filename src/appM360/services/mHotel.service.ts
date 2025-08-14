@@ -13,7 +13,8 @@ import {
   IinsertAccHeadReqBody,
   IinsertAccHeadReqBodyForMpanel,
 } from "../../appAdmin/utlis/interfaces/doubleEntry.interface";
-
+import { body } from "express-validator";
+import { v4 as uuidv4 } from "uuid";
 class MHotelService extends AbstractServices {
   constructor() {
     super();
@@ -40,6 +41,7 @@ class MHotelService extends AbstractServices {
         fax,
         phone,
         website_url,
+        white_label,
         permission,
       } = req.body as IhotelCreateRequestBodyPayload;
 
@@ -135,6 +137,8 @@ class MHotelService extends AbstractServices {
         description,
         postal_code,
         expiry_date,
+        white_label_token: req.body?.white_label && uuidv4(),
+        white_label,
       });
 
       // insert others info
@@ -335,6 +339,7 @@ class MHotelService extends AbstractServices {
         expiry_date,
         optional_phone1,
         hotel_name,
+        white_label,
         ...hotelData
       } = req.body as Partial<IUpdateHotelReqBody>;
 

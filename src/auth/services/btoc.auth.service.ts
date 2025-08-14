@@ -11,6 +11,7 @@ class BtocUserAuthService extends AbstractServices {
 
   // registration
   public async registration(req: Request) {
+    const { hotel_code } = req.web_token;
     const { email, password, ...rest } = req.body;
     const files = req.upFiles;
     const model = this.Model.btocUserModel();
@@ -33,6 +34,7 @@ class BtocUserAuthService extends AbstractServices {
 
     const newUserData = {
       email,
+      hotel_code,
       password: hashedPassword,
       photo: photoUrl,
       ...rest,
@@ -58,8 +60,8 @@ class BtocUserAuthService extends AbstractServices {
     if (!user) {
       return {
         success: false,
-        code: this.StatusCode.HTTP_BAD_REQUEST,
-        message: "User not found with this email.",
+        code: this.StatusCode.HTTP_UNAUTHORIZED,
+        message: this.ResMsg.HTTP_UNAUTHORIZED,
       };
     }
 
@@ -71,7 +73,7 @@ class BtocUserAuthService extends AbstractServices {
       };
     }
 
-    const { password: hashPass, ...rest } = user;
+    const { password: hashPass, is_deleted, ...rest } = user;
 
     const isPasswordValid = await Lib.compare(password, hashPass);
     if (!isPasswordValid) {
@@ -84,13 +86,14 @@ class BtocUserAuthService extends AbstractServices {
 
     const tokenPayload = {
       user_id: user.id,
-      name: user.first_name + " " + user.last_name,
+      first_name: user.first_name,
+      last_name: user.last_name,
       email: user.email,
       phone: user.phone,
       status: user.status,
       date_of_birth: user.date_of_birth,
       gender: user.status,
-      type: null,
+      type: "btoc_user",
     };
 
     const token = Lib.createToken(
@@ -102,7 +105,7 @@ class BtocUserAuthService extends AbstractServices {
     return {
       success: true,
       code: this.StatusCode.HTTP_OK,
-      message: "User login successful",
+      message: "Successfully Logged In",
       data: rest,
       token,
     };

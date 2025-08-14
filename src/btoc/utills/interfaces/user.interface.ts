@@ -1,3 +1,18 @@
+export interface IBtocUserRegistration {
+  hotel_code: number;
+  first_name: string;
+  last_name: string;
+  email: string;
+  password: string;
+  phone?: string;
+  photo?: string;
+  date_of_birth?: string;
+  gender: string;
+  address?: string;
+  city_id?: number;
+  country_id: number;
+}
+
 export interface IBtocUser {
   id: number;
   first_name: string;

@@ -34,6 +34,7 @@ class BtocUserAuthService extends abstract_service_1.default {
     // registration
     registration(req) {
         return __awaiter(this, void 0, void 0, function* () {
+            const { hotel_code } = req.web_token;
             const _a = req.body, { email, password } = _a, rest = __rest(_a, ["email", "password"]);
             const files = req.upFiles;
             const model = this.Model.btocUserModel();
@@ -50,7 +51,8 @@ class BtocUserAuthService extends abstract_service_1.default {
             if (files && files.length > 0) {
                 photoUrl = files[0] || null;
             }
-            const newUserData = Object.assign({ email, password: hashedPassword, photo: photoUrl }, rest);
+            const newUserData = Object.assign({ email,
+                hotel_code, password: hashedPassword, photo: photoUrl }, rest);
             const createdUser = yield model.createUser(newUserData);
             return {
                 success: true,
@@ -72,8 +74,8 @@ class BtocUserAuthService extends abstract_service_1.default {
             if (!user) {
                 return {
                     success: false,
-                    code: this.StatusCode.HTTP_BAD_REQUEST,
-                    message: "User not found with this email.",
+                    code: this.StatusCode.HTTP_UNAUTHORIZED,
+                    message: this.ResMsg.HTTP_UNAUTHORIZED,
                 };
             }
             if (user.status !== "active") {
@@ -83,7 +85,7 @@ class BtocUserAuthService extends abstract_service_1.default {
                     message: `Your account is ${user.status}. Please contact support.`,
                 };
             }
-            const { password: hashPass } = user, rest = __rest(user, ["password"]);
+            const { password: hashPass, is_deleted } = user, rest = __rest(user, ["password", "is_deleted"]);
             const isPasswordValid = yield lib_1.default.compare(password, hashPass);
             if (!isPasswordValid) {
                 return {
@@ -94,19 +96,20 @@ class BtocUserAuthService extends abstract_service_1.default {
             }
             const tokenPayload = {
                 user_id: user.id,
-                name: user.first_name + " " + user.last_name,
+                first_name: user.first_name,
+                last_name: user.last_name,
                 email: user.email,
                 phone: user.phone,
                 status: user.status,
                 date_of_birth: user.date_of_birth,
                 gender: user.status,
-                type: null,
+                type: "btoc_user",
             };
             const token = lib_1.default.createToken(tokenPayload, config_1.default.JWT_SECRET_H_USER, "24h");
             return {
                 success: true,
                 code: this.StatusCode.HTTP_OK,
-                message: "User login successful",
+                message: "Successfully Logged In",
                 data: rest,
                 token,
             };

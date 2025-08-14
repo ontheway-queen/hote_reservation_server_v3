@@ -28,6 +28,7 @@ const mHotelUserCredentials_template_1 = require("../../templates/mHotelUserCred
 const lib_1 = __importDefault(require("../../utils/lib/lib"));
 const constants_1 = require("../../utils/miscellaneous/constants");
 const config_1 = __importDefault(require("../../config/config"));
+const uuid_1 = require("uuid");
 class MHotelService extends abstract_service_1.default {
     constructor() {
         super();
@@ -35,8 +36,8 @@ class MHotelService extends abstract_service_1.default {
     createHotel(req) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
-                var _a;
-                const { hotel_email, user_name, password, accommodation_type_id, hotel_name, address, chain_name, city_code, country_code, description, expiry_date, latitude, longitude, postal_code, star_category, fax, phone, website_url, permission, } = req.body;
+                var _a, _b;
+                const { hotel_email, user_name, password, accommodation_type_id, hotel_name, address, chain_name, city_code, country_code, description, expiry_date, latitude, longitude, postal_code, star_category, fax, phone, website_url, white_label, permission, } = req.body;
                 const expiry = new Date(expiry_date);
                 if (expiry < new Date()) {
                     return {
@@ -105,6 +106,8 @@ class MHotelService extends abstract_service_1.default {
                     description,
                     postal_code,
                     expiry_date,
+                    white_label_token: ((_b = req.body) === null || _b === void 0 ? void 0 : _b.white_label) && (0, uuid_1.v4)(),
+                    white_label,
                 });
                 // insert others info
                 yield model.insertHotelContactDetails({
@@ -255,7 +258,7 @@ class MHotelService extends abstract_service_1.default {
     updateHotel(req) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
-                const _a = req.body, { fax, phone, website_url, hotel_email, remove_hotel_images, expiry_date, optional_phone1, hotel_name } = _a, hotelData = __rest(_a, ["fax", "phone", "website_url", "hotel_email", "remove_hotel_images", "expiry_date", "optional_phone1", "hotel_name"]);
+                const _a = req.body, { fax, phone, website_url, hotel_email, remove_hotel_images, expiry_date, optional_phone1, hotel_name, white_label } = _a, hotelData = __rest(_a, ["fax", "phone", "website_url", "hotel_email", "remove_hotel_images", "expiry_date", "optional_phone1", "hotel_name", "white_label"]);
                 const { id } = req.params;
                 const parsedId = parseInt(id);
                 const files = req.files || [];
