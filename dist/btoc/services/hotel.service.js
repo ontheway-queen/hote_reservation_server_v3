@@ -14,6 +14,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.BtocHotelService = void 0;
 const abstract_service_1 = __importDefault(require("../../abstarcts/abstract.service"));
+const helperFunction_1 = require("../../appAdmin/utlis/library/helperFunction");
 class BtocHotelService extends abstract_service_1.default {
     constructor() {
         super();
@@ -22,8 +23,10 @@ class BtocHotelService extends abstract_service_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             const { hotel_code } = req.web_token;
             const { checkin, checkout, client_nationality, rooms } = req.body;
+            const nights = helperFunction_1.HelperFunction.calculateNights(checkin, checkout);
             const getAllAvailableRoomsWithType = yield this.BtocModels.btocReservationModel().searchAvailableRoomsBTOC({
                 hotel_code,
+                nights,
                 checkin: checkin,
                 checkout: checkout,
                 rooms,
@@ -32,6 +35,7 @@ class BtocHotelService extends abstract_service_1.default {
             return {
                 success: true,
                 code: this.StatusCode.HTTP_OK,
+                total: getAllAvailableRoomsWithType.length,
                 data: getAllAvailableRoomsWithType,
             };
         });

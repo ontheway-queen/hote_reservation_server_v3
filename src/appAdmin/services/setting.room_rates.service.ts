@@ -2,7 +2,6 @@ import { Request } from "express";
 import AbstractServices from "../../abstarcts/abstract.service";
 
 import { IRoomRateReqBodyPayload } from "../utlis/interfaces/setting.interface";
-import { HelperFunction } from "../utlis/library/helperFunction";
 
 class RoomRatesService extends AbstractServices {
   constructor() {

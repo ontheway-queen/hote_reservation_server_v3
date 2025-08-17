@@ -1,6 +1,7 @@
 import moment from "moment";
-import AbstractServices from "../../../abstarcts/abstract.service";
+
 import knex, { Knex } from "knex";
+import AbstractServices from "../../../abstarcts/abstract.service";
 
 export class HelperFunction extends AbstractServices {
   public static generateRateCalendar(rawData: any) {

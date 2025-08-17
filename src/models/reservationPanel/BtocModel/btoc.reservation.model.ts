@@ -1,3 +1,4 @@
+import { HelperFunction } from "./../../../appAdmin/utlis/library/helperFunction";
 import { number } from "joi";
 import {
   CalendarRoomType,
@@ -16,6 +17,7 @@ import Schema from "../../../utils/miscellaneous/schema";
 
 export class BtocReservationModel extends Schema {
   private db: TDB;
+
   constructor(db: TDB) {
     super();
     this.db = db;
@@ -25,42 +27,45 @@ export class BtocReservationModel extends Schema {
     checkin: string;
     checkout: string;
     hotel_code: number;
+    nights: number;
     rooms: { adults: number; no_of_infants: number; children_ages: number[] }[];
   }) {
-    const { hotel_code, checkin, checkout, rooms } = payload;
+    const { hotel_code, checkin, checkout, rooms, nights } = payload;
+    const totalRequested = rooms.length;
 
-    // Fetch all room types with min availability for the date range
+    // Step 1: Query all room types with their rate plans and boarding details
     const roomTypes = await this.db("room_types as rt")
       .withSchema(this.RESERVATION_SCHEMA)
       .select(
-        "rt.id",
-        "rt.name",
+        "rt.id as room_type_id",
+        "rt.name as room_type_name",
         "rt.description",
         "rt.max_adults",
         "rt.max_children",
-        this.db.raw(`MIN(ra.available_rooms) AS available_rooms`),
-        this.db.raw(`
-        COALESCE(
-          json_agg(
-            DISTINCT jsonb_build_object(
-              'rate_plan_id', rp.id,
-              'name', rp.name,
-              'base_rate', rpd.base_rate,
-              'boarding_details', (
-                SELECT json_agg(mp.name)
-                FROM hotel_reservation.rate_plan_meal_mappings rpmp
-                LEFT JOIN hotel_reservation.meal_plans mp ON rpmp.meal_plan_id = mp.id
-                WHERE rpmp.rate_plan_id = rp.id
-              )
-            )
-          ) FILTER (WHERE rpd.id IS NOT NULL),
-          '[]'
-        ) AS rate_plans
-      `)
+        this.db.raw(`MIN(ra.available_rooms) AS available_count`),
+        "rp.id as rate_plan_id",
+        "rp.name as rate_plan_name",
+        "rpd.base_rate",
+        this.db.raw(`COALESCE(meals.meal_list, '[]')::json AS boarding_details`)
       )
       .leftJoin("room_availability as ra", "rt.id", "ra.room_type_id")
       .leftJoin("rate_plan_details as rpd", "rt.id", "rpd.room_type_id")
       .leftJoin("rate_plans as rp", "rpd.rate_plan_id", "rp.id")
+      .leftJoin(
+        this.db
+          .select("rpmp.rate_plan_id")
+          .from("hotel_reservation.rate_plan_meal_mappings as rpmp")
+          .leftJoin(
+            "hotel_reservation.meal_plans as mp",
+            "rpmp.meal_plan_id",
+            "mp.id"
+          )
+          .groupBy("rpmp.rate_plan_id")
+          .select(this.db.raw("json_agg(mp.name)::text as meal_list"))
+          .as("meals"),
+        "meals.rate_plan_id",
+        "rp.id"
+      )
       .where("rt.hotel_code", hotel_code)
       .andWhere("rt.is_deleted", false)
       .andWhere("ra.date", ">=", checkin)
@@ -70,57 +75,68 @@ export class BtocReservationModel extends Schema {
         "rt.name",
         "rt.description",
         "rt.max_adults",
-        "rt.max_children"
+        "rt.max_children",
+        "rp.id",
+        "rp.name",
+        "rpd.base_rate",
+        "meals.meal_list"
       )
-      .havingRaw("MIN(ra.available_rooms) > 0");
+      .havingRaw("MIN(ra.available_rooms) >= ?", [totalRequested]);
 
-    // Track remaining stock per room type
-    const remainingRooms = new Map<number, number>();
-    const roomTypeMap = roomTypes.map((rt) => {
-      remainingRooms.set(rt.id, Number(rt.available_rooms));
-      return { ...rt, rate_plans: rt.rate_plans };
-    });
+    // Step 2: Group room types and calculate min_rate per room type
+    const grouped: Record<string, any> = {};
 
-    const searchResults: any[] = [];
-
-    for (const reqRoom of rooms) {
-      // Get ALL room types that satisfy occupancy and availability
-      const possibleRTs = roomTypeMap.filter(
-        (r) =>
-          r.max_adults >= reqRoom.adults &&
-          r.max_children >= reqRoom.children_ages.length &&
-          (remainingRooms.get(r.id) || 0) > 0
-      );
-
-      if (possibleRTs.length === 0) {
-        searchResults.push([]);
-        continue;
-      }
-
-      // Build result list for this requested room
-      const roomResults = possibleRTs.map((r) => {
-        // Decrement 1 room of this type (per request)
-        remainingRooms.set(r.id, (remainingRooms.get(r.id) || 0) - 1);
-
-        return {
-          room_type_id: r.id,
-          room_type_name: r.name,
+    for (const r of roomTypes) {
+      if (!grouped[r.room_type_id]) {
+        grouped[r.room_type_id] = {
+          room_type_id: r.room_type_id,
+          room_type_name: r.room_type_name,
           description: r.description,
           max_adults: r.max_adults,
           max_children: r.max_children,
-          rates: r.rate_plans.map((rp: any) => ({
-            rate_plan_id: rp.rate_plan_id,
-            name: rp.name,
-            price: rp.base_rate,
-            boarding_details: rp.boarding_details,
-          })),
+          available_count: Number(r.available_count),
+          rate_plans: [],
         };
+      }
+      grouped[r.room_type_id].rate_plans.push({
+        rate_plan_id: r.rate_plan_id,
+        rate_plan_name: r.rate_plan_name,
+        boarding_details: r.boarding_details,
+        base_rate: r.base_rate,
       });
-
-      searchResults.push(roomResults);
     }
 
-    return searchResults;
+    // Step 3: Compute min_rate for each room_type
+    for (const rt of Object.values(grouped)) {
+      let minRatePlan: any = null;
+
+      for (const rp of rt.rate_plans) {
+        const totalPrice = rp.base_rate * totalRequested * nights;
+
+        if (!minRatePlan || totalPrice < minRatePlan.price) {
+          minRatePlan = {
+            rate_plan_id: rp.rate_plan_id,
+            rate_plan_name: rp.rate_plan_name,
+            boarding_details: rp.boarding_details,
+            price: totalPrice,
+            no_of_rooms: totalRequested,
+            rooms: rooms.map((room, idx) => ({
+              no_of_adults: room.adults,
+              no_of_children: room.children_ages.length,
+              no_of_rooms: 1,
+              description: rt.description,
+              room_type: rt.room_type_name,
+            })),
+            cancellation_policy: {},
+          };
+        }
+      }
+
+      rt.min_rate = minRatePlan;
+      delete rt.rate_plans; // remove flat rate_plans if not needed
+    }
+
+    return Object.values(grouped);
   }
 
   public async insertBooking(payload: IRoomBooking) {
