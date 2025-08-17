@@ -20,13 +20,15 @@ class BtocHotelService extends abstract_service_1.default {
     }
     searchAvailability(req) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { hotel_code } = req.btoc_user;
-            const { check_in, check_out } = req.query;
-            const getAllAvailableRoomsWithType = yield this.Model.reservationModel().calendar({
+            const { hotel_code } = req.web_token;
+            const { checkin, checkout, client_nationality, rooms } = req.body;
+            const getAllAvailableRoomsWithType = yield this.BtocModels.btocReservationModel().searchAvailableRoomsBTOC({
                 hotel_code,
-                check_in: check_in,
-                check_out: check_out,
+                checkin: checkin,
+                checkout: checkout,
+                rooms,
             });
+            console.log({ getAllAvailableRoomsWithType });
             return {
                 success: true,
                 code: this.StatusCode.HTTP_OK,

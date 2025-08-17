@@ -32,8 +32,7 @@ export class BtocUserModel extends Schema {
       .returning(["id", "email"]);
   }
 
-  // get profile
-  public async getProfile(query: {
+  public async getSingleUser(query: {
     id?: number;
     email?: string;
   }): Promise<IBtocUserProfile> {
@@ -46,6 +45,7 @@ export class BtocUserModel extends Schema {
         "u.email",
         "u.phone",
         "u.photo",
+        "u.password",
         "u.status",
         "u.gender",
         "u.address",
@@ -54,12 +54,9 @@ export class BtocUserModel extends Schema {
         "country.country_name as country",
         "u.is_deleted"
       )
-      //   .joinRaw("LEFT JOIN ?? city ON city.city_code = u.city_id", [
-      //     `${this.PUBLIC_SCHEMA}.${this.TABLES.city}`,
-      //   ])
-      //   .joinRaw("LEFT JOIN ?? country ON country.id = u.country_id", [
-      //     `${this.PUBLIC_SCHEMA}.${this.TABLES.country}`,
-      //   ])
+
+      .joinRaw("LEFT JOIN public.city ON city.city_code = u.city_id")
+      .joinRaw("LEFT JOIN public.country ON country.id = u.country_id")
       .modify((qb) => {
         if (query.id) qb.where("u.id", query.id);
         if (query.email) qb.where("u.email", query.email);
@@ -68,7 +65,6 @@ export class BtocUserModel extends Schema {
       .first();
   }
 
-  // update profile
   public async updateProfile({
     payload,
     id,

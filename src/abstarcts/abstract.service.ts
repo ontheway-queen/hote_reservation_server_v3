@@ -1,4 +1,5 @@
 import { db } from "../app/database";
+import { BtocModels } from "../models/btoc.rootModel";
 import Models from "../models/rootModels";
 import ManageFile from "../utils/lib/manageFile";
 import ResMsg from "../utils/miscellaneous/responseMessage";
@@ -11,6 +12,7 @@ abstract class AbstractServices {
   protected ResMsg = ResMsg;
   protected StatusCode = StatusCode;
   protected Model = new Models(this.db);
+  protected BtocModels = new BtocModels(this.db);
   protected schema = new Schema();
 }
 

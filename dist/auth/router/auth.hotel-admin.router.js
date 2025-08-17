@@ -14,18 +14,14 @@ class HotelAdminAuthRouter extends abstract_router_1.default {
         this.callRouter();
     }
     callRouter() {
-        // login
         this.router.route("/login").post(this.adminAuthController.login);
-        // profile
         this.router
             .route("/profile")
             .get(this.authChecker.hotelAdminAuthChecker, this.adminAuthController.getProfile)
             .patch(this.uploader.cloudUploadRaw(this.fileFolders.ADMIN_FILES), this.authChecker.hotelAdminAuthChecker, this.adminAuthController.updateProfile);
-        // forget password
         this.router
             .route("/forget-password")
             .post(this.adminAuthController.forgetPassword);
-        // change password
         this.router
             .route("/change-password")
             .post(this.authChecker.hotelAdminAuthChecker, this.adminAuthController.changeAdminPassword);

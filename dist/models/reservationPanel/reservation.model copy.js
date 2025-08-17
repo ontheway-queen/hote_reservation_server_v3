@@ -943,4 +943,4 @@ class ReservationModel extends schema_1.default {
     }
 }
 exports.ReservationModel = ReservationModel;
-//# sourceMappingURL=reservation.model.js.map
+//# sourceMappingURL=reservation.model%20copy.js.map

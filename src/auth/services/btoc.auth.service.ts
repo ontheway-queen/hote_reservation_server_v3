@@ -56,7 +56,7 @@ class BtocUserAuthService extends AbstractServices {
   public async login(req: Request) {
     const { email, password } = req.body;
     const model = this.Model.btocUserModel();
-    const user = await model.checkUser({ email });
+    const user = await model.getSingleUser({ email });
     if (!user) {
       return {
         success: false,
@@ -108,6 +108,31 @@ class BtocUserAuthService extends AbstractServices {
       message: "Successfully Logged In",
       data: rest,
       token,
+    };
+  }
+
+  public async getProfile(req: Request) {
+    const { id, hotel_code } = req.btoc_user;
+
+    const reservationModel = this.Model.btocUserModel();
+    const data = await reservationModel.getSingleUser({ id });
+
+    if (!data) {
+      return {
+        success: false,
+        code: this.StatusCode.HTTP_NOT_FOUND,
+        message: this.ResMsg.HTTP_NOT_FOUND,
+      };
+    }
+
+    const { password, ...rest } = data;
+
+    return {
+      success: true,
+      code: this.StatusCode.HTTP_OK,
+      data: {
+        ...rest,
+      },
     };
   }
 

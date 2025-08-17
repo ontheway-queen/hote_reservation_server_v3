@@ -22,6 +22,18 @@ class BtocUserAuthRouter extends AbstractRouter {
     this.router.route("/login").post(this.btocUserAuthController.login);
 
     this.router
+      .route("/profile")
+      .get(
+        this.authChecker.btocUserAuthChecker,
+        this.btocUserAuthController.getProfile
+      );
+    // .patch(
+    //   this.uploader.cloudUploadRaw(this.fileFolders.ADMIN_FILES),
+    //   this.authChecker.hotelAdminAuthChecker,
+    //   this.adminAuthController.updateProfile
+    // );
+
+    this.router
       .route("/forget-password")
       .patch(this.btocUserAuthController.forgetPassword);
 

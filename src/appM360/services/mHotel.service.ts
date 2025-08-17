@@ -137,7 +137,7 @@ class MHotelService extends AbstractServices {
         description,
         postal_code,
         expiry_date,
-        white_label_token: req.body?.white_label && uuidv4(),
+        white_label_token: uuidv4(),
         white_label,
       });
 

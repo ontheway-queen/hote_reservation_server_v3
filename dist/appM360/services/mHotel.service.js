@@ -36,7 +36,7 @@ class MHotelService extends abstract_service_1.default {
     createHotel(req) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
-                var _a, _b;
+                var _a;
                 const { hotel_email, user_name, password, accommodation_type_id, hotel_name, address, chain_name, city_code, country_code, description, expiry_date, latitude, longitude, postal_code, star_category, fax, phone, website_url, white_label, permission, } = req.body;
                 const expiry = new Date(expiry_date);
                 if (expiry < new Date()) {
@@ -106,7 +106,7 @@ class MHotelService extends abstract_service_1.default {
                     description,
                     postal_code,
                     expiry_date,
-                    white_label_token: ((_b = req.body) === null || _b === void 0 ? void 0 : _b.white_label) && (0, uuid_1.v4)(),
+                    white_label_token: (0, uuid_1.v4)(),
                     white_label,
                 });
                 // insert others info

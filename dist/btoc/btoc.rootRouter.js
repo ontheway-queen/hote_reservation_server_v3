@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.BtocRootRouter = void 0;
 const express_1 = require("express");
 const authChecker_1 = __importDefault(require("../common/middleware/authChecker/authChecker"));
-const hotel_router_1 = require("./routers/hotel.router");
+const btoc_hotel_router_1 = require("./routers/btoc.hotel.router");
 class BtocRootRouter {
     constructor() {
         this.router = (0, express_1.Router)();
@@ -14,7 +14,7 @@ class BtocRootRouter {
         this.callRouter();
     }
     callRouter() {
-        this.router.use("/hotel", this.authChecker.whiteLabelTokenVerfiy, new hotel_router_1.BtocHotelRouter().router);
+        this.router.use("/hotel", this.authChecker.whiteLabelTokenVerfiy, new btoc_hotel_router_1.BtocHotelRouter().router);
     }
 }
 exports.BtocRootRouter = BtocRootRouter;

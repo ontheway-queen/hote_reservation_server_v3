@@ -112,7 +112,7 @@ class HotelModel extends schema_1.default {
             const { hotel_code, email, id, wl_token } = payload;
             return yield this.db("hotels as h")
                 .withSchema(this.RESERVATION_SCHEMA)
-                .select("h.id", "h.hotel_code", "h.name as hotel_name", "h.address", "h.star_category", "h.city_code", "h.country_code", "h.accommodation_type_id", "h.accommodation_type_name", "h.created_at", "h.latitude", "h.longitude", "h.chain_name", "h.postal_code", "h.description", "h.star_category", "h.created_at", "h.status", "h.expiry_date", "h.created_at", "hcd.logo", "hcd.fax", "hcd.website_url", "hcd.email as hotel_email", "hcd.phone", "hcd.optional_phone1", "h.bin", this.db.raw(`(SELECT json_agg(
+                .select("h.id", "h.hotel_code", "h.name as hotel_name", "h.address", "h.star_category", "h.city_code", "h.country_code", "h.accommodation_type_id", "h.accommodation_type_name", "h.created_at", "h.latitude", "h.longitude", "h.chain_name", "h.postal_code", "h.description", "h.star_category", "h.created_at", "h.status", "h.white_label", "h.white_label_token", "h.expiry_date", "h.created_at", "hcd.logo", "hcd.fax", "hcd.website_url", "hcd.email as hotel_email", "hcd.phone", "hcd.optional_phone1", "h.bin", this.db.raw(`(SELECT json_agg(
       json_build_object(
         'id', hi.id,
         'image_url', hi.image_url,

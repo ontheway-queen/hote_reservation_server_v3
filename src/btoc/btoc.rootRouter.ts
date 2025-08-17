@@ -1,6 +1,6 @@
 import { Router } from "express";
 import AuthChecker from "../common/middleware/authChecker/authChecker";
-import { BtocHotelRouter } from "./routers/hotel.router";
+import { BtocHotelRouter } from "./routers/btoc.hotel.router";
 
 export class BtocRootRouter {
   public router = Router();

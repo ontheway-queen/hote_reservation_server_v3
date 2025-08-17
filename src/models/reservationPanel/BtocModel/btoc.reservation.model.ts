@@ -9,337 +9,118 @@ import {
   IRoomBooking,
   ISearchAvailableRoom,
   IsingleRoomOfBooking,
-} from "../../appAdmin/utlis/interfaces/reservation.interface";
+} from "../../../appAdmin/utlis/interfaces/reservation.interface";
 
-import { TDB } from "../../common/types/commontypes";
-import Schema from "../../utils/miscellaneous/schema";
+import { TDB } from "../../../common/types/commontypes";
+import Schema from "../../../utils/miscellaneous/schema";
 
-export class ReservationModel extends Schema {
+export class BtocReservationModel extends Schema {
   private db: TDB;
   constructor(db: TDB) {
     super();
     this.db = db;
   }
 
-  public async calendar(payload: {
-    check_in: string;
-    check_out: string;
+  public async searchAvailableRoomsBTOC(payload: {
+    checkin: string;
+    checkout: string;
     hotel_code: number;
-  }): Promise<CalendarRoomType[]> {
-    const { hotel_code, check_in, check_out } = payload;
-    const db = this.db;
+    rooms: { adults: number; no_of_infants: number; children_ages: number[] }[];
+  }) {
+    const { hotel_code, checkin, checkout, rooms } = payload;
 
-    return await db("room_types as rt")
-      .withSchema(this.RESERVATION_SCHEMA)
-      .select(
-        "rt.id",
-        "rt.name",
-        "rt.hotel_code",
-        db.raw(
-          `
-        COALESCE(
-          json_agg(
-            jsonb_build_object(
-              'room_id', r.id,
-              'room_name', r.room_name,
-              'room_status', r.status,
-              'bookings', COALESCE(
-                (
-                  SELECT json_agg(
-                    jsonb_build_object(
-                      'booking_id', b.id,
-                      'check_in', br2.check_in,
-                      'check_out', br2.check_out,
-                      'stay_nights', (
-                        SELECT json_agg(to_char(d, 'YYYY-MM-DD'))
-                        FROM generate_series(
-                          br2.check_in,
-                          br2.check_out - INTERVAL '1 day',
-                          INTERVAL '1 day'
-                        ) AS d
-                      ),
-                      'booking_status', br2.status,
-                      'guest_id', b.guest_id,
-                      'guest_name', CONCAT(g.first_name, ' ', g.last_name),
-                      'vat', b.vat,
-                      'service_charge', b.service_charge,
-                      'discount_amount', b.discount_amount,
-                      'total_amount', b.total_amount
-                    )
-                  )
-                  FROM ?? AS br2
-                  JOIN ?? AS b ON br2.booking_id = b.id
-                  JOIN ?? AS g ON b.guest_id = g.id
-                  WHERE br2.room_id = r.id
-                    AND (
-                      (b.booking_type = 'B' AND b.status NOT IN ('checked_out', 'pending', 'canceled', 'rejected'))
-                      OR
-                      (b.booking_type = 'H' AND b.status != 'canceled')
-                    )
-                    AND br2.check_in < ?
-                    AND br2.check_out > ?
-                    AND br2.status != ?
-                ), '[]'
-              )
-            )
-            ORDER BY r.room_name::int ASC
-          ) FILTER (WHERE r.id IS NOT NULL),
-          '[]'
-        ) AS rooms
-        `,
-          [
-            `${this.RESERVATION_SCHEMA}.booking_rooms`,
-            `${this.RESERVATION_SCHEMA}.bookings`,
-            `${this.RESERVATION_SCHEMA}.guests`,
-            check_out, // br2.check_in < check_out
-            check_in, // br2.check_out > check_in
-            "checkout",
-          ]
-        )
-      )
-      .leftJoin("rooms as r", "rt.id", "r.room_type_id")
-      .where("rt.hotel_code", hotel_code)
-      .groupBy("rt.id")
-      .orderBy("rt.name", "asc");
-  }
-
-  public async getAllAvailableRoomsTypeWithAvailableRoomCount(payload: {
-    check_in: string;
-    check_out: string;
-    hotel_code: number;
-    room_type_id?: number;
-    exclude_booking_id?: number;
-  }): Promise<IAvailableRoomType[]> {
-    const { hotel_code, check_in, check_out, room_type_id } = payload;
-
-    return await this.db("room_types as rt")
+    // Fetch all room types with min availability for the date range
+    const roomTypes = await this.db("room_types as rt")
       .withSchema(this.RESERVATION_SCHEMA)
       .select(
         "rt.id",
         "rt.name",
         "rt.description",
-        "rt.hotel_code",
+        "rt.max_adults",
+        "rt.max_children",
         this.db.raw(`MIN(ra.available_rooms) AS available_rooms`),
         this.db.raw(`
-      COALESCE(
-        json_agg(
-          DISTINCT jsonb_build_object(
-            'rate_plan_id', rp.id,
-            'name', rp.name,
-            'base_rate', rpd.base_rate
-          )
-        ) FILTER (WHERE rpd.id IS NOT NULL),
-        '[]'
-      ) AS rate_plans
-    `)
+        COALESCE(
+          json_agg(
+            DISTINCT jsonb_build_object(
+              'rate_plan_id', rp.id,
+              'name', rp.name,
+              'base_rate', rpd.base_rate,
+              'boarding_details', (
+                SELECT json_agg(mp.name)
+                FROM hotel_reservation.rate_plan_meal_mappings rpmp
+                LEFT JOIN hotel_reservation.meal_plans mp ON rpmp.meal_plan_id = mp.id
+                WHERE rpmp.rate_plan_id = rp.id
+              )
+            )
+          ) FILTER (WHERE rpd.id IS NOT NULL),
+          '[]'
+        ) AS rate_plans
+      `)
       )
       .leftJoin("room_availability as ra", "rt.id", "ra.room_type_id")
       .leftJoin("rate_plan_details as rpd", "rt.id", "rpd.room_type_id")
       .leftJoin("rate_plans as rp", "rpd.rate_plan_id", "rp.id")
       .where("rt.hotel_code", hotel_code)
       .andWhere("rt.is_deleted", false)
-      .andWhere("ra.date", ">=", check_in)
-      .andWhere("ra.date", "<", check_out)
-      .andWhere(function () {
-        if (room_type_id) {
-          this.andWhere("rt.id", room_type_id);
-        }
-      })
-
-      .groupBy("rt.id", "rt.name", "rt.description", "rt.hotel_code")
-      .having(this.db.raw("MIN(ra.available_rooms) > 0"));
-  }
-
-  public async getAllAvailableRoomsByRoomType(payload: {
-    check_in: string;
-    check_out: string;
-    hotel_code: number;
-    room_type_id: number;
-    exclude_booking_id?: number;
-  }): Promise<
-    {
-      hotel_code: number;
-      room_id: number;
-      room_name: string;
-      room_type_id: number;
-      room_type_name: string;
-    }[]
-  > {
-    const {
-      hotel_code,
-      check_in,
-      check_out,
-      room_type_id,
-      exclude_booking_id,
-    } = payload;
-
-    const schema = this.RESERVATION_SCHEMA;
-
-    const availableRoomTypes = () =>
-      this.db(`${schema}.room_availability as ra`)
-        .joinRaw(
-          `
-          JOIN (
-            SELECT gs1.date AS gen_date
-            FROM generate_series(?::date, (?::date - INTERVAL '1 day'), INTERVAL '1 day') AS gs1(date)
-          ) d ON d.gen_date = ra.date
-        `,
-          [check_in, check_out]
-        )
-        .where("ra.hotel_code", hotel_code)
-        .andWhere("ra.room_type_id", room_type_id)
-        .andWhere("ra.available_rooms", ">", 0)
-        .groupBy("ra.room_type_id")
-        .havingRaw(
-          `
-          COUNT(*) = (
-            SELECT COUNT(*) FROM (
-              SELECT gs2.date AS gen_date
-              FROM generate_series(?::date, (?::date - INTERVAL '1 day'), INTERVAL '1 day') AS gs2(date)
-            ) AS dd
-          )
-        `,
-          [check_in, check_out]
-        )
-        .select("ra.room_type_id");
-
-    return await this.db(`${schema}.rooms as r`)
-      .select(
-        "r.hotel_code",
-        "r.id as room_id",
-        "r.room_name",
-        "r.room_type_id",
-        "rt.name as room_type_name"
+      .andWhere("ra.date", ">=", checkin)
+      .andWhere("ra.date", "<", checkout)
+      .groupBy(
+        "rt.id",
+        "rt.name",
+        "rt.description",
+        "rt.max_adults",
+        "rt.max_children"
       )
-      .leftJoin(`${schema}.room_types as rt`, "r.room_type_id", "rt.id")
-      .where("r.hotel_code", hotel_code)
-      .andWhere("r.is_deleted", false)
-      .andWhere("r.room_type_id", room_type_id)
-      .whereExists(availableRoomTypes())
-      .whereNotExists(function () {
-        this.select("*")
-          .from(`${schema}.bookings as b`)
-          .join(`${schema}.booking_rooms as br`, "br.booking_id", "b.id")
-          .whereRaw("br.room_id = r.id")
-          .andWhere(function () {
-            if (exclude_booking_id) {
-              this.andWhere("br.booking_id", "!=", exclude_booking_id);
-            }
-          })
-          .andWhere(function () {
-            this.where(function () {
-              this.where("b.booking_type", "B").whereNotIn("br.status", [
-                "checked_out",
-                "pending",
-                "canceled",
-                "rejected",
-              ]);
-            }).orWhere(function () {
-              this.where("b.booking_type", "H").where(
-                "br.status",
-                "!=",
-                "canceled"
-              );
-            });
-          })
-          .andWhere("br.check_in", "<", check_out)
-          .andWhere("br.check_out", ">", check_in);
-      });
-  }
+      .havingRaw("MIN(ra.available_rooms) > 0");
 
-  public async getAvailableRoomsByRoomType(payload: {
-    check_in: string;
-    check_out: string;
-    hotel_code: number;
-    room_type_id: number;
-    exclude_booking_id?: number;
-  }): Promise<
-    {
-      hotel_code: number;
-      room_id: number;
-      room_name: string;
-      room_type_id: number;
-      room_type_name: string;
-    }[]
-  > {
-    const {
-      hotel_code,
-      check_in,
-      check_out,
-      room_type_id,
-      exclude_booking_id,
-    } = payload;
+    // Track remaining stock per room type
+    const remainingRooms = new Map<number, number>();
+    const roomTypeMap = roomTypes.map((rt) => {
+      remainingRooms.set(rt.id, Number(rt.available_rooms));
+      return { ...rt, rate_plans: rt.rate_plans };
+    });
 
-    const schema = this.RESERVATION_SCHEMA;
+    const searchResults: any[] = [];
 
-    const availableRooms = await this.db
-      .withSchema(schema)
-      .select(
-        "r.id as room_id",
-        "r.room_name",
-        "r.room_type_id",
-        "r.hotel_code"
-      )
-      .from("rooms as r")
-      .leftJoin("room_types as rt", "r.room_type_id", "rt.id")
-      .where("r.hotel_code", hotel_code)
-      .andWhere("r.room_type_id", room_type_id)
-      .andWhere("r.is_deleted", false)
-      .whereNotExists(function () {
-        this.select("*")
-          .from(`${schema}.bookings as b`)
-          .join(`${schema}.booking_rooms as br`, "br.booking_id", "b.id")
-          .whereRaw("br.room_id = r.id")
-          .andWhere("br.check_in", "<", check_out)
-          .andWhere("br.check_out", ">", check_in)
-          .modify((qb) => {
-            if (exclude_booking_id) {
-              qb.andWhere("br.booking_id", "!=", exclude_booking_id);
-            }
-          })
-          .andWhere(function () {
-            this.where(function () {
-              this.where("b.booking_type", "B").whereNotIn("br.status", [
-                "checked_out",
-                "pending",
-                "canceled",
-                "rejected",
-              ]);
-            }).orWhere(function () {
-              this.where("b.booking_type", "H").where(
-                "br.status",
-                "!=",
-                "canceled"
-              );
-            });
-          });
+    for (const reqRoom of rooms) {
+      // Get ALL room types that satisfy occupancy and availability
+      const possibleRTs = roomTypeMap.filter(
+        (r) =>
+          r.max_adults >= reqRoom.adults &&
+          r.max_children >= reqRoom.children_ages.length &&
+          (remainingRooms.get(r.id) || 0) > 0
+      );
+
+      if (possibleRTs.length === 0) {
+        searchResults.push([]);
+        continue;
+      }
+
+      // Build result list for this requested room
+      const roomResults = possibleRTs.map((r) => {
+        // Decrement 1 room of this type (per request)
+        remainingRooms.set(r.id, (remainingRooms.get(r.id) || 0) - 1);
+
+        return {
+          room_type_id: r.id,
+          room_type_name: r.name,
+          description: r.description,
+          max_adults: r.max_adults,
+          max_children: r.max_children,
+          rates: r.rate_plans.map((rp: any) => ({
+            rate_plan_id: rp.rate_plan_id,
+            name: rp.name,
+            price: rp.base_rate,
+            boarding_details: rp.boarding_details,
+          })),
+        };
       });
 
-    return availableRooms;
-  }
+      searchResults.push(roomResults);
+    }
 
-  public async getAllAvailableRoomsTypeForEachAvailableRoom(payload: {
-    check_in: string;
-    check_out: string;
-    hotel_code: number;
-  }) {
-    const { hotel_code, check_in, check_out } = payload;
-
-    console.log({ check_in, check_out });
-
-    const db = this.db;
-    return await db("room_availability as ra")
-      .withSchema(this.RESERVATION_SCHEMA)
-      .select(
-        "ra.room_type_id",
-        "ra.hotel_code",
-        "ra.available_rooms",
-        db.raw("ra.date::text as date")
-      )
-      .where("ra.hotel_code", hotel_code)
-      .andWhere("ra.date", ">=", check_in)
-      .andWhere("ra.date", "<=", check_out)
-      .orderBy("ra.date", "asc");
+    return searchResults;
   }
 
   public async insertBooking(payload: IRoomBooking) {

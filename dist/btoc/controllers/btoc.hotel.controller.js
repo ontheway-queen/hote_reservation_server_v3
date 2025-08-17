@@ -39,4 +39,4 @@ class BtocHotelController extends abstract_controller_1.default {
     }
 }
 exports.BtocHotelController = BtocHotelController;
-//# sourceMappingURL=hotel.controller.js.map
+//# sourceMappingURL=btoc.hotel.controller.js.map

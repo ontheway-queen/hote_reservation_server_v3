@@ -1,5 +1,6 @@
 import { Request } from "express";
 import AbstractServices from "../../abstarcts/abstract.service";
+import { hotelSearchAvailabilityReqPayload } from "../utills/interfaces/hotel.interface";
 
 export class BtocHotelService extends AbstractServices {
   constructor() {
@@ -7,17 +8,20 @@ export class BtocHotelService extends AbstractServices {
   }
 
   public async searchAvailability(req: Request) {
-    const { hotel_code } = req.btoc_user;
+    const { hotel_code } = req.web_token;
 
-    const { check_in, check_out } = req.query;
+    const { checkin, checkout, client_nationality, rooms } =
+      req.body as hotelSearchAvailabilityReqPayload;
 
     const getAllAvailableRoomsWithType =
-      await this.Model.reservationModel().calendar({
+      await this.BtocModels.btocReservationModel().searchAvailableRoomsBTOC({
         hotel_code,
-        check_in: check_in as string,
-        check_out: check_out as string,
+        checkin: checkin as string,
+        checkout: checkout as string,
+        rooms,
       });
 
+    console.log({ getAllAvailableRoomsWithType });
     return {
       success: true,
       code: this.StatusCode.HTTP_OK,

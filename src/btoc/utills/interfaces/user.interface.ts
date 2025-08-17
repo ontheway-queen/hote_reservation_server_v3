@@ -40,6 +40,7 @@ export interface IBtocUserProfile {
   phone: string;
   photo: string | null;
   status: string;
+  password: string;
   gender: string;
   address: string;
   date_of_birth: string;

@@ -32,6 +32,15 @@ class BtocUserAuthController extends AbstractController {
     }
   );
 
+  // get profile
+  public getProfile = this.asyncWrapper.wrap(
+    null,
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.getProfile(req);
+      res.status(code).json(data);
+    }
+  );
+
   // forget password
   public forgetPassword = this.asyncWrapper.wrap(
     { bodySchema: this.commonValidator.forgetPasswordValidator },

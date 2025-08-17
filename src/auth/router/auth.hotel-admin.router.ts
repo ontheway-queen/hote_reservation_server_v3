@@ -12,10 +12,8 @@ class HotelAdminAuthRouter extends AbstractRouter {
   }
 
   private callRouter() {
-    // login
     this.router.route("/login").post(this.adminAuthController.login);
 
-    // profile
     this.router
       .route("/profile")
       .get(
@@ -28,12 +26,10 @@ class HotelAdminAuthRouter extends AbstractRouter {
         this.adminAuthController.updateProfile
       );
 
-    // forget password
     this.router
       .route("/forget-password")
       .post(this.adminAuthController.forgetPassword);
 
-    // change password
     this.router
       .route("/change-password")
       .post(

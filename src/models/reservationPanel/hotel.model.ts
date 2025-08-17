@@ -183,6 +183,8 @@ class HotelModel extends Schema {
         "h.star_category",
         "h.created_at",
         "h.status",
+        "h.white_label",
+        "h.white_label_token",
         "h.expiry_date",
         "h.created_at",
         "hcd.logo",

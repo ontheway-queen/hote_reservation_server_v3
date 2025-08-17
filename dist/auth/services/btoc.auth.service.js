@@ -70,7 +70,7 @@ class BtocUserAuthService extends abstract_service_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             const { email, password } = req.body;
             const model = this.Model.btocUserModel();
-            const user = yield model.checkUser({ email });
+            const user = yield model.getSingleUser({ email });
             if (!user) {
                 return {
                     success: false,
@@ -112,6 +112,26 @@ class BtocUserAuthService extends abstract_service_1.default {
                 message: "Successfully Logged In",
                 data: rest,
                 token,
+            };
+        });
+    }
+    getProfile(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { id, hotel_code } = req.btoc_user;
+            const reservationModel = this.Model.btocUserModel();
+            const data = yield reservationModel.getSingleUser({ id });
+            if (!data) {
+                return {
+                    success: false,
+                    code: this.StatusCode.HTTP_NOT_FOUND,
+                    message: this.ResMsg.HTTP_NOT_FOUND,
+                };
+            }
+            const { password } = data, rest = __rest(data, ["password"]);
+            return {
+                success: true,
+                code: this.StatusCode.HTTP_OK,
+                data: Object.assign({}, rest),
             };
         });
     }

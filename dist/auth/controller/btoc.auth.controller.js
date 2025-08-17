@@ -43,9 +43,14 @@ class BtocUserAuthController extends abstract_controller_1.default {
             const _b = yield this.service.login(req), { code } = _b, data = __rest(_b, ["code"]);
             res.status(code).json(data);
         }));
+        // get profile
+        this.getProfile = this.asyncWrapper.wrap(null, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _c = yield this.service.getProfile(req), { code } = _c, data = __rest(_c, ["code"]);
+            res.status(code).json(data);
+        }));
         // forget password
         this.forgetPassword = this.asyncWrapper.wrap({ bodySchema: this.commonValidator.forgetPasswordValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _c = yield this.service.forgetPassword(req), { code } = _c, data = __rest(_c, ["code"]);
+            const _d = yield this.service.forgetPassword(req), { code } = _d, data = __rest(_d, ["code"]);
             res.status(code).json(data);
         }));
         // change password
@@ -56,23 +61,23 @@ class BtocUserAuthController extends abstract_controller_1.default {
             const passField = "password";
             const userIdField = "id";
             const schema = "btoc";
-            const _d = yield this.commonService.userPasswordVerify({
+            const _e = yield this.commonService.userPasswordVerify({
                 table,
                 oldPassword: old_password,
                 passField,
                 userId: id,
                 userIdField,
                 schema,
-            }), { code } = _d, data = __rest(_d, ["code"]);
+            }), { code } = _e, data = __rest(_e, ["code"]);
             if (data.success) {
-                const _e = yield this.commonService.changePassword({
+                const _f = yield this.commonService.changePassword({
                     password: new_password,
                     table,
                     passField,
                     userId: id,
                     userIdField,
                     schema,
-                }), { code } = _e, data = __rest(_e, ["code"]);
+                }), { code } = _f, data = __rest(_f, ["code"]);
                 res.status(code).json(data);
             }
             else {
