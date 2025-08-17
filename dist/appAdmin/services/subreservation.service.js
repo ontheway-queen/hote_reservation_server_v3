@@ -1194,23 +1194,29 @@ class SubReservationService extends abstract_service_1.default {
                         credit: 0,
                         date,
                         room_id: br.room_id,
-                    }, {
-                        folio_id: primaryFolio[0].id,
-                        description: "VAT",
-                        posting_type: "VAT",
-                        debit: vat,
-                        credit: 0,
-                        date,
-                        room_id: br.room_id,
-                    }, {
-                        folio_id: primaryFolio[0].id,
-                        description: "Service Charge",
-                        posting_type: "SERVICE_CHARGE",
-                        debit: sc,
-                        credit: 0,
-                        date,
-                        room_id: br.room_id,
                     });
+                    if (vat > 0) {
+                        entries.push({
+                            folio_id: primaryFolio[0].id,
+                            description: "VAT",
+                            posting_type: "VAT",
+                            debit: vat,
+                            credit: 0,
+                            date,
+                            room_id: br.room_id,
+                        });
+                    }
+                    if (sc > 0) {
+                        entries.push({
+                            folio_id: primaryFolio[0].id,
+                            description: "Service Charge",
+                            posting_type: "SERVICE_CHARGE",
+                            debit: sc,
+                            credit: 0,
+                            date,
+                            room_id: br.room_id,
+                        });
+                    }
                 }
                 yield hotelInvModel.insertInFolioEntries(entries);
                 const newTotalAmount = entries.reduce((acc, cu) => acc + Number(cu.debit), 0);
@@ -1301,23 +1307,29 @@ class SubReservationService extends abstract_service_1.default {
                         credit: 0,
                         date,
                         room_id: br.room_id,
-                    }, {
-                        folio_id: roomFolio.id,
-                        description: "VAT",
-                        posting_type: "VAT",
-                        debit: vat,
-                        credit: 0,
-                        date,
-                        room_id: br.room_id,
-                    }, {
-                        folio_id: roomFolio.id,
-                        description: "Service Charge",
-                        posting_type: "SERVICE_CHARGE",
-                        debit: sc,
-                        credit: 0,
-                        date,
-                        room_id: br.room_id,
                     });
+                    if (vat > 0) {
+                        entries.push({
+                            folio_id: roomFolio.id,
+                            description: "VAT",
+                            posting_type: "VAT",
+                            debit: vat,
+                            credit: 0,
+                            date,
+                            room_id: br.room_id,
+                        });
+                    }
+                    if (sc > 0) {
+                        entries.push({
+                            folio_id: roomFolio.id,
+                            description: "Service Charge",
+                            posting_type: "SERVICE_CHARGE",
+                            debit: sc,
+                            credit: 0,
+                            date,
+                            room_id: br.room_id,
+                        });
+                    }
                 }
                 yield hotelInvModel.insertInFolioEntries(entries);
                 const newTotalAmount = entries.reduce((acc, cu) => acc + Number(cu.debit), 0);

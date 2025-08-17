@@ -1666,17 +1666,18 @@ export class SubReservationService extends AbstractServices {
         const vat = (tariff * bookingVatPct) / 100;
         const sc = (tariff * bookingScPct) / 100;
 
-        entries.push(
-          {
-            folio_id: primaryFolio[0].id,
-            description: "Room Tariff",
-            posting_type: "ROOM_CHARGE",
-            debit: tariff,
-            credit: 0,
-            date,
-            room_id: br.room_id,
-          },
-          {
+        entries.push({
+          folio_id: primaryFolio[0].id,
+          description: "Room Tariff",
+          posting_type: "ROOM_CHARGE",
+          debit: tariff,
+          credit: 0,
+          date,
+          room_id: br.room_id,
+        });
+
+        if (vat > 0) {
+          entries.push({
             folio_id: primaryFolio[0].id,
             description: "VAT",
             posting_type: "VAT",
@@ -1684,8 +1685,11 @@ export class SubReservationService extends AbstractServices {
             credit: 0,
             date,
             room_id: br.room_id,
-          },
-          {
+          });
+        }
+
+        if (sc > 0) {
+          entries.push({
             folio_id: primaryFolio[0].id,
             description: "Service Charge",
             posting_type: "SERVICE_CHARGE",
@@ -1693,9 +1697,10 @@ export class SubReservationService extends AbstractServices {
             credit: 0,
             date,
             room_id: br.room_id,
-          }
-        );
+          });
+        }
       }
+
       await hotelInvModel.insertInFolioEntries(entries);
 
       const newTotalAmount = entries.reduce(
@@ -1823,17 +1828,18 @@ export class SubReservationService extends AbstractServices {
         const vat = (tariff * bookingVatPct) / 100;
         const sc = (tariff * bookingScPct) / 100;
 
-        entries.push(
-          {
-            folio_id: roomFolio.id,
-            description: "Room Tariff",
-            posting_type: "ROOM_CHARGE",
-            debit: tariff,
-            credit: 0,
-            date,
-            room_id: br.room_id,
-          },
-          {
+        entries.push({
+          folio_id: roomFolio.id,
+          description: "Room Tariff",
+          posting_type: "ROOM_CHARGE",
+          debit: tariff,
+          credit: 0,
+          date,
+          room_id: br.room_id,
+        });
+
+        if (vat > 0) {
+          entries.push({
             folio_id: roomFolio.id,
             description: "VAT",
             posting_type: "VAT",
@@ -1841,8 +1847,11 @@ export class SubReservationService extends AbstractServices {
             credit: 0,
             date,
             room_id: br.room_id,
-          },
-          {
+          });
+        }
+
+        if (sc > 0) {
+          entries.push({
             folio_id: roomFolio.id,
             description: "Service Charge",
             posting_type: "SERVICE_CHARGE",
@@ -1850,8 +1859,8 @@ export class SubReservationService extends AbstractServices {
             credit: 0,
             date,
             room_id: br.room_id,
-          }
-        );
+          });
+        }
       }
       await hotelInvModel.insertInFolioEntries(entries);
 
