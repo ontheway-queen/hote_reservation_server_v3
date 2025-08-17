@@ -625,6 +625,7 @@ export class ReservationModel extends Schema {
       .withSchema(this.RESERVATION_SCHEMA)
       .select(
         "b.id",
+        "b.hotel_code",
         "b.booking_reference",
         this.db.raw(`TO_CHAR(b.check_in, 'YYYY-MM-DD') as check_in`),
         this.db.raw(`TO_CHAR(b.check_out, 'YYYY-MM-DD') as check_out`),
