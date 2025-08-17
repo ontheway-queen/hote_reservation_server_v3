@@ -289,9 +289,6 @@ class DashBoardModel extends Schema {
       const data = await this.db("bookings as b")
         .withSchema(this.RESERVATION_SCHEMA)
         .select(
-          // "g.id as guest_id",
-          // "g.first_name",
-          // "g.last_name",
           this.db.raw("COALESCE(brg.guest_id, b.guest_id) AS guest_id"),
           this.db.raw("COALESCE(g.first_name, g2.first_name) AS first_name"),
           this.db.raw("COALESCE(g.last_name, g2.last_name) AS last_name"),
@@ -300,7 +297,6 @@ class DashBoardModel extends Schema {
           "br.status"
         )
         .leftJoin("booking_rooms as br", "b.id", "br.booking_id")
-        // .leftJoin("guests as g", "b.guest_id", "g.id")
         .leftJoin("booking_room_guest as brg", function () {
           this.on("br.id", "=", "brg.booking_room_id").andOnVal(
             "brg.is_room_primary_guest",
@@ -312,6 +308,7 @@ class DashBoardModel extends Schema {
         .leftJoin("guests as g2", "b.guest_id", "g2.id")
         .where("b.hotel_code", hotel_code)
         .andWhere("br.check_in", current_date)
+        .andWhere("b.booking_type", "B")
         .andWhere("br.status", "confirmed")
         .limit(limit ? parseInt(limit) : 50)
         .offset(skip ? parseInt(skip) : 0);
