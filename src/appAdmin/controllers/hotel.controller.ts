@@ -4,33 +4,43 @@ import HotelService from "../services/hotel.service";
 import HotelValidator from "../utlis/validator/hotel.validator";
 
 class HotelController extends AbstractController {
-  private hotelService;
-  private hotelValidator = new HotelValidator();
-  constructor() {
-    super();
+	private hotelService;
+	private hotelValidator = new HotelValidator();
+	constructor() {
+		super();
 
-    this.hotelService = new HotelService();
-  }
+		this.hotelService = new HotelService();
+	}
 
-  // get my hotel
-  public getMyHotel = this.asyncWrapper.wrap(
-    null,
-    async (req: Request, res: Response) => {
-      const { code, ...data } = await this.hotelService.getMyHotel(req);
+	// get my hotel
+	public getMyHotel = this.asyncWrapper.wrap(
+		null,
+		async (req: Request, res: Response) => {
+			const { code, ...data } = await this.hotelService.getMyHotel(req);
 
-      res.status(code).json(data);
-    }
-  );
+			res.status(code).json(data);
+		}
+	);
 
-  // update my hotel
-  public updateHotel = this.asyncWrapper.wrap(
-    { bodySchema: this.hotelValidator.updateHotelValidator },
-    async (req: Request, res: Response) => {
-      const { code, ...data } = await this.hotelService.updateHotel(req);
+	// update my hotel
+	public updateHotel = this.asyncWrapper.wrap(
+		{ bodySchema: this.hotelValidator.updateHotelValidator },
+		async (req: Request, res: Response) => {
+			const { code, ...data } = await this.hotelService.updateHotel(req);
 
-      res.status(code).json(data);
-    }
-  );
+			res.status(code).json(data);
+		}
+	);
+
+	public updateSiteConfiguration = this.asyncWrapper.wrap(
+		{ bodySchema: this.hotelValidator.updateHotelValidator },
+		async (req: Request, res: Response) => {
+			const { code, ...data } =
+				await this.hotelService.updateSiteConfiguration(req);
+
+			res.status(code).json(data);
+		}
+	);
 }
 
 export default HotelController;

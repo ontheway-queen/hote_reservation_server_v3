@@ -163,16 +163,20 @@ class AuthChecker extends abstract_service_1.default {
             try {
                 const wl_token = req.headers.wl_token;
                 if (!wl_token) {
-                    return res
-                        .status(statusCode_1.default.HTTP_UNAUTHORIZED)
-                        .json({ success: false, message: responseMessage_1.default.HTTP_UNAUTHORIZED });
+                    return res.status(statusCode_1.default.HTTP_UNAUTHORIZED).json({
+                        success: false,
+                        message: responseMessage_1.default.HTTP_UNAUTHORIZED,
+                    });
                 }
                 // get hotel by web token
-                const hotel = yield this.Model.HotelModel().getSingleHotel({ wl_token });
+                const hotel = yield this.Model.HotelModel().getSingleHotel({
+                    wl_token,
+                });
                 if (!hotel) {
-                    return res
-                        .status(statusCode_1.default.HTTP_UNAUTHORIZED)
-                        .json({ success: false, message: responseMessage_1.default.HTTP_UNAUTHORIZED });
+                    return res.status(statusCode_1.default.HTTP_UNAUTHORIZED).json({
+                        success: false,
+                        message: responseMessage_1.default.HTTP_UNAUTHORIZED,
+                    });
                 }
                 else {
                     req.web_token = {

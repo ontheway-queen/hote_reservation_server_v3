@@ -14,7 +14,7 @@ class BtocRootRouter {
         this.callRouter();
     }
     callRouter() {
-        this.router.use("/hotel", this.authChecker.whiteLabelTokenVerfiy, new hotel_router_1.BtocHotelRouter().router);
+        this.router.use("/hotel", this.authChecker.whiteLabelTokenVerfiy, this.authChecker.btocUserAuthChecker, new hotel_router_1.BtocHotelRouter().router);
     }
 }
 exports.BtocRootRouter = BtocRootRouter;

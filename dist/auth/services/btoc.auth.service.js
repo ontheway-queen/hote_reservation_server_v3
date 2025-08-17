@@ -68,6 +68,7 @@ class BtocUserAuthService extends abstract_service_1.default {
     // Login
     login(req) {
         return __awaiter(this, void 0, void 0, function* () {
+            const { hotel_code } = req.web_token;
             const { email, password } = req.body;
             const model = this.Model.btocUserModel();
             const user = yield model.checkUser({ email });
@@ -95,6 +96,7 @@ class BtocUserAuthService extends abstract_service_1.default {
                 };
             }
             const tokenPayload = {
+                hotel_code,
                 user_id: user.id,
                 first_name: user.first_name,
                 last_name: user.last_name,

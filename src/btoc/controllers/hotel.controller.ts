@@ -3,17 +3,19 @@ import AbstractController from "../../abstarcts/abstract.controller";
 import { BtocHotelService } from "../services/hotel.service";
 
 export class BtocHotelController extends AbstractController {
-  private service = new BtocHotelService();
+	private service = new BtocHotelService();
 
-  constructor() {
-    super();
-  }
+	constructor() {
+		super();
+	}
 
-  public searchAvailability = this.asyncWrapper.wrap(
-    {},
-    async (req: Request, res: Response) => {
-      const { code, ...data } = await this.service.searchAvailability(req);
-      res.status(code).json(data);
-    }
-  );
+	public searchAvailability = this.asyncWrapper.wrap(
+		{},
+		async (req: Request, res: Response) => {
+			const { code, ...data } = await this.service.searchAvailability(
+				req
+			);
+			res.status(code).json(data);
+		}
+	);
 }
