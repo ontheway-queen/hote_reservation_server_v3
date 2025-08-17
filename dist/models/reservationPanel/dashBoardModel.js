@@ -150,6 +150,7 @@ class DashBoardModel extends schema_1.default {
                 .leftJoin("guests as g", "b.guest_id", "g.id")
                 .where("b.hotel_code", hotel_code)
                 .andWhere("br.check_in", current_date)
+                .andWhere("b.booking_type", "B")
                 .andWhere("br.status", "confirmed")
                 .first();
             const totalDepartures = yield this.db("bookings as b")
@@ -159,6 +160,7 @@ class DashBoardModel extends schema_1.default {
                 .leftJoin("guests as g", "b.guest_id", "g.id")
                 .where("b.hotel_code", hotel_code)
                 .andWhere("br.status", "checked_in")
+                .andWhere("b.booking_type", "B")
                 .andWhere("br.check_out", current_date)
                 .first();
             const totalStays = yield this.db("bookings as b")
@@ -166,6 +168,7 @@ class DashBoardModel extends schema_1.default {
                 .join("booking_rooms as br", "b.id", "br.booking_id")
                 .count("br.id as total")
                 .where("b.hotel_code", hotel_code)
+                .andWhere("b.booking_type", "B")
                 .andWhere(function () {
                 this.where("br.check_out", ">=", current_date).andWhere("br.check_in", "<=", current_date);
             })
