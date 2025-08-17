@@ -449,7 +449,7 @@ class ReportModel extends schema_1.default {
                 dtbs.limit(parseInt(limit)).offset(parseInt(skip));
             }
             const data = yield dtbs
-                .select("b.id as booking_id", "b.booking_reference", this.db.raw(`TO_CHAR(b.booking_date, 'YYYY-MM-DD') as booking_date`), "b.booking_type", "b.is_individual_booking", "b.status", "b.check_in", "b.check_out", "b.comments", "b.company_name", "b.visit_purpose", "g.id AS guest_id", "g.first_name", "g.last_name", "g.passport_no", "g.address", "g.email AS guest_email", "g.phone", "c.country_name AS country", "c.nationality", "ua.id as reservation_by_id", "ua.name as reservation_by_name", this.db.raw(`Count(br.id) AS total_reserved_rooms`), this.db.raw(`(SELECT sum(fe.credit) from hotel_reservation.folios as f 
+                .select("b.id as booking_id", "b.booking_reference", this.db.raw(`TO_CHAR(b.booking_date, 'YYYY-MM-DD') as booking_date`), "b.booking_type", "b.is_individual_booking", "b.status", this.db.raw(`TO_CHAR(b.check_in, 'YYYY-MM-DD') as check_in`), this.db.raw(`TO_CHAR(b.check_out, 'YYYY-MM-DD') as check_out`), "b.comments", "b.company_name", "b.visit_purpose", "g.id AS guest_id", "g.first_name", "g.last_name", "g.passport_no", "g.address", "g.email AS guest_email", "g.phone", "c.country_name AS country", "c.nationality", "ua.id as reservation_by_id", "ua.name as reservation_by_name", this.db.raw(`Count(br.id) AS total_reserved_rooms`), this.db.raw(`(SELECT sum(fe.credit) from hotel_reservation.folios as f 
           left join hotel_reservation.folio_entries as fe on f.id = fe.folio_id
           where f.booking_id = b.id and fe.is_void = false) as total_paid_amount
           `), this.db.raw(`
