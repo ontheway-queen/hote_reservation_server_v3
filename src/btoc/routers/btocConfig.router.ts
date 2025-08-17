@@ -29,5 +29,9 @@ export class BtocConfigRouter extends AbstractRouter {
 		this.router.route("/hot-deals").get(this.controller.getHotDeals);
 
 		this.router.route("/social-links").get(this.controller.getSocialLinks);
+
+		this.router
+			.route("/popular-room-types")
+			.get(this.controller.getPopularRoomTypes);
 	}
 }

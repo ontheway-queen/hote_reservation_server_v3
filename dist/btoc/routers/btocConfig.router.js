@@ -28,6 +28,9 @@ class BtocConfigRouter extends abstract_router_1.default {
             .get(this.controller.getHeroBgContent);
         this.router.route("/hot-deals").get(this.controller.getHotDeals);
         this.router.route("/social-links").get(this.controller.getSocialLinks);
+        this.router
+            .route("/popular-room-types")
+            .get(this.controller.getPopularRoomTypes);
     }
 }
 exports.BtocConfigRouter = BtocConfigRouter;

@@ -118,4 +118,26 @@ export class BtocConfigService extends AbstractServices {
 			data,
 		};
 	}
+
+	public async getPopularRoomTypes(req: Request) {
+		const { hotel_code } = req.web_token;
+		const configurationModel = this.Model.b2cConfigurationModel();
+		const data = await configurationModel.getPopularRoomTypes({
+			hotel_code,
+		});
+		if (data && data.length < 1) {
+			return {
+				success: false,
+				message: "No social links found!",
+				code: this.StatusCode.HTTP_NOT_FOUND,
+			};
+		}
+
+		return {
+			success: false,
+			message: "Social Links fetched successfully!",
+			code: this.StatusCode.HTTP_OK,
+			data,
+		};
+	}
 }

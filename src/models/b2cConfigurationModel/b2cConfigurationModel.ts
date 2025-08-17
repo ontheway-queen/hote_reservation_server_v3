@@ -3,6 +3,7 @@ import {
 	IHeroBgContent,
 	IHeroBgContentPayload,
 	IHotDealsPayload,
+	IPopularRoomType,
 	IPopUpBanner,
 	IPopUpBannerPayload,
 	ISiteConfig,
@@ -96,6 +97,28 @@ export default class B2cConfigurationModel extends Schema {
 			});
 	}
 
+	public async getPopularRoomTypes(query: {
+		hotel_code: number;
+		id?: number;
+		order_number?: number;
+	}): Promise<IPopularRoomType[]> {
+		return await this.db("popular_room_types as prt")
+			.withSchema(this.BTOC_SCHEMA)
+			.select("prt.*", "rt.name", "rt.description")
+			.joinRaw(`JOIN ?? as rt ON rt.id = prt.room_type_id`, [
+				`${this.RESERVATION_SCHEMA}.${this.TABLES.room_types}`,
+			])
+			.where("prt.hotel_code", query.hotel_code)
+			.modify((qb) => {
+				if (query.id) {
+					qb.andWhere("prt.id", query.id);
+				}
+				if (query.order_number) {
+					qb.andWhere("prt.order_number", query.order_number);
+				}
+			});
+	}
+
 	public async updateSiteConfig({
 		hotel_code,
 		payload,
@@ -168,6 +191,23 @@ export default class B2cConfigurationModel extends Schema {
 		payload: IHeroBgContentPayload;
 	}) {
 		return await this.db("social_links")
+			.withSchema(this.BTOC_SCHEMA)
+			.select("*")
+			.where("hotel_code", hotel_code)
+			.andWhere("id", id)
+			.update(payload);
+	}
+
+	public async updatePopularRoomTypes({
+		hotel_code,
+		id,
+		payload,
+	}: {
+		hotel_code: number;
+		id: number;
+		payload: IHeroBgContentPayload;
+	}) {
+		return await this.db("popular_room_types")
 			.withSchema(this.BTOC_SCHEMA)
 			.select("*")
 			.where("hotel_code", hotel_code)

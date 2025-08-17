@@ -119,6 +119,28 @@ class AdminBtocHandlerService extends AbstractServices {
 		};
 	}
 
+	public async getPopularRoomTypes(req: Request) {
+		const { hotel_code } = req.hotel_admin;
+		const configurationModel = this.Model.b2cConfigurationModel();
+		const data = await configurationModel.getPopularRoomTypes({
+			hotel_code,
+		});
+		if (data && data.length < 1) {
+			return {
+				success: false,
+				message: "No popular room types found!",
+				code: this.StatusCode.HTTP_NOT_FOUND,
+			};
+		}
+
+		return {
+			success: false,
+			message: "Popular room types fetched successfully!",
+			code: this.StatusCode.HTTP_OK,
+			data,
+		};
+	}
+
 	// update site config
 	public async updateSiteConfig(req: Request) {
 		return await this.db.transaction(async (trx) => {
@@ -263,7 +285,7 @@ class AdminBtocHandlerService extends AbstractServices {
 				order_number,
 			});
 
-			if (isOrderExists && isOrderExists.length < 1) {
+			if (isOrderExists && isOrderExists.length > 0) {
 				return {
 					success: false,
 					message:
@@ -325,7 +347,7 @@ class AdminBtocHandlerService extends AbstractServices {
 				order_number,
 			});
 
-			if (isOrderExists && isOrderExists.length < 1) {
+			if (isOrderExists && isOrderExists.length > 0) {
 				return {
 					success: false,
 					message:
@@ -388,7 +410,7 @@ class AdminBtocHandlerService extends AbstractServices {
 				order_number,
 			});
 
-			if (isOrderExists && isOrderExists.length < 1) {
+			if (isOrderExists && isOrderExists.length > 0) {
 				return {
 					success: false,
 					message:
@@ -422,6 +444,70 @@ class AdminBtocHandlerService extends AbstractServices {
 				hotel_code,
 				id,
 				payload: newSocialLinks,
+			});
+
+			return {
+				success: true,
+				code: this.StatusCode.HTTP_OK,
+				message: "Hotel configuration updated successfully",
+			};
+		});
+	}
+
+	public async updatePopularRoomTypes(req: Request) {
+		return await this.db.transaction(async (trx) => {
+			const hotel_code = req.hotel_admin.hotel_code;
+			const { id, order_number, ...rest_popular_room_types } = req.body;
+			const files = (req.files as Express.Multer.File[]) || [];
+
+			const configurationModel = this.Model.b2cConfigurationModel();
+			const data = await configurationModel.getPopularRoomTypes({
+				hotel_code,
+				id: Number(id),
+			});
+			if (data && data.length < 1) {
+				return {
+					success: false,
+					message: "No room type found!",
+					code: this.StatusCode.HTTP_NOT_FOUND,
+				};
+			}
+			console.log(order_number);
+			const isOrderExists = await configurationModel.getPopularRoomTypes({
+				hotel_code,
+				order_number,
+			});
+
+			if (isOrderExists && isOrderExists.length > 0) {
+				return {
+					success: false,
+					message:
+						"An entry with the same order number already exists!",
+					code: this.StatusCode.HTTP_CONFLICT,
+				};
+			}
+
+			let thumbnail;
+			for (const { fieldname, filename } of files) {
+				switch (fieldname) {
+					case "thumbnail":
+						thumbnail = filename;
+						break;
+					default:
+						break;
+				}
+			}
+
+			const newRoomTypes = {
+				thumbnail,
+				order_number,
+				...rest_popular_room_types,
+			};
+
+			await configurationModel.updatePopularRoomTypes({
+				hotel_code,
+				id,
+				payload: newRoomTypes,
 			});
 
 			return {

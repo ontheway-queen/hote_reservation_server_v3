@@ -56,4 +56,15 @@ export class BtocConfigController extends AbstractController {
 			res.status(code).json(data);
 		}
 	);
+
+	public getPopularRoomTypes = this.asyncWrapper.wrap(
+		null,
+		async (req: Request, res: Response) => {
+			const { code, ...data } = await this.service.getPopularRoomTypes(
+				req
+			);
+
+			res.status(code).json(data);
+		}
+	);
 }

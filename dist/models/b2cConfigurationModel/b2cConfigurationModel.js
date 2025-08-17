@@ -84,6 +84,25 @@ class B2cConfigurationModel extends schema_1.default {
             });
         });
     }
+    getPopularRoomTypes(query) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("popular_room_types as prt")
+                .withSchema(this.BTOC_SCHEMA)
+                .select("prt.*", "rt.name", "rt.description")
+                .joinRaw(`JOIN ?? as rt ON rt.id = prt.room_type_id`, [
+                `${this.RESERVATION_SCHEMA}.${this.TABLES.room_types}`,
+            ])
+                .where("prt.hotel_code", query.hotel_code)
+                .modify((qb) => {
+                if (query.id) {
+                    qb.andWhere("prt.id", query.id);
+                }
+                if (query.order_number) {
+                    qb.andWhere("prt.order_number", query.order_number);
+                }
+            });
+        });
+    }
     updateSiteConfig({ hotel_code, payload, }) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("site_config")
@@ -125,6 +144,16 @@ class B2cConfigurationModel extends schema_1.default {
     updateSocialLinks({ hotel_code, id, payload, }) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("social_links")
+                .withSchema(this.BTOC_SCHEMA)
+                .select("*")
+                .where("hotel_code", hotel_code)
+                .andWhere("id", id)
+                .update(payload);
+        });
+    }
+    updatePopularRoomTypes({ hotel_code, id, payload, }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("popular_room_types")
                 .withSchema(this.BTOC_SCHEMA)
                 .select("*")
                 .where("hotel_code", hotel_code)

@@ -77,6 +77,13 @@ class AdminBtocHandlerValidator {
             order_number: joi_1.default.string().optional(),
             // thumbnail: Joi.string().optional(),
         });
+        this.updatePopularRoomTypes = joi_1.default.object({
+            id: joi_1.default.number().required(),
+            room_type_id: joi_1.default.number().optional(),
+            status: joi_1.default.boolean().optional(),
+            order_number: joi_1.default.string().optional(),
+            // thumbnail: Joi.string().optional(),
+        });
     }
 }
 exports.default = AdminBtocHandlerValidator;

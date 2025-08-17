@@ -131,6 +131,28 @@ class BtocConfigService extends abstract_service_1.default {
             };
         });
     }
+    getPopularRoomTypes(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { hotel_code } = req.web_token;
+            const configurationModel = this.Model.b2cConfigurationModel();
+            const data = yield configurationModel.getPopularRoomTypes({
+                hotel_code,
+            });
+            if (data && data.length < 1) {
+                return {
+                    success: false,
+                    message: "No social links found!",
+                    code: this.StatusCode.HTTP_NOT_FOUND,
+                };
+            }
+            return {
+                success: false,
+                message: "Social Links fetched successfully!",
+                code: this.StatusCode.HTTP_OK,
+                data,
+            };
+        });
+    }
 }
 exports.BtocConfigService = BtocConfigService;
 //# sourceMappingURL=btocConfig.service.js.map

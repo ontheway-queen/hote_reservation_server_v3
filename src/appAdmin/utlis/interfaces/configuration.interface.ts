@@ -123,3 +123,16 @@ export interface IHotDealsPayload {
 	status: boolean;
 	order_number: number;
 }
+
+export interface IPopularRoomType {
+	id: number;
+	hotel_code: number;
+	room_type_id: number;
+	name: string;
+	description: string;
+	thumbnail: string;
+	order_number: number;
+	status: boolean;
+	created_at: Date;
+	updated_at: Date;
+}

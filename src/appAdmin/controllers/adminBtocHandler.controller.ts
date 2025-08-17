@@ -58,6 +58,17 @@ class AdminBtocHandlerController extends AbstractController {
 		}
 	);
 
+	public getPopularRoomTypes = this.asyncWrapper.wrap(
+		null,
+		async (req: Request, res: Response) => {
+			const { code, ...data } = await this.service.getPopularRoomTypes(
+				req
+			);
+
+			res.status(code).json(data);
+		}
+	);
+
 	public updateSiteConfig = this.asyncWrapper.wrap(
 		{ bodySchema: this.validator.updateBtocSiteConfig },
 		async (req: Request, res: Response) => {
@@ -100,6 +111,17 @@ class AdminBtocHandlerController extends AbstractController {
 		{ bodySchema: this.validator.updateSocialLinks },
 		async (req: Request, res: Response) => {
 			const { code, ...data } = await this.service.updateSocialLinks(req);
+
+			res.status(code).json(data);
+		}
+	);
+
+	public updatePopularRoomTypes = this.asyncWrapper.wrap(
+		{ bodySchema: this.validator.updatePopularRoomTypes },
+		async (req: Request, res: Response) => {
+			const { code, ...data } = await this.service.updatePopularRoomTypes(
+				req
+			);
 
 			res.status(code).json(data);
 		}

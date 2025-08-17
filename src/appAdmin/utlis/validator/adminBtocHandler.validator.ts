@@ -82,4 +82,12 @@ export default class AdminBtocHandlerValidator {
 		order_number: Joi.string().optional(),
 		// thumbnail: Joi.string().optional(),
 	});
+
+	public updatePopularRoomTypes = Joi.object({
+		id: Joi.number().required(),
+		room_type_id: Joi.number().optional(),
+		status: Joi.boolean().optional(),
+		order_number: Joi.string().optional(),
+		// thumbnail: Joi.string().optional(),
+	});
 }

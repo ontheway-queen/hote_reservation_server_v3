@@ -51,24 +51,32 @@ class AdminBtocHandlerController extends abstract_controller_1.default {
             const _e = yield this.service.getSocialLinks(req), { code } = _e, data = __rest(_e, ["code"]);
             res.status(code).json(data);
         }));
+        this.getPopularRoomTypes = this.asyncWrapper.wrap(null, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _f = yield this.service.getPopularRoomTypes(req), { code } = _f, data = __rest(_f, ["code"]);
+            res.status(code).json(data);
+        }));
         this.updateSiteConfig = this.asyncWrapper.wrap({ bodySchema: this.validator.updateBtocSiteConfig }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _f = yield this.service.updateSiteConfig(req), { code } = _f, data = __rest(_f, ["code"]);
+            const _g = yield this.service.updateSiteConfig(req), { code } = _g, data = __rest(_g, ["code"]);
             res.status(code).json(data);
         }));
         this.updatePopUpBanner = this.asyncWrapper.wrap({ bodySchema: this.validator.updatePopUpBanner }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _g = yield this.service.updatePopUpBanner(req), { code } = _g, data = __rest(_g, ["code"]);
+            const _h = yield this.service.updatePopUpBanner(req), { code } = _h, data = __rest(_h, ["code"]);
             res.status(code).json(data);
         }));
         this.updateHeroBgContent = this.asyncWrapper.wrap({ bodySchema: this.validator.updateHeroBgContent }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _h = yield this.service.updateHeroBgContent(req), { code } = _h, data = __rest(_h, ["code"]);
+            const _j = yield this.service.updateHeroBgContent(req), { code } = _j, data = __rest(_j, ["code"]);
             res.status(code).json(data);
         }));
         this.updateHotDeals = this.asyncWrapper.wrap({ bodySchema: this.validator.updateHotDeals }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _j = yield this.service.updateHotDeals(req), { code } = _j, data = __rest(_j, ["code"]);
+            const _k = yield this.service.updateHotDeals(req), { code } = _k, data = __rest(_k, ["code"]);
             res.status(code).json(data);
         }));
         this.updateSocialLinks = this.asyncWrapper.wrap({ bodySchema: this.validator.updateSocialLinks }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _k = yield this.service.updateSocialLinks(req), { code } = _k, data = __rest(_k, ["code"]);
+            const _l = yield this.service.updateSocialLinks(req), { code } = _l, data = __rest(_l, ["code"]);
+            res.status(code).json(data);
+        }));
+        this.updatePopularRoomTypes = this.asyncWrapper.wrap({ bodySchema: this.validator.updatePopularRoomTypes }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _m = yield this.service.updatePopularRoomTypes(req), { code } = _m, data = __rest(_m, ["code"]);
             res.status(code).json(data);
         }));
     }

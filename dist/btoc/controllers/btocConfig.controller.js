@@ -50,6 +50,10 @@ class BtocConfigController extends abstract_controller_1.default {
             const _e = yield this.service.getSocialLinks(req), { code } = _e, data = __rest(_e, ["code"]);
             res.status(code).json(data);
         }));
+        this.getPopularRoomTypes = this.asyncWrapper.wrap(null, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _f = yield this.service.getPopularRoomTypes(req), { code } = _f, data = __rest(_f, ["code"]);
+            res.status(code).json(data);
+        }));
     }
 }
 exports.BtocConfigController = BtocConfigController;

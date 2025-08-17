@@ -48,6 +48,14 @@ class AdminBtocHandlerRouter extends AbstractRouter {
 				this.uploader.cloudUploadRaw(this.fileFolders.BTOC_USERS_FILES),
 				this.controller.updateSocialLinks
 			);
+
+		this.router
+			.route("/popular-room-types")
+			.get(this.controller.getPopularRoomTypes)
+			.patch(
+				this.uploader.cloudUploadRaw(this.fileFolders.BTOC_USERS_FILES),
+				this.controller.updatePopularRoomTypes
+			);
 	}
 }
 export default AdminBtocHandlerRouter;
