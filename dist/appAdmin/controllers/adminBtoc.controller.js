@@ -24,28 +24,16 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const abstract_controller_1 = __importDefault(require("../../abstarcts/abstract.controller"));
-const hotel_service_1 = __importDefault(require("../services/hotel.service"));
-const hotel_validator_1 = __importDefault(require("../utlis/validator/hotel.validator"));
-class HotelController extends abstract_controller_1.default {
+const btoc_service_1 = __importDefault(require("../services/btoc.service"));
+class AdminBtocController extends abstract_controller_1.default {
     constructor() {
         super();
-        this.hotelValidator = new hotel_validator_1.default();
-        // get my hotel
-        this.getMyHotel = this.asyncWrapper.wrap(null, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _a = yield this.hotelService.getMyHotel(req), { code } = _a, data = __rest(_a, ["code"]);
+        this.btocService = new btoc_service_1.default();
+        this.updateSiteConfiguration = this.asyncWrapper.wrap(null, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _a = yield this.btocService.updateSiteConfiguration(req), { code } = _a, data = __rest(_a, ["code"]);
             res.status(code).json(data);
         }));
-        // update my hotel
-        this.updateHotel = this.asyncWrapper.wrap({ bodySchema: this.hotelValidator.updateHotelValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _b = yield this.hotelService.updateHotel(req), { code } = _b, data = __rest(_b, ["code"]);
-            res.status(code).json(data);
-        }));
-        this.updateSiteConfiguration = this.asyncWrapper.wrap({ bodySchema: this.hotelValidator.updateHotelValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _c = yield this.hotelService.updateSiteConfiguration(req), { code } = _c, data = __rest(_c, ["code"]);
-            res.status(code).json(data);
-        }));
-        this.hotelService = new hotel_service_1.default();
     }
 }
-exports.default = HotelController;
-//# sourceMappingURL=hotel.controller.js.map
+exports.default = AdminBtocController;
+//# sourceMappingURL=adminBtoc.controller.js.map

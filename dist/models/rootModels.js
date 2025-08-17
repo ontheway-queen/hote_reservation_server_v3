@@ -25,6 +25,7 @@ const Setting_Model_1 = __importDefault(require("./reservationPanel/Setting.Mode
 const reservation_model_1 = require("./reservationPanel/reservation.model");
 const dboModel_1 = __importDefault(require("./commonModel/dboModel"));
 const btoc_model_1 = require("./btocModels/btoc.model");
+const b2cConfigurationModel_1 = __importDefault(require("./b2cConfigurationModel/b2cConfigurationModel"));
 class Models {
     constructor(db) {
         this.db = db;
@@ -103,6 +104,10 @@ class Models {
     //--------------------- Btoc Model ---------------------------//
     btocUserModel(trx) {
         return new btoc_model_1.BtocUserModel(trx || this.db);
+    }
+    // ------------- Btoc Configuration Model ----------------- //
+    b2cConfigurationModel(trx) {
+        return new b2cConfigurationModel_1.default(trx || this.db);
     }
 }
 exports.default = Models;

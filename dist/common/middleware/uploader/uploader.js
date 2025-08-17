@@ -45,7 +45,9 @@ class Uploader extends common_abstract_storage_1.default {
                         cb(null, true); // no errors
                     }
                     else {
-                        cb(new Error("File mimetype is not allowed" + " for " + file.fieldname));
+                        cb(new Error("File mimetype is not allowed" +
+                            " for " +
+                            file.fieldname));
                     }
                 },
             });
@@ -90,7 +92,9 @@ class Uploader extends common_abstract_storage_1.default {
                         cb(null, true);
                     }
                     else {
-                        cb(new Error("File mimetype is not allowed" + " for " + file.fieldname));
+                        cb(new Error("File mimetype is not allowed" +
+                            " for " +
+                            file.fieldname));
                     }
                 },
             });
