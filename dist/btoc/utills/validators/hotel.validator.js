@@ -14,7 +14,6 @@ class BtoHotelValidator {
             rooms: joi_1.default.array()
                 .items(joi_1.default.object({
                 adults: joi_1.default.number().required(),
-                no_of_infants: joi_1.default.number().optional(),
                 children_ages: joi_1.default.array().items(joi_1.default.number()).optional(),
             }))
                 .required(),

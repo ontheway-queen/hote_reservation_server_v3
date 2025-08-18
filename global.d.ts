@@ -1,7 +1,8 @@
 import {} from "";
+
 import {
   IAdmin,
-  IBtocUser,
+  IGBtocUser,
   IWebToken,
   IhAdmin,
   IhotelUser,
@@ -13,7 +14,7 @@ declare global {
     interface Request {
       admin: IAdmin;
       hotel_admin: IhAdmin;
-      btoc_user: IBtocUser;
+      btoc_user: IGBtocUser;
       rest_user: IrestUser;
       web_token: IWebToken;
       upFiles: string[];

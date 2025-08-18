@@ -15,5 +15,7 @@ export class BtocHotelRouter {
     this.router
       .route("/search-availability")
       .get(this.controller.searchAvailability);
+
+    this.router.route("/room-rates").get(this.controller.searchAvailability);
   }
 }

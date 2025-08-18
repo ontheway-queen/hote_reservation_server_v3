@@ -1,6 +1,6 @@
 import { Request } from "express";
 import AbstractServices from "../../abstarcts/abstract.service";
-import { hotelSearchAvailabilityReqPayload } from "../utills/interfaces/hotel.interface";
+import { hotelSearchAvailabilityReqPayload } from "../utills/interfaces/btoc.hotel.interface";
 import { HelperFunction } from "../../appAdmin/utlis/library/helperFunction";
 
 export class BtocHotelService extends AbstractServices {
@@ -15,8 +15,8 @@ export class BtocHotelService extends AbstractServices {
       req.body as hotelSearchAvailabilityReqPayload;
 
     const nights = HelperFunction.calculateNights(checkin, checkout);
-    const getAllAvailableRoomsWithType =
-      await this.BtocModels.btocReservationModel().searchAvailableRoomsBTOC({
+    const getAllAvailableRooms =
+      await this.BtocModels.btocReservationModel().getAllRoomRatesBTOC({
         hotel_code,
         nights,
         checkin: checkin as string,
@@ -24,12 +24,19 @@ export class BtocHotelService extends AbstractServices {
         rooms,
       });
 
-    console.log({ getAllAvailableRoomsWithType });
+    console.log({ getAllAvailableRooms });
     return {
       success: true,
       code: this.StatusCode.HTTP_OK,
-      total: getAllAvailableRoomsWithType.length,
-      data: getAllAvailableRoomsWithType,
+
+      data: {
+        total: getAllAvailableRooms.length,
+        no_of_nights: nights,
+        checkin,
+        checkout,
+        no_of_rooms: rooms.length,
+        data: getAllAvailableRooms,
+      },
     };
   }
 }

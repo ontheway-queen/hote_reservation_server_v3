@@ -9,7 +9,6 @@ export class BtoHotelValidator {
       .items(
         Joi.object({
           adults: Joi.number().required(),
-          no_of_infants: Joi.number().optional(),
           children_ages: Joi.array().items(Joi.number()).optional(),
         })
       )

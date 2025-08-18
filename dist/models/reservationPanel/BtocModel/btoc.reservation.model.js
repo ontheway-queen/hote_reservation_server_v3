@@ -23,7 +23,6 @@ class BtocReservationModel extends schema_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             const { hotel_code, checkin, checkout, rooms, nights } = payload;
             const totalRequested = rooms.length;
-            // Step 1: Query all room types with their rate plans and boarding details
             const roomTypes = yield this.db("room_types as rt")
                 .withSchema(this.RESERVATION_SCHEMA)
                 .select("rt.id as room_type_id", "rt.name as room_type_name", "rt.description", "rt.max_adults", "rt.max_children", this.db.raw(`MIN(ra.available_rooms) AS available_count`), "rp.id as rate_plan_id", "rp.name as rate_plan_name", "rpd.base_rate", this.db.raw(`COALESCE(meals.meal_list, '[]')::json AS boarding_details`))
@@ -43,54 +42,166 @@ class BtocReservationModel extends schema_1.default {
                 .andWhere("ra.date", "<", checkout)
                 .groupBy("rt.id", "rt.name", "rt.description", "rt.max_adults", "rt.max_children", "rp.id", "rp.name", "rpd.base_rate", "meals.meal_list")
                 .havingRaw("MIN(ra.available_rooms) >= ?", [totalRequested]);
-            // Step 2: Group room types and calculate min_rate per room type
             const grouped = {};
+            const result = {};
             for (const r of roomTypes) {
-                if (!grouped[r.room_type_id]) {
-                    grouped[r.room_type_id] = {
-                        room_type_id: r.room_type_id,
-                        room_type_name: r.room_type_name,
-                        description: r.description,
-                        max_adults: r.max_adults,
-                        max_children: r.max_children,
-                        available_count: Number(r.available_count),
-                        rate_plans: [],
-                    };
+                if (r.rate_plan_id) {
+                    if (!grouped[r.room_type_id]) {
+                        grouped[r.room_type_id] = {
+                            room_type_id: r.room_type_id,
+                            room_type_name: r.room_type_name,
+                            description: r.description,
+                            max_adults: r.max_adults,
+                            max_children: r.max_children,
+                            available_count: Number(r.available_count),
+                            rate_plans: [],
+                        };
+                    }
+                    grouped[r.room_type_id].rate_plans.push({
+                        rate_plan_id: r.rate_plan_id,
+                        rate_plan_name: r.rate_plan_name,
+                        boarding_details: r.boarding_details,
+                        base_rate: Number(r.base_rate),
+                    });
                 }
-                grouped[r.room_type_id].rate_plans.push({
-                    rate_plan_id: r.rate_plan_id,
-                    rate_plan_name: r.rate_plan_name,
-                    boarding_details: r.boarding_details,
-                    base_rate: r.base_rate,
-                });
             }
-            // Step 3: Compute min_rate for each room_type
             for (const rt of Object.values(grouped)) {
+                let isValid = true;
+                // Validate capacity
+                for (const room of rooms) {
+                    if (room.adults > rt.max_adults ||
+                        room.children_ages.length > rt.max_children) {
+                        isValid = false;
+                        break;
+                    }
+                }
+                if (!isValid) {
+                    delete grouped[rt.room_type_id];
+                    continue;
+                }
                 let minRatePlan = null;
                 for (const rp of rt.rate_plans) {
                     const totalPrice = rp.base_rate * totalRequested * nights;
+                    const ratePlan = {
+                        rate_plan_id: rp.rate_plan_id,
+                        rate_plan_name: rp.rate_plan_name,
+                        boarding_details: rp.boarding_details,
+                        price: totalPrice,
+                        no_of_rooms: totalRequested,
+                        rooms: rooms.map((room) => ({
+                            no_of_adults: room.adults,
+                            no_of_children: room.children_ages.length,
+                            no_of_rooms: 1,
+                            description: rt.description,
+                            room_type: rt.room_type_name,
+                        })),
+                        cancellation_policy: {},
+                    };
                     if (!minRatePlan || totalPrice < minRatePlan.price) {
-                        minRatePlan = {
-                            rate_plan_id: rp.rate_plan_id,
-                            rate_plan_name: rp.rate_plan_name,
-                            boarding_details: rp.boarding_details,
-                            price: totalPrice,
-                            no_of_rooms: totalRequested,
-                            rooms: rooms.map((room, idx) => ({
-                                no_of_adults: room.adults,
-                                no_of_children: room.children_ages.length,
-                                no_of_rooms: 1,
-                                description: rt.description,
-                                room_type: rt.room_type_name,
-                            })),
-                            cancellation_policy: {},
-                        };
+                        minRatePlan = ratePlan;
                     }
                 }
-                rt.min_rate = minRatePlan;
-                delete rt.rate_plans; // remove flat rate_plans if not needed
+                result[rt.room_type_id] = {
+                    room_type_id: rt.room_type_id,
+                    room_type_name: rt.room_type_name,
+                    description: rt.description,
+                    max_adults: rt.max_adults,
+                    max_children: rt.max_children,
+                    available_count: rt.available_count,
+                    min_rate: minRatePlan,
+                };
+                // rt.min_rate = minRatePlan || undefined;
             }
-            return Object.values(grouped);
+            return Object.values(result);
+        });
+    }
+    getAllRoomRatesBTOC(payload) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { hotel_code, checkin, checkout, rooms, nights } = payload;
+            const totalRequested = rooms.length;
+            const roomTypes = yield this.db("room_types as rt")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .select("rt.id as room_type_id", "rt.name as room_type_name", "rt.description", "rt.max_adults", "rt.max_children", this.db.raw(`MIN(ra.available_rooms) AS available_count`), "rp.id as rate_plan_id", "rp.name as rate_plan_name", "rpd.base_rate", this.db.raw(`COALESCE(meals.meal_list, '[]')::json AS boarding_details`))
+                .leftJoin("room_availability as ra", "rt.id", "ra.room_type_id")
+                .leftJoin("rate_plan_details as rpd", "rt.id", "rpd.room_type_id")
+                .leftJoin("rate_plans as rp", "rpd.rate_plan_id", "rp.id")
+                .leftJoin(this.db
+                .select("rpmp.rate_plan_id")
+                .from("hotel_reservation.rate_plan_meal_mappings as rpmp")
+                .leftJoin("hotel_reservation.meal_plans as mp", "rpmp.meal_plan_id", "mp.id")
+                .groupBy("rpmp.rate_plan_id")
+                .select(this.db.raw("json_agg(mp.name)::text as meal_list"))
+                .as("meals"), "meals.rate_plan_id", "rp.id")
+                .where("rt.hotel_code", hotel_code)
+                .andWhere("rt.is_deleted", false)
+                .andWhere("ra.date", ">=", checkin)
+                .andWhere("ra.date", "<", checkout)
+                .groupBy("rt.id", "rt.name", "rt.description", "rt.max_adults", "rt.max_children", "rp.id", "rp.name", "rpd.base_rate", "meals.meal_list")
+                .havingRaw("MIN(ra.available_rooms) >= ?", [totalRequested]);
+            const grouped = {};
+            for (const r of roomTypes) {
+                if (r.rate_plan_id) {
+                    if (!grouped[r.room_type_id]) {
+                        grouped[r.room_type_id] = {
+                            room_type_id: r.room_type_id,
+                            room_type_name: r.room_type_name,
+                            description: r.description,
+                            max_adults: r.max_adults,
+                            max_children: r.max_children,
+                            available_count: Number(r.available_count),
+                            rate_plans: [],
+                        };
+                    }
+                    grouped[r.room_type_id].rate_plans.push({
+                        rate_plan_id: r.rate_plan_id,
+                        rate_plan_name: r.rate_plan_name,
+                        boarding_details: r.boarding_details,
+                        base_rate: Number(r.base_rate),
+                    });
+                }
+            }
+            const result = [];
+            for (const rt of Object.values(grouped)) {
+                let isValid = true;
+                for (const room of rooms) {
+                    if (room.adults > rt.max_adults ||
+                        room.children_ages.length > rt.max_children) {
+                        isValid = false;
+                        break;
+                    }
+                }
+                if (!isValid)
+                    continue;
+                const ratePlans = rt.rate_plans.map((rp) => {
+                    const totalPrice = rp.base_rate * totalRequested * nights;
+                    return {
+                        rate_plan_id: rp.rate_plan_id,
+                        rate_plan_name: rp.rate_plan_name,
+                        boarding_details: rp.boarding_details,
+                        base_rate: rp.base_rate,
+                        total_price: totalPrice,
+                        no_of_rooms: totalRequested,
+                        rooms: rooms.map((room) => ({
+                            no_of_adults: room.adults,
+                            no_of_children: room.children_ages.length,
+                            no_of_rooms: 1,
+                            description: rt.description,
+                            room_type: rt.room_type_name,
+                        })),
+                        cancellation_policy: {},
+                    };
+                });
+                result.push({
+                    room_type_id: rt.room_type_id,
+                    room_type_name: rt.room_type_name,
+                    description: rt.description,
+                    max_adults: rt.max_adults,
+                    max_children: rt.max_children,
+                    available_count: rt.available_count,
+                    room_rates: ratePlans,
+                });
+            }
+            return result;
         });
     }
     insertBooking(payload) {

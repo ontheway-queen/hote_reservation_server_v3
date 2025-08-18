@@ -24,19 +24,25 @@ class BtocHotelService extends abstract_service_1.default {
             const { hotel_code } = req.web_token;
             const { checkin, checkout, client_nationality, rooms } = req.body;
             const nights = helperFunction_1.HelperFunction.calculateNights(checkin, checkout);
-            const getAllAvailableRoomsWithType = yield this.BtocModels.btocReservationModel().searchAvailableRoomsBTOC({
+            const getAllAvailableRooms = yield this.BtocModels.btocReservationModel().getAllRoomRatesBTOC({
                 hotel_code,
                 nights,
                 checkin: checkin,
                 checkout: checkout,
                 rooms,
             });
-            console.log({ getAllAvailableRoomsWithType });
+            console.log({ getAllAvailableRooms });
             return {
                 success: true,
                 code: this.StatusCode.HTTP_OK,
-                total: getAllAvailableRoomsWithType.length,
-                data: getAllAvailableRoomsWithType,
+                data: {
+                    total: getAllAvailableRooms.length,
+                    no_of_nights: nights,
+                    checkin,
+                    checkout,
+                    no_of_rooms: rooms.length,
+                    data: getAllAvailableRooms,
+                },
             };
         });
     }

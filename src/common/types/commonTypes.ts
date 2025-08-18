@@ -27,7 +27,6 @@ export interface IhAdmin {
   type: string;
 }
 
-// hotel user types
 export interface IGBtocUser {
   id: number;
   hotel_code: number;

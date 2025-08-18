@@ -104,15 +104,14 @@ class AuthChecker extends abstract_service_1.default {
                 });
             }
             const verify = lib_1.default.verifyToken(authSplit[1], config_1.default.JWT_SECRET_H_USER);
+            console.log({ verify });
             if (!verify) {
                 return res
                     .status(statusCode_1.default.HTTP_UNAUTHORIZED)
                     .json({ success: false, message: responseMessage_1.default.HTTP_UNAUTHORIZED });
             }
             else {
-                if (verify.type !== "btoc_user" ||
-                    verify.status === "blocked" ||
-                    verify.status === "expired") {
+                if (verify.status === "blocked" || verify.status === "expired") {
                     return res.status(statusCode_1.default.HTTP_UNAUTHORIZED).json({
                         success: false,
                         message: responseMessage_1.default.HTTP_UNAUTHORIZED,
