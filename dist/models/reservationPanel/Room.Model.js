@@ -342,9 +342,10 @@ class RoomModel extends schema_1.default {
                 .where((qb) => {
                 qb.where("bk.status", "checked_in").orWhere("bk.status", "confirmed");
             })
+                .andWhere("bk.booking_type", "B")
                 .andWhere("bk.hotel_code", hotel_code)
-                .andWhere("bk.check_in", "<=", date)
-                .andWhere("bk.check_out", ">=", date)
+                .andWhere("br.check_in", "<=", date)
+                .andWhere("br.check_out", ">=", date)
                 .andWhere("r.is_deleted", false)
                 .orderBy("r.id", "asc");
             const grouped = rows.reduce((acc, row) => {
