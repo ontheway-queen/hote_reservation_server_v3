@@ -31,7 +31,6 @@ class BtocHotelService extends abstract_service_1.default {
                 checkout: checkout,
                 rooms,
             });
-            console.log({ getAllAvailableRooms });
             return {
                 success: true,
                 code: this.StatusCode.HTTP_OK,
@@ -42,6 +41,33 @@ class BtocHotelService extends abstract_service_1.default {
                     checkout,
                     no_of_rooms: rooms.length,
                     data: getAllAvailableRooms,
+                },
+            };
+        });
+    }
+    recheck(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { hotel_code } = req.web_token;
+            const { checkin, checkout, rooms, room_type_id, rate_plan_id } = req.body;
+            const nights = helperFunction_1.HelperFunction.calculateNights(checkin, checkout);
+            const getAvailableRoom = yield this.BtocModels.btocReservationModel().recheck({
+                hotel_code,
+                nights,
+                checkin: checkin,
+                checkout: checkout,
+                rooms,
+                rate_plan_id,
+                room_type_id,
+            });
+            return {
+                success: true,
+                code: this.StatusCode.HTTP_OK,
+                data: {
+                    no_of_nights: nights,
+                    checkin,
+                    checkout,
+                    no_of_rooms: rooms.length,
+                    data: getAvailableRoom,
                 },
             };
         });

@@ -10,6 +10,7 @@ import {
   IAvailableRoomType,
   IGroupedRoomType,
   IMinRoomRatePlan,
+  IRecheckRes,
   IRoomRatesRes,
   ISearchAvailableRoomsPayload,
 } from "../../../btoc/utills/interfaces/btoc.hotel.interface";
@@ -262,7 +263,9 @@ export class BtocReservationModel extends Schema {
       if (!isValid) continue;
 
       const ratePlans = rt.rate_plans.map((rp) => {
-        const totalPrice = rp.base_rate * totalRequested * nights;
+        const totalPrice =
+          Number(rp.base_rate) * Number(totalRequested) * nights;
+        console.log({ nights, totalPrice });
 
         return {
           rate_plan_id: rp.rate_plan_id,
@@ -282,6 +285,8 @@ export class BtocReservationModel extends Schema {
         };
       });
 
+      const minRate = Math.min(...ratePlans.map((rp) => rp.total_price));
+
       result.push({
         room_type_id: rt.room_type_id,
         room_type_name: rt.room_type_name,
@@ -289,11 +294,128 @@ export class BtocReservationModel extends Schema {
         max_adults: rt.max_adults,
         max_children: rt.max_children,
         available_count: rt.available_count,
+        price: minRate,
         room_rates: ratePlans,
       });
     }
 
     return result;
+  }
+
+  public async recheck(payload: {
+    hotel_code: number;
+    checkin: string;
+    checkout: string;
+    room_type_id: number;
+    rate_plan_id: number;
+    nights: number;
+    rooms: { adults: number; children_ages: number[] }[];
+  }): Promise<IRecheckRes> {
+    const {
+      hotel_code,
+      checkin,
+      checkout,
+      room_type_id,
+      rate_plan_id,
+      rooms,
+      nights,
+    } = payload;
+    const totalRequested = rooms.length;
+
+    const result = await this.db("room_types as rt")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .select(
+        "rt.id as room_type_id",
+        "rt.name as room_type_name",
+        "rt.description",
+        "rt.max_adults",
+        "rt.max_children",
+        this.db.raw(`MIN(ra.available_rooms) AS available_count`),
+        "rp.id as rate_plan_id",
+        "rp.name as rate_plan_name",
+        "rpd.base_rate",
+        this.db.raw(`COALESCE(meals.meal_list, '[]')::json AS boarding_details`)
+      )
+      .leftJoin("room_availability as ra", "rt.id", "ra.room_type_id")
+      .leftJoin("rate_plan_details as rpd", "rt.id", "rpd.room_type_id")
+      .leftJoin("rate_plans as rp", "rpd.rate_plan_id", "rp.id")
+      .leftJoin(
+        this.db
+          .select("rpmp.rate_plan_id")
+          .from("hotel_reservation.rate_plan_meal_mappings as rpmp")
+          .leftJoin(
+            "hotel_reservation.meal_plans as mp",
+            "rpmp.meal_plan_id",
+            "mp.id"
+          )
+          .groupBy("rpmp.rate_plan_id")
+          .select(this.db.raw("json_agg(mp.name)::text as meal_list"))
+          .as("meals"),
+        "meals.rate_plan_id",
+        "rp.id"
+      )
+      .where("rt.hotel_code", hotel_code)
+      .andWhere("rt.id", room_type_id)
+      .andWhere("rp.id", rate_plan_id)
+      .andWhere("ra.date", ">=", checkin)
+      .andWhere("ra.date", "<", checkout)
+      .groupBy(
+        "rt.id",
+        "rt.name",
+        "rt.description",
+        "rt.max_adults",
+        "rt.max_children",
+        "rp.id",
+        "rp.name",
+        "rpd.base_rate",
+        "meals.meal_list"
+      )
+      .first();
+
+    if (!result) {
+      throw new Error("Room type or rate plan not found");
+    }
+
+    if (Number(result.available_count) < totalRequested) {
+      throw new Error("Not enough rooms available");
+    }
+
+    for (const r of rooms) {
+      if (
+        r.adults > result.max_adults ||
+        r.children_ages.length > result.max_children
+      ) {
+        throw new Error("Guest count exceeds room capacity");
+      }
+    }
+
+    const totalPrice = Number(result.base_rate) * totalRequested * nights;
+
+    return {
+      room_type_id: result.room_type_id,
+      room_type_name: result.room_type_name,
+      description: result.description,
+      max_adults: result.max_adults,
+      max_children: result.max_children,
+      available_count: Number(result.available_count),
+      price: totalPrice,
+      rate: {
+        rate_plan_id: result.rate_plan_id,
+        rate_plan_name: result.rate_plan_name,
+        boarding_details: result.boarding_details,
+        base_rate: Number(result.base_rate),
+        total_price: totalPrice,
+        no_of_rooms: totalRequested,
+        rooms: rooms.map((room) => ({
+          no_of_adults: room.adults,
+          no_of_children: room.children_ages.length,
+          no_of_rooms: 1,
+          description: result.description,
+          room_type: result.room_type_name,
+        })),
+        cancellation_policy: {},
+      },
+    };
   }
 
   public async insertBooking(payload: IRoomBooking) {

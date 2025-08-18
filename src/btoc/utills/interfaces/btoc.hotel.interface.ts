@@ -8,6 +8,18 @@ export interface hotelSearchAvailabilityReqPayload {
   }[];
 }
 
+export interface recheckReqPayload {
+  checkin: string;
+  checkout: string;
+  room_type_id: number;
+  rate_plan_id: number;
+
+  rooms: {
+    adults: number;
+    children_ages: number[];
+  }[];
+}
+
 export interface ISearchAvailableRoomsPayload {
   checkin: string;
   checkout: string;
@@ -81,6 +93,7 @@ export interface IRoomRatesRes {
   max_adults: number;
   max_children: number;
   available_count: number;
+  price: number;
   room_rates: {
     rate_plan_id: number;
     rate_plan_name: string;
@@ -97,4 +110,29 @@ export interface IRoomRatesRes {
     }[];
     cancellation_policy: {};
   }[];
+}
+export interface IRecheckRes {
+  room_type_id: number;
+  room_type_name: string;
+  description: string;
+  max_adults: number;
+  max_children: number;
+  available_count: number;
+  price: number;
+  rate: {
+    rate_plan_id: number;
+    rate_plan_name: string;
+    boarding_details: string[];
+    base_rate: number;
+    total_price: number;
+    no_of_rooms: number;
+    rooms: {
+      no_of_adults: number;
+      no_of_children: number;
+      no_of_rooms: number;
+      description: string;
+      room_type: string;
+    }[];
+    cancellation_policy: {};
+  };
 }

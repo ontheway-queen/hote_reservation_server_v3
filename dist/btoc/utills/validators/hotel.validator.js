@@ -14,7 +14,19 @@ class BtoHotelValidator {
             rooms: joi_1.default.array()
                 .items(joi_1.default.object({
                 adults: joi_1.default.number().required(),
-                children_ages: joi_1.default.array().items(joi_1.default.number()).optional(),
+                children_ages: joi_1.default.array().items(joi_1.default.number()).required(),
+            }))
+                .required(),
+        });
+        this.recheckValidator = joi_1.default.object({
+            checkin: joi_1.default.string().required(),
+            checkout: joi_1.default.string().required(),
+            room_type_id: joi_1.default.number().required(),
+            rate_plan_id: joi_1.default.number().required(),
+            rooms: joi_1.default.array()
+                .items(joi_1.default.object({
+                adults: joi_1.default.number().required(),
+                children_ages: joi_1.default.array().items(joi_1.default.number()).required(),
             }))
                 .required(),
         });

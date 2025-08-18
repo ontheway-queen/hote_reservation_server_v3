@@ -18,4 +18,12 @@ export class BtocHotelController extends AbstractController {
       res.status(code).json(data);
     }
   );
+
+  public recheck = this.asyncWrapper.wrap(
+    { bodySchema: this.validator.recheckValidator },
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.recheck(req);
+      res.status(code).json(data);
+    }
+  );
 }
