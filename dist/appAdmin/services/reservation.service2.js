@@ -529,20 +529,19 @@ class ReservationService2 extends abstract_service_1.default {
                         }
                     }
                 }
-                const primaryFolio = yield invoiceModel.getFoliosbySingleBooking({
-                    booking_id,
-                    hotel_code,
-                    type: "Primary",
-                });
-                if (!primaryFolio.length) {
-                    return {
-                        success: false,
-                        code: this.StatusCode.HTTP_NOT_FOUND,
-                        message: "Primary folio not found",
-                    };
-                }
-                const folioEntries = [];
                 if (booking.is_individual_booking) {
+                    const primaryFolio = yield invoiceModel.getFoliosbySingleBooking({
+                        booking_id,
+                        hotel_code,
+                        type: "Primary",
+                    });
+                    if (!primaryFolio.length) {
+                        return {
+                            success: false,
+                            code: this.StatusCode.HTTP_NOT_FOUND,
+                            message: "Primary folio not found",
+                        };
+                    }
                     yield subDerived.changeDateOfBookingForIndividual({
                         booking,
                         nights,
@@ -564,7 +563,6 @@ class ReservationService2 extends abstract_service_1.default {
                         booking_rooms,
                         check_in,
                         check_out,
-                        primaryFolio,
                         req,
                         service_charge_percentage,
                         vat_percentage,

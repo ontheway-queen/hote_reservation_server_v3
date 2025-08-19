@@ -634,7 +634,7 @@ class ReservationService extends abstract_service_1.default {
             }));
         });
     }
-    individualCheckOut(req) {
+    individualRoomCheckOut(req) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
                 const hotel_code = req.hotel_admin.hotel_code;
@@ -650,7 +650,7 @@ class ReservationService extends abstract_service_1.default {
                         message: this.ResMsg.HTTP_NOT_FOUND,
                     };
                 }
-                const { status, booking_type, booking_rooms, check_in, check_out } = data;
+                const { status, booking_type, booking_rooms } = data;
                 if (booking_type != "B" && status != "checked_in") {
                     return {
                         success: false,
@@ -658,6 +658,18 @@ class ReservationService extends abstract_service_1.default {
                         message: "This booking has other status. So, you cannot checkout",
                     };
                 }
+                const singleRoom = yield reservationModel.getSingleBookingRoom({
+                    booking_id,
+                    room_id: roomID,
+                });
+                if (!singleRoom) {
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_NOT_FOUND,
+                        message: this.ResMsg.HTTP_NOT_FOUND,
+                    };
+                }
+                const { check_out } = singleRoom;
                 if (check_out > new Date().toISOString()) {
                     return {
                         success: false,

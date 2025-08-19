@@ -540,6 +540,7 @@ class SubDerivedReservationService extends abstract_service_1.default {
                 hotel_code,
                 type: "room_primary",
             });
+            console.log({ roomFoliosByBooking });
             if (!roomFoliosByBooking.length) {
                 return {
                     success: false,
@@ -548,6 +549,7 @@ class SubDerivedReservationService extends abstract_service_1.default {
                 };
             }
             const prevRoomFolio = roomFoliosByBooking.find((rf) => rf.room_id === room_id);
+            console.log({ prevRoomFolio });
             if (!prevRoomFolio) {
                 return {
                     success: false,
@@ -598,8 +600,6 @@ class SubDerivedReservationService extends abstract_service_1.default {
                 }
             }
             const folioEntriesByFolio = yield invoiceModel.getFolioEntriesbyFolioID(hotel_code, prevRoomFolio.id);
-            console.log({ folioEntriesByFolio });
-            // const folioEntryIDs = folioEntriesByFolio.map((fe) => fe.id);
             let prevRoomAmount = 0;
             const folioEntryIDs = folioEntriesByFolio
                 .filter((fe) => {
@@ -611,7 +611,6 @@ class SubDerivedReservationService extends abstract_service_1.default {
                 }
             })
                 .map((fe) => fe.id);
-            console.log({ room_id, folioEntryIDs, prevRoomAmount });
             if (!folioEntryIDs.length) {
                 return {
                     success: false,
@@ -826,7 +825,7 @@ class SubDerivedReservationService extends abstract_service_1.default {
             }
         });
     }
-    changeDateOfBookingForGroupReservation({ booking_rooms, nights, check_in, vat_percentage, service_charge_percentage, check_out, req, booking_id, booking, primaryFolio, }) {
+    changeDateOfBookingForGroupReservation({ booking_rooms, nights, check_in, vat_percentage, service_charge_percentage, check_out, req, booking_id, booking, }) {
         return __awaiter(this, void 0, void 0, function* () {
             const reservationModel = this.Model.reservationModel(this.trx);
             const invoiceModel = this.Model.hotelInvoiceModel(this.trx);
@@ -840,7 +839,7 @@ class SubDerivedReservationService extends abstract_service_1.default {
                     const vat = (tariff * vat_percentage) / 100;
                     const sc = (tariff * service_charge_percentage) / 100;
                     folioEntries.push({
-                        folio_id: primaryFolio[0].id,
+                        folio_id: 0,
                         date,
                         posting_type: "ROOM_CHARGE",
                         debit: tariff,
@@ -851,7 +850,7 @@ class SubDerivedReservationService extends abstract_service_1.default {
                     });
                     if (vat > 0) {
                         folioEntries.push({
-                            folio_id: primaryFolio[0].id,
+                            folio_id: 0,
                             date,
                             posting_type: "VAT",
                             debit: vat,
@@ -863,7 +862,7 @@ class SubDerivedReservationService extends abstract_service_1.default {
                     }
                     if (sc > 0) {
                         folioEntries.push({
-                            folio_id: primaryFolio[0].id,
+                            folio_id: 0,
                             date,
                             posting_type: "SERVICE_CHARGE",
                             debit: sc,
@@ -876,21 +875,61 @@ class SubDerivedReservationService extends abstract_service_1.default {
                 }
             }
             let newTotalAmount = folioEntries.reduce((ac, cu) => { var _a; return ac + Number((_a = cu === null || cu === void 0 ? void 0 : cu.debit) !== null && _a !== void 0 ? _a : 0); }, 0);
-            const folioEntriesByFolio = yield invoiceModel.getFolioEntriesbyFolioID(hotel_code, primaryFolio[0].id);
+            // const folioEntriesByFolio = await invoiceModel.getFolioEntriesbyFolioID(
+            //   hotel_code,
+            //   primaryFolio[0].id
+            // );
+            const roomFolios = yield invoiceModel.getFoliosbySingleBooking({
+                booking_id,
+                hotel_code,
+                type: "room_primary",
+            });
+            if (!roomFolios.length) {
+                return {
+                    success: false,
+                    code: 404,
+                    message: "No room-primary folios found.",
+                };
+            }
+            const entryIdsToVoid = [];
+            const roomIdToFolioId = new Map();
             let prevRoomAmount = 0;
-            const entryIdsToVoid = folioEntriesByFolio
-                .filter((fe) => {
-                if ((fe.posting_type == "ROOM_CHARGE" ||
-                    fe.posting_type == "VAT" ||
-                    fe.posting_type == "SERVICE_CHARGE") &&
-                    fe.room_id) {
-                    prevRoomAmount += Number(fe.debit);
-                    return fe;
-                }
-            })
-                .map((fe) => fe.id);
+            // const entryIdsToVoid = folioEntriesByFolio
+            //   .filter((fe) => {
+            //     if (
+            //       (fe.posting_type == "ROOM_CHARGE" ||
+            //         fe.posting_type == "VAT" ||
+            //         fe.posting_type == "SERVICE_CHARGE") &&
+            //       fe.room_id
+            //     ) {
+            //       prevRoomAmount += Number(fe.debit);
+            //       return fe;
+            //     }
+            //   })
+            //   .map((fe) => fe.id);
+            for (const f of roomFolios) {
+                roomIdToFolioId.set(f.room_id, f.id);
+                const folioEntriesByFolio = yield invoiceModel.getFolioEntriesbyFolioID(hotel_code, f.id);
+                // entryIdsToVoid.push(...folioEntriesByFolio.map((fe) =>  fe.id));
+                entryIdsToVoid.push(...folioEntriesByFolio
+                    .filter((fe) => {
+                    if (fe.posting_type == "ROOM_CHARGE" ||
+                        fe.posting_type == "VAT" ||
+                        fe.posting_type == "SERVICE_CHARGE") {
+                        prevRoomAmount += Number(fe.debit);
+                        return fe;
+                    }
+                })
+                    .map((fe) => fe.id));
+            }
             if (entryIdsToVoid.length) {
                 yield invoiceModel.updateFolioEntries({ is_void: true }, entryIdsToVoid);
+            }
+            for (const e of folioEntries) {
+                const fid = roomIdToFolioId.get(e.room_id);
+                if (!fid)
+                    throw new Error(`No room_primary folio found for room_id ${e.room_id}`);
+                e.folio_id = fid;
             }
             yield invoiceModel.insertInFolioEntries(folioEntries);
             yield this.sub.updateRoomAvailabilityService({
