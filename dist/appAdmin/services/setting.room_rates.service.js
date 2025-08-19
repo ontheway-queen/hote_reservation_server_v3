@@ -48,13 +48,15 @@ class RoomRatesService extends abstract_service_1.default {
                     };
                 }
                 // Validate cancellation policy
-                const cancellationPolicyData = yield settingModel.getSingleCancellationPolicy(hotel_code, cancellation_policy_id);
-                if (!cancellationPolicyData.length) {
-                    return {
-                        success: false,
-                        code: this.StatusCode.HTTP_CONFLICT,
-                        message: "Invalid cancellation policy",
-                    };
+                if (cancellation_policy_id) {
+                    const cancellationPolicyData = yield settingModel.getSingleCancellationPolicy(hotel_code, cancellation_policy_id);
+                    if (!cancellationPolicyData.length) {
+                        return {
+                            success: false,
+                            code: this.StatusCode.HTTP_CONFLICT,
+                            message: "Invalid cancellation policy",
+                        };
+                    }
                 }
                 // Validate room types
                 const room_type_ids = room_type_prices.map((item) => item.room_type_id);

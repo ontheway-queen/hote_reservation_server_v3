@@ -323,7 +323,7 @@ class SettingValidator {
         // room rates
         this.createRoomRateValidator = joi_1.default.object({
             name: joi_1.default.string().required(),
-            cancellation_policy_id: joi_1.default.number().integer().required(),
+            cancellation_policy_id: joi_1.default.number().integer().optional(),
             sources: joi_1.default.array().items(joi_1.default.number().integer().required()).optional(),
             meal_plan_items: joi_1.default.array()
                 .items(joi_1.default.number().integer().required())

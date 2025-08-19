@@ -710,7 +710,7 @@ class SettingModel extends Schema {
   // ------------------ room rate ---------------------//
   public async insertInRatePlans(payload: {
     hotel_code: number;
-    cancellation_policy_id: number;
+    cancellation_policy_id?: number;
     name: string;
   }) {
     return await this.db("rate_plans")
