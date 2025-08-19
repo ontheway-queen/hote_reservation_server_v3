@@ -136,3 +136,21 @@ export interface IRecheckRes {
     cancellation_policy: {};
   };
 }
+
+export interface IbookingReqPayload {
+  hotel_code: number;
+  checkin: string;
+  checkout: string;
+  room_type_id: number;
+  rate_plan_id: number;
+  rooms: { adults: number; children_ages: number[] }[];
+  guest_info: {
+    first_name: string;
+    last_name: string;
+    email: string;
+    phone: string;
+    address?: string;
+  };
+  payment_method: string;
+  special_request?: string;
+}

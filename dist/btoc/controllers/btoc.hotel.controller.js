@@ -40,6 +40,10 @@ class BtocHotelController extends abstract_controller_1.default {
             const _b = yield this.service.recheck(req), { code } = _b, data = __rest(_b, ["code"]);
             res.status(code).json(data);
         }));
+        this.booking = this.asyncWrapper.wrap({ bodySchema: this.validator.recheckValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _c = yield this.service.booking(req), { code } = _c, data = __rest(_c, ["code"]);
+            res.status(code).json(data);
+        }));
     }
 }
 exports.BtocHotelController = BtocHotelController;

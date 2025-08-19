@@ -72,6 +72,39 @@ class BtocHotelService extends abstract_service_1.default {
             };
         });
     }
+    booking(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
+                const { hotel_code, checkin, checkout, room_type_id, rate_plan_id, rooms, guest_info, special_request, } = req.body;
+                const totalRequested = rooms.length;
+                const nights = helperFunction_1.HelperFunction.calculateNights(checkin, checkout);
+                const recheck = yield this.BtocModels.btocReservationModel().recheck({
+                    hotel_code,
+                    nights,
+                    checkin: checkin,
+                    checkout: checkout,
+                    rooms,
+                    rate_plan_id,
+                    room_type_id,
+                });
+                if (!recheck) {
+                    throw new Error("Room not available for booking");
+                }
+                return {
+                    success: true,
+                    code: this.StatusCode.HTTP_OK,
+                    guest: guest_info,
+                    room_type: recheck.room_type_name,
+                    rate_plan: recheck.rate.rate_plan_name,
+                    total_price: recheck.rate.total_price,
+                    checkin,
+                    checkout,
+                    rooms: rooms.length,
+                    status: "CONFIRMED",
+                };
+            }));
+        });
+    }
 }
 exports.BtocHotelService = BtocHotelService;
 //# sourceMappingURL=hotel.service.js.map

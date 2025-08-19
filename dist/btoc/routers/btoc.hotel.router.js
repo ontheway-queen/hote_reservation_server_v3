@@ -19,6 +19,7 @@ class BtocHotelRouter {
             .route("/search-availability")
             .post(this.controller.searchAvailability);
         this.router.route("/recheck").post(this.controller.recheck);
+        this.router.route("/booking").post(this.controller.booking);
     }
 }
 exports.BtocHotelRouter = BtocHotelRouter;
