@@ -215,8 +215,8 @@ class DashBoardModel extends Schema {
       .join("bookings as b", "br.booking_id", "b.id")
       .where("b.hotel_code", hotel_code)
       .andWhere(function () {
-        this.where("b.check_out", ">=", current_date).andWhere(
-          "b.check_in",
+        this.where("br.check_out", ">=", current_date).andWhere(
+          "br.check_in",
           "<=",
           current_date
         );
