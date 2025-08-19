@@ -133,9 +133,9 @@ class ReservationModel extends schema_1.default {
                   JOIN ?? AS g ON b.guest_id = g.id
                   WHERE br2.room_id = r.id
                     AND (
-                      (b.booking_type = 'B' AND b.status NOT IN ('checked_out', 'pending', 'canceled', 'rejected'))
+                      (b.booking_type = 'B' AND br2.status NOT IN ('checked_out', 'pending', 'canceled', 'rejected'))
                       OR
-                      (b.booking_type = 'H' AND b.status != 'canceled')
+                      (b.booking_type = 'H' AND br2.status != 'canceled')
                     )
                     AND br2.check_in < ?
                     AND br2.check_out > ?
