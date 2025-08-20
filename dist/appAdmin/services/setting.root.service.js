@@ -25,9 +25,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SettingRootService = void 0;
 const abstract_service_1 = __importDefault(require("../../abstarcts/abstract.service"));
+const payment_gateway_interface_1 = require("../utlis/interfaces/payment.gateway.interface");
+const paymentSettingHelper_1 = __importDefault(require("../utlis/library/paymentSettingHelper"));
+const paymentGateway_constant_1 = require("../utlis/library/paymentGateway.constant");
 class SettingRootService extends abstract_service_1.default {
     constructor() {
         super();
+        this.paymentSettingHelper = new paymentSettingHelper_1.default();
     }
     insertAccomodation(req) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -291,6 +295,166 @@ class SettingRootService extends abstract_service_1.default {
                 code: this.StatusCode.HTTP_OK,
                 data: data ? data : {},
             };
+        });
+    }
+    createPaymentGatewaySetting(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { id, hotel_code } = req.hotel_admin;
+            const body = req.body;
+            return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
+                const paymentModel = this.Model.paymentModel(trx);
+                const checkExists = yield paymentModel.getPaymentGateway({
+                    type: body.type,
+                    hotel_code,
+                });
+                if (checkExists.length) {
+                    return {
+                        success: false,
+                        message: this.ResMsg.HTTP_CONFLICT,
+                        code: this.StatusCode.HTTP_CONFLICT,
+                    };
+                }
+                let logo = "";
+                const files = req.files;
+                if (!files.length) {
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_BAD_REQUEST,
+                        message: "Please upload a logo",
+                    };
+                }
+                logo = files[0].filename;
+                if (body.type === payment_gateway_interface_1.PAYMENT_TYPE.BRAC_BANK) {
+                    this.paymentSettingHelper.validateRequiredFields(body, paymentGateway_constant_1.requiredFieldForBracBank);
+                }
+                else if (body.type === payment_gateway_interface_1.PAYMENT_TYPE.PAYPAL) {
+                    this.paymentSettingHelper.validateRequiredFields(body, paymentGateway_constant_1.requiredFieldForPaypal);
+                }
+                else if (body.type === payment_gateway_interface_1.PAYMENT_TYPE.NGENIUS) {
+                    this.paymentSettingHelper.validateRequiredFields(body, paymentGateway_constant_1.requiredFieldForNgenius);
+                }
+                else if (body.type === payment_gateway_interface_1.PAYMENT_TYPE.MAMO_PAY) {
+                    this.paymentSettingHelper.validateRequiredFields(body, paymentGateway_constant_1.requiredFieldForMamoPay);
+                }
+                const res = yield paymentModel.createPaymentGateway({
+                    hotel_code,
+                    created_by: id,
+                    details: body.details,
+                    title: body.title,
+                    bank_charge: body.bank_charge,
+                    bank_charge_type: body.bank_charge_type,
+                    is_default: body.is_default || 0,
+                    logo,
+                    type: body.type,
+                });
+                if (body.is_default) {
+                    yield paymentModel.updatePaymentGateway({
+                        payload: { is_default: 0 },
+                        whereNotId: res[0].id,
+                    });
+                }
+                return {
+                    success: true,
+                    code: this.StatusCode.HTTP_SUCCESSFUL,
+                    message: this.ResMsg.HTTP_SUCCESSFUL,
+                };
+            }));
+        });
+    }
+    //   get payment gateway info
+    getAllPaymentGatewaySetting(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { hotel_code } = req.hotel_admin;
+            const model = this.Model.paymentModel();
+            const data = yield model.getPaymentGateway(Object.assign(Object.assign({}, req.query), { hotel_code }));
+            return {
+                success: true,
+                message: this.ResMsg.HTTP_OK,
+                code: this.StatusCode.HTTP_OK,
+                data,
+            };
+        });
+    }
+    //   update payment gateway info
+    updatePaymentGatewaySetting(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { id: created_by, hotel_code } = req.hotel_admin;
+            const { id } = req.params;
+            const body = req.body;
+            return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
+                const model = this.Model.paymentModel(trx);
+                const check = yield model.getPaymentGateway({
+                    hotel_code,
+                    id: Number(id),
+                });
+                if (!check.length) {
+                    return {
+                        success: false,
+                        message: this.ResMsg.HTTP_NOT_FOUND,
+                        code: this.StatusCode.HTTP_NOT_FOUND,
+                    };
+                }
+                if (check[0].title === payment_gateway_interface_1.PAYMENT_TYPE.MFS) {
+                    const allowedFields = ["is_default", "status"];
+                    const filteredBody = Object.keys(body).filter((key) => !allowedFields.includes(key));
+                    if (filteredBody.length > 0) {
+                        return {
+                            success: false,
+                            code: this.StatusCode.HTTP_BAD_REQUEST,
+                            message: `Only 'is_default' and 'status' fields are allowed for ${payment_gateway_interface_1.PAYMENT_TYPE.MFS}`,
+                        };
+                    }
+                }
+                const files = req.files;
+                if (files.length) {
+                    body.logo = files[0].filename;
+                }
+                yield model.updatePaymentGateway({ payload: body, id: Number(id) });
+                if (body.is_default) {
+                    yield model.updatePaymentGateway({
+                        payload: { is_default: 0 },
+                        whereNotId: Number(id),
+                    });
+                }
+                const checkMinimumOneActiveAndDefault = yield model.getPaymentGateway({
+                    hotel_code,
+                    is_default: 1,
+                    status: 1,
+                });
+                if (!checkMinimumOneActiveAndDefault.length) {
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_BAD_REQUEST,
+                        message: "Minium One Payment Gateway should Active and Default",
+                    };
+                }
+                if (check[0].title !== payment_gateway_interface_1.PAYMENT_TYPE.MFS) {
+                    const checkAfterUpdate = yield model.getPaymentGateway({
+                        hotel_code,
+                        id: Number(id),
+                    });
+                    if (checkAfterUpdate[0].title === payment_gateway_interface_1.PAYMENT_TYPE.BRAC_BANK) {
+                        this.paymentSettingHelper.validateRequiredFields(checkAfterUpdate[0], paymentGateway_constant_1.requiredFieldForBracBank);
+                    }
+                    if (checkAfterUpdate[0].title === payment_gateway_interface_1.PAYMENT_TYPE.PAYPAL) {
+                        this.paymentSettingHelper.validateRequiredFields(checkAfterUpdate[0], paymentGateway_constant_1.requiredFieldForPaypal);
+                    }
+                    if (checkAfterUpdate[0].title === payment_gateway_interface_1.PAYMENT_TYPE.NGENIUS) {
+                        this.paymentSettingHelper.validateRequiredFields(checkAfterUpdate[0], paymentGateway_constant_1.requiredFieldForNgenius);
+                    }
+                    if (checkAfterUpdate[0].title === payment_gateway_interface_1.PAYMENT_TYPE.MAMO_PAY) {
+                        this.paymentSettingHelper.validateRequiredFields(checkAfterUpdate[0], paymentGateway_constant_1.requiredFieldForMamoPay);
+                    }
+                }
+                if (check[0].logo && files.length) {
+                    yield this.manageFile.deleteFromCloud([check[0].logo]);
+                }
+                return {
+                    success: true,
+                    message: "Payment Gateway setting successfully updated",
+                    code: this.StatusCode.HTTP_OK,
+                };
+            }));
         });
     }
 }

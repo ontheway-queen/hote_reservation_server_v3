@@ -25,6 +25,7 @@ const Setting_Model_1 = __importDefault(require("./reservationPanel/Setting.Mode
 const reservation_model_1 = require("./reservationPanel/reservation.model");
 const dboModel_1 = __importDefault(require("./commonModel/dboModel"));
 const btoc_model_1 = require("./btocModels/btoc.model");
+const payment_model_1 = __importDefault(require("./reservationPanel/paymentModel/payment.model"));
 class Models {
     constructor(db) {
         this.db = db;
@@ -84,6 +85,10 @@ class Models {
     // stock
     stockInventoryModel(trx) {
         return new stock_inventory_model_1.default(trx || this.db);
+    }
+    // payment model
+    paymentModel(trx) {
+        return new payment_model_1.default(trx || this.db);
     }
     //=============== m360ict panel model start ================ //
     // hotel user model

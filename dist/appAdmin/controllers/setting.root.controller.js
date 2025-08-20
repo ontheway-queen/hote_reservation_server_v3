@@ -72,6 +72,24 @@ class SettingRootController extends abstract_controller_1.default {
             const _k = yield this.service.getChildAgePolicies(req), { code } = _k, data = __rest(_k, ["code"]);
             res.status(code).json(data);
         }));
+        // create PaymentGatewaySetting
+        this.createPaymentGatewaySetting = this.asyncWrapper.wrap({ bodySchema: this.validator.createPaymentInfoSchema }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _l = yield this.service.createPaymentGatewaySetting(req), { code } = _l, data = __rest(_l, ["code"]);
+            res.status(code).json(data);
+        }));
+        // update PaymentGatewaySetting
+        this.updatePaymentGatewaySetting = this.asyncWrapper.wrap({
+            bodySchema: this.validator.updatePaymentInfoSchema,
+            paramSchema: this.commonValidator.singleParamValidator("id"),
+        }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _m = yield this.service.updatePaymentGatewaySetting(req), { code } = _m, data = __rest(_m, ["code"]);
+            res.status(code).json(data);
+        }));
+        // get all PaymentGatewaySetting
+        this.getAllPaymentGatewaySetting = this.asyncWrapper.wrap({}, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _o = yield this.service.getAllPaymentGatewaySetting(req), { code } = _o, data = __rest(_o, ["code"]);
+            res.status(code).json(data);
+        }));
     }
 }
 exports.SettingRootController = SettingRootController;

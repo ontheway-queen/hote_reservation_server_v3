@@ -4,6 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const joi_1 = __importDefault(require("joi"));
+const payment_gateway_interface_1 = require("../interfaces/payment.gateway.interface");
 class SettingValidator {
     constructor() {
         // create room Type validation
@@ -395,6 +396,61 @@ class SettingValidator {
             building_no: joi_1.default.number().required(),
             description: joi_1.default.string().allow("").optional(),
             status: joi_1.default.boolean().optional(),
+        });
+        // --------------------- Payment gateway ---------------------//
+        this.createPaymentInfoSchema = joi_1.default.object({
+            type: joi_1.default.string()
+                .valid(...Object.values(payment_gateway_interface_1.PAYMENT_TYPE))
+                .optional()
+                .messages({
+                "string.base": "Please enter valid type",
+                "any.only": "Please enter valid type",
+            }),
+            title: joi_1.default.string().required(),
+            details: joi_1.default.string().required().messages({
+                "any.required": "Please enter valid details",
+                "string.base": "Please enter valid details",
+            }),
+            is_default: joi_1.default.boolean().required().messages({
+                "any.required": "Please enter valid default value",
+                "any.only": "Please enter valid default value",
+            }),
+            bank_charge: joi_1.default.number().integer().optional().messages({
+                "any.required": "Please enter valid bank charge",
+                "number.base": "Please enter valid bank charge",
+            }),
+            bank_charge_type: joi_1.default.string()
+                .valid(payment_gateway_interface_1.PAYMENT_CHARGE_TYPE.FLAT, payment_gateway_interface_1.PAYMENT_CHARGE_TYPE.PERCENTAGE)
+                .optional()
+                .messages({
+                "any.required": "Please enter valid bank charge type",
+                "any.only": "Please enter valid bank charge type",
+            }),
+        });
+        this.updatePaymentInfoSchema = joi_1.default.object({
+            type: joi_1.default.string()
+                .valid(...Object.values(payment_gateway_interface_1.PAYMENT_TYPE))
+                .optional()
+                .messages({
+                "string.base": "Please enter valid type",
+                "any.only": "Please enter valid type",
+            }),
+            title: joi_1.default.string().required(),
+            details: joi_1.default.string().optional().messages({
+                "string.base": "Please enter valid details",
+            }),
+            is_default: joi_1.default.string().valid("0", "1").optional().messages({
+                "any.only": "Please enter valid default value",
+            }),
+            bank_charge: joi_1.default.number().integer().optional().messages({
+                "number.base": "Please enter valid bank charge",
+            }),
+            bank_charge_type: joi_1.default.string()
+                .valid(...Object.values(payment_gateway_interface_1.PAYMENT_CHARGE_TYPE))
+                .optional()
+                .messages({
+                "any.only": "Please enter valid bank charge type",
+            }),
         });
     }
 }

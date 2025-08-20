@@ -24,6 +24,7 @@ import SettingModel from "./reservationPanel/Setting.Model";
 import { ReservationModel } from "./reservationPanel/reservation.model";
 import DboModel from "./commonModel/dboModel";
 import { BtocUserModel } from "./btocModels/btoc.model";
+import PaymentModel from "./reservationPanel/paymentModel/payment.model";
 
 class Models {
   private db: Knex;
@@ -104,6 +105,11 @@ class Models {
   // stock
   public stockInventoryModel(trx?: Knex.Transaction) {
     return new StockInventoryModel(trx || this.db);
+  }
+
+  // payment model
+  public paymentModel(trx?: Knex.Transaction) {
+    return new PaymentModel(trx || this.db);
   }
 
   //=============== m360ict panel model start ================ //
