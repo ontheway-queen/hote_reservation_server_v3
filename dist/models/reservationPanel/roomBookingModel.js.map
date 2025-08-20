@@ -1,1 +1,0 @@
-{"version":3,"file":"roomBookingModel.js","sourceRoot":"","sources":["../../../src/models/reservationPanel/roomBookingModel.ts"],"names":[],"mappings":";;;;;AAKA,8EAAsD;AAEtD,MAAM,gBAAiB,SAAQ,gBAAM;IAEnC,YAAY,EAAO;QACjB,KAAK,EAAE,CAAC;QACR,IAAI,CAAC,EAAE,GAAG,EAAE,CAAC;IACf,CAAC;CACF;AACD,kBAAe,gBAAgB,CAAC"}
