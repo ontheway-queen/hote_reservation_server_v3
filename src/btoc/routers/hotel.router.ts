@@ -3,17 +3,17 @@ import AuthChecker from "../../common/middleware/authChecker/authChecker";
 import { BtocHotelController } from "../controllers/hotel.controller";
 
 export class BtocHotelRouter {
-	public router = Router();
-	public authChecker = new AuthChecker();
-	private controller = new BtocHotelController();
+  public router = Router();
+  public authChecker = new AuthChecker();
+  private controller = new BtocHotelController();
 
-	constructor() {
-		this.callRouter();
-	}
+  constructor() {
+    this.callRouter();
+  }
 
-	private callRouter() {
-		this.router
-			.route("/search-availability")
-			.get(this.controller.searchAvailability);
-	}
+  private callRouter() {
+    this.router
+      .route("/search-availability")
+      .get(this.controller.searchAvailability);
+  }
 }
