@@ -2025,7 +2025,6 @@ export class SubReservationService extends AbstractServices {
     const reservationModel = this.Model.reservationModel(this.trx);
     const hotelInvModel = this.Model.hotelInvoiceModel(this.trx);
     const accountModel = this.Model.accountModel(this.trx);
-    const roomModel = this.Model.RoomModel(this.trx);
     const today = new Date().toISOString().split("T")[0];
 
     const hotel_code = req.hotel_admin.hotel_code;
@@ -2038,6 +2037,7 @@ export class SubReservationService extends AbstractServices {
     );
 
     const bookingRoomIds = roomsBeingRemoved.map((br) => br.id);
+
     // delete booking room guest
     const res = await reservationModel.deleteBookingRoomGuest({
       booking_room_ids: bookingRoomIds,
@@ -2079,6 +2079,7 @@ export class SubReservationService extends AbstractServices {
     if (folioEntryIDs.length) {
       await hotelInvModel.updateFolioEntries({ is_void: true }, folioEntryIDs);
     }
+
     if (allFolioIDs.length) {
       await hotelInvModel.updateSingleFolio(
         { is_void: true },

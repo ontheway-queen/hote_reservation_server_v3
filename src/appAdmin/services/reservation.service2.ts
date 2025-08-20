@@ -715,22 +715,21 @@ export class ReservationService2 extends AbstractServices {
         }
       }
 
-      const primaryFolio = await invoiceModel.getFoliosbySingleBooking({
-        booking_id,
-        hotel_code,
-        type: "Primary",
-      });
-
-      if (!primaryFolio.length) {
-        return {
-          success: false,
-          code: this.StatusCode.HTTP_NOT_FOUND,
-          message: "Primary folio not found",
-        };
-      }
-      const folioEntries: IinsertFolioEntriesPayload[] = [];
-
       if (booking.is_individual_booking) {
+        const primaryFolio = await invoiceModel.getFoliosbySingleBooking({
+          booking_id,
+          hotel_code,
+          type: "Primary",
+        });
+
+        if (!primaryFolio.length) {
+          return {
+            success: false,
+            code: this.StatusCode.HTTP_NOT_FOUND,
+            message: "Primary folio not found",
+          };
+        }
+
         await subDerived.changeDateOfBookingForIndividual({
           booking,
           nights,
@@ -751,7 +750,6 @@ export class ReservationService2 extends AbstractServices {
           booking_rooms,
           check_in,
           check_out,
-          primaryFolio,
           req,
           service_charge_percentage,
           vat_percentage,

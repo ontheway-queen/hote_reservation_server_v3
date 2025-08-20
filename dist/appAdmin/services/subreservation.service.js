@@ -1438,7 +1438,6 @@ class SubReservationService extends abstract_service_1.default {
             const reservationModel = this.Model.reservationModel(this.trx);
             const hotelInvModel = this.Model.hotelInvoiceModel(this.trx);
             const accountModel = this.Model.accountModel(this.trx);
-            const roomModel = this.Model.RoomModel(this.trx);
             const today = new Date().toISOString().split("T")[0];
             const hotel_code = req.hotel_admin.hotel_code;
             const admin_id = req.hotel_admin.id;
