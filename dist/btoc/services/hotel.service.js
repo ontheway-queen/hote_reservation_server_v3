@@ -23,16 +23,86 @@ class BtocHotelService extends abstract_service_1.default {
             console.log({ data: req.btoc_user });
             const { hotel_code } = req.btoc_user;
             const { check_in, check_out } = req.query;
-            const getAllAvailableRoomsWithType = yield this.Model.reservationModel().calendar({
+            const nights = HelperFunction.calculateNights(checkin, checkout);
+            const getAllAvailableRooms = yield this.BtocModels.btocReservationModel().getAllRoomRatesBTOC({
                 hotel_code,
-                check_in: check_in,
-                check_out: check_out,
+                nights,
+                checkin: checkin,
+                checkout: checkout,
+                rooms,
             });
             return {
                 success: true,
                 code: this.StatusCode.HTTP_OK,
-                data: getAllAvailableRoomsWithType,
+                data: {
+                    total: getAllAvailableRooms.length,
+                    no_of_nights: nights,
+                    checkin,
+                    checkout,
+                    no_of_rooms: rooms.length,
+                    data: getAllAvailableRooms,
+                },
             };
+        });
+    }
+    recheck(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { hotel_code } = req.web_token;
+            const { checkin, checkout, rooms, room_type_id, rate_plan_id } = req.body;
+            const nights = HelperFunction.calculateNights(checkin, checkout);
+            const getAvailableRoom = yield this.BtocModels.btocReservationModel().recheck({
+                hotel_code,
+                nights,
+                checkin: checkin,
+                checkout: checkout,
+                rooms,
+                rate_plan_id,
+                room_type_id,
+            });
+            return {
+                success: true,
+                code: this.StatusCode.HTTP_OK,
+                data: {
+                    no_of_nights: nights,
+                    checkin,
+                    checkout,
+                    no_of_rooms: rooms.length,
+                    data: getAvailableRoom,
+                },
+            };
+        });
+    }
+    booking(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
+                const { hotel_code, checkin, checkout, room_type_id, rate_plan_id, rooms, guest_info, special_request, } = req.body;
+                const totalRequested = rooms.length;
+                const nights = HelperFunction.calculateNights(checkin, checkout);
+                const recheck = yield this.BtocModels.btocReservationModel().recheck({
+                    hotel_code,
+                    nights,
+                    checkin: checkin,
+                    checkout: checkout,
+                    rooms,
+                    rate_plan_id,
+                    room_type_id,
+                });
+                if (!recheck) {
+                    throw new Error("Room not available for booking");
+                }
+                return {
+                    success: true,
+                    code: this.StatusCode.HTTP_OK,
+                    guest: guest_info,
+                    room_type: recheck.room_type_name,
+                    rate_plan: recheck.rate.rate_plan_name,
+                    total_price: recheck.rate.total_price,
+                    checkin,
+                    checkout,
+                    rooms: rooms.length,
+                    status: "CONFIRMED",
+                };
+            }));
         });
     }
 }
