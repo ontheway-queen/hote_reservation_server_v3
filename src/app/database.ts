@@ -3,6 +3,7 @@ import config from "../config/config";
 
 let dbInstance: Knex;
 
+// db declared here
 const createDbCon = () => {
   if (!dbInstance) {
     dbInstance = knex({
