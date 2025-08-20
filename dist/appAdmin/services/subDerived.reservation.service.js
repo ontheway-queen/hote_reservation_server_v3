@@ -600,8 +600,6 @@ class SubDerivedReservationService extends abstract_service_1.default {
                 }
             }
             const folioEntriesByFolio = yield invoiceModel.getFolioEntriesbyFolioID(hotel_code, prevRoomFolio.id);
-            console.log({ folioEntriesByFolio });
-            // const folioEntryIDs = folioEntriesByFolio.map((fe) => fe.id);
             let prevRoomAmount = 0;
             const folioEntryIDs = folioEntriesByFolio
                 .filter((fe) => {
@@ -613,7 +611,6 @@ class SubDerivedReservationService extends abstract_service_1.default {
                 }
             })
                 .map((fe) => fe.id);
-            console.log({ room_id, folioEntryIDs, prevRoomAmount });
             if (!folioEntryIDs.length) {
                 return {
                     success: false,
@@ -630,7 +627,6 @@ class SubDerivedReservationService extends abstract_service_1.default {
             // insert new folio entries
             let newTotalAmount = folioEntries.reduce((ac, cu) => { var _a; return ac + Number((_a = cu === null || cu === void 0 ? void 0 : cu.debit) !== null && _a !== void 0 ? _a : 0); }, 0);
             yield invoiceModel.insertInFolioEntries(folioEntries);
-            console.log({ check_in, check_out });
             yield reservationModel.updateSingleBookingRoom({
                 check_in,
                 check_out,

@@ -875,7 +875,7 @@ export class ReservationService extends AbstractServices {
     });
   }
 
-  public async individualCheckOut(req: Request) {
+  public async individualRoomCheckOut(req: Request) {
     return await this.db.transaction(async (trx) => {
       const hotel_code = req.hotel_admin.hotel_code;
       const booking_id = parseInt(req.params.id);

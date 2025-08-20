@@ -634,7 +634,7 @@ class ReservationService extends abstract_service_1.default {
             }));
         });
     }
-    individualCheckOut(req) {
+    individualRoomCheckOut(req) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
                 const hotel_code = req.hotel_admin.hotel_code;

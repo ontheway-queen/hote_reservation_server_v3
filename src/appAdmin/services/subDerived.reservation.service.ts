@@ -870,10 +870,6 @@ export class SubDerivedReservationService extends AbstractServices {
       prevRoomFolio.id
     );
 
-    console.log({ folioEntriesByFolio });
-
-    // const folioEntryIDs = folioEntriesByFolio.map((fe) => fe.id);
-
     let prevRoomAmount = 0;
 
     const folioEntryIDs = folioEntriesByFolio
@@ -888,8 +884,6 @@ export class SubDerivedReservationService extends AbstractServices {
         }
       })
       .map((fe) => fe.id);
-
-    console.log({ room_id, folioEntryIDs, prevRoomAmount });
 
     if (!folioEntryIDs.length) {
       return {
@@ -914,7 +908,6 @@ export class SubDerivedReservationService extends AbstractServices {
 
     await invoiceModel.insertInFolioEntries(folioEntries);
 
-    console.log({ check_in, check_out });
     await reservationModel.updateSingleBookingRoom(
       {
         check_in,
