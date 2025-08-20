@@ -14,6 +14,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.BtocHotelService = void 0;
 const abstract_service_1 = __importDefault(require("../../abstarcts/abstract.service"));
+const helperFunction_1 = require("../../appAdmin/utlis/library/helperFunction");
 class BtocHotelService extends abstract_service_1.default {
     constructor() {
         super();
@@ -23,7 +24,7 @@ class BtocHotelService extends abstract_service_1.default {
             console.log({ data: req.btoc_user });
             const { hotel_code } = req.btoc_user;
             const { check_in, check_out } = req.query;
-            const nights = HelperFunction.calculateNights(checkin, checkout);
+            const nights = helperFunction_1.HelperFunction.calculateNights(checkin, checkout);
             const getAllAvailableRooms = yield this.BtocModels.btocReservationModel().getAllRoomRatesBTOC({
                 hotel_code,
                 nights,
@@ -49,7 +50,7 @@ class BtocHotelService extends abstract_service_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             const { hotel_code } = req.web_token;
             const { checkin, checkout, rooms, room_type_id, rate_plan_id } = req.body;
-            const nights = HelperFunction.calculateNights(checkin, checkout);
+            const nights = helperFunction_1.HelperFunction.calculateNights(checkin, checkout);
             const getAvailableRoom = yield this.BtocModels.btocReservationModel().recheck({
                 hotel_code,
                 nights,
@@ -77,7 +78,7 @@ class BtocHotelService extends abstract_service_1.default {
             return this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
                 const { hotel_code, checkin, checkout, room_type_id, rate_plan_id, rooms, guest_info, special_request, } = req.body;
                 const totalRequested = rooms.length;
-                const nights = HelperFunction.calculateNights(checkin, checkout);
+                const nights = helperFunction_1.HelperFunction.calculateNights(checkin, checkout);
                 const recheck = yield this.BtocModels.btocReservationModel().recheck({
                     hotel_code,
                     nights,
