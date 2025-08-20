@@ -133,17 +133,14 @@ class AuthChecker extends AbstractServices {
 			authSplit[1],
 			config.JWT_SECRET_H_USER
 		) as IGBtocUser;
+		console.log({ verify });
 
 		if (!verify) {
 			return res
 				.status(StatusCode.HTTP_UNAUTHORIZED)
 				.json({ success: false, message: ResMsg.HTTP_UNAUTHORIZED });
 		} else {
-			if (
-				verify.type !== "btoc_user" ||
-				verify.status === "blocked" ||
-				verify.status === "expired"
-			) {
+			if (verify.status === "blocked" || verify.status === "expired") {
 				return res.status(StatusCode.HTTP_UNAUTHORIZED).json({
 					success: false,
 					message: ResMsg.HTTP_UNAUTHORIZED,

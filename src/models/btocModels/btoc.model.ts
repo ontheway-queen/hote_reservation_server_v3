@@ -32,20 +32,23 @@ export class BtocUserModel extends Schema {
 			.returning(["id", "email"]);
 	}
 
-	// get profile
-	public async getProfile(query: {
+	public async getSingleUser(query: {
 		id?: number;
 		email?: string;
+		hotel_code?: number;
 	}): Promise<IBtocUserProfile> {
+		const { id, email, hotel_code } = query;
 		return await this.db("users as u")
 			.withSchema(this.BTOC_SCHEMA)
 			.select(
 				"u.id",
+				"u.hotel_code",
 				"u.first_name",
 				"u.last_name",
 				"u.email",
 				"u.phone",
 				"u.photo",
+				"u.password",
 				"u.status",
 				"u.gender",
 				"u.address",
@@ -54,21 +57,21 @@ export class BtocUserModel extends Schema {
 				"country.country_name as country",
 				"u.is_deleted"
 			)
-			//   .joinRaw("LEFT JOIN ?? city ON city.city_code = u.city_id", [
-			//     `${this.PUBLIC_SCHEMA}.${this.TABLES.city}`,
-			//   ])
-			//   .joinRaw("LEFT JOIN ?? country ON country.id = u.country_id", [
-			//     `${this.PUBLIC_SCHEMA}.${this.TABLES.country}`,
-			//   ])
+
+			.joinRaw("LEFT JOIN public.city ON city.city_code = u.city_id")
+			.joinRaw("LEFT JOIN public.country ON country.id = u.country_id")
 			.modify((qb) => {
-				if (query.id) qb.where("u.id", query.id);
-				if (query.email) qb.where("u.email", query.email);
+				if (id) qb.where("u.id", id);
+				if (email) qb.where("u.email", email);
+
+				if (hotel_code) {
+					qb.andWhere("u.hotel_code", hotel_code);
+				}
 			})
 			.andWhere("u.is_deleted", false)
 			.first();
 	}
 
-	// update profile
 	public async updateProfile({
 		payload,
 		id,

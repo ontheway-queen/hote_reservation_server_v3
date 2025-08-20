@@ -41,13 +41,38 @@ class BtocUserAuthService extends AbstractServices {
 		};
 		const createdUser = await model.createUser(newUserData);
 
+		const tokenPayload = {
+			id: createdUser[0].id,
+			first_name: req.body.first_name,
+			last_name: req.body.last_name,
+			email: req.body.email,
+			phone: req.body.phone,
+			status: "active",
+			date_of_birth: req.body.date_of_birth,
+			gender: req.body.gender,
+			type: "btoc_user",
+		};
+
+		const token = Lib.createToken(
+			tokenPayload,
+			config.JWT_SECRET_H_USER,
+			"24h"
+		);
+
 		return {
 			success: true,
 			code: this.StatusCode.HTTP_OK,
 			message: "User registration successful",
+			token,
 			data: {
 				id: createdUser[0].id,
 				email: createdUser[0].email,
+				first_name: req.body.first_name,
+				last_name: req.body.last_name,
+				phone: req.body.phone,
+				status: "active",
+				date_of_birth: req.body.date_of_birth,
+				gender: req.body.gender,
 			},
 		};
 	}
@@ -75,6 +100,7 @@ class BtocUserAuthService extends AbstractServices {
 		}
 
 		const { password: hashPass, is_deleted, ...rest } = user;
+		console.log({ user });
 
 		const isPasswordValid = await Lib.compare(password, hashPass);
 		if (!isPasswordValid) {
@@ -86,8 +112,7 @@ class BtocUserAuthService extends AbstractServices {
 		}
 
 		const tokenPayload = {
-			hotel_code,
-			user_id: user.id,
+			id: user.id,
 			first_name: user.first_name,
 			last_name: user.last_name,
 			email: user.email,
@@ -120,7 +145,6 @@ class BtocUserAuthService extends AbstractServices {
 			token,
 			config.JWT_SECRET_H_USER
 		);
-
 		if (!tokenVerify) {
 			return {
 				success: false,
@@ -129,27 +153,26 @@ class BtocUserAuthService extends AbstractServices {
 			};
 		}
 
-		const { email: verifyEmail, type } = tokenVerify;
-		if (email === verifyEmail && type === OTP_TYPE_FORGET_BTOC_USER) {
-			const hashPass = await Lib.hashPass(password);
-			const model = this.Model.btocUserModel();
-			await model.updateProfile({
-				payload: { password: hashPass },
-				email,
-			});
+		console.log({ btoc: req.btoc_user });
 
-			return {
-				success: true,
-				code: this.StatusCode.HTTP_OK,
-				message: this.ResMsg.HTTP_OK,
-			};
-		} else {
+		const reservationModel = this.Model.btocUserModel();
+		const data = await reservationModel.getSingleUser({
+			email,
+		});
+		console.log({ data });
+		if (!data) {
 			return {
 				success: false,
-				code: this.StatusCode.HTTP_BAD_REQUEST,
-				message: this.ResMsg.HTTP_BAD_REQUEST,
+				code: this.StatusCode.HTTP_NOT_FOUND,
+				message: this.ResMsg.HTTP_NOT_FOUND,
 			};
 		}
+
+		return {
+			success: true,
+			code: this.StatusCode.HTTP_OK,
+			message: this.ResMsg.HTTP_OK,
+		};
 	}
 }
 

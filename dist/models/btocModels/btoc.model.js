@@ -40,29 +40,27 @@ class BtocUserModel extends schema_1.default {
                 .returning(["id", "email"]);
         });
     }
-    // get profile
-    getProfile(query) {
+    getSingleUser(query) {
         return __awaiter(this, void 0, void 0, function* () {
+            const { id, email, hotel_code } = query;
             return yield this.db("users as u")
                 .withSchema(this.BTOC_SCHEMA)
-                .select("u.id", "u.first_name", "u.last_name", "u.email", "u.phone", "u.photo", "u.status", "u.gender", "u.address", "u.date_of_birth", "city.city_name as city", "country.country_name as country", "u.is_deleted")
-                //   .joinRaw("LEFT JOIN ?? city ON city.city_code = u.city_id", [
-                //     `${this.PUBLIC_SCHEMA}.${this.TABLES.city}`,
-                //   ])
-                //   .joinRaw("LEFT JOIN ?? country ON country.id = u.country_id", [
-                //     `${this.PUBLIC_SCHEMA}.${this.TABLES.country}`,
-                //   ])
+                .select("u.id", "u.hotel_code", "u.first_name", "u.last_name", "u.email", "u.phone", "u.photo", "u.password", "u.status", "u.gender", "u.address", "u.date_of_birth", "city.city_name as city", "country.country_name as country", "u.is_deleted")
+                .joinRaw("LEFT JOIN public.city ON city.city_code = u.city_id")
+                .joinRaw("LEFT JOIN public.country ON country.id = u.country_id")
                 .modify((qb) => {
-                if (query.id)
-                    qb.where("u.id", query.id);
-                if (query.email)
-                    qb.where("u.email", query.email);
+                if (id)
+                    qb.where("u.id", id);
+                if (email)
+                    qb.where("u.email", email);
+                if (hotel_code) {
+                    qb.andWhere("u.hotel_code", hotel_code);
+                }
             })
                 .andWhere("u.is_deleted", false)
                 .first();
         });
     }
-    // update profile
     updateProfile({ payload, id, email, }) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("users")

@@ -36,7 +36,9 @@ class HelperFunction extends abstract_service_1.default {
                 if (override) {
                     dailyRates.push({
                         date: dateStr,
-                        day_name: d.toLocaleDateString("en-US", { weekday: "long" }),
+                        day_name: d.toLocaleDateString("en-US", {
+                            weekday: "long",
+                        }),
                         rate: override.rate,
                         extra_adult_rate: override.extra_adult_rate,
                         extra_child_rate: override.extra_child_rate,
@@ -47,7 +49,9 @@ class HelperFunction extends abstract_service_1.default {
                 else {
                     dailyRates.push({
                         date: dateStr,
-                        day_name: d.toLocaleDateString("en-US", { weekday: "long" }),
+                        day_name: d.toLocaleDateString("en-US", {
+                            weekday: "long",
+                        }),
                         rate: detail.base_rate,
                         extra_adult_rate: detail.extra_adult_rate,
                         extra_child_rate: detail.extra_child_rate,
