@@ -16,10 +16,13 @@ class BtocHotelRouter {
     }
     callRouter() {
         this.router
-            .route("/search-availability")
-            .post(this.controller.searchAvailability);
-        this.router.route("/recheck").post(this.controller.recheck);
-        this.router.route("/booking").post(this.controller.booking);
+            .route("/booking")
+            .post(this.controller.booking)
+            .get(this.controller.getAllBooking);
+        this.router
+            .route("/booking/:ref_id")
+            .get(this.controller.getSingleBooking)
+            .delete(this.controller.cancelSingleBooking);
     }
 }
 exports.BtocHotelRouter = BtocHotelRouter;

@@ -537,7 +537,7 @@ class SettingValidator {
       "string.base": "Please enter valid details",
     }),
 
-    is_default: Joi.string().valid("0", "1").optional().messages({
+    is_default: Joi.boolean().optional().messages({
       "any.only": "Please enter valid default value",
     }),
 

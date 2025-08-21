@@ -40,8 +40,20 @@ class BtocHotelController extends abstract_controller_1.default {
             const _b = yield this.service.recheck(req), { code } = _b, data = __rest(_b, ["code"]);
             res.status(code).json(data);
         }));
-        this.booking = this.asyncWrapper.wrap({ bodySchema: this.validator.recheckValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+        this.booking = this.asyncWrapper.wrap({ bodySchema: this.validator.bookingValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
             const _c = yield this.service.booking(req), { code } = _c, data = __rest(_c, ["code"]);
+            res.status(code).json(data);
+        }));
+        this.getAllBooking = this.asyncWrapper.wrap({}, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _d = yield this.service.getAllBooking(req), { code } = _d, data = __rest(_d, ["code"]);
+            res.status(code).json(data);
+        }));
+        this.getSingleBooking = this.asyncWrapper.wrap({ paramSchema: this.commonValidator.singleParamStringValidator("ref_id") }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _e = yield this.service.getSingleBooking(req), { code } = _e, data = __rest(_e, ["code"]);
+            res.status(code).json(data);
+        }));
+        this.cancelSingleBooking = this.asyncWrapper.wrap({ paramSchema: this.commonValidator.singleParamStringValidator("ref_id") }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _f = yield this.service.cancelSingleBooking(req), { code } = _f, data = __rest(_f, ["code"]);
             res.status(code).json(data);
         }));
     }

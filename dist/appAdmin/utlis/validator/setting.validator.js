@@ -439,7 +439,7 @@ class SettingValidator {
             details: joi_1.default.string().optional().messages({
                 "string.base": "Please enter valid details",
             }),
-            is_default: joi_1.default.string().valid("0", "1").optional().messages({
+            is_default: joi_1.default.boolean().optional().messages({
                 "any.only": "Please enter valid default value",
             }),
             bank_charge: joi_1.default.number().integer().optional().messages({

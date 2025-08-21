@@ -12,9 +12,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ReservationModel = void 0;
+exports.BtocReservationModel = void 0;
 const schema_1 = __importDefault(require("../../utils/miscellaneous/schema"));
-class ReservationModel extends schema_1.default {
+class BtocReservationModel extends schema_1.default {
     constructor(db) {
         super();
         this.db = db;
@@ -942,5 +942,5 @@ class ReservationModel extends schema_1.default {
         });
     }
 }
-exports.ReservationModel = ReservationModel;
-//# sourceMappingURL=reservation.model%20copy.js.map
+exports.BtocReservationModel = BtocReservationModel;
+//# sourceMappingURL=btoc.reservation.model.js.map
