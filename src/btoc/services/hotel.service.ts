@@ -235,7 +235,7 @@ export class BtocHotelService extends AbstractServices {
     if (
       data.status !== "pending" &&
       data.booking_type === "B" &&
-      data.payment_status === "unpaid"
+      (data.payment_status === "unpaid" || !data.payment_status)
     ) {
       await this.BtocModels.btocReservationModel().cancelSingleBooking({
         hotel_code,
@@ -246,14 +246,14 @@ export class BtocHotelService extends AbstractServices {
       return {
         success: false,
         code: this.StatusCode.HTTP_BAD_REQUEST,
-        message: "Booking cannot be canceled",
+        message:
+          "Booking cannot be canceled, Only pending bookings can be canceled",
       };
     }
 
     return {
       success: true,
       code: this.StatusCode.HTTP_OK,
-      data,
     };
   }
 }

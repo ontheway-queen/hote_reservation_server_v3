@@ -584,8 +584,7 @@ export class BtocReservationModel extends Schema {
       .where("hotel_code", hotel_code)
       .update({ status: "canceled" })
       .andWhere("booking_reference", ref_id)
-      .andWhere("created_by", user_id)
-      .first();
+      .andWhere("created_by", user_id);
   }
 
   public async getLastBooking() {
