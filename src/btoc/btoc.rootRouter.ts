@@ -2,33 +2,43 @@ import { Router } from "express";
 import AuthChecker from "../common/middleware/authChecker/authChecker";
 import { BtocHotelRouter } from "./routers/btoc.hotel.router";
 import { BtocHotelController } from "./controllers/btoc.hotel.controller";
+import { BtocConfigRouter } from "./routers/btocConfig.router";
 
 export class BtocRootRouter {
-  public router = Router();
-  public authChecker = new AuthChecker();
-  private controller = new BtocHotelController();
+	public router = Router();
+	public authChecker = new AuthChecker();
+	private controller = new BtocHotelController();
 
-  constructor() {
-    this.callRouter();
-  }
+	constructor() {
+		this.callRouter();
+	}
 
-  private callRouter() {
-    this.router
-      .route("/hotel/search-availability")
-      .post(
-        this.authChecker.whiteLabelTokenVerfiy,
-        this.controller.searchAvailability
-      );
+	private callRouter() {
+		this.router
+			.route("/hotel/search-availability")
+			.post(
+				this.authChecker.whiteLabelTokenVerfiy,
+				this.controller.searchAvailability
+			);
 
-    this.router
-      .route("/hotel/recheck")
-      .post(this.authChecker.whiteLabelTokenVerfiy, this.controller.recheck);
+		this.router
+			.route("/hotel/recheck")
+			.post(
+				this.authChecker.whiteLabelTokenVerfiy,
+				this.controller.recheck
+			);
 
-    this.router.use(
-      "/hotel",
-      this.authChecker.whiteLabelTokenVerfiy,
-      this.authChecker.btocUserAuthChecker,
-      new BtocHotelRouter().router
-    );
-  }
+		this.router.use(
+			"/hotel",
+			this.authChecker.whiteLabelTokenVerfiy,
+			this.authChecker.btocUserAuthChecker,
+			new BtocHotelRouter().router
+		);
+
+		this.router.use(
+			"/configuration",
+			this.authChecker.whiteLabelTokenVerfiy,
+			new BtocConfigRouter().router
+		);
+	}
 }

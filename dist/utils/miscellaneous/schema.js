@@ -14,6 +14,7 @@ class Schema {
             blood_group: "blood_group",
             months: "months",
             accounts: "accounts",
+            room_types: "room_types",
         };
     }
 }
