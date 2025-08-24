@@ -161,6 +161,7 @@ class AuthChecker extends abstract_service_1.default {
         this.whiteLabelTokenVerfiy = (req, res, next) => __awaiter(this, void 0, void 0, function* () {
             try {
                 const wl_token = req.headers.wl_token;
+                console.log({ wl_token });
                 if (!wl_token) {
                     return res
                         .status(statusCode_1.default.HTTP_UNAUTHORIZED)

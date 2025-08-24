@@ -205,6 +205,7 @@ class AuthChecker extends AbstractServices {
   ) => {
     try {
       const wl_token: string = req.headers.wl_token as string;
+      console.log({ wl_token });
 
       if (!wl_token) {
         return res
