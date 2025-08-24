@@ -161,6 +161,126 @@ class B2cConfigurationModel extends schema_1.default {
                 .update(payload);
         });
     }
+    // ======================== Service Content ================================ //
+    createHotelServiceContent(payload) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("hotel_service_content")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .insert(payload, "id");
+        });
+    }
+    getSingleServiceContent(query) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("hotel_service_content")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .select("*")
+                .modify((qb) => {
+                if (query.id) {
+                    qb.andWhere("id", query.id);
+                }
+                if (query.hotel_code) {
+                    qb.andWhere("hotel_code", query.hotel_code);
+                }
+            })
+                .first();
+        });
+    }
+    getHotelServiceContentWithServices(query) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("hotel_service_content as hsc")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .select("hsc.id", "hsc.hotel_code", "hsc.title", "hsc.description", this.db.raw(`
+        COALESCE(
+          json_agg(
+            json_build_object(
+              'id', hs.id,
+              'icon', hs.icon,
+              'title', hs.title,
+              'description', hs.description
+            )
+          ) FILTER (WHERE hs.id IS NOT NULL),
+          '[]'
+        ) as services
+      `))
+                .leftJoin("hotel_services as hs", "hs.hotel_code", "hsc.hotel_code")
+                .modify((qb) => {
+                if (query.id) {
+                    qb.andWhere("hsc.id", query.id);
+                }
+                if (query.hotel_code) {
+                    qb.andWhere("hsc.hotel_code", query.hotel_code);
+                }
+            })
+                .groupBy("hsc.id")
+                .first();
+        });
+    }
+    updateServiceContent(payload, query) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("hotel_service_content")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .update(payload)
+                .modify((qb) => {
+                if (query.hotel_code) {
+                    qb.andWhere("hotel_code", query.hotel_code);
+                }
+            });
+        });
+    }
+    // ======================== Services ================================ //
+    createHotelService(payload) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("hotel_services")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .insert(payload, "id");
+        });
+    }
+    getSingleService(query) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("hotel_services")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .select("*")
+                .modify((qb) => {
+                if (query.id) {
+                    qb.andWhere("id", query.id);
+                }
+                if (query.title) {
+                    qb.andWhere("title", "ilike", `%${query.title}%`);
+                }
+            })
+                .first();
+        });
+    }
+    getAllServices(query) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const qb = this.db("hotel_services")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .modify((qb) => {
+                if (query.title) {
+                    qb.andWhere("title", "ilike", `%${query.title}%`);
+                }
+            })
+                .andWhere("is_deleted", false);
+            const data = yield qb
+                .clone()
+                .limit(query.limit)
+                .offset(query.skip)
+                .orderBy("id", "desc");
+            const total = yield qb.clone().count("* as count").first();
+            return {
+                data,
+                total: Number((total === null || total === void 0 ? void 0 : total.count) || 0),
+            };
+        });
+    }
+    updateHotelService(payload, query) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("hotel_services")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .update(payload)
+                .where("id", query.id);
+        });
+    }
 }
 exports.default = B2cConfigurationModel;
 //# sourceMappingURL=b2cConfigurationModel.js.map

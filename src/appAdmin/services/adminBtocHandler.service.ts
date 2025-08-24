@@ -1,5 +1,6 @@
 import { Request } from "express";
 import AbstractServices from "../../abstarcts/abstract.service";
+import CustomError from "../../utils/lib/customEror";
 
 class AdminBtocHandlerService extends AbstractServices {
 	constructor() {
@@ -514,6 +515,251 @@ class AdminBtocHandlerService extends AbstractServices {
 				success: true,
 				code: this.StatusCode.HTTP_OK,
 				message: "Hotel configuration updated successfully",
+			};
+		});
+	}
+
+	// ======================== Service Content ================================ //
+	public async createHotelServiceContent(req: Request) {
+		return await this.db.transaction(async (trx) => {
+			const { hotel_code } = req.hotel_admin;
+			const b2cConfigurationModel = this.Model.b2cConfigurationModel(trx);
+
+			const serviceContent =
+				await b2cConfigurationModel.getSingleServiceContent({
+					hotel_code,
+				});
+
+			if (serviceContent) {
+				return {
+					success: false,
+					code: this.StatusCode.HTTP_CONFLICT,
+					message: "Service content already exists",
+				};
+			}
+
+			await b2cConfigurationModel.createHotelServiceContent({
+				hotel_code,
+				title: req.body.title,
+				description: req.body.description,
+			});
+
+			return {
+				success: true,
+				code: this.StatusCode.HTTP_SUCCESSFUL,
+				message: "Service content created successfully.",
+			};
+		});
+	}
+
+	public async updateHotelServiceContent(req: Request) {
+		return await this.db.transaction(async (trx) => {
+			const { hotel_code } = req.hotel_admin;
+			const b2cConfigurationModel = this.Model.b2cConfigurationModel(trx);
+
+			const serviceContent =
+				await b2cConfigurationModel.getSingleServiceContent({
+					hotel_code,
+				});
+			console.log({ hotel_code });
+			if (!serviceContent) {
+				return {
+					success: false,
+					code: this.StatusCode.HTTP_CONFLICT,
+					message: "Service content not found",
+				};
+			}
+
+			await b2cConfigurationModel.updateServiceContent(
+				{ title: req.body.title, description: req.body.description },
+				{ hotel_code }
+			);
+
+			return {
+				success: true,
+				code: this.StatusCode.HTTP_SUCCESSFUL,
+				message: "Service content updated successfully.",
+			};
+		});
+	}
+
+	public async getHotelContentService(req: Request) {
+		return await this.db.transaction(async (trx) => {
+			const { hotel_code } = req.hotel_admin;
+			const { search, limit, skip } = req.query;
+			const b2cConfigurationModel = this.Model.b2cConfigurationModel(trx);
+
+			const serviceContent =
+				await b2cConfigurationModel.getHotelServiceContentWithServices({
+					hotel_code,
+					search: search as string,
+					limit: Number(limit),
+					skip: Number(skip),
+				});
+
+			if (!serviceContent) {
+				return {
+					success: false,
+					code: this.StatusCode.HTTP_CONFLICT,
+					message: "Service content not found",
+				};
+			}
+
+			return {
+				success: true,
+				code: this.StatusCode.HTTP_SUCCESSFUL,
+				message: "Service content fetched successfully.",
+				data: serviceContent,
+			};
+		});
+	}
+
+	// ======================== Services ================================ //
+	public async createHotelService(req: Request) {
+		return await this.db.transaction(async (trx) => {
+			const { hotel_code } = req.hotel_admin;
+			const files = (req.files as Express.Multer.File[]) || [];
+
+			if (Array.isArray(files) && files.length > 0) {
+				req.body["icon"] = files[0].filename;
+			}
+
+			const b2cConfigurationModel = this.Model.b2cConfigurationModel(trx);
+
+			const service = await b2cConfigurationModel.getSingleService({
+				title: req.body.title,
+			});
+
+			if (service) {
+				return {
+					success: false,
+					code: this.StatusCode.HTTP_CONFLICT,
+					message: "Service already exists",
+				};
+			}
+
+			await b2cConfigurationModel.createHotelService({
+				...req.body,
+				hotel_code,
+			});
+
+			return {
+				success: true,
+				code: this.StatusCode.HTTP_SUCCESSFUL,
+				message: "Service created successfully.",
+			};
+		});
+	}
+
+	public async getAllServices(req: Request) {
+		const { title, limit, skip } = req.query;
+		const b2cConfigurationModel = this.Model.b2cConfigurationModel();
+
+		const data = await b2cConfigurationModel.getAllServices({
+			title: title as string,
+			limit: Number(limit),
+			skip: Number(skip),
+		});
+
+		return {
+			success: true,
+			code: this.StatusCode.HTTP_SUCCESSFUL,
+			message: "Services retrieved successfully.",
+			...data,
+		};
+	}
+
+	public async getSingleService(req: Request) {
+		const id = Number(req.params.id);
+		const b2cConfigurationModel = this.Model.b2cConfigurationModel();
+
+		const data = await b2cConfigurationModel.getSingleService({ id });
+
+		if (!data) {
+			throw new CustomError(
+				"Hotel Service not found",
+				this.StatusCode.HTTP_NOT_FOUND
+			);
+		}
+
+		return {
+			success: true,
+			code: this.StatusCode.HTTP_SUCCESSFUL,
+			message: "Service retrieved successfully.",
+			data,
+		};
+	}
+
+	public async updateService(req: Request) {
+		return await this.db.transaction(async (trx) => {
+			const id = Number(req.params.id);
+			const files = (req.files as Express.Multer.File[]) || [];
+
+			if (Array.isArray(files) && files.length > 0) {
+				req.body["icon"] = files[0].filename;
+			}
+
+			const b2cConfigurationModel = this.Model.b2cConfigurationModel(trx);
+
+			const service = await b2cConfigurationModel.getSingleService({
+				id,
+			});
+
+			if (!service) {
+				return {
+					success: false,
+					code: this.StatusCode.HTTP_CONFLICT,
+					message: "Service not found",
+				};
+			}
+
+			const isServicTitleExists =
+				await b2cConfigurationModel.getSingleService({
+					title: req.body.title,
+				});
+
+			if (isServicTitleExists) {
+				return {
+					success: false,
+					code: this.StatusCode.HTTP_CONFLICT,
+					message: "Service title already exists",
+				};
+			}
+
+			await b2cConfigurationModel.updateHotelService(req.body, { id });
+
+			return {
+				success: true,
+				code: this.StatusCode.HTTP_SUCCESSFUL,
+				message: "Service update successfully.",
+			};
+		});
+	}
+
+	public async deleteService(req: Request) {
+		return await this.db.transaction(async (trx) => {
+			const id = Number(req.params.id);
+
+			const b2cConfigurationModel = this.Model.b2cConfigurationModel(trx);
+
+			const service = await b2cConfigurationModel.getSingleService({
+				id,
+			});
+
+			if (!service) {
+				return {
+					success: false,
+					code: this.StatusCode.HTTP_CONFLICT,
+					message: "Service not found",
+				};
+			}
+
+			await b2cConfigurationModel.updateHotelService(req.body, { id });
+
+			return {
+				success: true,
+				code: this.StatusCode.HTTP_SUCCESSFUL,
+				message: "Service deleted successfully.",
 			};
 		});
 	}

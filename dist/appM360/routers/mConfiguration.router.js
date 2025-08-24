@@ -12,7 +12,9 @@ class MConfigurationRouter extends abstract_router_1.default {
         this.callRouter();
     }
     callRouter() {
-        this.router.route("/accommodation").get(this.controller.getAllAccomodation);
+        this.router
+            .route("/accommodation")
+            .get(this.controller.getAllAccomodation);
         this.router
             .route("/accommodation/:id")
             .get(this.controller.getAllAccomodation);
