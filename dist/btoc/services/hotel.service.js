@@ -206,7 +206,8 @@ class BtocHotelService extends abstract_service_1.default {
                     message: "Booking not found",
                 };
             }
-            if (data.status !== "pending" &&
+            console.log({ data });
+            if (data.status == "pending" &&
                 data.booking_type === "B" &&
                 (data.payment_status === "unpaid" || !data.payment_status)) {
                 yield this.BtocModels.btocReservationModel().cancelSingleBooking({

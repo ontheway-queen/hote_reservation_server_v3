@@ -232,8 +232,9 @@ export class BtocHotelService extends AbstractServices {
       };
     }
 
+    console.log({ data });
     if (
-      data.status !== "pending" &&
+      data.status == "pending" &&
       data.booking_type === "B" &&
       (data.payment_status === "unpaid" || !data.payment_status)
     ) {
