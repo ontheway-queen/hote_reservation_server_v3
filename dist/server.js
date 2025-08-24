@@ -7,4 +7,5 @@ const app_1 = __importDefault(require("./app/app"));
 const config_1 = __importDefault(require("./config/config"));
 const app = new app_1.default(config_1.default.PORT);
 app.startServer();
+// this is test
 //# sourceMappingURL=server.js.map
