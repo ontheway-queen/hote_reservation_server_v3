@@ -374,8 +374,8 @@ class RoomModel extends Schema {
                 JSON_BUILD_OBJECT(
                   'booking_id', b.id,
                   'booking_reference', b.booking_reference,
-                  'check_in', b.check_in,
-                  'check_out', b.check_out,
+                  'check_in', br.check_in,
+                  'check_out', br.check_out,
                   'booking_type', b.booking_type,
                   'booking_status', b.status,
                   'guest_first_name', g.first_name,
@@ -387,11 +387,11 @@ class RoomModel extends Schema {
               JOIN ${this.RESERVATION_SCHEMA}.bookings b ON b.id = br.booking_id
               LEFT JOIN ${this.RESERVATION_SCHEMA}.guests g ON g.id = b.guest_id
               WHERE br.room_id = r.id
-                AND b.check_in <= ?
-                AND b.check_out >= ?
+                AND br.check_in <= ?
+                AND br.check_out >= ?
                 AND b.hotel_code = r.hotel_code
                 AND b.booking_type = ?
-                AND (b.status = ? OR b.status = ?)
+                AND (br.status = ? OR br.status = ?)
             ), '[]')
           ) AS room_obj
         FROM ${this.RESERVATION_SCHEMA}.rooms r

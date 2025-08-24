@@ -1007,12 +1007,22 @@ export class ReservationService2 extends AbstractServices {
         exclude_booking_id: booking_id,
       });
 
-      if (!roomList.some((r) => r.room_id === room_id)) {
-        return {
-          success: false,
-          code: this.StatusCode.HTTP_CONFLICT,
-          message: `Room #${room_id} is not free for the new dates.`,
-        };
+      console.log({ roomList });
+
+      // get single room
+      const singleRoom = await this.Model.RoomModel(trx).getSingleRoom(
+        hotel_code,
+        room_id
+      );
+
+      if (roomList.length) {
+        if (!roomList.some((r) => r.room_id === room_id)) {
+          return {
+            success: false,
+            code: this.StatusCode.HTTP_CONFLICT,
+            message: `Room #${singleRoom[0].room_name} is not free for the new dates.`,
+          };
+        }
       }
 
       console.log({ booking });
