@@ -3,7 +3,6 @@ import HotelRouter from "./hotel.router";
 import BankNameRouter from "./setting.bankname.router";
 import DepartmentSettingRouter from "./setting.department.router";
 import DesignationSettingRouter from "./setting.designation.router";
-import HallSettingRouter from "./setting.hall.router";
 import PayrollMonthSettingRouter from "./setting.payroll-month.router";
 import RoomSettingRouter from "./setting.room.router";
 import RoomRatesRouter from "./setting.room_rates.router ";
@@ -29,8 +28,6 @@ class SettingRouter extends AbstractRouter {
     this.router.use("/department", new DepartmentSettingRouter().router);
 
     this.router.use("/designation", new DesignationSettingRouter().router);
-
-    this.router.use("/hall", new HallSettingRouter().router);
 
     this.router.use("/payroll-month", new PayrollMonthSettingRouter().router);
   }

@@ -31,6 +31,15 @@ class SettingRootRouter extends abstract_router_1.default {
         this.router
             .route("/child-age-policies")
             .get(this.controller.getChildAgePolicies);
+        // -------------------- Payment Gateway --------------//
+        this.router
+            .route("/payment-gateway")
+            .post(this.uploader.cloudUploadRaw("payment_gateway_logo"), this.controller.createPaymentGatewaySetting)
+            .get(this.controller.getAllPaymentGatewaySetting);
+        // update and delete payment name
+        this.router
+            .route("/payment-gateway/:id")
+            .patch(this.uploader.cloudUploadRaw("payment_gateway_logo"), this.controller.updatePaymentGatewaySetting);
     }
 }
 exports.default = SettingRootRouter;

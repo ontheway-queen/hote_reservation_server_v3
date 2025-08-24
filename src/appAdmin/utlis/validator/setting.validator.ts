@@ -1,4 +1,8 @@
 import Joi, { build } from "joi";
+import {
+  PAYMENT_CHARGE_TYPE,
+  PAYMENT_TYPE,
+} from "../interfaces/payment.gateway.interface";
 
 class SettingValidator {
   // create room Type validation
@@ -483,6 +487,70 @@ class SettingValidator {
     building_no: Joi.number().required(),
     description: Joi.string().allow("").optional(),
     status: Joi.boolean().optional(),
+  });
+
+  // --------------------- Payment gateway ---------------------//
+  public createPaymentInfoSchema = Joi.object({
+    type: Joi.string()
+      .valid(...Object.values(PAYMENT_TYPE))
+      .optional()
+      .messages({
+        "string.base": "Please enter valid type",
+        "any.only": "Please enter valid type",
+      }),
+    title: Joi.string().required(),
+    details: Joi.string().required().messages({
+      "any.required": "Please enter valid details",
+      "string.base": "Please enter valid details",
+    }),
+
+    is_default: Joi.boolean().required().messages({
+      "any.required": "Please enter valid default value",
+      "any.only": "Please enter valid default value",
+    }),
+
+    bank_charge: Joi.number().integer().optional().messages({
+      "any.required": "Please enter valid bank charge",
+      "number.base": "Please enter valid bank charge",
+    }),
+
+    bank_charge_type: Joi.string()
+      .valid(PAYMENT_CHARGE_TYPE.FLAT, PAYMENT_CHARGE_TYPE.PERCENTAGE)
+      .optional()
+      .messages({
+        "any.required": "Please enter valid bank charge type",
+        "any.only": "Please enter valid bank charge type",
+      }),
+  });
+
+  public updatePaymentInfoSchema = Joi.object({
+    type: Joi.string()
+      .valid(...Object.values(PAYMENT_TYPE))
+      .optional()
+      .messages({
+        "string.base": "Please enter valid type",
+        "any.only": "Please enter valid type",
+      }),
+    title: Joi.string().required(),
+
+    details: Joi.string().optional().messages({
+      "string.base": "Please enter valid details",
+    }),
+
+    is_default: Joi.boolean().optional().messages({
+      "any.only": "Please enter valid default value",
+    }),
+
+    bank_charge: Joi.number().integer().optional().messages({
+      "number.base": "Please enter valid bank charge",
+    }),
+
+    bank_charge_type: Joi.string()
+      .valid(...Object.values(PAYMENT_CHARGE_TYPE))
+      .optional()
+      .messages({
+        "any.only": "Please enter valid bank charge type",
+      }),
   });
 }
 export default SettingValidator;

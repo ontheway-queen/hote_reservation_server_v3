@@ -97,4 +97,40 @@ export class SettingRootController extends AbstractController {
       res.status(code).json(data);
     }
   );
+
+  // create PaymentGatewaySetting
+  public createPaymentGatewaySetting = this.asyncWrapper.wrap(
+    { bodySchema: this.validator.createPaymentInfoSchema },
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.createPaymentGatewaySetting(
+        req
+      );
+      res.status(code).json(data);
+    }
+  );
+
+  // update PaymentGatewaySetting
+  public updatePaymentGatewaySetting = this.asyncWrapper.wrap(
+    {
+      bodySchema: this.validator.updatePaymentInfoSchema,
+      paramSchema: this.commonValidator.singleParamValidator("id"),
+    },
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.updatePaymentGatewaySetting(
+        req
+      );
+      res.status(code).json(data);
+    }
+  );
+
+  // get all PaymentGatewaySetting
+  public getAllPaymentGatewaySetting = this.asyncWrapper.wrap(
+    {},
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.getAllPaymentGatewaySetting(
+        req
+      );
+      res.status(code).json(data);
+    }
+  );
 }
