@@ -322,16 +322,13 @@ class ReservationModel extends schema_1.default {
         var _a, _b;
         return __awaiter(this, void 0, void 0, function* () {
             const endCheckInDate = checkin_to ? new Date(checkin_to) : null;
-            // if (endCheckInDate) endCheckInDate.setDate(endCheckInDate.getDate() + 1);
             const endCheckOutDate = checkout_to ? new Date(checkout_to) : null;
-            // if (endCheckOutDate) endCheckOutDate.setDate(endCheckOutDate.getDate() + 1);
             const endBookedDate = booked_to ? new Date(booked_to) : null;
-            // if (endBookedDate) endBookedDate.setDate(endBookedDate.getDate() + 1);
             const limitNum = limit ? Number(limit) : 50;
             const offsetNum = skip ? Number(skip) : 0;
             const data = yield this.db("bookings as b")
                 .withSchema(this.RESERVATION_SCHEMA)
-                .select("b.id", "b.hotel_code", "b.booking_reference", this.db.raw(`TO_CHAR(b.check_in, 'YYYY-MM-DD') as check_in`), this.db.raw(`TO_CHAR(b.check_out, 'YYYY-MM-DD') as check_out`), this.db.raw(`TO_CHAR(b.booking_date, 'YYYY-MM-DD') as booking_date`), "b.booking_type", "b.status", "b.is_individual_booking", "b.total_amount", "b.vat", "b.discount_amount", "b.service_charge", "b.source_id", "src.name as source_name", "b.company_name", "b.pickup", "b.pickup_from", "b.pickup_time", "b.drop", "b.drop_time", "b.drop_to", "b.visit_purpose", "b.comments", "g.id as guest_id", "g.first_name", "g.last_name", "g.email as guest_email", "g.phone as guest_phone", this.db.raw(`(
+                .select("b.id", "b.hotel_code", "b.booking_reference", this.db.raw(`TO_CHAR(b.check_in, 'YYYY-MM-DD') as check_in`), this.db.raw(`TO_CHAR(b.check_out, 'YYYY-MM-DD') as check_out`), this.db.raw(`TO_CHAR(b.booking_date, 'YYYY-MM-DD') as booking_date`), "b.booking_type", "b.status", "b.is_individual_booking", "b.total_amount", "b.vat", "b.discount_amount", "b.service_charge", "b.source_id", "src.name as source_name", "b.company_name", "b.pickup", "b.pickup_from", "b.pickup_time", "b.drop", "b.drop_time", "b.drop_to", "b.book_from", "b.visit_purpose", "b.comments", "g.id as guest_id", "g.first_name", "g.last_name", "g.email as guest_email", "g.phone as guest_phone", this.db.raw(`(
             SELECT JSON_AGG(JSON_BUILD_OBJECT(
               'id', br.id,
               'room_type_id', br.room_type_id,
@@ -388,6 +385,103 @@ class ReservationModel extends schema_1.default {
                 .leftJoin("sources as src", "b.source_id", "src.id")
                 .leftJoin("guests as g", "b.guest_id", "g.id")
                 .where("b.hotel_code", hotel_code)
+                .andWhere(function () {
+                if (checkin_from && checkin_to) {
+                    this.andWhereBetween("b.check_in", [checkin_from, endCheckInDate]);
+                }
+                if (checkout_from && checkout_to) {
+                    this.andWhereBetween("b.check_out", [checkout_from, endCheckOutDate]);
+                }
+                if (booked_from && booked_to) {
+                    this.andWhereBetween("b.booking_date", [booked_from, endBookedDate]);
+                }
+                if (search) {
+                    this.andWhere("b.booking_reference", "ilike", `%${search}%`)
+                        .orWhere("g.first_name", "ilike", `%${search}%`)
+                        .orWhere("g.email", "ilike", `%${search}%`);
+                }
+                if (status) {
+                    this.andWhere("b.status", status);
+                }
+                if (booking_type) {
+                    this.andWhere("b.booking_type", booking_type);
+                }
+            });
+            return {
+                data,
+                total: ((_a = total[0]) === null || _a === void 0 ? void 0 : _a.total) ? parseInt((_b = total[0]) === null || _b === void 0 ? void 0 : _b.total) : 0,
+            };
+        });
+    }
+    getAllBtocReservation({ hotel_code, checkin_from, checkin_to, checkout_from, checkout_to, booked_from, booked_to, limit, search, skip, booking_type, status, }) {
+        var _a, _b;
+        return __awaiter(this, void 0, void 0, function* () {
+            const endCheckInDate = checkin_to ? new Date(checkin_to) : null;
+            const endCheckOutDate = checkout_to ? new Date(checkout_to) : null;
+            const endBookedDate = booked_to ? new Date(booked_to) : null;
+            const limitNum = limit ? Number(limit) : 50;
+            const offsetNum = skip ? Number(skip) : 0;
+            const data = yield this.db("bookings as b")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .select("b.id", "b.hotel_code", "b.booking_reference", this.db.raw(`TO_CHAR(b.check_in, 'YYYY-MM-DD') as check_in`), this.db.raw(`TO_CHAR(b.check_out, 'YYYY-MM-DD') as check_out`), this.db.raw(`TO_CHAR(b.booking_date, 'YYYY-MM-DD') as booking_date`), "b.booking_type", "b.status", "b.is_individual_booking", "b.total_amount", "b.vat", "b.discount_amount", "b.service_charge", "b.source_id", "src.name as source_name", "b.company_name", "b.pickup", "b.pickup_from", "b.pickup_time", "b.drop", "b.drop_time", "b.drop_to", "b.book_from", "b.visit_purpose", "b.comments", "g.id as guest_id", "g.first_name", "g.last_name", "g.email as guest_email", "g.phone as guest_phone", this.db.raw(`(
+            SELECT JSON_AGG(JSON_BUILD_OBJECT(
+              'id', br.id,
+              'room_type_id', br.room_type_id,
+              'room_type_name', rt.name,
+              'room_id', br.room_id,
+              'room_name', r.room_name,
+              'adults', br.adults,
+              'children', br.children,
+              'infant', br.infant
+             
+            ))
+            FROM ?? AS br
+            LEFT JOIN ?? AS rt ON br.room_type_id = rt.id
+            LEFT JOIN ?? AS r ON br.room_id = r.id
+            WHERE br.booking_id = b.id
+          ) AS booking_rooms`, [
+                "hotel_reservation.booking_rooms",
+                "hotel_reservation.room_types",
+                "hotel_reservation.rooms",
+            ]))
+                .leftJoin("sources as src", "b.source_id", "src.id")
+                .leftJoin("guests as g", "b.guest_id", "g.id")
+                .where("b.hotel_code", hotel_code)
+                .andWhere("b.book_from", "web")
+                .andWhere(function () {
+                if (checkin_from && checkin_to) {
+                    this.andWhereBetween("b.check_in", [checkin_from, endCheckInDate]);
+                }
+                if (checkout_from && checkout_to) {
+                    this.andWhereBetween("b.check_out", [checkout_from, endCheckOutDate]);
+                }
+                if (booked_from && booked_to) {
+                    this.andWhereBetween("b.booking_date", [booked_from, endBookedDate]);
+                }
+                if (search) {
+                    this.andWhere(function () {
+                        this.where("b.booking_reference", "ilike", `%${search}%`)
+                            .orWhere("g.first_name", "ilike", `%${search}%`)
+                            .orWhere("g.email", "ilike", `%${search}%`);
+                    });
+                }
+                if (status) {
+                    this.andWhere("b.status", status);
+                }
+                if (booking_type) {
+                    this.andWhere("b.booking_type", booking_type);
+                }
+            })
+                .orderBy("b.id", "desc")
+                .limit(limitNum)
+                .offset(offsetNum);
+            const total = yield this.db("bookings as b")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .count("b.id as total")
+                .leftJoin("sources as src", "b.source_id", "src.id")
+                .leftJoin("guests as g", "b.guest_id", "g.id")
+                .where("b.hotel_code", hotel_code)
+                .andWhere("b.book_from", "web")
                 .andWhere(function () {
                 if (checkin_from && checkin_to) {
                     this.andWhereBetween("b.check_in", [checkin_from, endCheckInDate]);

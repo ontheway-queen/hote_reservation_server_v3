@@ -1,3 +1,4 @@
+import { title } from "process";
 import { Request } from "express";
 import AbstractServices from "../../abstarcts/abstract.service";
 import {
@@ -92,7 +93,6 @@ export class BtocHotelService extends AbstractServices {
         holder,
       } = req.body as IBookingRequestBody;
 
-      const totalRequested = rooms.length;
       const nights = HelperFunction.calculateNights(checkin, checkout);
       const recheck = await this.BtocModels.btocReservationModel().recheck({
         hotel_code,
@@ -131,35 +131,38 @@ export class BtocHotelService extends AbstractServices {
       });
 
       const booked_room_types: IBookedRoomTypeRequest[] = [];
-      const bookedRooms: IBRoomGuest[] = [];
 
       rooms.forEach((room) => {
-        bookedRooms.push({
+        const guestRoom: IBRoomGuest = {
           check_in: checkin,
           check_out: checkout,
           adults: room.adults,
           children: room.children_ages.length,
-
           rate: {
             base_rate: recheck.rate.base_rate,
             changed_rate: recheck.rate.base_rate,
           },
           guest_info: room?.paxes?.map((pax) => ({
+            title: pax.title,
             first_name: pax.name,
             last_name: pax.surname,
             is_room_primary_guest: false,
-            type: pax.type === "AD" ? "adult" : "child",
+            type:
+              pax.type === "AD"
+                ? "adult"
+                : pax.type === "CH"
+                ? "child"
+                : "infant",
           })),
-        });
+        };
 
         booked_room_types.push({
           room_type_id,
           rate_plan_id,
-          rooms: bookedRooms,
+          rooms: [guestRoom],
         });
       });
 
-      console.log({ booked_room_types });
       // Insert booking rooms
       await sub.insertBookingRooms({
         booked_room_types,

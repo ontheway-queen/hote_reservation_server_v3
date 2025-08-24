@@ -78,7 +78,6 @@ class BtocHotelService extends abstract_service_1.default {
             return this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
                 const { hotel_code } = req.web_token;
                 const { checkin, checkout, room_type_id, rate_plan_id, rooms, special_requests, holder, } = req.body;
-                const totalRequested = rooms.length;
                 const nights = helperFunction_1.HelperFunction.calculateNights(checkin, checkout);
                 const recheck = yield this.BtocModels.btocReservationModel().recheck({
                     hotel_code,
@@ -113,10 +112,9 @@ class BtocHotelService extends abstract_service_1.default {
                     sub_total: recheck.price,
                 });
                 const booked_room_types = [];
-                const bookedRooms = [];
                 rooms.forEach((room) => {
                     var _a;
-                    bookedRooms.push({
+                    const guestRoom = {
                         check_in: checkin,
                         check_out: checkout,
                         adults: room.adults,
@@ -126,19 +124,23 @@ class BtocHotelService extends abstract_service_1.default {
                             changed_rate: recheck.rate.base_rate,
                         },
                         guest_info: (_a = room === null || room === void 0 ? void 0 : room.paxes) === null || _a === void 0 ? void 0 : _a.map((pax) => ({
+                            title: pax.title,
                             first_name: pax.name,
                             last_name: pax.surname,
                             is_room_primary_guest: false,
-                            type: pax.type === "AD" ? "adult" : "child",
+                            type: pax.type === "AD"
+                                ? "adult"
+                                : pax.type === "CH"
+                                    ? "child"
+                                    : "infant",
                         })),
-                    });
+                    };
                     booked_room_types.push({
                         room_type_id,
                         rate_plan_id,
-                        rooms: bookedRooms,
+                        rooms: [guestRoom],
                     });
                 });
-                console.log({ booked_room_types });
                 // Insert booking rooms
                 yield sub.insertBookingRooms({
                     booked_room_types,

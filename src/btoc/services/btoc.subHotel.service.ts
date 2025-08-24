@@ -1,3 +1,4 @@
+import { title } from "process";
 import { BtocReservationModel } from "../../models/reservationPanel/BtocModel/btoc.reservation.model";
 import { Knex } from "knex";
 import AbstractServices from "../../abstarcts/abstract.service";
@@ -154,6 +155,7 @@ export class SubBtocHotelService extends AbstractServices {
             const [guestRes] = await this.Model.guestModel(
               this.trx
             ).createGuestForGroupBooking({
+              title: guest.title,
               first_name: guest.first_name,
               last_name: guest.last_name,
               email: guest.email,

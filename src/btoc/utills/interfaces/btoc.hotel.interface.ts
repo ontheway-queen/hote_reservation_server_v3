@@ -188,6 +188,7 @@ export interface IBRoomGuest {
 }
 
 export interface IBGuestInfo {
+  title?: "Mr." | "Ms." | "Mrs." | "Mstr.";
   first_name: string;
   last_name: string;
   email?: string;

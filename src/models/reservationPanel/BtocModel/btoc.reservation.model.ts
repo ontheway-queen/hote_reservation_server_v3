@@ -536,32 +536,35 @@ export class BtocReservationModel extends Schema {
     `),
 
         this.db.raw(`
-      (
-        SELECT JSON_AGG(
-          JSON_BUILD_OBJECT(
-            'room_type', rt.name,
-            'adults', br.adults,
-            'children', br.children,
-            'guests',
-              (
-                SELECT JSON_AGG(
-                  JSON_BUILD_OBJECT(
-                    'title', g2.title,
-                    'name', g2.first_name,
-                    'surname', g2.last_name
-                  )
-                )
-                FROM hotel_reservation.booking_room_guest brg
-                LEFT JOIN hotel_reservation.guests g2 ON brg.guest_id = g2.id
-                WHERE brg.booking_room_id = br.id
-              )
+(
+  SELECT JSON_AGG(
+    JSON_BUILD_OBJECT(
+      'room_type_id', rt.id,
+      'room_type', rt.name,
+      'adults', br.adults,
+      'children', br.children,
+      'guests',
+        (
+          SELECT JSON_AGG(
+            JSON_BUILD_OBJECT(
+              'title', g2.title,
+              'name', g2.first_name,
+              'surname', g2.last_name,
+              'type', g2.type
+
+            )
           )
+          FROM hotel_reservation.booking_room_guest brg
+          LEFT JOIN hotel_reservation.guests g2 ON brg.guest_id = g2.id
+          WHERE brg.booking_room_id = br.id
         )
-        FROM hotel_reservation.booking_rooms br
-        LEFT JOIN hotel_reservation.room_types rt ON br.room_type_id = rt.id
-        WHERE br.booking_id = b.id
-      ) as rooms
-    `)
+    )
+  )
+  FROM hotel_reservation.booking_rooms br
+  LEFT JOIN hotel_reservation.room_types rt ON br.room_type_id = rt.id
+  WHERE br.booking_id = b.id
+) as rooms
+`)
       )
       .leftJoin("guests as g", "b.guest_id", "g.id")
       .where("b.hotel_code", hotel_code)

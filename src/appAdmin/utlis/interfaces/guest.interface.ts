@@ -1,4 +1,5 @@
 export interface IguestInterface {
+  title?: "Mr." | "Ms." | "Mrs." | "Mstr.";
   hotel_code: number;
   country_id?: number;
   first_name: string;

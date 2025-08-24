@@ -113,6 +113,7 @@ class SubBtocHotelService extends abstract_service_1.default {
                         console.log(room.guest_info);
                         for (const guest of room.guest_info) {
                             const [guestRes] = yield this.Model.guestModel(this.trx).createGuestForGroupBooking({
+                                title: guest.title,
                                 first_name: guest.first_name,
                                 last_name: guest.last_name,
                                 email: guest.email,
