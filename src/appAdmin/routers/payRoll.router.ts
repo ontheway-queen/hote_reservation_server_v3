@@ -9,7 +9,6 @@ class PayRollRouter extends AbstractRouter {
   }
 
   private callRouter() {
-    // create and get all PayRoll
     this.router
       .route("/")
       .post(
@@ -18,10 +17,7 @@ class PayRollRouter extends AbstractRouter {
       )
       .get(this.controller.getAllPayRoll);
 
-    // update and delete pay roll
-    this.router
-      .route("/:id")
-      .get(this.controller.getSinglePayRoll)
+    this.router.route("/:id").get(this.controller.getSinglePayRoll);
   }
 }
 export default PayRollRouter;

@@ -170,17 +170,17 @@ class AdminBtocHandlerService extends abstract_service_1.default {
                 const hotel_code = req.hotel_admin.hotel_code;
                 let _a = req.body, { id, main_logo, contact_us_thumbnail, about_us_thumbnail, favicon, site_thumbnail } = _a, rest_site_config = __rest(_a, ["id", "main_logo", "contact_us_thumbnail", "about_us_thumbnail", "favicon", "site_thumbnail"]);
                 const files = req.files || [];
-                const configurationModel = this.Model.b2cConfigurationModel();
-                const data = yield configurationModel.getSiteConfig({
-                    hotel_code,
-                });
-                if (!data) {
-                    return {
-                        success: false,
-                        message: "No site configuration found!",
-                        code: this.StatusCode.HTTP_NOT_FOUND,
-                    };
-                }
+                const configurationModel = this.Model.b2cConfigurationModel(trx);
+                //   const data = await configurationModel.getSiteConfig({
+                //     hotel_code,
+                //   });
+                //   if (!data) {
+                //     return {
+                //       success: false,
+                //       message: "No site configuration found!",
+                //       code: this.StatusCode.HTTP_NOT_FOUND,
+                //     };
+                //   }
                 for (const { fieldname, filename } of files) {
                     switch (fieldname) {
                         case "main_logo":

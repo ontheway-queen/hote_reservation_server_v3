@@ -2,30 +2,23 @@ import AbstractRouter from "../../abstarcts/abstract.router";
 import PayrollMonthSettingController from "../controllers/setting.payroll-month.controller";
 
 class PayrollMonthSettingRouter extends AbstractRouter {
-    private Controller = new PayrollMonthSettingController();
+  private Controller = new PayrollMonthSettingController();
 
-    constructor() {
-        super();
-        this.callRouter();
-    }
+  constructor() {
+    super();
+    this.callRouter();
+  }
 
-    private callRouter() {
+  private callRouter() {
+    this.router
+      .route("/")
+      .post(this.Controller.createPayrollMonths)
+      .get(this.Controller.getAllPayrollMonths);
 
-    //=================== Pay Roll Router ======================//
-
-        // pay roll 
-        this.router
-        .route("/")
-        .post(this.Controller.createPayrollMonths)
-        .get(this.Controller.getAllPayrollMonths)
-
-        // edit and remove Pay Roll
-        this.router
-        .route("/:id")
-        .patch(this.Controller.updatePayrollMonths)
-        .delete(this.Controller.deletePayrollMonths);
-
-    }
-
+    this.router
+      .route("/:id")
+      .patch(this.Controller.updatePayrollMonths)
+      .delete(this.Controller.deletePayrollMonths);
+  }
 }
 export default PayrollMonthSettingRouter;

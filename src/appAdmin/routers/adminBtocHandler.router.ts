@@ -14,7 +14,7 @@ class AdminBtocHandlerRouter extends AbstractRouter {
       .route("/site-configuration")
       .get(this.controller.getSiteConfiguration)
       .patch(
-        this.uploader.cloudUploadRaw(this.fileFolders.BTOC_USERS_FILES),
+        this.uploader.cloudUploadRaw(this.fileFolders.BTOC_SITE_CONFIG_FILES),
         this.controller.updateSiteConfig
       );
 
@@ -22,7 +22,7 @@ class AdminBtocHandlerRouter extends AbstractRouter {
       .route("/pop-up-banner")
       .get(this.controller.getPopUpBannerConfiguration)
       .patch(
-        this.uploader.cloudUploadRaw(this.fileFolders.BTOC_USERS_FILES),
+        this.uploader.cloudUploadRaw(this.fileFolders.BTOC_SITE_CONFIG_FILES),
         this.controller.updatePopUpBanner
       );
 
@@ -30,7 +30,7 @@ class AdminBtocHandlerRouter extends AbstractRouter {
       .route("/hero-bg-content")
       .get(this.controller.getHeroBgContent)
       .patch(
-        this.uploader.cloudUploadRaw(this.fileFolders.BTOC_USERS_FILES),
+        this.uploader.cloudUploadRaw(this.fileFolders.BTOC_SITE_CONFIG_FILES),
         this.controller.updateHeroBgContent
       );
 
@@ -38,7 +38,7 @@ class AdminBtocHandlerRouter extends AbstractRouter {
       .route("/hot-deals")
       .get(this.controller.getHotDeals)
       .patch(
-        this.uploader.cloudUploadRaw(this.fileFolders.BTOC_USERS_FILES),
+        this.uploader.cloudUploadRaw(this.fileFolders.BTOC_SITE_CONFIG_FILES),
         this.controller.updateHotDeals
       );
 
@@ -46,7 +46,7 @@ class AdminBtocHandlerRouter extends AbstractRouter {
       .route("/social-links")
       .get(this.controller.getSocialLinks)
       .patch(
-        this.uploader.cloudUploadRaw(this.fileFolders.BTOC_USERS_FILES),
+        this.uploader.cloudUploadRaw(this.fileFolders.BTOC_SITE_CONFIG_FILES),
         this.controller.updateSocialLinks
       );
 
@@ -54,7 +54,7 @@ class AdminBtocHandlerRouter extends AbstractRouter {
       .route("/popular-room-types")
       .get(this.controller.getPopularRoomTypes)
       .patch(
-        this.uploader.cloudUploadRaw(this.fileFolders.BTOC_USERS_FILES),
+        this.uploader.cloudUploadRaw(this.fileFolders.BTOC_SITE_CONFIG_FILES),
         this.controller.updatePopularRoomTypes
       );
 

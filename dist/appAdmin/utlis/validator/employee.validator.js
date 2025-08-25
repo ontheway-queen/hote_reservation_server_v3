@@ -6,25 +6,19 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const joi_1 = __importDefault(require("joi"));
 class EmployeeValidator {
     constructor() {
-        // create employee validator
         this.createEmployeeValidator = joi_1.default.object({
             name: joi_1.default.string().allow("").required(),
             department_id: joi_1.default.number().required(),
-            designation_id: joi_1.default.number().required(),
-            res_id: joi_1.default.number().allow("").optional(),
-            category: joi_1.default.string()
-                .valid("restaurant", "hotel", "management")
-                .optional(),
+            designation_id: joi_1.default.array().items(joi_1.default.number()).required(),
             blood_group: joi_1.default.number().optional(),
             salary: joi_1.default.number().optional(),
             email: joi_1.default.string().allow("").optional(),
-            mobile_no: joi_1.default.string().allow("").required(),
+            contact_no: joi_1.default.string().allow("").required(),
             dob: joi_1.default.string().optional(),
             appointment_date: joi_1.default.string().optional(),
             joining_date: joi_1.default.string().optional(),
             address: joi_1.default.string().allow("").optional(),
         });
-        // get all Employee query validator
         this.getAllEmployeeQueryValidator = joi_1.default.object({
             status: joi_1.default.string().valid("0", "1"),
             category: joi_1.default.string().allow("").optional(),
@@ -34,7 +28,6 @@ class EmployeeValidator {
             department: joi_1.default.string().allow("").optional(),
             designation: joi_1.default.string().allow("").optional(),
         });
-        // update employee validator
         this.updateEmployeeValidator = joi_1.default.object({
             name: joi_1.default.string().allow("").optional(),
             department_id: joi_1.default.number().optional(),

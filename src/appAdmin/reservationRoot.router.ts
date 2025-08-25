@@ -17,6 +17,7 @@ import FolioRouter from "./routers/folio.router";
 import EmployeeSettingRouter from "./routers/employee.router";
 import CommonRouter from "./routers/common.router";
 import AdminBtocHandlerRouter from "./routers/adminBtocHandler.router";
+import HrRouter from "./routers/hr.router";
 
 export class ReservationRootRouter {
   public router = Router();
@@ -31,6 +32,12 @@ export class ReservationRootRouter {
       "/common",
       this.authChecker.hotelAdminAuthChecker,
       new CommonRouter().router
+    );
+
+    this.router.use(
+      "/hr",
+      this.authChecker.hotelAdminAuthChecker,
+      new HrRouter().router
     );
 
     this.router.use(
@@ -100,21 +107,9 @@ export class ReservationRootRouter {
     );
 
     this.router.use(
-      "/payroll",
-      this.authChecker.hotelAdminAuthChecker,
-      new PayRollRouter().router
-    );
-
-    this.router.use(
       "/inventory",
       this.authChecker.hotelAdminAuthChecker,
       new HotelInventoryRouter().router
-    );
-
-    this.router.use(
-      "/employee",
-      this.authChecker.hotelAdminAuthChecker,
-      new EmployeeSettingRouter().router
     );
 
     this.router.use(

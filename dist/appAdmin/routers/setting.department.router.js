@@ -12,13 +12,10 @@ class DepartmentSettingRouter extends abstract_router_1.default {
         this.callRouter();
     }
     callRouter() {
-        //=================== Department Router ======================//
-        // Department
         this.router
             .route("/")
             .post(this.departmentSettingController.createDepartment)
             .get(this.departmentSettingController.getAllDepartment);
-        // edit and remove Department
         this.router
             .route("/:id")
             .get(this.departmentSettingController.getSingleDepartment)

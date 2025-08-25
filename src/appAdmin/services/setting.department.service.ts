@@ -6,144 +6,145 @@ import SettingModel from "../../models/reservationPanel/Setting.Model";
 import CustomError from "../../utils/lib/customEror";
 
 class DepartmentSettingService extends AbstractServices {
-	constructor() {
-		super();
-	}
+  constructor() {
+    super();
+  }
 
-	//=================== Department service ======================//
+  //=================== Department service ======================//
 
-	// create Department
-	public async createDepartment(req: Request) {
-		return await this.db.transaction(async (trx) => {
-			const { hotel_code, id } = req.hotel_admin;
-			const { name } = req.body;
+  // create Department
+  public async createDepartment(req: Request) {
+    return await this.db.transaction(async (trx) => {
+      const { hotel_code, id } = req.hotel_admin;
+      const { name } = req.body;
 
-			// Department check
-			const settingModel = this.Model.settingModel();
+      // Department check
+      const settingModel = this.Model.settingModel();
 
-			const { data } = await settingModel.getAllDepartment({
-				name,
-				hotel_code,
-			});
+      const { data } = await settingModel.getAllDepartment({
+        name,
+        hotel_code,
+      });
 
-			if (data.length) {
-				return {
-					success: false,
-					code: this.StatusCode.HTTP_CONFLICT,
-					message: "Department name already exists",
-				};
-			}
-			// model
-			const model = new SettingModel(trx);
+      if (data.length) {
+        return {
+          success: false,
+          code: this.StatusCode.HTTP_CONFLICT,
+          message: "Department name already exists",
+        };
+      }
+      // model
+      const model = new SettingModel(trx);
 
-			await model.createDepartment({
-				hotel_code,
-				name,
-				created_by: id,
-			});
+      await model.createDepartment({
+        hotel_code,
+        name,
+        created_by: id,
+      });
 
-			return {
-				success: true,
-				code: this.StatusCode.HTTP_SUCCESSFUL,
-				message: "Department created successfully.",
-			};
-		});
-	}
+      return {
+        success: true,
+        code: this.StatusCode.HTTP_SUCCESSFUL,
+        message: "Department created successfully.",
+      };
+    });
+  }
 
-	// Get all Department
-	public async getAllDepartment(req: Request) {
-		const { hotel_code } = req.hotel_admin;
-		const { limit, skip, name, status } = req.query;
+  // Get all Department
+  public async getAllDepartment(req: Request) {
+    const { hotel_code } = req.hotel_admin;
+    const { limit, skip, name, status } = req.query;
 
-		const model = this.Model.settingModel();
+    const model = this.Model.settingModel();
 
-		const { data, total } = await model.getAllDepartment({
-			status: status as string,
-			limit: limit as string,
-			skip: skip as string,
-			name: name as string,
-			hotel_code,
-		});
-		return {
-			success: true,
-			code: this.StatusCode.HTTP_OK,
-			total,
-			data,
-		};
-	}
+    const { data, total } = await model.getAllDepartment({
+      status: status as string,
+      limit: limit as string,
+      skip: skip as string,
+      name: name as string,
+      hotel_code,
+    });
 
-	public async getSingleDepartment(req: Request) {
-		const { hotel_code } = req.hotel_admin;
-		const id = req.params.id;
+    return {
+      success: true,
+      code: this.StatusCode.HTTP_OK,
+      total,
+      data,
+    };
+  }
 
-		const model = this.Model.settingModel();
+  public async getSingleDepartment(req: Request) {
+    const { hotel_code } = req.hotel_admin;
+    const id = req.params.id;
 
-		const data = await model.getSingleDepartment(Number(id), hotel_code);
-		if (!data) {
-			throw new CustomError(
-				`The requested department with ID: ${id} does not exist`,
-				this.StatusCode.HTTP_NOT_FOUND
-			);
-		}
-		return {
-			success: true,
-			code: this.StatusCode.HTTP_OK,
-			data,
-		};
-	}
+    const model = this.Model.settingModel();
 
-	// Update Department
-	public async updateDepartment(req: Request) {
-		return await this.db.transaction(async (trx) => {
-			const { hotel_code } = req.hotel_admin;
-			const { id } = req.params;
+    const data = await model.getSingleDepartment(Number(id), hotel_code);
+    if (!data) {
+      throw new CustomError(
+        `The requested department with ID: ${id} does not exist`,
+        this.StatusCode.HTTP_NOT_FOUND
+      );
+    }
+    return {
+      success: true,
+      code: this.StatusCode.HTTP_OK,
+      data,
+    };
+  }
 
-			const updatePayload = req.body as IUpdatedepartment;
+  // Update Department
+  public async updateDepartment(req: Request) {
+    return await this.db.transaction(async (trx) => {
+      const { hotel_code } = req.hotel_admin;
+      const { id } = req.params;
 
-			const model = this.Model.settingModel(trx);
+      const updatePayload = req.body as IUpdatedepartment;
 
-			const { data } = await model.getAllDepartment({
-				name: updatePayload.name,
-				hotel_code,
-				excludeId: parseInt(req.params.id),
-			});
+      const model = this.Model.settingModel(trx);
 
-			if (data.length) {
-				return {
-					success: false,
-					code: this.StatusCode.HTTP_CONFLICT,
-					message: "Department name already exists",
-				};
-			}
+      const { data } = await model.getAllDepartment({
+        name: updatePayload.name,
+        hotel_code,
+        excludeId: parseInt(req.params.id),
+      });
 
-			await model.updateDepartment(parseInt(id), hotel_code, {
-				name: updatePayload.name,
-				status: updatePayload.status,
-			});
+      if (data.length) {
+        return {
+          success: false,
+          code: this.StatusCode.HTTP_CONFLICT,
+          message: "Department name already exists",
+        };
+      }
 
-			return {
-				success: true,
-				code: this.StatusCode.HTTP_OK,
-				message: "Department updated successfully",
-			};
-		});
-	}
+      await model.updateDepartment(parseInt(id), hotel_code, {
+        name: updatePayload.name,
+        status: updatePayload.status,
+      });
 
-	// Delete Department
-	public async deleteDepartment(req: Request) {
-		return await this.db.transaction(async (trx) => {
-			const { hotel_code } = req.hotel_admin;
-			const { id } = req.params;
+      return {
+        success: true,
+        code: this.StatusCode.HTTP_OK,
+        message: "Department updated successfully",
+      };
+    });
+  }
 
-			const model = this.Model.settingModel(trx);
-			await model.deleteDepartment(parseInt(id), hotel_code);
+  // Delete Department
+  public async deleteDepartment(req: Request) {
+    return await this.db.transaction(async (trx) => {
+      const { hotel_code } = req.hotel_admin;
+      const { id } = req.params;
 
-			return {
-				success: true,
-				code: this.StatusCode.HTTP_OK,
-				message: "Department deleted successfully",
-			};
-		});
-	}
+      const model = this.Model.settingModel(trx);
+      await model.deleteDepartment(parseInt(id), hotel_code);
+
+      return {
+        success: true,
+        code: this.StatusCode.HTTP_OK,
+        message: "Department deleted successfully",
+      };
+    });
+  }
 }
 export default DepartmentSettingService;

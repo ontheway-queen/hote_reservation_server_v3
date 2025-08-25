@@ -2,41 +2,34 @@ import AbstractRouter from "../../abstarcts/abstract.router";
 import EmployeeSettingController from "../controllers/employee.controller";
 
 class EmployeeRouter extends AbstractRouter {
-	private controller = new EmployeeSettingController();
-	constructor() {
-		super();
-		this.callRouter();
-	}
+  private controller = new EmployeeSettingController();
+  constructor() {
+    super();
+    this.callRouter();
+  }
 
-	private callRouter() {
-		// create and get all employee
-		this.router
-			.route("/")
-			.post(
-				this.uploader.cloudUploadRaw(
-					this.fileFolders.HOTEL_EMPLOYEE_FILES
-				),
-				this.controller.createEmployee
-			)
-			.get(this.controller.getAllEmployee);
+  private callRouter() {
+    this.router
+      .route("/")
+      .post(
+        this.uploader.cloudUploadRaw(this.fileFolders.HOTEL_EMPLOYEE_FILES),
+        this.controller.createEmployee
+      )
+      .get(this.controller.getAllEmployee);
 
-		// update and delete employee profile
-		this.router
-			.route("/:id")
-			.get(this.controller.getSingleEmployee)
-			.patch(
-				this.uploader.cloudUploadRaw(
-					this.fileFolders.HOTEL_EMPLOYEE_FILES
-				),
-				this.controller.updateEmployee
-			)
-			.delete(this.controller.deleteEmployee);
+    this.router
+      .route("/:id")
+      .get(this.controller.getSingleEmployee)
+      .patch(
+        this.uploader.cloudUploadRaw(this.fileFolders.HOTEL_EMPLOYEE_FILES),
+        this.controller.updateEmployee
+      )
+      .delete(this.controller.deleteEmployee);
 
-		//   getEmployeesByDepartmentId
-		this.router
-			.route("/by-department/:id")
-			.get(this.controller.getEmployeesByDepartmentId);
-	}
+    this.router
+      .route("/by-department/:id")
+      .get(this.controller.getEmployeesByDepartmentId);
+  }
 }
 
 export default EmployeeRouter;

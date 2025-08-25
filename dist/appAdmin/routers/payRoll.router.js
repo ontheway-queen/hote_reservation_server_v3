@@ -12,15 +12,11 @@ class PayRollRouter extends abstract_router_1.default {
         this.callRouter();
     }
     callRouter() {
-        // create and get all PayRoll
         this.router
             .route("/")
             .post(this.uploader.cloudUploadRaw(this.fileFolders.HOTEL_PAYROLL_FILES), this.controller.createPayRoll)
             .get(this.controller.getAllPayRoll);
-        // update and delete pay roll
-        this.router
-            .route("/:id")
-            .get(this.controller.getSinglePayRoll);
+        this.router.route("/:id").get(this.controller.getSinglePayRoll);
     }
 }
 exports.default = PayRollRouter;

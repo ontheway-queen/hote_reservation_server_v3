@@ -12,13 +12,10 @@ class DesignationSettingRouter extends abstract_router_1.default {
         this.callRouter();
     }
     callRouter() {
-        //=================== Designation Router ======================//
-        // Designation
         this.router
             .route("/")
             .post(this.designationSettingController.createDesignation)
             .get(this.designationSettingController.getAllDesignation);
-        // edit and remove Designation
         this.router
             .route("/:id")
             .patch(this.designationSettingController.updateDesignation)

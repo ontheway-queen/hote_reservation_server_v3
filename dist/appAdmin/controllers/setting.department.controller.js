@@ -31,28 +31,22 @@ class DepartmentSettingController extends abstract_controller_1.default {
         super();
         this.departmentSettingService = new setting_department_service_1.default();
         this.settingValidator = new setting_validator_1.default();
-        //=================== Department Controller ======================//
-        // Create Department
         this.createDepartment = this.asyncWrapper.wrap({ bodySchema: this.settingValidator.createdepartmentValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
             const _a = yield this.departmentSettingService.createDepartment(req), { code } = _a, data = __rest(_a, ["code"]);
             res.status(code).json(data);
         }));
-        // Get All Department
         this.getAllDepartment = this.asyncWrapper.wrap({ querySchema: this.settingValidator.getAlldepartmentQueryValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
             const _b = yield this.departmentSettingService.getAllDepartment(req), { code } = _b, data = __rest(_b, ["code"]);
             res.status(code).json(data);
         }));
-        // Get Single Department
         this.getSingleDepartment = this.asyncWrapper.wrap({ paramSchema: this.commonValidator.singleParamValidator() }, (req, res) => __awaiter(this, void 0, void 0, function* () {
             const _c = yield this.departmentSettingService.getSingleDepartment(req), { code } = _c, data = __rest(_c, ["code"]);
             res.status(code).json(data);
         }));
-        // Update Department
         this.updateDepartment = this.asyncWrapper.wrap({ bodySchema: this.settingValidator.UpdatedepatmentValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
             const _d = yield this.departmentSettingService.updateDepartment(req), { code } = _d, data = __rest(_d, ["code"]);
             res.status(code).json(data);
         }));
-        // Delete Department
         this.deleteDepartment = this.asyncWrapper.wrap({ paramSchema: this.commonValidator.singleParamValidator() }, (req, res) => __awaiter(this, void 0, void 0, function* () {
             const _e = yield this.departmentSettingService.deleteDepartment(req), { code } = _e, data = __rest(_e, ["code"]);
             res.status(code).json(data);

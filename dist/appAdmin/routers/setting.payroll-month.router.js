@@ -12,13 +12,10 @@ class PayrollMonthSettingRouter extends abstract_router_1.default {
         this.callRouter();
     }
     callRouter() {
-        //=================== Pay Roll Router ======================//
-        // pay roll 
         this.router
             .route("/")
             .post(this.Controller.createPayrollMonths)
             .get(this.Controller.getAllPayrollMonths);
-        // edit and remove Pay Roll
         this.router
             .route("/:id")
             .patch(this.Controller.updatePayrollMonths)
