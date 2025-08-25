@@ -40,7 +40,9 @@ class MConfigurationModel extends schema_1.default {
     }
     insertCity(body) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("city").withSchema(this.PUBLIC_SCHEMA).insert(body);
+            return yield this.db("city")
+                .withSchema(this.PUBLIC_SCHEMA)
+                .insert(body);
         });
     }
     getAllCity({ limit, skip, search, country_code, }) {

@@ -1,17 +1,75 @@
 import Joi from "joi";
 
 export default class AdminBtocHandlerValidator {
-  public updateBtocSiteConfig = Joi.object({
+  updateBtocSiteConfig = Joi.object({
     hero_quote: Joi.string().optional(),
     hero_sub_quote: Joi.string().optional(),
     site_name: Joi.string().optional(),
-    emails: Joi.string().optional(),
-    numbers: Joi.string().optional(),
-    address: Joi.string().optional(),
+
+    emails: Joi.alternatives()
+      .try(
+        Joi.string().custom((value, helpers) => {
+          try {
+            const parsed = JSON.parse(value);
+            if (!Array.isArray(parsed)) throw new Error("Not an array");
+            return parsed;
+          } catch {
+            return helpers.error("any.invalid");
+          }
+        }),
+        Joi.array().items(
+          Joi.object({
+            email: Joi.string().email().required(),
+          })
+        )
+      )
+      .optional(),
+
+    numbers: Joi.alternatives()
+      .try(
+        Joi.string().custom((value, helpers) => {
+          try {
+            const parsed = JSON.parse(value);
+            if (!Array.isArray(parsed)) throw new Error("Not an array");
+            return parsed;
+          } catch {
+            return helpers.error("any.invalid");
+          }
+        }),
+        Joi.array().items(
+          Joi.object({
+            number: Joi.string()
+              .pattern(/^\+?\d+$/)
+              .required(),
+          })
+        )
+      )
+      .optional(),
+
+    address: Joi.alternatives()
+      .try(
+        Joi.string().custom((value, helpers) => {
+          try {
+            const parsed = JSON.parse(value);
+            if (!Array.isArray(parsed)) throw new Error("Not an array");
+            return parsed;
+          } catch {
+            return helpers.error("any.invalid");
+          }
+        }),
+        Joi.array().items(
+          Joi.object({
+            title: Joi.string().optional(),
+            address: Joi.string().optional(),
+          })
+        )
+      )
+      .optional(),
+
     contact_us_content: Joi.string().optional(),
     about_us_content: Joi.string().optional(),
     privacy_policy_content: Joi.string().optional(),
-    term_and_conditions_content: Joi.string().optional(),
+    terms_and_conditions_content: Joi.string().optional(),
     meta_title: Joi.string().optional(),
     meta_description: Joi.string().optional(),
     meta_tags: Joi.string().optional(),
@@ -22,6 +80,7 @@ export default class AdminBtocHandlerValidator {
 
   public updatePopUpBanner = Joi.object({
     title: Joi.string().optional(),
+    // thumbnail: Joi.string().optional(),
     description: Joi.string().optional(),
     status: Joi.boolean().optional(),
     link: Joi.string().optional(),

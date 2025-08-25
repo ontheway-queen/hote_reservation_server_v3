@@ -119,6 +119,83 @@ class AdminBtocHandlerController extends AbstractController {
       res.status(code).json(data);
     }
   );
+
+  // ======================== Service Content ================================ //
+  public createHotelServiceContent = this.asyncWrapper.wrap(
+    null,
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.createHotelServiceContent(
+        req
+      );
+
+      res.status(code).json(data);
+    }
+  );
+
+  public updateHotelServiceContent = this.asyncWrapper.wrap(
+    null,
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.updateHotelServiceContent(
+        req
+      );
+
+      res.status(code).json(data);
+    }
+  );
+
+  public getHotelContentService = this.asyncWrapper.wrap(
+    null,
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.getHotelContentService(req);
+
+      res.status(code).json(data);
+    }
+  );
+
+  // ======================== Services ================================ //
+  public createHotelService = this.asyncWrapper.wrap(
+    null,
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.createHotelService(req);
+
+      res.status(code).json(data);
+    }
+  );
+
+  public getAllServices = this.asyncWrapper.wrap(
+    null,
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.getAllServices(req);
+
+      res.status(code).json(data);
+    }
+  );
+
+  public getSingleService = this.asyncWrapper.wrap(
+    { paramSchema: this.commonValidator.singleParamValidator("id") },
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.getSingleService(req);
+
+      res.status(code).json(data);
+    }
+  );
+
+  public updateService = this.asyncWrapper.wrap(
+    { paramSchema: this.commonValidator.singleParamValidator("id") },
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.updateService(req);
+
+      res.status(code).json(data);
+    }
+  );
+  public deleteService = this.asyncWrapper.wrap(
+    { paramSchema: this.commonValidator.singleParamValidator("id") },
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.deleteService(req);
+
+      res.status(code).json(data);
+    }
+  );
 }
 
 export default AdminBtocHandlerController;

@@ -79,6 +79,40 @@ class AdminBtocHandlerController extends abstract_controller_1.default {
             const _m = yield this.service.updatePopularRoomTypes(req), { code } = _m, data = __rest(_m, ["code"]);
             res.status(code).json(data);
         }));
+        // ======================== Service Content ================================ //
+        this.createHotelServiceContent = this.asyncWrapper.wrap(null, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _o = yield this.service.createHotelServiceContent(req), { code } = _o, data = __rest(_o, ["code"]);
+            res.status(code).json(data);
+        }));
+        this.updateHotelServiceContent = this.asyncWrapper.wrap(null, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _p = yield this.service.updateHotelServiceContent(req), { code } = _p, data = __rest(_p, ["code"]);
+            res.status(code).json(data);
+        }));
+        this.getHotelContentService = this.asyncWrapper.wrap(null, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _q = yield this.service.getHotelContentService(req), { code } = _q, data = __rest(_q, ["code"]);
+            res.status(code).json(data);
+        }));
+        // ======================== Services ================================ //
+        this.createHotelService = this.asyncWrapper.wrap(null, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _r = yield this.service.createHotelService(req), { code } = _r, data = __rest(_r, ["code"]);
+            res.status(code).json(data);
+        }));
+        this.getAllServices = this.asyncWrapper.wrap(null, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _s = yield this.service.getAllServices(req), { code } = _s, data = __rest(_s, ["code"]);
+            res.status(code).json(data);
+        }));
+        this.getSingleService = this.asyncWrapper.wrap({ paramSchema: this.commonValidator.singleParamValidator("id") }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _t = yield this.service.getSingleService(req), { code } = _t, data = __rest(_t, ["code"]);
+            res.status(code).json(data);
+        }));
+        this.updateService = this.asyncWrapper.wrap({ paramSchema: this.commonValidator.singleParamValidator("id") }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _u = yield this.service.updateService(req), { code } = _u, data = __rest(_u, ["code"]);
+            res.status(code).json(data);
+        }));
+        this.deleteService = this.asyncWrapper.wrap({ paramSchema: this.commonValidator.singleParamValidator("id") }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _v = yield this.service.deleteService(req), { code } = _v, data = __rest(_v, ["code"]);
+            res.status(code).json(data);
+        }));
     }
 }
 exports.default = AdminBtocHandlerController;

@@ -10,13 +10,58 @@ class AdminBtocHandlerValidator {
             hero_quote: joi_1.default.string().optional(),
             hero_sub_quote: joi_1.default.string().optional(),
             site_name: joi_1.default.string().optional(),
-            emails: joi_1.default.string().optional(),
-            numbers: joi_1.default.string().optional(),
-            address: joi_1.default.string().optional(),
+            emails: joi_1.default.alternatives()
+                .try(joi_1.default.string().custom((value, helpers) => {
+                try {
+                    const parsed = JSON.parse(value);
+                    if (!Array.isArray(parsed))
+                        throw new Error("Not an array");
+                    return parsed;
+                }
+                catch (_a) {
+                    return helpers.error("any.invalid");
+                }
+            }), joi_1.default.array().items(joi_1.default.object({
+                email: joi_1.default.string().email().required(),
+            })))
+                .optional(),
+            numbers: joi_1.default.alternatives()
+                .try(joi_1.default.string().custom((value, helpers) => {
+                try {
+                    const parsed = JSON.parse(value);
+                    if (!Array.isArray(parsed))
+                        throw new Error("Not an array");
+                    return parsed;
+                }
+                catch (_a) {
+                    return helpers.error("any.invalid");
+                }
+            }), joi_1.default.array().items(joi_1.default.object({
+                number: joi_1.default.string()
+                    .pattern(/^\+?\d+$/)
+                    .required(),
+            })))
+                .optional(),
+            address: joi_1.default.alternatives()
+                .try(joi_1.default.string().custom((value, helpers) => {
+                try {
+                    const parsed = JSON.parse(value);
+                    if (!Array.isArray(parsed))
+                        throw new Error("Not an array");
+                    return parsed;
+                }
+                catch (_a) {
+                    return helpers.error("any.invalid");
+                }
+            }), joi_1.default.array().items(joi_1.default.object({
+                title: joi_1.default.string().optional(),
+                address: joi_1.default.string().optional(),
+            })))
+                .optional(),
             contact_us_content: joi_1.default.string().optional(),
             about_us_content: joi_1.default.string().optional(),
             privacy_policy_content: joi_1.default.string().optional(),
-            term_and_conditions_content: joi_1.default.string().optional(),
+            terms_and_conditions_content: joi_1.default.string().optional(),
             meta_title: joi_1.default.string().optional(),
             meta_description: joi_1.default.string().optional(),
             meta_tags: joi_1.default.string().optional(),
@@ -26,6 +71,7 @@ class AdminBtocHandlerValidator {
         });
         this.updatePopUpBanner = joi_1.default.object({
             title: joi_1.default.string().optional(),
+            // thumbnail: Joi.string().optional(),
             description: joi_1.default.string().optional(),
             status: joi_1.default.boolean().optional(),
             link: joi_1.default.string().optional(),

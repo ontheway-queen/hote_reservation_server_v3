@@ -5,7 +5,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const abstract_router_1 = __importDefault(require("../../abstarcts/abstract.router"));
 const adminBtocHandler_controller_1 = __importDefault(require("../controllers/adminBtocHandler.controller"));
-const reservation_btoc_router_1 = __importDefault(require("./reservation.btoc.router"));
 class AdminBtocHandlerRouter extends abstract_router_1.default {
     constructor() {
         super();
@@ -36,9 +35,23 @@ class AdminBtocHandlerRouter extends abstract_router_1.default {
         this.router
             .route("/popular-room-types")
             .get(this.controller.getPopularRoomTypes)
-            .patch(this.uploader.cloudUploadRaw(this.fileFolders.BTOC_SITE_CONFIG_FILES), this.controller.updatePopularRoomTypes);
-        //  reservation root router
-        this.router.use("/reservation", new reservation_btoc_router_1.default().router);
+            .patch(this.uploader.cloudUploadRaw(this.fileFolders.BTOC_USERS_FILES), this.controller.updatePopularRoomTypes);
+        // ======================== Service Content ================================ //
+        this.router
+            .route("/hotel-service-content")
+            .post(this.controller.createHotelServiceContent)
+            .patch(this.controller.updateHotelServiceContent)
+            .get(this.controller.getHotelContentService);
+        // ======================== Services ================================ //
+        this.router
+            .route("/hotel-services")
+            .post(this.uploader.cloudUploadRaw("hotel_services"), this.controller.createHotelService)
+            .get(this.controller.getAllServices);
+        this.router
+            .route("/hotel-services/:id")
+            .get(this.controller.getSingleService)
+            .patch(this.uploader.cloudUploadRaw("services"), this.controller.updateService)
+            .delete(this.controller.deleteService);
     }
 }
 exports.default = AdminBtocHandlerRouter;

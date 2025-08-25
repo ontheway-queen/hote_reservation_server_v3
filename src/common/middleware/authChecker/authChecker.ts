@@ -208,18 +208,22 @@ class AuthChecker extends AbstractServices {
       console.log({ wl_token });
 
       if (!wl_token) {
-        return res
-          .status(StatusCode.HTTP_UNAUTHORIZED)
-          .json({ success: false, message: ResMsg.HTTP_UNAUTHORIZED });
+        return res.status(StatusCode.HTTP_UNAUTHORIZED).json({
+          success: false,
+          message: ResMsg.HTTP_UNAUTHORIZED,
+        });
       }
 
       // get hotel by web token
-      const hotel = await this.Model.HotelModel().getSingleHotel({ wl_token });
+      const hotel = await this.Model.HotelModel().getSingleHotel({
+        wl_token,
+      });
 
       if (!hotel) {
-        return res
-          .status(StatusCode.HTTP_UNAUTHORIZED)
-          .json({ success: false, message: ResMsg.HTTP_UNAUTHORIZED });
+        return res.status(StatusCode.HTTP_UNAUTHORIZED).json({
+          success: false,
+          message: ResMsg.HTTP_UNAUTHORIZED,
+        });
       } else {
         req.web_token = {
           hotel_code: hotel.hotel_code,

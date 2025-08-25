@@ -24,6 +24,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const abstract_service_1 = __importDefault(require("../../abstarcts/abstract.service"));
+const customEror_1 = __importDefault(require("../../utils/lib/customEror"));
 class AdminBtocHandlerService extends abstract_service_1.default {
     constructor() {
         super();
@@ -167,8 +168,9 @@ class AdminBtocHandlerService extends abstract_service_1.default {
     updateSiteConfig(req) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
+                var _a, _b, _c;
                 const hotel_code = req.hotel_admin.hotel_code;
-                let _a = req.body, { id, main_logo, contact_us_thumbnail, about_us_thumbnail, favicon, site_thumbnail } = _a, rest_site_config = __rest(_a, ["id", "main_logo", "contact_us_thumbnail", "about_us_thumbnail", "favicon", "site_thumbnail"]);
+                let {} = req.body;
                 const files = req.files || [];
                 const configurationModel = this.Model.b2cConfigurationModel(trx);
                 //   const data = await configurationModel.getSiteConfig({
@@ -184,29 +186,48 @@ class AdminBtocHandlerService extends abstract_service_1.default {
                 for (const { fieldname, filename } of files) {
                     switch (fieldname) {
                         case "main_logo":
-                            main_logo = filename;
+                            req.body.main_logo = filename;
                             break;
                         case "contact_us_thumbnail":
-                            contact_us_thumbnail = filename;
+                            req.body.contact_us_thumbnail = filename;
                             break;
                         case "about_us_thumbnail":
-                            about_us_thumbnail = filename;
+                            req.body.about_us_thumbnail = filename;
                             break;
                         case "favicon":
-                            favicon = filename;
+                            req.body.favicon = filename;
                             break;
                         case "site_thumbnail":
-                            site_thumbnail = filename;
+                            req.body.site_thumbnail = filename;
                             break;
                         default:
                             break;
                     }
                 }
-                const newSiteConfig = Object.assign({ main_logo,
-                    contact_us_thumbnail,
-                    about_us_thumbnail,
-                    favicon,
-                    site_thumbnail }, rest_site_config);
+                const newSiteConfig = {
+                    main_logo: req.body.main_logo,
+                    contact_us_thumbnail: req.body.contact_us_thumbnail,
+                    hotel_code: req.hotel_admin.hotel_code,
+                    favicon: req.body.favicon,
+                    site_thumbnail: req.body.site_thumbnail,
+                    emails: JSON.stringify((_a = req.body.emails) !== null && _a !== void 0 ? _a : []),
+                    numbers: JSON.stringify((_b = req.body.numbers) !== null && _b !== void 0 ? _b : []),
+                    address: JSON.stringify((_c = req.body.address) !== null && _c !== void 0 ? _c : []),
+                    hero_quote: req.body.hero_quote,
+                    hero_sub_quote: req.body.hero_sub_quote,
+                    site_name: req.body.site_name,
+                    contact_us_content: req.body.contact_us_content,
+                    about_us_content: req.body.about_us_content,
+                    privacy_policy_content: req.body.privacy_policy_content,
+                    terms_and_conditions_content: req.body.terms_and_conditions_content,
+                    meta_title: req.body.meta_title,
+                    meta_description: req.body.meta_description,
+                    meta_tags: req.body.meta_tags,
+                    notice: req.body.notice,
+                    android_app_link: req.body.android_app_link,
+                    ios_app_link: req.body.ios_app_link,
+                };
+                console.log(newSiteConfig);
                 yield configurationModel.updateSiteConfig({
                     hotel_code,
                     payload: newSiteConfig,
@@ -463,17 +484,211 @@ class AdminBtocHandlerService extends abstract_service_1.default {
                             break;
                     }
                 }
-                const newRoomTypes = Object.assign({ thumbnail,
-                    order_number }, rest_popular_room_types);
-                yield configurationModel.updatePopularRoomTypes({
-                    hotel_code,
-                    id,
-                    payload: newRoomTypes,
-                });
                 return {
                     success: true,
                     code: this.StatusCode.HTTP_OK,
                     message: "Hotel configuration updated successfully",
+                };
+            }));
+        });
+    }
+    // ======================== Service Content ================================ //
+    createHotelServiceContent(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
+                const { hotel_code } = req.hotel_admin;
+                const b2cConfigurationModel = this.Model.b2cConfigurationModel(trx);
+                const serviceContent = yield b2cConfigurationModel.getSingleServiceContent({
+                    hotel_code,
+                });
+                if (serviceContent) {
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_CONFLICT,
+                        message: "Service content already exists",
+                    };
+                }
+                yield b2cConfigurationModel.createHotelServiceContent({
+                    hotel_code,
+                    title: req.body.title,
+                    description: req.body.description,
+                });
+                return {
+                    success: true,
+                    code: this.StatusCode.HTTP_SUCCESSFUL,
+                    message: "Service content created successfully.",
+                };
+            }));
+        });
+    }
+    updateHotelServiceContent(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
+                const { hotel_code } = req.hotel_admin;
+                const b2cConfigurationModel = this.Model.b2cConfigurationModel(trx);
+                const serviceContent = yield b2cConfigurationModel.getSingleServiceContent({
+                    hotel_code,
+                });
+                console.log({ hotel_code });
+                if (!serviceContent) {
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_CONFLICT,
+                        message: "Service content not found",
+                    };
+                }
+                yield b2cConfigurationModel.updateServiceContent({ title: req.body.title, description: req.body.description }, { hotel_code });
+                return {
+                    success: true,
+                    code: this.StatusCode.HTTP_SUCCESSFUL,
+                    message: "Service content updated successfully.",
+                };
+            }));
+        });
+    }
+    getHotelContentService(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
+                const { hotel_code } = req.hotel_admin;
+                const { search, limit, skip } = req.query;
+                const b2cConfigurationModel = this.Model.b2cConfigurationModel(trx);
+                const serviceContent = yield b2cConfigurationModel.getHotelServiceContentWithServices({
+                    hotel_code,
+                    search: search,
+                    limit: Number(limit),
+                    skip: Number(skip),
+                });
+                if (!serviceContent) {
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_CONFLICT,
+                        message: "Service content not found",
+                    };
+                }
+                return {
+                    success: true,
+                    code: this.StatusCode.HTTP_SUCCESSFUL,
+                    message: "Service content fetched successfully.",
+                    data: serviceContent,
+                };
+            }));
+        });
+    }
+    // ======================== Services ================================ //
+    createHotelService(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
+                const { hotel_code } = req.hotel_admin;
+                const files = req.files || [];
+                if (Array.isArray(files) && files.length > 0) {
+                    req.body["icon"] = files[0].filename;
+                }
+                const b2cConfigurationModel = this.Model.b2cConfigurationModel(trx);
+                const service = yield b2cConfigurationModel.getSingleService({
+                    title: req.body.title,
+                });
+                if (service) {
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_CONFLICT,
+                        message: "Service already exists",
+                    };
+                }
+                yield b2cConfigurationModel.createHotelService(Object.assign(Object.assign({}, req.body), { hotel_code }));
+                return {
+                    success: true,
+                    code: this.StatusCode.HTTP_SUCCESSFUL,
+                    message: "Service created successfully.",
+                };
+            }));
+        });
+    }
+    getAllServices(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { title, limit, skip } = req.query;
+            const b2cConfigurationModel = this.Model.b2cConfigurationModel();
+            const data = yield b2cConfigurationModel.getAllServices({
+                title: title,
+                limit: Number(limit),
+                skip: Number(skip),
+            });
+            return Object.assign({ success: true, code: this.StatusCode.HTTP_SUCCESSFUL, message: "Services retrieved successfully." }, data);
+        });
+    }
+    getSingleService(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const id = Number(req.params.id);
+            const b2cConfigurationModel = this.Model.b2cConfigurationModel();
+            const data = yield b2cConfigurationModel.getSingleService({ id });
+            if (!data) {
+                throw new customEror_1.default("Hotel Service not found", this.StatusCode.HTTP_NOT_FOUND);
+            }
+            return {
+                success: true,
+                code: this.StatusCode.HTTP_SUCCESSFUL,
+                message: "Service retrieved successfully.",
+                data,
+            };
+        });
+    }
+    updateService(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
+                const id = Number(req.params.id);
+                const files = req.files || [];
+                if (Array.isArray(files) && files.length > 0) {
+                    req.body["icon"] = files[0].filename;
+                }
+                const b2cConfigurationModel = this.Model.b2cConfigurationModel(trx);
+                const service = yield b2cConfigurationModel.getSingleService({
+                    id,
+                });
+                if (!service) {
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_CONFLICT,
+                        message: "Service not found",
+                    };
+                }
+                const isServicTitleExists = yield b2cConfigurationModel.getSingleService({
+                    title: req.body.title,
+                });
+                if (isServicTitleExists) {
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_CONFLICT,
+                        message: "Service title already exists",
+                    };
+                }
+                yield b2cConfigurationModel.updateHotelService(req.body, { id });
+                return {
+                    success: true,
+                    code: this.StatusCode.HTTP_SUCCESSFUL,
+                    message: "Service update successfully.",
+                };
+            }));
+        });
+    }
+    deleteService(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
+                const id = Number(req.params.id);
+                const b2cConfigurationModel = this.Model.b2cConfigurationModel(trx);
+                const service = yield b2cConfigurationModel.getSingleService({
+                    id,
+                });
+                if (!service) {
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_CONFLICT,
+                        message: "Service not found",
+                    };
+                }
+                yield b2cConfigurationModel.updateHotelService(req.body, { id });
+                return {
+                    success: true,
+                    code: this.StatusCode.HTTP_SUCCESSFUL,
+                    message: "Service deleted successfully.",
                 };
             }));
         });
