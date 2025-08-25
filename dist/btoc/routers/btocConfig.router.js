@@ -16,20 +16,7 @@ class BtocConfigRouter extends abstract_router_1.default {
         this.controller = new btocConfig_controller_1.BtocConfigController();
         this.callRouter();
     }
-    callRouter() {
-        this.router
-            .route("/site-configuration")
-            .get(this.controller.getSiteConfiguration);
-        this.router
-            .route("/pop-up-banner")
-            .get(this.controller.getPopUpBannerConfiguration);
-        this.router.route("/hero-bg-content").get(this.controller.getHeroBgContent);
-        this.router.route("/hot-deals").get(this.controller.getHotDeals);
-        this.router.route("/social-links").get(this.controller.getSocialLinks);
-        this.router
-            .route("/popular-room-types")
-            .get(this.controller.getPopularRoomTypes);
-    }
+    callRouter() { }
 }
 exports.BtocConfigRouter = BtocConfigRouter;
 //# sourceMappingURL=btocConfig.router.js.map

@@ -12,6 +12,10 @@ class FileFolder {
   static readonly FLEET_FILES = "fleet-files";
   static readonly INVENTORY_FILES = "inventory-files";
   static readonly BTOC_USERS_FILES = "btoc-user-files";
-  static readonly BTOC_SITE_CONFIG_FILES = "btoc-site-config-files";
+
+  static readonly B2C_SITE_CONFIG = "b2c/site-config";
+  static readonly B2C_SITE_CONFIG_HERO_BG = "b2c/hero-bg";
+  static readonly B2C_SITE_CONFIG_OTHERS = "b2c/others";
+  static readonly B2C_SITE_CONFIG_POP_UP = "b2c/pop-up";
 }
 export default FileFolder;

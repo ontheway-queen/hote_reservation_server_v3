@@ -1,18 +1,40 @@
 import {
-  IGetHotDeals,
-  IHeroBgContent,
-  IHeroBgContentPayload,
-  IHotDealsPayload,
-  IPopularRoomType,
-  IPopUpBanner,
-  IPopUpBannerPayload,
-  ISiteConfig,
-  ISiteConfigPayload,
+  ICreateAgencyB2CHeroBgContentPayload,
+  ICreateAgencyB2CHotDeals,
+  ICreateAgencyB2CPopularDestinationPayload,
+  ICreateAgencyB2CPopularPlace,
+  ICreateAgencyB2CPopUpBanner,
+  ICreateAgencyB2CSiteConfig,
+  ICreateAgencyB2CSocialLinkPayload,
+  IGetAgencyB2CHeroBgContentData,
+  IGetAgencyB2CHeroBgContentQuery,
+  IGetAgencyB2CHotDealsData,
+  IGetAgencyB2CHotDealsQuery,
+  IGetAgencyB2CPopularDestinationData,
+  IGetAgencyB2CPopularDestinationLastNoData,
+  IGetAgencyB2CPopularDestinationQuery,
+  IGetAgencyB2CPopularPlaceData,
+  IGetAgencyB2CPopularPlaceQuery,
+  IGetAgencyB2CPopUpBannerData,
+  IGetAgencyB2CPopUpBannerQuery,
+  IGetAgencyB2CSiteConfigData,
+  IGetAgencyB2CSocialLinkData,
+  IGetAgencyB2CSocialLinkQuery,
+  IGetSocialMediaData,
+  IInsertSocialMedia,
+  IUpdateAgencyB2CHeroBgContentPayload,
+  IUpdateAgencyB2CHotDealsPayload,
+  IUpdateAgencyB2CPopularDestinationPayload,
+  IUpdateAgencyB2CPopularPlace,
+  IUpdateAgencyB2CPopUpBannerPayload,
+  IUpdateAgencyB2CSiteConfigPayload,
+  IUpdateAgencyB2CSocialLinkPayload,
+  IUpdateSocialMediaPayload,
 } from "../../appAdmin/utlis/interfaces/configuration.interface";
 import { TDB } from "../../common/types/commontypes";
 import Schema from "../../utils/miscellaneous/schema";
 
-export default class B2cConfigurationModel extends Schema {
+export default class AgencyB2CConfigModel extends Schema {
   private db: TDB;
 
   constructor(db: TDB) {
@@ -20,9 +42,247 @@ export default class B2cConfigurationModel extends Schema {
     this.db = db;
   }
 
+  public async insertHeroBGContent(
+    payload:
+      | ICreateAgencyB2CHeroBgContentPayload
+      | ICreateAgencyB2CHeroBgContentPayload[]
+  ) {
+    return await this.db("hero_bg_content")
+      .withSchema(this.BTOC_SCHEMA)
+      .insert(payload, "id");
+  }
+
+  public async getHeroBGContent(
+    query: IGetAgencyB2CHeroBgContentQuery
+  ): Promise<IGetAgencyB2CHeroBgContentData[]> {
+    return await this.db("hero_bg_content")
+      .withSchema(this.BTOC_SCHEMA)
+      .select("*")
+      .orderBy("order_number", "asc")
+      .andWhere("agency_id", query.agency_id)
+      .where((qb) => {
+        if (query.status !== undefined) {
+          qb.andWhere("status", query.status);
+        }
+        if (query.type) {
+          qb.andWhere("type", query.type);
+        }
+      });
+  }
+
+  public async checkHeroBGContent(query: {
+    agency_id: number;
+    id: number;
+  }): Promise<IGetAgencyB2CHeroBgContentData[]> {
+    return await this.db("hero_bg_content")
+      .withSchema(this.BTOC_SCHEMA)
+      .select("*")
+      .orderBy("order_number", "asc")
+      .andWhere("agency_id", query.agency_id)
+      .andWhere("id", query.id);
+  }
+
+  public async getHeroBGContentLastNo(query: {
+    agency_id: number;
+  }): Promise<IGetAgencyB2CHeroBgContentData | null> {
+    return await this.db("hero_bg_content")
+      .withSchema(this.BTOC_SCHEMA)
+      .select("*")
+      .where("agency_id", query.agency_id)
+      .orderBy("order_number", "desc")
+      .first();
+  }
+
+  public async updateHeroBGContent(
+    payload: IUpdateAgencyB2CHeroBgContentPayload,
+    where: {
+      agency_id: number;
+      id: number;
+    }
+  ) {
+    return await this.db("hero_bg_content")
+      .withSchema(this.BTOC_SCHEMA)
+      .update(payload)
+      .where("agency_id", where.agency_id)
+      .where("id", where.id);
+  }
+
+  public async deleteHeroBGContent(where: { agency_id: number; id: number }) {
+    return await this.db("hero_bg_content")
+      .withSchema(this.BTOC_SCHEMA)
+      .del()
+      .where("agency_id", where.agency_id)
+      .where("id", where.id);
+  }
+
+  public async insertPopularDestination(
+    payload:
+      | ICreateAgencyB2CPopularDestinationPayload
+      | ICreateAgencyB2CPopularDestinationPayload[]
+  ) {
+    return await this.db("popular_destination")
+      .withSchema(this.BTOC_SCHEMA)
+      .insert(payload);
+  }
+
+  public async getPopularDestination(
+    query: IGetAgencyB2CPopularDestinationQuery
+  ): Promise<IGetAgencyB2CPopularDestinationData[]> {
+    return await this.db("popular_destination AS pd")
+      .withSchema(this.BTOC_SCHEMA)
+      .select(
+        "pd.*",
+        "dc.name AS from_airport_country",
+        "dci.name AS from_airport_city",
+        "da.name AS from_airport_name",
+        "da.iata_code AS from_airport_code",
+        "aa.name AS to_airport_name",
+        "aa.iata_code AS to_airport_code",
+        "ac.name AS to_airport_country",
+        "aci.name AS to_airport_city"
+      )
+      .joinRaw(`LEFT JOIN public.airport AS da ON pd.from_airport = da.id`)
+      .joinRaw(`LEFT JOIN public.airport AS aa ON pd.to_airport = aa.id`)
+      .joinRaw(`LEFT JOIN public.country AS dc ON da.country_id = dc.id`)
+      .joinRaw(`LEFT JOIN public.country AS ac ON aa.country_id = ac.id`)
+      .joinRaw(`LEFT JOIN public.city AS dci ON da.city = dci.id`)
+      .joinRaw(`LEFT JOIN public.city AS aci ON aa.city = aci.id`)
+      .orderBy("pd.order_number", "asc")
+      .andWhere("pd.agency_id", query.agency_id)
+      .where((qb) => {
+        if (query.status !== undefined) {
+          qb.andWhere("pd.status", query.status);
+        }
+      });
+  }
+
+  public async checkPopularDestination(query: {
+    agency_id: number;
+    id: number;
+  }): Promise<IGetAgencyB2CPopularDestinationLastNoData | null> {
+    return await this.db("popular_destination")
+      .withSchema(this.BTOC_SCHEMA)
+      .select("*")
+      .orderBy("order_number", "asc")
+      .andWhere("agency_id", query.agency_id)
+      .andWhere("id", query.id)
+      .first();
+  }
+
+  public async getPopularDestinationLastNo(query: {
+    agency_id: number;
+  }): Promise<IGetAgencyB2CPopularDestinationLastNoData | null> {
+    return await this.db("popular_destination")
+      .withSchema(this.BTOC_SCHEMA)
+      .select("*")
+      .where("agency_id", query.agency_id)
+      .orderBy("order_number", "desc")
+      .first();
+  }
+
+  public async updatePopularDestination(
+    payload: IUpdateAgencyB2CPopularDestinationPayload,
+    where: {
+      agency_id: number;
+      id: number;
+    }
+  ) {
+    return await this.db("popular_destination")
+      .withSchema(this.BTOC_SCHEMA)
+      .update(payload)
+      .where("agency_id", where.agency_id)
+      .where("id", where.id);
+  }
+
+  public async deletePopularDestination(where: {
+    agency_id: number;
+    id: number;
+  }) {
+    return await this.db("popular_destination")
+      .withSchema(this.BTOC_SCHEMA)
+      .del()
+      .where("agency_id", where.agency_id)
+      .where("id", where.id);
+  }
+
+  public async insertPopularPlaces(
+    payload: ICreateAgencyB2CPopularPlace | ICreateAgencyB2CPopularPlace[]
+  ) {
+    return await this.db("popular_places")
+      .withSchema(this.BTOC_SCHEMA)
+      .insert(payload);
+  }
+
+  public async getPopularPlaces(
+    query: IGetAgencyB2CPopularPlaceQuery
+  ): Promise<IGetAgencyB2CPopularPlaceData[]> {
+    return await this.db("popular_places AS pp")
+      .withSchema(this.BTOC_SCHEMA)
+      .select("pp.*", "c.name AS country_name")
+      .joinRaw(`LEFT JOIN public.country AS c ON pp.country_id = c.id`)
+      .orderBy("pp.order_number", "asc")
+      .andWhere("pp.agency_id", query.agency_id)
+      .where((qb) => {
+        if (query.status !== undefined) {
+          qb.andWhere("pp.status", query.status);
+        }
+      });
+  }
+
+  public async checkPopularPlace(query: {
+    agency_id: number;
+    id: number;
+  }): Promise<IGetAgencyB2CPopularPlaceData | null> {
+    return await this.db("popular_places")
+      .withSchema(this.BTOC_SCHEMA)
+      .select("*")
+      .andWhere("agency_id", query.agency_id)
+      .andWhere("id", query.id)
+      .first();
+  }
+
+  public async getPopularPlaceLastNo(query: {
+    agency_id: number;
+  }): Promise<IGetAgencyB2CPopularPlaceData | null> {
+    return await this.db("popular_places")
+      .withSchema(this.BTOC_SCHEMA)
+      .select("*")
+      .where("agency_id", query.agency_id)
+      .orderBy("order_number", "desc")
+      .first();
+  }
+
+  public async updatePopularPlace(
+    payload: IUpdateAgencyB2CPopularPlace,
+    where: {
+      agency_id: number;
+      id: number;
+    }
+  ) {
+    return await this.db("popular_places")
+      .withSchema(this.BTOC_SCHEMA)
+      .update(payload)
+      .where("agency_id", where.agency_id)
+      .andWhere("id", where.id);
+  }
+
+  public async deletePopularPlace(where: { agency_id: number; id: number }) {
+    return await this.db("popular_places")
+      .withSchema(this.BTOC_SCHEMA)
+      .del()
+      .where("agency_id", where.agency_id)
+      .where("id", where.id);
+  }
+
+  public async insertSiteConfig(payload: ICreateAgencyB2CSiteConfig) {
+    return await this.db("site_config")
+      .withSchema(this.BTOC_SCHEMA)
+      .insert(payload);
+  }
+
   public async getSiteConfig(query: {
     hotel_code: number;
-  }): Promise<ISiteConfig> {
+  }): Promise<IGetAgencyB2CSiteConfigData | null> {
     return await this.db("site_config")
       .withSchema(this.BTOC_SCHEMA)
       .select("*")
@@ -30,352 +290,268 @@ export default class B2cConfigurationModel extends Schema {
       .first();
   }
 
-  public async getPopUpBanner(query: {
-    hotel_code: number;
-  }): Promise<IPopUpBanner> {
-    return await this.db("pop_up_banner")
-      .withSchema(this.BTOC_SCHEMA)
-      .select("*")
-      .where("hotel_code", query.hotel_code)
-      .first();
-  }
-
-  public async getHeroBgContent(query: {
-    hotel_code: number;
-    id?: number;
-    order_number?: number;
-  }): Promise<IHeroBgContent[]> {
-    return await this.db("hero_bg_content")
-      .withSchema(this.BTOC_SCHEMA)
-      .select("*")
-      .where("hotel_code", query.hotel_code)
-      .modify((qb) => {
-        if (query.id) {
-          qb.andWhere("id", query.id);
-        }
-        if (query.order_number) {
-          qb.andWhere("order_number", query.order_number);
-        }
-      });
-  }
-
-  public async getHotDeals(query: {
-    hotel_code: number;
-    id?: number;
-    order_number?: number;
-  }): Promise<IGetHotDeals[]> {
-    return await this.db("hot_deals")
-      .withSchema(this.BTOC_SCHEMA)
-      .select("*")
-      .where("hotel_code", query.hotel_code)
-      .modify((qb) => {
-        if (query.id) {
-          qb.andWhere("id", query.id);
-        }
-        if (query.order_number) {
-          qb.andWhere("order_number", query.order_number);
-        }
-      });
-  }
-
-  public async getSocialLinks(query: {
-    hotel_code: number;
-    id?: number;
-    order_number?: number;
-  }): Promise<IGetHotDeals[]> {
-    return await this.db("social_links")
-      .withSchema(this.BTOC_SCHEMA)
-      .select("*")
-      .where("hotel_code", query.hotel_code)
-      .modify((qb) => {
-        if (query.id) {
-          qb.andWhere("id", query.id);
-        }
-        if (query.order_number) {
-          qb.andWhere("order_number", query.order_number);
-        }
-      });
-  }
-
-  public async getPopularRoomTypes(query: {
-    hotel_code: number;
-    id?: number;
-    order_number?: number;
-  }): Promise<IPopularRoomType[]> {
-    return await this.db("popular_room_types as prt")
-      .withSchema(this.BTOC_SCHEMA)
-      .select("prt.*", "rt.name", "rt.description")
-      .joinRaw(`JOIN ?? as rt ON rt.id = prt.room_type_id`, [
-        `${this.RESERVATION_SCHEMA}.${this.TABLES.room_types}`,
-      ])
-      .where("prt.hotel_code", query.hotel_code)
-      .modify((qb) => {
-        if (query.id) {
-          qb.andWhere("prt.id", query.id);
-        }
-        if (query.order_number) {
-          qb.andWhere("prt.order_number", query.order_number);
-        }
-      });
-  }
-
-  public async updateSiteConfig({
-    hotel_code,
-    payload,
-  }: {
-    hotel_code: number;
-    payload: ISiteConfigPayload;
-  }) {
+  public async updateConfig(
+    payload: IUpdateAgencyB2CSiteConfigPayload,
+    where: {
+      hotel_code: number;
+    }
+  ) {
     return await this.db("site_config")
       .withSchema(this.BTOC_SCHEMA)
-      .select("*")
-      .where("hotel_code", hotel_code)
-      .update(payload);
+      .update(payload)
+      .where("hotel_code", where.hotel_code);
   }
 
-  public async updatePopUpBanner({
-    hotel_code,
-    payload,
-  }: {
-    hotel_code: number;
-    payload: IPopUpBannerPayload;
-  }) {
-    return await this.db("pop_up_banner")
-      .withSchema(this.BTOC_SCHEMA)
-      .select("*")
-      .where("hotel_code", hotel_code)
-      .update(payload);
-  }
-
-  public async updateHeroBgContent({
-    hotel_code,
-    id,
-    payload,
-  }: {
-    hotel_code: number;
-    id: number;
-    payload: IHeroBgContentPayload;
-  }) {
-    return await this.db("hero_bg_content")
-      .withSchema(this.BTOC_SCHEMA)
-      .select("*")
-      .where("hotel_code", hotel_code)
-      .andWhere("id", id)
-      .update(payload);
-  }
-
-  public async updateHotDeals({
-    hotel_code,
-    id,
-    payload,
-  }: {
-    hotel_code: number;
-    id: number;
-    payload: IHotDealsPayload;
-  }) {
-    return await this.db("hot_deals")
-      .withSchema(this.BTOC_SCHEMA)
-      .select("*")
-      .where("hotel_code", hotel_code)
-      .andWhere("id", id)
-      .update(payload);
-  }
-
-  public async updateSocialLinks({
-    hotel_code,
-    id,
-    payload,
-  }: {
-    hotel_code: number;
-    id: number;
-    payload: IHeroBgContentPayload;
-  }) {
+  public async insertSocialLink(
+    payload:
+      | ICreateAgencyB2CSocialLinkPayload
+      | ICreateAgencyB2CSocialLinkPayload[]
+  ) {
     return await this.db("social_links")
       .withSchema(this.BTOC_SCHEMA)
-      .select("*")
-      .where("hotel_code", hotel_code)
-      .andWhere("id", id)
-      .update(payload);
-  }
-
-  public async updatePopularRoomTypes({
-    hotel_code,
-    id,
-    payload,
-  }: {
-    hotel_code: number;
-    id: number;
-    payload: IHeroBgContentPayload;
-  }) {
-    return await this.db("popular_room_types")
-      .withSchema(this.BTOC_SCHEMA)
-      .select("*")
-      .where("hotel_code", hotel_code)
-      .andWhere("id", id)
-      .update(payload);
-  }
-
-  // ======================== Service Content ================================ //
-  public async createHotelServiceContent(payload: {
-    hotel_code: number;
-    title: string;
-    description: string;
-  }) {
-    return await this.db("hotel_service_content")
-      .withSchema(this.RESERVATION_SCHEMA)
       .insert(payload, "id");
   }
 
-  public async getSingleServiceContent(query: {
-    hotel_code?: number;
-    id?: number;
-  }) {
-    return await this.db("hotel_service_content")
-      .withSchema(this.RESERVATION_SCHEMA)
-      .select("*")
-      .modify((qb) => {
-        if (query.id) {
-          qb.andWhere("id", query.id);
-        }
-        if (query.hotel_code) {
-          qb.andWhere("hotel_code", query.hotel_code);
-        }
-      })
-      .first();
-  }
-
-  public async getHotelServiceContentWithServices(query: {
-    hotel_code?: number;
-    search?: string;
-    limit?: number;
-    skip?: number;
-    id?: number;
-  }) {
-    return await this.db("hotel_service_content as hsc")
-      .withSchema(this.RESERVATION_SCHEMA)
+  public async getSocialLink(
+    query: IGetAgencyB2CSocialLinkQuery
+  ): Promise<IGetAgencyB2CSocialLinkData[]> {
+    return await this.db("social_links AS sl")
+      .withSchema(this.BTOC_SCHEMA)
       .select(
-        "hsc.id",
-        "hsc.hotel_code",
-        "hsc.title",
-        "hsc.description",
-        this.db.raw(`
-        COALESCE(
-          json_agg(
-            json_build_object(
-              'id', hs.id,
-              'icon', hs.icon,
-              'title', hs.title,
-              'description', hs.description
-            )
-          ) FILTER (WHERE hs.id IS NOT NULL),
-          '[]'
-        ) as services
-      `)
+        "sl.id",
+        "sl.link",
+        "sl.status",
+        "sl.order_number",
+        "sl.social_media_id",
+        "sm.name AS media",
+        "sm.logo"
       )
-      .leftJoin("hotel_services as hs", "hs.hotel_code", "hsc.hotel_code")
-      .modify((qb) => {
-        if (query.id) {
-          qb.andWhere("hsc.id", query.id);
-        }
-        if (query.hotel_code) {
-          qb.andWhere("hsc.hotel_code", query.hotel_code);
-        }
-      })
-      .groupBy("hsc.id")
-      .first();
-  }
-
-  public async updateServiceContent(
-    payload: { title: string; description: string },
-    query: { hotel_code: number }
-  ) {
-    return await this.db("hotel_service_content")
-      .withSchema(this.RESERVATION_SCHEMA)
-      .update(payload)
-      .modify((qb) => {
-        if (query.hotel_code) {
-          qb.andWhere("hotel_code", query.hotel_code);
+      .joinRaw(
+        `LEFT JOIN btoc.social_media AS sm ON sl.social_media_id = sm.id`
+      )
+      .orderBy("sl.order_number", "asc")
+      .andWhere("sl.hotel_code", query.hotel_code)
+      .where((qb) => {
+        if (query.status !== undefined) {
+          qb.andWhere("sl.status", query.status);
         }
       });
   }
 
-  // ======================== Services ================================ //
-  public async createHotelService(payload: {
-    title: string;
-    description: string;
-    icon: string;
-  }) {
-    return await this.db("hotel_services")
-      .withSchema(this.RESERVATION_SCHEMA)
-      .insert(payload, "id");
-  }
-
-  public async getSingleService(query: { id?: number; title?: string }) {
-    return await this.db("hotel_services")
-      .withSchema(this.RESERVATION_SCHEMA)
+  public async checkSocialLink(query: {
+    hotel_code: number;
+    id: number;
+  }): Promise<IGetAgencyB2CSocialLinkData | null> {
+    return await this.db("social_links")
+      .withSchema(this.BTOC_SCHEMA)
       .select("*")
-      .modify((qb) => {
-        if (query.id) {
-          qb.andWhere("id", query.id);
-        }
-        if (query.title) {
-          qb.andWhere("title", "ilike", `%${query.title}%`);
-        }
-      })
+      .andWhere("hotel_code", query.hotel_code)
+      .andWhere("id", query.id)
       .first();
   }
 
-  public async getAllServices(query: {
-    title?: string;
-    limit: number;
-    skip: number;
-  }): Promise<{
-    data: {
-      id: number;
-      icon: string;
-      title: string;
-      description: string;
-      is_deleted: boolean;
-      created_at: string;
-      updated_at: string;
-    };
-    total: number;
-  }> {
-    const qb = this.db("hotel_services")
-      .withSchema(this.RESERVATION_SCHEMA)
-      .modify((qb) => {
-        if (query.title) {
-          qb.andWhere("title", "ilike", `%${query.title}%`);
-        }
-      })
-      .andWhere("is_deleted", false);
-
-    const data = await qb
-      .clone()
-      .limit(query.limit)
-      .offset(query.skip)
-      .orderBy("id", "desc");
-
-    const total = await qb.clone().count("* as count").first();
-
-    return {
-      data,
-      total: Number(total?.count || 0),
-    };
+  public async getSocialLinkLastNo(query: {
+    hotel_code: number;
+  }): Promise<IGetAgencyB2CSocialLinkData | null> {
+    return await this.db("social_links")
+      .withSchema(this.BTOC_SCHEMA)
+      .select("*")
+      .where("hotel_code", query.hotel_code)
+      .orderBy("order_number", "desc")
+      .first();
   }
 
-  public async updateHotelService(
-    payload: {
-      icon: string;
-      title: string;
-      description: string;
-      is_deleted?: boolean;
-    },
-    query: { id: number }
+  public async checkSocialMedia(id: number): Promise<IGetSocialMediaData> {
+    return await this.db("social_media")
+      .withSchema(this.BTOC_SCHEMA)
+      .select("*")
+      .where("id", id)
+      .first();
+  }
+  public async updateSocialLink(
+    payload: IUpdateAgencyB2CSocialLinkPayload,
+    where: {
+      hotel_code: number;
+      id: number;
+    }
   ) {
-    return await this.db("hotel_services")
-      .withSchema(this.RESERVATION_SCHEMA)
+    return await this.db("social_links")
+      .withSchema(this.BTOC_SCHEMA)
       .update(payload)
-      .where("id", query.id);
+      .where("hotel_code", where.hotel_code)
+      .andWhere("id", where.id);
+  }
+
+  public async deleteSocialLink(where: { hotel_code: number; id: number }) {
+    return await this.db("social_links")
+      .withSchema(this.BTOC_SCHEMA)
+      .del()
+      .where("hotel_code", where.hotel_code)
+      .where("id", where.id);
+  }
+
+  public async insertHotDeals(
+    payload: ICreateAgencyB2CHotDeals | ICreateAgencyB2CHotDeals[]
+  ) {
+    return await this.db("hot_deals")
+      .withSchema(this.BTOC_SCHEMA)
+      .insert(payload);
+  }
+
+  public async getHotDeals(
+    query: IGetAgencyB2CHotDealsQuery
+  ): Promise<IGetAgencyB2CHotDealsData[]> {
+    return await this.db("hot_deals")
+      .withSchema(this.BTOC_SCHEMA)
+      .select("*")
+      .orderBy("order_number", "asc")
+      .andWhere("agency_id", query.agency_id)
+      .where((qb) => {
+        if (query.status !== undefined) {
+          qb.andWhere("status", query.status);
+        }
+      });
+  }
+
+  public async checkHotDeals(query: {
+    agency_id: number;
+    id: number;
+  }): Promise<IGetAgencyB2CHotDealsData | null> {
+    return await this.db("hot_deals")
+      .withSchema(this.BTOC_SCHEMA)
+      .select("*")
+      .andWhere("agency_id", query.agency_id)
+      .andWhere("id", query.id)
+      .first();
+  }
+
+  public async getHotDealsLastNo(query: {
+    agency_id: number;
+  }): Promise<IGetAgencyB2CHotDealsData | null> {
+    return await this.db("hot_deals")
+      .withSchema(this.BTOC_SCHEMA)
+      .select("*")
+      .where("agency_id", query.agency_id)
+      .orderBy("order_number", "desc")
+      .first();
+  }
+
+  public async updateHotDeals(
+    payload: IUpdateAgencyB2CHotDealsPayload,
+    where: {
+      agency_id: number;
+      id: number;
+    }
+  ) {
+    return await this.db("hot_deals")
+      .withSchema(this.BTOC_SCHEMA)
+      .update(payload)
+      .where("agency_id", where.agency_id)
+      .andWhere("id", where.id);
+  }
+
+  public async deleteHotDeals(where: { hotel_code: number; id: number }) {
+    return await this.db("hot_deals")
+      .withSchema(this.BTOC_SCHEMA)
+      .del()
+      .where("hotel_code", where.hotel_code)
+      .where("id", where.id);
+  }
+
+  public async insertSocialMedias(payload: IInsertSocialMedia) {
+    return await this.db("social_media")
+      .withSchema(this.PUBLIC_SCHEMA)
+      .insert(payload, "id");
+  }
+
+  public async updateSocialMedia(
+    payload: IUpdateSocialMediaPayload,
+    id: number
+  ) {
+    return await this.db("social_media")
+      .withSchema(this.PUBLIC_SCHEMA)
+      .update(payload)
+      .where("id", id);
+  }
+
+  public async getSocialMedia(query: {
+    name?: string;
+    id?: number;
+    status?: boolean | "true" | "false";
+  }): Promise<IGetSocialMediaData[]> {
+    console.log({ query });
+    return await this.db("social_media")
+      .withSchema(this.PUBLIC_SCHEMA)
+      .select("*")
+      .where((qb) => {
+        if (query.name) {
+          qb.andWhereILike("name", `%${query.name}%`);
+        }
+
+        if (query.id) {
+          qb.andWhere("id", query.id);
+        }
+
+        if (query.status !== undefined) {
+          qb.andWhere("status", query.status);
+        }
+      });
+  }
+
+  public async insertPopUpBanner(
+    payload: ICreateAgencyB2CPopUpBanner | ICreateAgencyB2CPopUpBanner[]
+  ) {
+    return await this.db("pop_up_banner")
+      .withSchema(this.BTOC_SCHEMA)
+      .insert(payload);
+  }
+
+  public async getPopUpBanner(
+    query: IGetAgencyB2CPopUpBannerQuery
+  ): Promise<IGetAgencyB2CPopUpBannerData[]> {
+    return await this.db("pop_up_banner")
+      .withSchema(this.BTOC_SCHEMA)
+      .select("*")
+      .andWhere("hotel_code", query.hotel_code)
+      .where((qb) => {
+        if (query.status !== undefined) {
+          qb.andWhere("status", query.status);
+        }
+        if (query.pop_up_for) {
+          qb.andWhere("pop_up_for", query.pop_up_for);
+        }
+      });
+  }
+
+  public async getSinglePopUpBanner(query: {
+    agency_id: number;
+    status: boolean;
+  }): Promise<IGetAgencyB2CPopUpBannerData | null> {
+    return await this.db("pop_up_banner")
+      .withSchema(this.BTOC_SCHEMA)
+      .select("*")
+      .andWhere("agency_id", query.agency_id)
+      .andWhere("status", query.status)
+      .first();
+  }
+
+  public async updatePopUpBanner(
+    payload: IUpdateAgencyB2CPopUpBannerPayload,
+    where: {
+      hotel_code: number;
+    }
+  ) {
+    return await this.db("pop_up_banner")
+      .withSchema(this.BTOC_SCHEMA)
+      .update(payload)
+      .where("hotel_code", where.hotel_code);
+  }
+
+  public async deletePopUpBanner(where: { agency_id: number; id: number }) {
+    return await this.db("pop_up_banner")
+      .withSchema(this.BTOC_SCHEMA)
+      .del()
+      .where("agency_id", where.agency_id)
+      .where("id", where.id);
   }
 }

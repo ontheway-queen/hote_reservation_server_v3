@@ -1,4 +1,8 @@
 import Joi from "joi";
+import {
+  CONTENT_TYPE_PHOTO,
+  CONTENT_TYPE_VIDEO,
+} from "../../../utils/miscellaneous/constants";
 
 export default class AdminBtocHandlerValidator {
   updateBtocSiteConfig = Joi.object({
@@ -86,15 +90,20 @@ export default class AdminBtocHandlerValidator {
     link: Joi.string().optional(),
   });
 
-  public updateHeroBgContent = Joi.object({
-    id: Joi.string().required(),
-    type: Joi.string().valid("image", "video").optional(),
+  public createHeroBGContent = Joi.object({
+    type: Joi.string().valid(CONTENT_TYPE_PHOTO, CONTENT_TYPE_VIDEO).required(),
+    quote: Joi.string().optional().trim(),
+    sub_quote: Joi.string().optional().trim(),
+    tab: Joi.string().valid("HOTEL").optional(),
+  });
+
+  public updateHeroBGContent = Joi.object({
+    type: Joi.string().valid(CONTENT_TYPE_PHOTO, CONTENT_TYPE_VIDEO).optional(),
+    quote: Joi.string().optional().trim(),
+    sub_quote: Joi.string().optional().trim(),
     status: Joi.boolean().optional(),
     order_number: Joi.number().optional(),
-    quote: Joi.string().optional(),
-    sub_quote: Joi.string().optional(),
-    tab: Joi.string().optional(),
-    // content: Joi.string().optional(),
+    tab: Joi.string().valid("HOTEL").optional(),
   });
 
   public updateSocialLinks = Joi.object({

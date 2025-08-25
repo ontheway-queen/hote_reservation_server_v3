@@ -126,3 +126,9 @@ export const ACC_HEAD_CONFIG = {
 } as const;
 
 export type IAccountConfigHeads = keyof typeof ACC_HEAD_CONFIG;
+
+export const CONTENT_TYPE_PHOTO = "PHOTO";
+export const CONTENT_TYPE_VIDEO = "VIDEO";
+
+// functions type
+export const FUNCTION_TYPE_HOTEL = "HOTEL";

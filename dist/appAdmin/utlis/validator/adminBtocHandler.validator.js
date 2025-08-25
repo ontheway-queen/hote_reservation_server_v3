@@ -4,6 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const joi_1 = __importDefault(require("joi"));
+const constants_1 = require("../../../utils/miscellaneous/constants");
 class AdminBtocHandlerValidator {
     constructor() {
         this.updateBtocSiteConfig = joi_1.default.object({
@@ -76,15 +77,19 @@ class AdminBtocHandlerValidator {
             status: joi_1.default.boolean().optional(),
             link: joi_1.default.string().optional(),
         });
-        this.updateHeroBgContent = joi_1.default.object({
-            id: joi_1.default.string().required(),
-            type: joi_1.default.string().valid("image", "video").optional(),
+        this.createHeroBGContent = joi_1.default.object({
+            type: joi_1.default.string().valid(constants_1.CONTENT_TYPE_PHOTO, constants_1.CONTENT_TYPE_VIDEO).required(),
+            quote: joi_1.default.string().optional().trim(),
+            sub_quote: joi_1.default.string().optional().trim(),
+            tab: joi_1.default.string().valid("HOTEL").optional(),
+        });
+        this.updateHeroBGContent = joi_1.default.object({
+            type: joi_1.default.string().valid(constants_1.CONTENT_TYPE_PHOTO, constants_1.CONTENT_TYPE_VIDEO).optional(),
+            quote: joi_1.default.string().optional().trim(),
+            sub_quote: joi_1.default.string().optional().trim(),
             status: joi_1.default.boolean().optional(),
             order_number: joi_1.default.number().optional(),
-            quote: joi_1.default.string().optional(),
-            sub_quote: joi_1.default.string().optional(),
-            tab: joi_1.default.string().optional(),
-            // content: Joi.string().optional(),
+            tab: joi_1.default.string().valid("HOTEL").optional(),
         });
         this.updateSocialLinks = joi_1.default.object({
             id: joi_1.default.number().required(),

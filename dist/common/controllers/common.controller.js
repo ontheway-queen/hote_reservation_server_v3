@@ -53,6 +53,10 @@ class CommonController extends common_abstract_controller_1.default {
             const _e = yield this.commonService.getMonthList(), { code } = _e, data = __rest(_e, ["code"]);
             res.status(code).json(data);
         }));
+        this.getSocialMedia = this.asyncWrapper.wrap({}, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _f = yield this.commonService.getSocialMedia(req), { code } = _f, rest = __rest(_f, ["code"]);
+            res.status(code).json(rest);
+        }));
     }
 }
 exports.default = CommonController;

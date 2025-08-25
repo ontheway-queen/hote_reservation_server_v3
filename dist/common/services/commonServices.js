@@ -280,6 +280,24 @@ class CommonService extends abstract_service_1.default {
             };
         });
     }
+    getSocialMedia(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
+                const configModel = this.Model.b2cConfigurationModel(trx);
+                const { filter } = req.query;
+                const banks = yield configModel.getSocialMedia({
+                    name: filter,
+                    status: true,
+                });
+                return {
+                    success: true,
+                    code: this.StatusCode.HTTP_OK,
+                    message: this.ResMsg.HTTP_OK,
+                    data: banks,
+                };
+            }));
+        });
+    }
 }
 exports.default = CommonService;
 //# sourceMappingURL=commonServices.js.map

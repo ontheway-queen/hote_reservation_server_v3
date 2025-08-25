@@ -16,10 +16,11 @@ class CommonRouter extends common_abstract_router_1.default {
         this.router.post("/send-email-otp", this.CommonController.sendEmailOtpController);
         this.router.post("/match-email-otp", this.CommonController.matchEmailOtpController);
         this.router.get("/country", this.CommonController.getAllCountry);
-        // get all blood group
         this.router.get("/blood-group", this.CommonController.getAllBloodGroup);
-        // get all months
         this.router.get("/months", this.CommonController.getMonthList);
+        this.router
+            .route("/social-media")
+            .get(this.CommonController.getSocialMedia);
     }
 }
 exports.default = CommonRouter;

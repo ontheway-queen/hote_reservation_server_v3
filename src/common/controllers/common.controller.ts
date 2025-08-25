@@ -61,6 +61,14 @@ class CommonController extends CommonAbstractController {
       res.status(code).json(data);
     }
   );
+
+  public getSocialMedia = this.asyncWrapper.wrap(
+    {},
+    async (req: Request, res: Response) => {
+      const { code, ...rest } = await this.commonService.getSocialMedia(req);
+      res.status(code).json(rest);
+    }
+  );
 }
 
 export default CommonController;

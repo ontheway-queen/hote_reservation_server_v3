@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ACC_HEAD_CONFIG = exports.ERROR_LEVEL_CRITICAL = exports.ERROR_LEVEL_ERROR = exports.ERROR_LEVEL_WARNING = exports.ERROR_LEVEL_INFO = exports.ERROR_LEVEL_DEBUG = exports.OTP_FOR_CREDENTIALS = exports.OTP_FOR = exports.OTP_EMAIL_SUBJECT = exports.OTP_TYPE_FORGET_RES_ADMIN = exports.OTP_TYPE_FORGET_BTOC_USER = exports.OTP_TYPE_FORGET_HOTEL_ADMIN = exports.OTP_TYPE_FORGET_M_ADMIN = exports.DIVIDEND_GROUP = exports.EXPENSE_GROUP = exports.INCOME_GROUP = exports.CAPITAL_GROUP = exports.LIABILITY_GROUP = exports.ASSET_GROUP = exports.allStrings = exports.origin = void 0;
+exports.FUNCTION_TYPE_HOTEL = exports.CONTENT_TYPE_VIDEO = exports.CONTENT_TYPE_PHOTO = exports.ACC_HEAD_CONFIG = exports.ERROR_LEVEL_CRITICAL = exports.ERROR_LEVEL_ERROR = exports.ERROR_LEVEL_WARNING = exports.ERROR_LEVEL_INFO = exports.ERROR_LEVEL_DEBUG = exports.OTP_FOR_CREDENTIALS = exports.OTP_FOR = exports.OTP_EMAIL_SUBJECT = exports.OTP_TYPE_FORGET_RES_ADMIN = exports.OTP_TYPE_FORGET_BTOC_USER = exports.OTP_TYPE_FORGET_HOTEL_ADMIN = exports.OTP_TYPE_FORGET_M_ADMIN = exports.DIVIDEND_GROUP = exports.EXPENSE_GROUP = exports.INCOME_GROUP = exports.CAPITAL_GROUP = exports.LIABILITY_GROUP = exports.ASSET_GROUP = exports.allStrings = exports.origin = void 0;
 exports.origin = [
     "http://localhost:3000",
     "http://10.10.220.47:3030",
@@ -116,4 +116,8 @@ exports.ACC_HEAD_CONFIG = {
     HOTEL_EXPENSE_HEAD_ID: "HOTEL_EXPENSE_HEAD_ID",
     HOTEL_REVENUE_HEAD_ID: "HOTEL_REVENUE_HEAD_ID",
 };
+exports.CONTENT_TYPE_PHOTO = "PHOTO";
+exports.CONTENT_TYPE_VIDEO = "VIDEO";
+// functions type
+exports.FUNCTION_TYPE_HOTEL = "HOTEL";
 //# sourceMappingURL=constants.js.map

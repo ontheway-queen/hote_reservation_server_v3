@@ -22,11 +22,13 @@ class CommonRouter extends CommonAbstractRouter {
 
     this.router.get("/country", this.CommonController.getAllCountry);
 
-    // get all blood group
     this.router.get("/blood-group", this.CommonController.getAllBloodGroup);
 
-    // get all months
     this.router.get("/months", this.CommonController.getMonthList);
+
+    this.router
+      .route("/social-media")
+      .get(this.CommonController.getSocialMedia);
   }
 }
 

@@ -15,7 +15,11 @@ class Uploader extends CommonAbstractStorage {
   }
 
   // cloud upload raw
-  public cloudUploadRaw(folder: string, types: string[] = allowAllFileTypes) {
+  public cloudUploadRaw(
+    folder: string,
+    fields?: string[],
+    types: string[] = allowAllFileTypes
+  ) {
     return (req: Request, res: Response, next: NextFunction): void => {
       req.upFiles = [];
       const upload = multer({
@@ -41,9 +45,18 @@ class Uploader extends CommonAbstractStorage {
           },
         }),
         fileFilter: function (_req, file, cb) {
+          console.log(file.mimetype);
           // Check allowed extensions
           if (types.includes(file.mimetype)) {
-            cb(null, true); // no errors
+            if (!fields) {
+              cb(null, true); // no errors
+            } else if (fields.includes(file.fieldname)) {
+              cb(null, true); // no errors
+            } else {
+              cb(
+                new Error(`File fieldname '${file.fieldname}' is not allowed`)
+              );
+            }
           } else {
             cb(
               new Error(

@@ -5,12 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const client_s3_1 = require("@aws-sdk/client-s3");
 const config_1 = __importDefault(require("../../config/config"));
-const allowed_file_types = [
-    "image/jpeg",
-    "image/jpg",
-    "image/png",
-    "image/webp",
-];
+const uploaderConstants_1 = require("../middleware/uploader/uploaderConstants");
 class CommonAbstractStorage {
     constructor() {
         // aws s3 connect
@@ -21,7 +16,7 @@ class CommonAbstractStorage {
                 secretAccessKey: config_1.default.AWS_S3_SECRET_KEY,
             },
         });
-        this.allowed_file_types = allowed_file_types;
+        this.allowed_file_types = uploaderConstants_1.allowAllFileTypes;
         this.error_message = "Only .jpg, .jpeg, .webp or .png format allowed!";
     }
 }

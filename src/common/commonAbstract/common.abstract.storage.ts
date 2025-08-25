@@ -1,19 +1,13 @@
 import { S3Client } from "@aws-sdk/client-s3";
 import config from "../../config/config";
-
-const allowed_file_types = [
-  "image/jpeg",
-  "image/jpg",
-  "image/png",
-  "image/webp",
-];
+import { allowAllFileTypes } from "../middleware/uploader/uploaderConstants";
 
 abstract class CommonAbstractStorage {
   protected allowed_file_types: string[];
   protected error_message: string;
 
   constructor() {
-    this.allowed_file_types = allowed_file_types;
+    this.allowed_file_types = allowAllFileTypes;
     this.error_message = "Only .jpg, .jpeg, .webp or .png format allowed!";
   }
 

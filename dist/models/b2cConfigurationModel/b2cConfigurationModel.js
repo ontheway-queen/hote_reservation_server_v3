@@ -13,10 +13,205 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const schema_1 = __importDefault(require("../../utils/miscellaneous/schema"));
-class B2cConfigurationModel extends schema_1.default {
+class AgencyB2CConfigModel extends schema_1.default {
     constructor(db) {
         super();
         this.db = db;
+    }
+    insertHeroBGContent(payload) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("hero_bg_content")
+                .withSchema(this.BTOC_SCHEMA)
+                .insert(payload, "id");
+        });
+    }
+    getHeroBGContent(query) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("hero_bg_content")
+                .withSchema(this.BTOC_SCHEMA)
+                .select("*")
+                .orderBy("order_number", "asc")
+                .andWhere("agency_id", query.agency_id)
+                .where((qb) => {
+                if (query.status !== undefined) {
+                    qb.andWhere("status", query.status);
+                }
+                if (query.type) {
+                    qb.andWhere("type", query.type);
+                }
+            });
+        });
+    }
+    checkHeroBGContent(query) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("hero_bg_content")
+                .withSchema(this.BTOC_SCHEMA)
+                .select("*")
+                .orderBy("order_number", "asc")
+                .andWhere("agency_id", query.agency_id)
+                .andWhere("id", query.id);
+        });
+    }
+    getHeroBGContentLastNo(query) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("hero_bg_content")
+                .withSchema(this.BTOC_SCHEMA)
+                .select("*")
+                .where("agency_id", query.agency_id)
+                .orderBy("order_number", "desc")
+                .first();
+        });
+    }
+    updateHeroBGContent(payload, where) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("hero_bg_content")
+                .withSchema(this.BTOC_SCHEMA)
+                .update(payload)
+                .where("agency_id", where.agency_id)
+                .where("id", where.id);
+        });
+    }
+    deleteHeroBGContent(where) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("hero_bg_content")
+                .withSchema(this.BTOC_SCHEMA)
+                .del()
+                .where("agency_id", where.agency_id)
+                .where("id", where.id);
+        });
+    }
+    insertPopularDestination(payload) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("popular_destination")
+                .withSchema(this.BTOC_SCHEMA)
+                .insert(payload);
+        });
+    }
+    getPopularDestination(query) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("popular_destination AS pd")
+                .withSchema(this.BTOC_SCHEMA)
+                .select("pd.*", "dc.name AS from_airport_country", "dci.name AS from_airport_city", "da.name AS from_airport_name", "da.iata_code AS from_airport_code", "aa.name AS to_airport_name", "aa.iata_code AS to_airport_code", "ac.name AS to_airport_country", "aci.name AS to_airport_city")
+                .joinRaw(`LEFT JOIN public.airport AS da ON pd.from_airport = da.id`)
+                .joinRaw(`LEFT JOIN public.airport AS aa ON pd.to_airport = aa.id`)
+                .joinRaw(`LEFT JOIN public.country AS dc ON da.country_id = dc.id`)
+                .joinRaw(`LEFT JOIN public.country AS ac ON aa.country_id = ac.id`)
+                .joinRaw(`LEFT JOIN public.city AS dci ON da.city = dci.id`)
+                .joinRaw(`LEFT JOIN public.city AS aci ON aa.city = aci.id`)
+                .orderBy("pd.order_number", "asc")
+                .andWhere("pd.agency_id", query.agency_id)
+                .where((qb) => {
+                if (query.status !== undefined) {
+                    qb.andWhere("pd.status", query.status);
+                }
+            });
+        });
+    }
+    checkPopularDestination(query) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("popular_destination")
+                .withSchema(this.BTOC_SCHEMA)
+                .select("*")
+                .orderBy("order_number", "asc")
+                .andWhere("agency_id", query.agency_id)
+                .andWhere("id", query.id)
+                .first();
+        });
+    }
+    getPopularDestinationLastNo(query) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("popular_destination")
+                .withSchema(this.BTOC_SCHEMA)
+                .select("*")
+                .where("agency_id", query.agency_id)
+                .orderBy("order_number", "desc")
+                .first();
+        });
+    }
+    updatePopularDestination(payload, where) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("popular_destination")
+                .withSchema(this.BTOC_SCHEMA)
+                .update(payload)
+                .where("agency_id", where.agency_id)
+                .where("id", where.id);
+        });
+    }
+    deletePopularDestination(where) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("popular_destination")
+                .withSchema(this.BTOC_SCHEMA)
+                .del()
+                .where("agency_id", where.agency_id)
+                .where("id", where.id);
+        });
+    }
+    insertPopularPlaces(payload) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("popular_places")
+                .withSchema(this.BTOC_SCHEMA)
+                .insert(payload);
+        });
+    }
+    getPopularPlaces(query) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("popular_places AS pp")
+                .withSchema(this.BTOC_SCHEMA)
+                .select("pp.*", "c.name AS country_name")
+                .joinRaw(`LEFT JOIN public.country AS c ON pp.country_id = c.id`)
+                .orderBy("pp.order_number", "asc")
+                .andWhere("pp.agency_id", query.agency_id)
+                .where((qb) => {
+                if (query.status !== undefined) {
+                    qb.andWhere("pp.status", query.status);
+                }
+            });
+        });
+    }
+    checkPopularPlace(query) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("popular_places")
+                .withSchema(this.BTOC_SCHEMA)
+                .select("*")
+                .andWhere("agency_id", query.agency_id)
+                .andWhere("id", query.id)
+                .first();
+        });
+    }
+    getPopularPlaceLastNo(query) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("popular_places")
+                .withSchema(this.BTOC_SCHEMA)
+                .select("*")
+                .where("agency_id", query.agency_id)
+                .orderBy("order_number", "desc")
+                .first();
+        });
+    }
+    updatePopularPlace(payload, where) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("popular_places")
+                .withSchema(this.BTOC_SCHEMA)
+                .update(payload)
+                .where("agency_id", where.agency_id)
+                .andWhere("id", where.id);
+        });
+    }
+    deletePopularPlace(where) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("popular_places")
+                .withSchema(this.BTOC_SCHEMA)
+                .del()
+                .where("agency_id", where.agency_id)
+                .where("id", where.id);
+        });
+    }
+    insertSiteConfig(payload) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("site_config")
+                .withSchema(this.BTOC_SCHEMA)
+                .insert(payload);
+        });
     }
     getSiteConfig(query) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -27,29 +222,88 @@ class B2cConfigurationModel extends schema_1.default {
                 .first();
         });
     }
-    getPopUpBanner(query) {
+    updateConfig(payload, where) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("pop_up_banner")
+            return yield this.db("site_config")
+                .withSchema(this.BTOC_SCHEMA)
+                .update(payload)
+                .where("hotel_code", where.hotel_code);
+        });
+    }
+    insertSocialLink(payload) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("social_links")
+                .withSchema(this.BTOC_SCHEMA)
+                .insert(payload, "id");
+        });
+    }
+    getSocialLink(query) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("social_links AS sl")
+                .withSchema(this.BTOC_SCHEMA)
+                .select("sl.id", "sl.link", "sl.status", "sl.order_number", "sl.social_media_id", "sm.name AS media", "sm.logo")
+                .joinRaw(`LEFT JOIN btoc.social_media AS sm ON sl.social_media_id = sm.id`)
+                .orderBy("sl.order_number", "asc")
+                .andWhere("sl.hotel_code", query.hotel_code)
+                .where((qb) => {
+                if (query.status !== undefined) {
+                    qb.andWhere("sl.status", query.status);
+                }
+            });
+        });
+    }
+    checkSocialLink(query) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("social_links")
                 .withSchema(this.BTOC_SCHEMA)
                 .select("*")
-                .where("hotel_code", query.hotel_code)
+                .andWhere("hotel_code", query.hotel_code)
+                .andWhere("id", query.id)
                 .first();
         });
     }
-    getHeroBgContent(query) {
+    getSocialLinkLastNo(query) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("hero_bg_content")
+            return yield this.db("social_links")
                 .withSchema(this.BTOC_SCHEMA)
                 .select("*")
                 .where("hotel_code", query.hotel_code)
-                .modify((qb) => {
-                if (query.id) {
-                    qb.andWhere("id", query.id);
-                }
-                if (query.order_number) {
-                    qb.andWhere("order_number", query.order_number);
-                }
-            });
+                .orderBy("order_number", "desc")
+                .first();
+        });
+    }
+    checkSocialMedia(id) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("social_media")
+                .withSchema(this.BTOC_SCHEMA)
+                .select("*")
+                .where("id", id)
+                .first();
+        });
+    }
+    updateSocialLink(payload, where) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("social_links")
+                .withSchema(this.BTOC_SCHEMA)
+                .update(payload)
+                .where("hotel_code", where.hotel_code)
+                .andWhere("id", where.id);
+        });
+    }
+    deleteSocialLink(where) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("social_links")
+                .withSchema(this.BTOC_SCHEMA)
+                .del()
+                .where("hotel_code", where.hotel_code)
+                .where("id", where.id);
+        });
+    }
+    insertHotDeals(payload) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("hot_deals")
+                .withSchema(this.BTOC_SCHEMA)
+                .insert(payload);
         });
     }
     getHotDeals(query) {
@@ -57,230 +311,137 @@ class B2cConfigurationModel extends schema_1.default {
             return yield this.db("hot_deals")
                 .withSchema(this.BTOC_SCHEMA)
                 .select("*")
-                .where("hotel_code", query.hotel_code)
-                .modify((qb) => {
-                if (query.id) {
-                    qb.andWhere("id", query.id);
-                }
-                if (query.order_number) {
-                    qb.andWhere("order_number", query.order_number);
+                .orderBy("order_number", "asc")
+                .andWhere("agency_id", query.agency_id)
+                .where((qb) => {
+                if (query.status !== undefined) {
+                    qb.andWhere("status", query.status);
                 }
             });
         });
     }
-    getSocialLinks(query) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("social_links")
-                .withSchema(this.BTOC_SCHEMA)
-                .select("*")
-                .where("hotel_code", query.hotel_code)
-                .modify((qb) => {
-                if (query.id) {
-                    qb.andWhere("id", query.id);
-                }
-                if (query.order_number) {
-                    qb.andWhere("order_number", query.order_number);
-                }
-            });
-        });
-    }
-    getPopularRoomTypes(query) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("popular_room_types as prt")
-                .withSchema(this.BTOC_SCHEMA)
-                .select("prt.*", "rt.name", "rt.description")
-                .joinRaw(`JOIN ?? as rt ON rt.id = prt.room_type_id`, [
-                `${this.RESERVATION_SCHEMA}.${this.TABLES.room_types}`,
-            ])
-                .where("prt.hotel_code", query.hotel_code)
-                .modify((qb) => {
-                if (query.id) {
-                    qb.andWhere("prt.id", query.id);
-                }
-                if (query.order_number) {
-                    qb.andWhere("prt.order_number", query.order_number);
-                }
-            });
-        });
-    }
-    updateSiteConfig({ hotel_code, payload, }) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("site_config")
-                .withSchema(this.BTOC_SCHEMA)
-                .select("*")
-                .where("hotel_code", hotel_code)
-                .update(payload);
-        });
-    }
-    updatePopUpBanner({ hotel_code, payload, }) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("pop_up_banner")
-                .withSchema(this.BTOC_SCHEMA)
-                .select("*")
-                .where("hotel_code", hotel_code)
-                .update(payload);
-        });
-    }
-    updateHeroBgContent({ hotel_code, id, payload, }) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("hero_bg_content")
-                .withSchema(this.BTOC_SCHEMA)
-                .select("*")
-                .where("hotel_code", hotel_code)
-                .andWhere("id", id)
-                .update(payload);
-        });
-    }
-    updateHotDeals({ hotel_code, id, payload, }) {
+    checkHotDeals(query) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("hot_deals")
                 .withSchema(this.BTOC_SCHEMA)
                 .select("*")
-                .where("hotel_code", hotel_code)
-                .andWhere("id", id)
-                .update(payload);
+                .andWhere("agency_id", query.agency_id)
+                .andWhere("id", query.id)
+                .first();
         });
     }
-    updateSocialLinks({ hotel_code, id, payload, }) {
+    getHotDealsLastNo(query) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("social_links")
+            return yield this.db("hot_deals")
                 .withSchema(this.BTOC_SCHEMA)
                 .select("*")
-                .where("hotel_code", hotel_code)
-                .andWhere("id", id)
-                .update(payload);
+                .where("agency_id", query.agency_id)
+                .orderBy("order_number", "desc")
+                .first();
         });
     }
-    updatePopularRoomTypes({ hotel_code, id, payload, }) {
+    updateHotDeals(payload, where) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("popular_room_types")
+            return yield this.db("hot_deals")
                 .withSchema(this.BTOC_SCHEMA)
-                .select("*")
-                .where("hotel_code", hotel_code)
-                .andWhere("id", id)
-                .update(payload);
+                .update(payload)
+                .where("agency_id", where.agency_id)
+                .andWhere("id", where.id);
         });
     }
-    // ======================== Service Content ================================ //
-    createHotelServiceContent(payload) {
+    deleteHotDeals(where) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("hotel_service_content")
-                .withSchema(this.RESERVATION_SCHEMA)
+            return yield this.db("hot_deals")
+                .withSchema(this.BTOC_SCHEMA)
+                .del()
+                .where("hotel_code", where.hotel_code)
+                .where("id", where.id);
+        });
+    }
+    insertSocialMedias(payload) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("social_media")
+                .withSchema(this.PUBLIC_SCHEMA)
                 .insert(payload, "id");
         });
     }
-    getSingleServiceContent(query) {
+    updateSocialMedia(payload, id) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("hotel_service_content")
-                .withSchema(this.RESERVATION_SCHEMA)
+            return yield this.db("social_media")
+                .withSchema(this.PUBLIC_SCHEMA)
+                .update(payload)
+                .where("id", id);
+        });
+    }
+    getSocialMedia(query) {
+        return __awaiter(this, void 0, void 0, function* () {
+            console.log({ query });
+            return yield this.db("social_media")
+                .withSchema(this.PUBLIC_SCHEMA)
                 .select("*")
-                .modify((qb) => {
+                .where((qb) => {
+                if (query.name) {
+                    qb.andWhereILike("name", `%${query.name}%`);
+                }
                 if (query.id) {
                     qb.andWhere("id", query.id);
                 }
-                if (query.hotel_code) {
-                    qb.andWhere("hotel_code", query.hotel_code);
-                }
-            })
-                .first();
-        });
-    }
-    getHotelServiceContentWithServices(query) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("hotel_service_content as hsc")
-                .withSchema(this.RESERVATION_SCHEMA)
-                .select("hsc.id", "hsc.hotel_code", "hsc.title", "hsc.description", this.db.raw(`
-        COALESCE(
-          json_agg(
-            json_build_object(
-              'id', hs.id,
-              'icon', hs.icon,
-              'title', hs.title,
-              'description', hs.description
-            )
-          ) FILTER (WHERE hs.id IS NOT NULL),
-          '[]'
-        ) as services
-      `))
-                .leftJoin("hotel_services as hs", "hs.hotel_code", "hsc.hotel_code")
-                .modify((qb) => {
-                if (query.id) {
-                    qb.andWhere("hsc.id", query.id);
-                }
-                if (query.hotel_code) {
-                    qb.andWhere("hsc.hotel_code", query.hotel_code);
-                }
-            })
-                .groupBy("hsc.id")
-                .first();
-        });
-    }
-    updateServiceContent(payload, query) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("hotel_service_content")
-                .withSchema(this.RESERVATION_SCHEMA)
-                .update(payload)
-                .modify((qb) => {
-                if (query.hotel_code) {
-                    qb.andWhere("hotel_code", query.hotel_code);
+                if (query.status !== undefined) {
+                    qb.andWhere("status", query.status);
                 }
             });
         });
     }
-    // ======================== Services ================================ //
-    createHotelService(payload) {
+    insertPopUpBanner(payload) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("hotel_services")
-                .withSchema(this.RESERVATION_SCHEMA)
-                .insert(payload, "id");
+            return yield this.db("pop_up_banner")
+                .withSchema(this.BTOC_SCHEMA)
+                .insert(payload);
         });
     }
-    getSingleService(query) {
+    getPopUpBanner(query) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("hotel_services")
-                .withSchema(this.RESERVATION_SCHEMA)
+            return yield this.db("pop_up_banner")
+                .withSchema(this.BTOC_SCHEMA)
                 .select("*")
-                .modify((qb) => {
-                if (query.id) {
-                    qb.andWhere("id", query.id);
+                .andWhere("hotel_code", query.hotel_code)
+                .where((qb) => {
+                if (query.status !== undefined) {
+                    qb.andWhere("status", query.status);
                 }
-                if (query.title) {
-                    qb.andWhere("title", "ilike", `%${query.title}%`);
+                if (query.pop_up_for) {
+                    qb.andWhere("pop_up_for", query.pop_up_for);
                 }
-            })
+            });
+        });
+    }
+    getSinglePopUpBanner(query) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("pop_up_banner")
+                .withSchema(this.BTOC_SCHEMA)
+                .select("*")
+                .andWhere("agency_id", query.agency_id)
+                .andWhere("status", query.status)
                 .first();
         });
     }
-    getAllServices(query) {
+    updatePopUpBanner(payload, where) {
         return __awaiter(this, void 0, void 0, function* () {
-            const qb = this.db("hotel_services")
-                .withSchema(this.RESERVATION_SCHEMA)
-                .modify((qb) => {
-                if (query.title) {
-                    qb.andWhere("title", "ilike", `%${query.title}%`);
-                }
-            })
-                .andWhere("is_deleted", false);
-            const data = yield qb
-                .clone()
-                .limit(query.limit)
-                .offset(query.skip)
-                .orderBy("id", "desc");
-            const total = yield qb.clone().count("* as count").first();
-            return {
-                data,
-                total: Number((total === null || total === void 0 ? void 0 : total.count) || 0),
-            };
+            return yield this.db("pop_up_banner")
+                .withSchema(this.BTOC_SCHEMA)
+                .update(payload)
+                .where("hotel_code", where.hotel_code);
         });
     }
-    updateHotelService(payload, query) {
+    deletePopUpBanner(where) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("hotel_services")
-                .withSchema(this.RESERVATION_SCHEMA)
-                .update(payload)
-                .where("id", query.id);
+            return yield this.db("pop_up_banner")
+                .withSchema(this.BTOC_SCHEMA)
+                .del()
+                .where("agency_id", where.agency_id)
+                .where("id", where.id);
         });
     }
 }
-exports.default = B2cConfigurationModel;
+exports.default = AgencyB2CConfigModel;
 //# sourceMappingURL=b2cConfigurationModel.js.map

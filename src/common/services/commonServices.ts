@@ -325,6 +325,26 @@ class CommonService extends AbstractServices {
       data,
     };
   }
+
+  public async getSocialMedia(req: Request) {
+    return this.db.transaction(async (trx) => {
+      const configModel = this.Model.b2cConfigurationModel(trx);
+
+      const { filter } = req.query as { filter: string };
+
+      const banks = await configModel.getSocialMedia({
+        name: filter,
+        status: true,
+      });
+
+      return {
+        success: true,
+        code: this.StatusCode.HTTP_OK,
+        message: this.ResMsg.HTTP_OK,
+        data: banks,
+      };
+    });
+  }
 }
 
 export default CommonService;
