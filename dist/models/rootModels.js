@@ -27,6 +27,7 @@ const dboModel_1 = __importDefault(require("./commonModel/dboModel"));
 const btoc_model_1 = require("./btocModels/btoc.model");
 const payment_model_1 = __importDefault(require("./reservationPanel/paymentModel/payment.model"));
 const b2cConfigurationModel_1 = __importDefault(require("./b2cConfigurationModel/b2cConfigurationModel"));
+const hrModel_1 = __importDefault(require("./reservationPanel/hrModel"));
 class Models {
     constructor(db) {
         this.db = db;
@@ -63,6 +64,9 @@ class Models {
     }
     employeeModel(trx) {
         return new employeeModel_1.default(trx || this.db);
+    }
+    hrModel(trx) {
+        return new hrModel_1.default(trx || this.db);
     }
     payRollModel(trx) {
         return new payRollModel_1.default(trx || this.db);

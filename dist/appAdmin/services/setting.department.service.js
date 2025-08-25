@@ -13,21 +13,17 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const abstract_service_1 = __importDefault(require("../../abstarcts/abstract.service"));
-const Setting_Model_1 = __importDefault(require("../../models/reservationPanel/Setting.Model"));
 const customEror_1 = __importDefault(require("../../utils/lib/customEror"));
 class DepartmentSettingService extends abstract_service_1.default {
     constructor() {
         super();
     }
-    //=================== Department service ======================//
-    // create Department
     createDepartment(req) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
                 const { hotel_code, id } = req.hotel_admin;
                 const { name } = req.body;
-                // Department check
-                const settingModel = this.Model.settingModel();
+                const settingModel = this.Model.hrModel();
                 const { data } = yield settingModel.getAllDepartment({
                     name,
                     hotel_code,
@@ -39,9 +35,7 @@ class DepartmentSettingService extends abstract_service_1.default {
                         message: "Department name already exists",
                     };
                 }
-                // model
-                const model = new Setting_Model_1.default(trx);
-                yield model.createDepartment({
+                yield settingModel.createDepartment({
                     hotel_code,
                     name,
                     created_by: id,
@@ -59,7 +53,7 @@ class DepartmentSettingService extends abstract_service_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             const { hotel_code } = req.hotel_admin;
             const { limit, skip, name, status } = req.query;
-            const model = this.Model.settingModel();
+            const model = this.Model.hrModel();
             const { data, total } = yield model.getAllDepartment({
                 status: status,
                 limit: limit,
@@ -79,7 +73,7 @@ class DepartmentSettingService extends abstract_service_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             const { hotel_code } = req.hotel_admin;
             const id = req.params.id;
-            const model = this.Model.settingModel();
+            const model = this.Model.hrModel();
             const data = yield model.getSingleDepartment(Number(id), hotel_code);
             if (!data) {
                 throw new customEror_1.default(`The requested department with ID: ${id} does not exist`, this.StatusCode.HTTP_NOT_FOUND);
@@ -98,7 +92,7 @@ class DepartmentSettingService extends abstract_service_1.default {
                 const { hotel_code } = req.hotel_admin;
                 const { id } = req.params;
                 const updatePayload = req.body;
-                const model = this.Model.settingModel(trx);
+                const model = this.Model.hrModel(trx);
                 const { data } = yield model.getAllDepartment({
                     name: updatePayload.name,
                     hotel_code,
@@ -129,8 +123,7 @@ class DepartmentSettingService extends abstract_service_1.default {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
                 const { hotel_code } = req.hotel_admin;
                 const { id } = req.params;
-                const model = this.Model.settingModel(trx);
-                yield model.deleteDepartment(parseInt(id), hotel_code);
+                yield this.Model.hrModel(trx).deleteDepartment(parseInt(id), hotel_code);
                 return {
                     success: true,
                     code: this.StatusCode.HTTP_OK,

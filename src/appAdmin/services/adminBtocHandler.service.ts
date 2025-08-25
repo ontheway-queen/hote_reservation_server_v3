@@ -31,20 +31,12 @@ class AdminBtocHandlerService extends AbstractServices {
     };
   }
 
-  // get pop up banner
   public async getPopUpBannerConfiguration(req: Request) {
     const { hotel_code } = req.hotel_admin;
     const configurationModel = this.Model.b2cConfigurationModel();
     const data = await configurationModel.getPopUpBanner({
       hotel_code,
     });
-    if (!data) {
-      return {
-        success: false,
-        message: "No pop up banner found!",
-        code: this.StatusCode.HTTP_NOT_FOUND,
-      };
-    }
 
     return {
       success: false,
@@ -61,13 +53,6 @@ class AdminBtocHandlerService extends AbstractServices {
     const data = await configurationModel.getHeroBgContent({
       hotel_code,
     });
-    if (data && data.length < 1) {
-      return {
-        success: false,
-        message: "No hero bg content found!",
-        code: this.StatusCode.HTTP_NOT_FOUND,
-      };
-    }
 
     return {
       success: false,
@@ -256,6 +241,7 @@ class AdminBtocHandlerService extends AbstractServices {
 
       const newPopUpBannerThumbnail = {
         thumbnail: pop_up_banner_thumbnail,
+        updated_at: new Date(),
         ...rest_pop_up_banner,
       };
 

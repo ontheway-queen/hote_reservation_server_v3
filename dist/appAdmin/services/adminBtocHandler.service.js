@@ -52,7 +52,6 @@ class AdminBtocHandlerService extends abstract_service_1.default {
             };
         });
     }
-    // get pop up banner
     getPopUpBannerConfiguration(req) {
         return __awaiter(this, void 0, void 0, function* () {
             const { hotel_code } = req.hotel_admin;
@@ -60,13 +59,6 @@ class AdminBtocHandlerService extends abstract_service_1.default {
             const data = yield configurationModel.getPopUpBanner({
                 hotel_code,
             });
-            if (!data) {
-                return {
-                    success: false,
-                    message: "No pop up banner found!",
-                    code: this.StatusCode.HTTP_NOT_FOUND,
-                };
-            }
             return {
                 success: false,
                 message: "Pop up banner fetched successfully!",
@@ -83,13 +75,6 @@ class AdminBtocHandlerService extends abstract_service_1.default {
             const data = yield configurationModel.getHeroBgContent({
                 hotel_code,
             });
-            if (data && data.length < 1) {
-                return {
-                    success: false,
-                    message: "No hero bg content found!",
-                    code: this.StatusCode.HTTP_NOT_FOUND,
-                };
-            }
             return {
                 success: false,
                 message: "Hero BG content fetched successfully!",
@@ -267,7 +252,7 @@ class AdminBtocHandlerService extends abstract_service_1.default {
                             break;
                     }
                 }
-                const newPopUpBannerThumbnail = Object.assign({ thumbnail: pop_up_banner_thumbnail }, rest_pop_up_banner);
+                const newPopUpBannerThumbnail = Object.assign({ thumbnail: pop_up_banner_thumbnail, updated_at: new Date() }, rest_pop_up_banner);
                 yield configurationModel.updatePopUpBanner({
                     hotel_code,
                     payload: newPopUpBannerThumbnail,

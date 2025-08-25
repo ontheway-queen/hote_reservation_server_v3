@@ -1,25 +1,20 @@
 import { Request } from "express";
 import AbstractServices from "../../abstarcts/abstract.service";
 
-import { IUpdatedepartment } from "../utlis/interfaces/setting.interface";
-import SettingModel from "../../models/reservationPanel/Setting.Model";
 import CustomError from "../../utils/lib/customEror";
+import { IUpdatedepartment } from "../utlis/interfaces/setting.interface";
 
 class DepartmentSettingService extends AbstractServices {
   constructor() {
     super();
   }
 
-  //=================== Department service ======================//
-
-  // create Department
   public async createDepartment(req: Request) {
     return await this.db.transaction(async (trx) => {
       const { hotel_code, id } = req.hotel_admin;
       const { name } = req.body;
 
-      // Department check
-      const settingModel = this.Model.settingModel();
+      const settingModel = this.Model.hrModel();
 
       const { data } = await settingModel.getAllDepartment({
         name,
@@ -33,10 +28,8 @@ class DepartmentSettingService extends AbstractServices {
           message: "Department name already exists",
         };
       }
-      // model
-      const model = new SettingModel(trx);
 
-      await model.createDepartment({
+      await settingModel.createDepartment({
         hotel_code,
         name,
         created_by: id,
@@ -55,7 +48,7 @@ class DepartmentSettingService extends AbstractServices {
     const { hotel_code } = req.hotel_admin;
     const { limit, skip, name, status } = req.query;
 
-    const model = this.Model.settingModel();
+    const model = this.Model.hrModel();
 
     const { data, total } = await model.getAllDepartment({
       status: status as string,
@@ -77,7 +70,7 @@ class DepartmentSettingService extends AbstractServices {
     const { hotel_code } = req.hotel_admin;
     const id = req.params.id;
 
-    const model = this.Model.settingModel();
+    const model = this.Model.hrModel();
 
     const data = await model.getSingleDepartment(Number(id), hotel_code);
     if (!data) {
@@ -101,7 +94,7 @@ class DepartmentSettingService extends AbstractServices {
 
       const updatePayload = req.body as IUpdatedepartment;
 
-      const model = this.Model.settingModel(trx);
+      const model = this.Model.hrModel(trx);
 
       const { data } = await model.getAllDepartment({
         name: updatePayload.name,
@@ -136,8 +129,7 @@ class DepartmentSettingService extends AbstractServices {
       const { hotel_code } = req.hotel_admin;
       const { id } = req.params;
 
-      const model = this.Model.settingModel(trx);
-      await model.deleteDepartment(parseInt(id), hotel_code);
+      await this.Model.hrModel(trx).deleteDepartment(parseInt(id), hotel_code);
 
       return {
         success: true,

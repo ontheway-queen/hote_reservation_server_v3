@@ -13,7 +13,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const abstract_service_1 = __importDefault(require("../../abstarcts/abstract.service"));
-const Setting_Model_1 = __importDefault(require("../../models/reservationPanel/Setting.Model"));
 class PayrollMonthsSettingService extends abstract_service_1.default {
     constructor() {
         super();
@@ -25,9 +24,8 @@ class PayrollMonthsSettingService extends abstract_service_1.default {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
                 const { hotel_code } = req.hotel_admin;
                 const { name, days, hours, month_id } = req.body;
-                // Payroll Months
-                const settingModel = this.Model.settingModel();
-                const { data } = yield settingModel.getPayrollMonths({
+                const model = this.Model.hrModel(trx);
+                const { data } = yield model.getPayrollMonths({
                     month_id,
                     hotel_code,
                 });
@@ -39,7 +37,6 @@ class PayrollMonthsSettingService extends abstract_service_1.default {
                     };
                 }
                 // model
-                const model = new Setting_Model_1.default(trx);
                 const res = yield model.createPayrollMonths({
                     hotel_code,
                     month_id,
@@ -59,7 +56,7 @@ class PayrollMonthsSettingService extends abstract_service_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             const { hotel_code } = req.hotel_admin;
             const { limit, skip, name } = req.query;
-            const model = this.Model.settingModel();
+            const model = this.Model.hrModel();
             const { data, total } = yield model.getPayrollMonths({
                 limit: limit,
                 skip: skip,
@@ -80,26 +77,17 @@ class PayrollMonthsSettingService extends abstract_service_1.default {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
                 const { id } = req.params;
                 const updatePayload = req.body;
-                const model = this.Model.settingModel(trx);
+                const model = this.Model.hrModel(trx);
                 const res = yield model.updatePayrollMonths(parseInt(id), {
                     month_id: updatePayload.month_id,
                     days: updatePayload.days,
                     hours: updatePayload.hours,
                 });
-                if (res === 1) {
-                    return {
-                        success: true,
-                        code: this.StatusCode.HTTP_OK,
-                        message: "Month name updated successfully",
-                    };
-                }
-                else {
-                    return {
-                        success: false,
-                        code: this.StatusCode.HTTP_NOT_FOUND,
-                        message: "Month name didn't find  from this ID",
-                    };
-                }
+                return {
+                    success: true,
+                    code: this.StatusCode.HTTP_OK,
+                    message: "Month name updated successfully",
+                };
             }));
         });
     }
@@ -108,7 +96,7 @@ class PayrollMonthsSettingService extends abstract_service_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
                 const { id } = req.params;
-                const model = this.Model.settingModel(trx);
+                const model = this.Model.hrModel(trx);
                 const res = yield model.deletePayrollMonths(parseInt(id));
                 if (res === 1) {
                     return {

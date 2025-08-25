@@ -36,36 +36,34 @@ class EmployeeService extends abstract_service_1.default {
             const { hotel_code, id } = req.hotel_admin;
             const body = req.body;
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
-                //   const files = (req.files as Express.Multer.File[]) || [];
-                //   if (files.length) {
-                //     body["photo"] = files[0].filename;
-                //   }
-                //   const employeeModel = this.Model.employeeModel();
-                //       const model = this.Model.settingModel();
-                //     const { data, total } = await model.getAllDepartment({
-                //       status: status as string,
-                //       limit: limit as string,
-                //       skip: skip as string,
-                //       name: name as string,
-                //       hotel_code,
-                //     });
-                //   const checkDepartment = await this.Model.employeeModel().ge(body.department_id);
-                //   const { data } = await employeeModel.getAllEmployee({
-                //     key: body.email,
-                //     hotel_code,
-                //   });
-                //   if (data.length) {
-                //     return {
-                //       success: false,
-                //       code: this.StatusCode.HTTP_CONFLICT,
-                //       message: "Employee already exist",
-                //     };
-                //   }
-                //   await employeeModel.insertEmployee({
-                //     ...req.body,
-                //     hotel_code,
-                //     created_by: id,
-                //   });
+                const files = req.files || [];
+                if (files.length) {
+                    body["photo"] = files[0].filename;
+                }
+                const hrModel = this.Model.hrModel(trx);
+                const { total } = yield hrModel.getAllDepartment({
+                    ids: body.department_id,
+                    hotel_code,
+                });
+                if (total !== body.department_id.length) {
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_BAD_REQUEST,
+                        message: "Department not found from given id",
+                    };
+                }
+                const { data } = yield hrModel.getAllEmployee({
+                    key: body.email,
+                    hotel_code,
+                });
+                if (data.length) {
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_CONFLICT,
+                        message: "Employee already exist",
+                    };
+                }
+                yield hrModel.insertEmployee(Object.assign(Object.assign({}, req.body), { hotel_code, created_by: id }));
                 return {
                     success: true,
                     code: this.StatusCode.HTTP_SUCCESSFUL,

@@ -18,44 +18,44 @@ export class EmployeeService extends AbstractServices {
     const body = req.body as IcreateEmployeeReqBody;
 
     return await this.db.transaction(async (trx) => {
-      //   const files = (req.files as Express.Multer.File[]) || [];
+      const files = (req.files as Express.Multer.File[]) || [];
 
-      //   if (files.length) {
-      //     body["photo"] = files[0].filename;
-      //   }
+      if (files.length) {
+        body["photo"] = files[0].filename;
+      }
 
-      //   const employeeModel = this.Model.employeeModel();
+      const hrModel = this.Model.hrModel(trx);
 
-      //       const model = this.Model.settingModel();
+      const { total } = await hrModel.getAllDepartment({
+        ids: body.department_id,
+        hotel_code,
+      });
 
-      //     const { data, total } = await model.getAllDepartment({
-      //       status: status as string,
-      //       limit: limit as string,
-      //       skip: skip as string,
-      //       name: name as string,
-      //       hotel_code,
-      //     });
+      if (total !== body.department_id.length) {
+        return {
+          success: false,
+          code: this.StatusCode.HTTP_BAD_REQUEST,
+          message: "Department not found from given id",
+        };
+      }
+      const { data } = await hrModel.getAllEmployee({
+        key: body.email,
+        hotel_code,
+      });
 
-      //   const checkDepartment = await this.Model.employeeModel().ge(body.department_id);
+      if (data.length) {
+        return {
+          success: false,
+          code: this.StatusCode.HTTP_CONFLICT,
+          message: "Employee already exist",
+        };
+      }
 
-      //   const { data } = await employeeModel.getAllEmployee({
-      //     key: body.email,
-      //     hotel_code,
-      //   });
-
-      //   if (data.length) {
-      //     return {
-      //       success: false,
-      //       code: this.StatusCode.HTTP_CONFLICT,
-      //       message: "Employee already exist",
-      //     };
-      //   }
-
-      //   await employeeModel.insertEmployee({
-      //     ...req.body,
-      //     hotel_code,
-      //     created_by: id,
-      //   });
+      await hrModel.insertEmployee({
+        ...req.body,
+        hotel_code,
+        created_by: id,
+      });
 
       return {
         success: true,
