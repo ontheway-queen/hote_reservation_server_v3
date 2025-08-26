@@ -181,6 +181,18 @@ class MHotelService extends abstract_service_1.default {
                     hotel_code,
                     owner: true,
                 });
+                // ________________ BTOC CONFIG ____________________//
+                if (white_label) {
+                    // const siteService = new SiteConfigSupportService(trx);
+                    // await siteService.insertSiteConfigData({
+                    //   agency_id: newAgency[0].id,
+                    //   address: body.address,
+                    //   email: body.email,
+                    //   phone: body.phone,
+                    //   site_name: body.agency_name,
+                    //   logo: agency_logo,
+                    // });
+                }
                 yield lib_1.default.sendEmail(hotel_email, constants_1.OTP_FOR_CREDENTIALS, (0, mHotelUserCredentials_template_1.newHotelUserAccount)(hotel_email, password, hotel_name));
                 return {
                     success: true,

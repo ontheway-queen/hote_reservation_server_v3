@@ -127,7 +127,7 @@ export interface IUpdateAgencyB2CPopularPlace {
   status?: boolean;
 }
 
-export interface ICreateAgencyB2CSiteConfig {
+export interface ICreateHotelB2CSiteConfig {
   agency_id: number;
   main_logo?: string;
   favicon?: string;
@@ -154,7 +154,7 @@ export interface ICreateAgencyB2CSiteConfig {
   ios_app_link?: string;
 }
 
-export interface IGetAgencyB2CSiteConfigData {
+export interface IGetHotelB2CSiteConfigData {
   id: number;
   hotel_code: number;
   main_logo: string;
@@ -204,7 +204,7 @@ export interface IB2CSubUpdateSiteConfigReqBody {
   developer_link?: string;
 }
 
-export interface IUpdateAgencyB2CSiteConfigPayload {
+export interface IUpdateHotelB2CSiteConfigPayload {
   main_logo?: string;
   favicon?: string;
   site_thumbnail?: string;
@@ -233,7 +233,7 @@ export interface IUpdateAgencyB2CSiteConfigPayload {
   developer_link?: string;
 }
 
-export interface ICreateAgencyB2CSocialLinkPayload {
+export interface ICreateHotelB2CSocialLinkPayload {
   hotel_code: number;
   social_media_id: number;
   link: string;

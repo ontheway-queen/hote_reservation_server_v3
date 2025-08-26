@@ -240,6 +240,20 @@ class MHotelService extends AbstractServices {
         owner: true,
       });
 
+      // ________________ BTOC CONFIG ____________________//
+
+      if (white_label) {
+        // const siteService = new SiteConfigSupportService(trx);
+        // await siteService.insertSiteConfigData({
+        //   agency_id: newAgency[0].id,
+        //   address: body.address,
+        //   email: body.email,
+        //   phone: body.phone,
+        //   site_name: body.agency_name,
+        //   logo: agency_logo,
+        // });
+      }
+
       await Lib.sendEmail(
         hotel_email,
         OTP_FOR_CREDENTIALS,
