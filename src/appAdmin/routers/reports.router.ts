@@ -57,6 +57,10 @@ class ReportRouter extends AbstractRouter {
       .route("/room_dashboard")
       .get(this.reportController.getRoomReport);
 
+    this.router
+      .route("/reservation-by-room")
+      .get(this.reportController.getAllReservationByRoom);
+
     this.router.get(
       "/room-type-availability",
       this.reportController.getRoomReport
