@@ -39,7 +39,9 @@ class B2CSubSiteConfigValidator {
                     const { error } = this.SiteConfigEmail.validate(parsed);
                     if (error) {
                         return helpers.error("any.invalid", {
-                            message: error.details.map((d) => d.message).join(", "),
+                            message: error.details
+                                .map((d) => d.message)
+                                .join(", "),
                         });
                     }
                     return parsed;
@@ -58,7 +60,9 @@ class B2CSubSiteConfigValidator {
                     const { error } = this.SiteConfigPhone.validate(parsed);
                     if (error) {
                         return helpers.error("any.invalid", {
-                            message: error.details.map((d) => d.message).join(", "),
+                            message: error.details
+                                .map((d) => d.message)
+                                .join(", "),
                         });
                     }
                     return parsed;
@@ -77,7 +81,9 @@ class B2CSubSiteConfigValidator {
                     const { error } = this.SiteConfigAddress.validate(parsed);
                     if (error) {
                         return helpers.error("any.invalid", {
-                            message: error.details.map((d) => d.message).join(", "),
+                            message: error.details
+                                .map((d) => d.message)
+                                .join(", "),
                         });
                     }
                     return parsed;
@@ -117,6 +123,21 @@ class B2CSubSiteConfigValidator {
             link: joi_1.default.string().optional().trim(),
             status: joi_1.default.boolean().optional(),
             description: joi_1.default.string().optional().trim(),
+        });
+        // =========================== FAQ =========================== //
+        this.createFaqHead = joi_1.default.object({
+            title: joi_1.default.string().trim().required(),
+            order_number: joi_1.default.number().required(),
+        });
+        this.updateFaqHead = joi_1.default.object({
+            title: joi_1.default.string().trim().optional(),
+            order_number: joi_1.default.number().optional(),
+        });
+        this.createFaq = joi_1.default.object({
+            faq_head_id: joi_1.default.number(),
+            question: joi_1.default.string().trim(),
+            answer: joi_1.default.string().trim(),
+            order_number: joi_1.default.number(),
         });
     }
 }

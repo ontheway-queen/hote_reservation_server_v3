@@ -442,6 +442,62 @@ class AgencyB2CConfigModel extends schema_1.default {
                 .where("id", where.id);
         });
     }
+    // =========================== FAQ =========================== //
+    getAllFaqHeads(where) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("faq_heads")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .select("id", "order_number", "title")
+                .where("hotel_code", where.hotel_code)
+                .andWhere((qb) => {
+                if (where.id) {
+                    qb.andWhere("id", where.id);
+                }
+                if (where.order) {
+                    qb.andWhere("order_number", where.order);
+                }
+            })
+                .andWhere("is_deleted", false);
+        });
+    }
+    createFaqHead(payload) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("faq_heads")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .insert(payload, "id");
+        });
+    }
+    updateFaqHead(payload, where) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("faq_heads")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .update(payload)
+                .where("id", where.id);
+        });
+    }
+    deleteFaqHead(where) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("faq_heads")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .update("is_deleted", "true")
+                .where("id", where.id);
+        });
+    }
+    createFaq(payload) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("faqs")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .insert(payload, "id");
+        });
+    }
+    getFaqsByHeadId(head_id) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("faqs")
+                .select("*")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .where("faq_head_id", head_id);
+        });
+    }
 }
 exports.default = AgencyB2CConfigModel;
 //# sourceMappingURL=b2cConfigurationModel.js.map

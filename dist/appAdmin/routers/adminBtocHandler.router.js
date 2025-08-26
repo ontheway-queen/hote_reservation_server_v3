@@ -68,26 +68,26 @@ class AdminBtocHandlerRouter extends abstract_router_1.default {
         //   );
         // ======================== Service Content ================================ //
         // this.router
-        //   .route("/hotel-service-content")
-        //   .post(this.controller.createHotelServiceContent)
-        //   .patch(this.controller.updateHotelServiceContent)
-        //   .get(this.controller.getHotelContentService);
-        // // ======================== Services ================================ //
+        // 	.route("/hotel-service-content")
+        // 	.post(this.controller.createHotelServiceContent)
+        // 	.patch(this.controller.updateHotelServiceContent)
+        // 	.get(this.controller.getHotelContentService);
+        // ======================== Services ================================ //
         // this.router
-        //   .route("/hotel-services")
-        //   .post(
-        //     this.uploader.cloudUploadRaw("hotel_services"),
-        //     this.controller.createHotelService
-        //   )
-        //   .get(this.controller.getAllServices);
+        // 	.route("/hotel-services")
+        // 	.post(
+        // 		this.uploader.cloudUploadRaw("hotel_services"),
+        // 		this.controller.createHotelService
+        // 	)
+        // 	.get(this.controller.getAllServices);
         // this.router
-        //   .route("/hotel-services/:id")
-        //   .get(this.controller.getSingleService)
-        //   .patch(
-        //     this.uploader.cloudUploadRaw("services"),
-        //     this.controller.updateService
-        //   )
-        //   .delete(this.controller.deleteService);
+        // 	.route("/hotel-services/:id")
+        // 	.get(this.controller.getSingleService)
+        // 	.patch(
+        // 		this.uploader.cloudUploadRaw("services"),
+        // 		this.controller.updateService
+        // 	)
+        // 	.delete(this.controller.deleteService);
     }
 }
 exports.default = AdminBtocHandlerRouter;
