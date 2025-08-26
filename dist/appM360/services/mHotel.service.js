@@ -29,6 +29,7 @@ const lib_1 = __importDefault(require("../../utils/lib/lib"));
 const constants_1 = require("../../utils/miscellaneous/constants");
 const config_1 = __importDefault(require("../../config/config"));
 const uuid_1 = require("uuid");
+const siteConfigSupport_service_1 = require("../../appAdmin/services/subServices/siteConfigSupport.service");
 class MHotelService extends abstract_service_1.default {
     constructor() {
         super();
@@ -106,7 +107,7 @@ class MHotelService extends abstract_service_1.default {
                     description,
                     postal_code,
                     expiry_date,
-                    white_label_token: (0, uuid_1.v4)(),
+                    white_label_token: white_label ? (0, uuid_1.v4)() : "",
                     white_label,
                 });
                 // insert others info
@@ -183,15 +184,15 @@ class MHotelService extends abstract_service_1.default {
                 });
                 // ________________ BTOC CONFIG ____________________//
                 if (white_label) {
-                    // const siteService = new SiteConfigSupportService(trx);
-                    // await siteService.insertSiteConfigData({
-                    //   agency_id: newAgency[0].id,
-                    //   address: body.address,
-                    //   email: body.email,
-                    //   phone: body.phone,
-                    //   site_name: body.agency_name,
-                    //   logo: agency_logo,
-                    // });
+                    const siteService = new siteConfigSupport_service_1.SiteConfigSupportService(trx);
+                    yield siteService.insertSiteConfigData({
+                        hotel_code,
+                        address,
+                        email: hotel_email,
+                        phone,
+                        site_name: hotel_name,
+                        logo: logoFilename,
+                    });
                 }
                 yield lib_1.default.sendEmail(hotel_email, constants_1.OTP_FOR_CREDENTIALS, (0, mHotelUserCredentials_template_1.newHotelUserAccount)(hotel_email, password, hotel_name));
                 return {
@@ -292,7 +293,10 @@ class MHotelService extends abstract_service_1.default {
                 }
                 const { hotel_code } = existingHotel;
                 // Filter out only defined fields for update
-                const filteredUpdateData = Object.fromEntries(Object.entries(Object.assign(Object.assign({}, hotelData), { expiry_date, name: hotel_name })).filter(([_, value]) => value !== undefined));
+                const filteredUpdateData = Object.fromEntries(Object.entries(Object.assign(Object.assign({}, hotelData), { expiry_date,
+                    white_label, white_label_token: white_label
+                        ? existingHotel.white_label_token
+                        : (0, uuid_1.v4)(), name: hotel_name })).filter(([_, value]) => value !== undefined));
                 if (Object.keys(filteredUpdateData).length > 0) {
                     yield model.updateHotel(filteredUpdateData, { id: parsedId });
                 }
@@ -335,6 +339,23 @@ class MHotelService extends abstract_service_1.default {
                 if (Array.isArray(remove_hotel_images) &&
                     remove_hotel_images.length > 0) {
                     yield model.deleteHotelImage(remove_hotel_images, hotel_code);
+                }
+                if (white_label) {
+                    const configModel = this.Model.b2cConfigurationModel(trx);
+                    const checkConfig = yield configModel.getSiteConfig({
+                        hotel_code,
+                    });
+                    if (!checkConfig) {
+                        const siteService = new siteConfigSupport_service_1.SiteConfigSupportService(trx);
+                        yield siteService.insertSiteConfigData({
+                            hotel_code,
+                            address: "",
+                            email: existingHotel.hotel_email,
+                            phone: existingHotel.phone,
+                            site_name: hotel_name,
+                            logo: existingHotel.logo,
+                        });
+                    }
                 }
                 return {
                     success: true,

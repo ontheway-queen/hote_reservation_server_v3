@@ -4,7 +4,7 @@ import {
   FUNCTION_TYPE_HOTEL,
 } from "../../../utils/miscellaneous/constants";
 
-export interface ICreateAgencyB2CHeroBgContentPayload {
+export interface ICreateHotelB2CHeroBgContentPayload {
   type: typeof CONTENT_TYPE_PHOTO | typeof CONTENT_TYPE_VIDEO;
   hotel_code: number;
   order_number: number;
@@ -14,7 +14,7 @@ export interface ICreateAgencyB2CHeroBgContentPayload {
   tab?: typeof FUNCTION_TYPE_HOTEL;
 }
 
-export interface IUpdateAgencyB2CHeroBgContentPayload {
+export interface IUpdateHotelB2CHeroBgContentPayload {
   order_number?: number;
   type?: typeof CONTENT_TYPE_PHOTO | typeof CONTENT_TYPE_VIDEO;
   content?: string;
@@ -23,13 +23,13 @@ export interface IUpdateAgencyB2CHeroBgContentPayload {
   tab?: typeof FUNCTION_TYPE_HOTEL;
 }
 
-export interface IGetAgencyB2CHeroBgContentQuery {
+export interface IGetHotelB2CHeroBgContentQuery {
   agency_id: number;
   status?: boolean;
   type?: typeof CONTENT_TYPE_PHOTO | typeof CONTENT_TYPE_VIDEO;
 }
 
-export interface IGetAgencyB2CHeroBgContentData {
+export interface IGetHotelB2CHeroBgContentData {
   id: number;
   type: typeof CONTENT_TYPE_PHOTO | typeof CONTENT_TYPE_VIDEO;
   agency_id: number;
@@ -38,26 +38,26 @@ export interface IGetAgencyB2CHeroBgContentData {
   status: boolean;
 }
 
-export interface ICreateAgencyB2CPopularDestinationPayload {
+export interface ICreateHotelB2CPopularDestinationPayload {
   agency_id: number;
   thumbnail: string;
   order_number: number;
   from_airport: number;
   to_airport: number;
 }
-export interface IUpdateAgencyB2CPopularDestinationPayload {
+export interface IUpdateHotelB2CPopularDestinationPayload {
   thumbnail?: string;
   order_number?: number;
   from_airport?: number;
   to_airport?: number;
 }
 
-export interface IGetAgencyB2CPopularDestinationQuery {
+export interface IGetHotelB2CPopularDestinationQuery {
   agency_id: number;
   status?: boolean;
 }
 
-export interface IGetAgencyB2CPopularDestinationData {
+export interface IGetHotelB2CPopularDestinationData {
   id: number;
   agency_id: number;
   thumbnail: string;
@@ -75,7 +75,7 @@ export interface IGetAgencyB2CPopularDestinationData {
   status: boolean;
 }
 
-export interface IGetAgencyB2CPopularDestinationLastNoData {
+export interface IGetHotelB2CPopularDestinationLastNoData {
   id: number;
   agency_id: number;
   thumbnail: string;
@@ -86,7 +86,7 @@ export interface IGetAgencyB2CPopularDestinationLastNoData {
   status: boolean;
 }
 
-export interface ICreateAgencyB2CPopularPlace {
+export interface ICreateHotelB2CPopularPlace {
   agency_id: number;
   thumbnail: string;
   order_number: number;
@@ -97,12 +97,12 @@ export interface ICreateAgencyB2CPopularPlace {
   country_id?: number;
 }
 
-export interface IGetAgencyB2CPopularPlaceQuery {
+export interface IGetHotelB2CPopularPlaceQuery {
   agency_id: number;
   status?: boolean;
 }
 
-export interface IGetAgencyB2CPopularPlaceData {
+export interface IGetHotelB2CPopularPlaceData {
   id: number;
   agency_id: number;
   thumbnail: string;
@@ -116,7 +116,7 @@ export interface IGetAgencyB2CPopularPlaceData {
   status: boolean;
 }
 
-export interface IUpdateAgencyB2CPopularPlace {
+export interface IUpdateHotelB2CPopularPlace {
   thumbnail?: string;
   order_number?: number;
   short_description?: string;
@@ -128,7 +128,7 @@ export interface IUpdateAgencyB2CPopularPlace {
 }
 
 export interface ICreateHotelB2CSiteConfig {
-  agency_id: number;
+  hotel_code: number;
   main_logo?: string;
   favicon?: string;
   site_thumbnail?: string;
@@ -240,12 +240,12 @@ export interface ICreateHotelB2CSocialLinkPayload {
   order_number: number;
 }
 
-export interface IGetAgencyB2CSocialLinkQuery {
+export interface IGetHotelB2CSocialLinkQuery {
   hotel_code: number;
   status?: boolean;
 }
 
-export interface IGetAgencyB2CSocialLinkData {
+export interface IGetHotelB2CSocialLinkData {
   id: number;
   media: string;
   link: string;
@@ -262,14 +262,14 @@ export interface IGetSocialMediaData {
   status: boolean;
 }
 
-export interface IUpdateAgencyB2CSocialLinkPayload {
+export interface IUpdateHotelB2CSocialLinkPayload {
   social_media_id?: number;
   link?: string;
   order_number?: number;
   status?: boolean;
 }
 
-export interface ICreateAgencyB2CHotDeals {
+export interface ICreateHotelB2CHotDeals {
   agency_id: number;
   title: string;
   thumbnail: string;
@@ -277,12 +277,12 @@ export interface ICreateAgencyB2CHotDeals {
   order_number: number;
 }
 
-export interface IGetAgencyB2CHotDealsQuery {
+export interface IGetHotelB2CHotDealsQuery {
   agency_id: number;
   status?: boolean;
 }
 
-export interface IGetAgencyB2CHotDealsData {
+export interface IGetHotelB2CHotDealsData {
   id: number;
   agency_id: number;
   title: string;
@@ -292,7 +292,7 @@ export interface IGetAgencyB2CHotDealsData {
   status: boolean;
 }
 
-export interface IUpdateAgencyB2CHotDealsPayload {
+export interface IUpdateHotelB2CHotDealsPayload {
   title?: string;
   thumbnail?: string;
   link?: string;
@@ -300,7 +300,7 @@ export interface IUpdateAgencyB2CHotDealsPayload {
   status?: boolean;
 }
 
-export interface ICreateAgencyB2CPopUpBanner {
+export interface ICreateHotelB2CPopUpBanner {
   hotel_code: number;
   title?: string;
   thumbnail?: string;
@@ -309,13 +309,13 @@ export interface ICreateAgencyB2CPopUpBanner {
   pop_up_for?: "WEB";
 }
 
-export interface IGetAgencyB2CPopUpBannerQuery {
+export interface IGetHotelB2CPopUpBannerQuery {
   hotel_code: number;
   status?: boolean;
   pop_up_for?: "WEB";
 }
 
-export interface IGetAgencyB2CPopUpBannerData {
+export interface IGetHotelB2CPopUpBannerData {
   id: number;
   agency_id: number;
   title: string;
@@ -326,7 +326,7 @@ export interface IGetAgencyB2CPopUpBannerData {
   status: boolean;
 }
 
-export interface IUpdateAgencyB2CPopUpBannerPayload {
+export interface IUpdateHotelB2CPopUpBannerPayload {
   title?: string;
   thumbnail?: string;
   link?: string;

@@ -20,11 +20,11 @@ class SiteConfigSupportService extends abstract_service_1.default {
         super();
         this.trx = trx;
     }
-    insertSiteConfigData({ agency_id, address, email, phone, site_name, logo, }) {
+    insertSiteConfigData({ hotel_code, address, email, phone, site_name, logo, }) {
         return __awaiter(this, void 0, void 0, function* () {
             const SiteConfigModel = this.Model.b2cConfigurationModel(this.trx);
             const payload = {
-                agency_id,
+                hotel_code,
                 about_us_content: (0, pagesContent_1.aboutUsContent)(site_name, address),
                 emails: JSON.stringify([{ email }]),
                 numbers: JSON.stringify([{ number: phone }]),
@@ -36,17 +36,16 @@ class SiteConfigSupportService extends abstract_service_1.default {
                 hero_quote: `Welcome to ${site_name}!`,
                 hero_sub_quote: "Find Flights, Hotels, Visa & Holidays",
                 main_logo: logo,
-                site_thumbnail: "agent/b2c/site-config/site-thumbnail.jpg",
-                about_us_thumbnail: "agent/b2c/site-config/about-us.png",
-                contact_us_thumbnail: "agent/b2c/site-config/contact-us.jpg",
-                favicon: "agent/b2c/site-config/favicon.png",
-                meta_description: `Welcome to ${site_name}, The ultimate online platform for ota services! Book air tickets, hotels, visa, tour package without hassle at the most competitive rates.`,
-                meta_tags: `${site_name}, flight booking, cheap hotels, tour packages, visa services, travel deals, online travel agency`,
-                meta_title: ` ${site_name} | Book Flights, Hotel, Tour, Visa Online`,
+                site_thumbnail: "",
+                about_us_thumbnail: "",
+                contact_us_thumbnail: "",
+                favicon: "",
+                meta_description: `Welcome to ${site_name}`,
+                meta_title: ` ${site_name}`,
                 notice: `Welcome to ${site_name}`,
             };
             yield SiteConfigModel.insertSiteConfig(payload);
-            const heroBGPayload = (0, pagesContent_1.heroBG)(agency_id);
+            const heroBGPayload = (0, pagesContent_1.heroBG)(hotel_code);
             yield SiteConfigModel.insertHeroBGContent(heroBGPayload);
         });
     }

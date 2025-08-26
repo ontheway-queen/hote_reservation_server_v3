@@ -2,10 +2,10 @@ import { Request } from "express";
 import AbstractServices from "../../abstarcts/abstract.service";
 import {
   IB2CSubUpdateSiteConfigReqBody,
-  ICreateAgencyB2CSocialLinkPayload,
-  IUpdateAgencyB2CPopUpBannerPayload,
-  IUpdateAgencyB2CSiteConfigPayload,
-  IUpdateAgencyB2CSocialLinkPayload,
+  ICreateHotelB2CSocialLinkPayload,
+  IUpdateHotelB2CPopUpBannerPayload,
+  IUpdateHotelB2CSiteConfigPayload,
+  IUpdateHotelB2CSocialLinkPayload,
   IUpSertPopUpBannerReqBody,
 } from "../utlis/interfaces/configuration.interface";
 
@@ -27,7 +27,7 @@ export class B2CSubSiteConfigService extends AbstractServices {
         hotel_code,
       });
 
-      const payload: IUpdateAgencyB2CSiteConfigPayload = {
+      const payload: IUpdateHotelB2CSiteConfigPayload = {
         last_updated: new Date(),
         updated_by: user_id,
         ...body,
@@ -135,7 +135,7 @@ export class B2CSubSiteConfigService extends AbstractServices {
       hotel_code,
     });
 
-    const payload: IUpdateAgencyB2CSiteConfigPayload = {
+    const payload: IUpdateHotelB2CSiteConfigPayload = {
       last_updated: new Date(),
       updated_by: user_id,
     };
@@ -206,7 +206,7 @@ export class B2CSubSiteConfigService extends AbstractServices {
       hotel_code,
     });
 
-    const payload: IUpdateAgencyB2CSiteConfigPayload = {
+    const payload: IUpdateHotelB2CSiteConfigPayload = {
       last_updated: new Date(),
       updated_by: user_id,
     };
@@ -272,7 +272,7 @@ export class B2CSubSiteConfigService extends AbstractServices {
 
     const configModel = this.Model.b2cConfigurationModel();
 
-    const payload: IUpdateAgencyB2CSiteConfigPayload = {
+    const payload: IUpdateHotelB2CSiteConfigPayload = {
       last_updated: new Date(),
       updated_by: user_id,
     };
@@ -324,7 +324,7 @@ export class B2CSubSiteConfigService extends AbstractServices {
 
     const configModel = this.Model.b2cConfigurationModel();
 
-    const payload: IUpdateAgencyB2CSiteConfigPayload = {
+    const payload: IUpdateHotelB2CSiteConfigPayload = {
       last_updated: new Date(),
       updated_by: user_id,
     };
@@ -435,7 +435,7 @@ export class B2CSubSiteConfigService extends AbstractServices {
 
       const lastNo = await configModel.getSocialLinkLastNo({ hotel_code });
 
-      const payload: ICreateAgencyB2CSocialLinkPayload = {
+      const payload: ICreateHotelB2CSocialLinkPayload = {
         hotel_code,
         order_number: lastNo?.order_number ? lastNo.order_number + 1 : 1,
         link: body.link,
@@ -478,7 +478,7 @@ export class B2CSubSiteConfigService extends AbstractServices {
         order_number?: number;
       };
 
-      const payload: IUpdateAgencyB2CSocialLinkPayload = body;
+      const payload: IUpdateHotelB2CSocialLinkPayload = body;
 
       await configModel.updateSocialLink(payload, { hotel_code, id });
 
@@ -515,7 +515,7 @@ export class B2CSubSiteConfigService extends AbstractServices {
 
       const files = (req.files as Express.Multer.File[]) || [];
 
-      const payload: IUpdateAgencyB2CPopUpBannerPayload = restBody;
+      const payload: IUpdateHotelB2CPopUpBannerPayload = restBody;
 
       if (files.length) {
         payload.thumbnail = files[0].filename;

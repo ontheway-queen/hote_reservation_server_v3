@@ -8,9 +8,13 @@ const express_1 = require("express");
 const inventory_app_router_1 = __importDefault(require("../appInventory/routers/inventory.app.router"));
 const authChecker_1 = __importDefault(require("../common/middleware/authChecker/authChecker"));
 const account_router_1 = __importDefault(require("./routers/account.router"));
+const adminBtocHandler_router_1 = __importDefault(require("./routers/adminBtocHandler.router"));
 const administration_router_1 = __importDefault(require("./routers/administration.router"));
+const common_router_1 = __importDefault(require("./routers/common.router"));
 const expense_router_1 = __importDefault(require("./routers/expense.router"));
+const folio_router_1 = __importDefault(require("./routers/folio.router"));
 const guest_router_1 = __importDefault(require("./routers/guest.router"));
+const hr_router_1 = __importDefault(require("./routers/hr.router"));
 const invoice_router_1 = __importDefault(require("./routers/invoice.router"));
 const money_reciept_router_1 = __importDefault(require("./routers/money-reciept.router"));
 const reports_router_1 = __importDefault(require("./routers/reports.router"));
@@ -18,10 +22,6 @@ const reservation_router_1 = require("./routers/reservation.router");
 const room_guest_router_1 = __importDefault(require("./routers/room.guest.router"));
 const room_router_1 = __importDefault(require("./routers/room.router"));
 const setting_router_1 = __importDefault(require("./routers/setting.router"));
-const folio_router_1 = __importDefault(require("./routers/folio.router"));
-const common_router_1 = __importDefault(require("./routers/common.router"));
-const adminBtocHandler_router_1 = __importDefault(require("./routers/adminBtocHandler.router"));
-const hr_router_1 = __importDefault(require("./routers/hr.router"));
 class ReservationRootRouter {
     constructor() {
         this.router = (0, express_1.Router)();

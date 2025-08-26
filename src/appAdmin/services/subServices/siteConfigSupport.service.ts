@@ -6,6 +6,10 @@ import {
   heroBG,
   privacyAndPolicy,
 } from "../../../utils/miscellaneous/siteConfig/pagesContent";
+import {
+  ICreateHotelB2CHeroBgContentPayload,
+  ICreateHotelB2CSiteConfig,
+} from "../../utlis/interfaces/configuration.interface";
 
 export class SiteConfigSupportService extends AbstractServices {
   private trx: Knex.Transaction;
@@ -15,14 +19,14 @@ export class SiteConfigSupportService extends AbstractServices {
   }
 
   public async insertSiteConfigData({
-    agency_id,
+    hotel_code,
     address,
     email,
     phone,
     site_name,
     logo,
   }: {
-    agency_id: number;
+    hotel_code: number;
     site_name: string;
     address: string;
     phone: string;
@@ -31,8 +35,8 @@ export class SiteConfigSupportService extends AbstractServices {
   }) {
     const SiteConfigModel = this.Model.b2cConfigurationModel(this.trx);
 
-    const payload: ICreateAgencyB2CSiteConfig = {
-      agency_id,
+    const payload: ICreateHotelB2CSiteConfig = {
+      hotel_code,
       about_us_content: aboutUsContent(site_name, address),
       emails: JSON.stringify([{ email }]),
       numbers: JSON.stringify([{ number: phone }]),
@@ -44,19 +48,19 @@ export class SiteConfigSupportService extends AbstractServices {
       hero_quote: `Welcome to ${site_name}!`,
       hero_sub_quote: "Find Flights, Hotels, Visa & Holidays",
       main_logo: logo,
-      site_thumbnail: "agent/b2c/site-config/site-thumbnail.jpg",
-      about_us_thumbnail: "agent/b2c/site-config/about-us.png",
-      contact_us_thumbnail: "agent/b2c/site-config/contact-us.jpg",
-      favicon: "agent/b2c/site-config/favicon.png",
-      meta_description: `Welcome to ${site_name}, The ultimate online platform for ota services! Book air tickets, hotels, visa, tour package without hassle at the most competitive rates.`,
-      meta_tags: `${site_name}, flight booking, cheap hotels, tour packages, visa services, travel deals, online travel agency`,
-      meta_title: ` ${site_name} | Book Flights, Hotel, Tour, Visa Online`,
+      site_thumbnail: "",
+      about_us_thumbnail: "",
+      contact_us_thumbnail: "",
+      favicon: "",
+      meta_description: `Welcome to ${site_name}`,
+      meta_title: ` ${site_name}`,
       notice: `Welcome to ${site_name}`,
     };
 
     await SiteConfigModel.insertSiteConfig(payload);
 
-    const heroBGPayload: ICreateB2CHeroBgContentPayload[] = heroBG(agency_id);
+    const heroBGPayload: ICreateHotelB2CHeroBgContentPayload[] =
+      heroBG(hotel_code);
 
     await SiteConfigModel.insertHeroBGContent(heroBGPayload);
   }
