@@ -78,6 +78,17 @@ class ReportValidator {
             to_date: joi_1.default.string().required(),
             head_id: joi_1.default.number().integer().required(),
         });
+        this.getAllReservationByRoom = joi_1.default.object({
+            room_id: joi_1.default.number().required(),
+            checkin: joi_1.default.string().allow("").optional(),
+            checkout: joi_1.default.string().allow("").optional(),
+            status: joi_1.default.string()
+                .allow("pending", "confirmed", "canceled", "rejected", "")
+                .optional(),
+            booking_type: joi_1.default.string().allow("B", "C", "H", "").optional(),
+            limit: joi_1.default.string().allow("").optional(),
+            skip: joi_1.default.string().allow("").optional(),
+        });
     }
 }
 exports.default = ReportValidator;
