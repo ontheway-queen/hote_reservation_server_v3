@@ -47,13 +47,54 @@ class EmployeeValidator {
 
   updateEmployeeValidator = Joi.object({
     name: Joi.string().allow("").optional(),
-    department_id: Joi.number().optional(),
-    res_id: Joi.number().allow("").optional(),
+    department_ids: Joi.string()
+      .optional()
+      .custom((value, helpers) => {
+        try {
+          let ids;
+          if (value.startsWith("[") && value.endsWith("]")) {
+            ids = JSON.parse(value);
+          }
+          ids = ids.map((id: any) => Number(id));
+
+          if (ids.some(isNaN)) {
+            return helpers.error("any.invalid");
+          }
+
+          console.log(ids);
+
+          return ids;
+        } catch (err) {
+          return helpers.error("any.invalid");
+        }
+      }),
+
+    remove_department_ids: Joi.string()
+      .optional()
+      .custom((value, helpers) => {
+        try {
+          let ids;
+          if (value.startsWith("[") && value.endsWith("]")) {
+            ids = JSON.parse(value);
+          }
+          ids = ids.map((id: any) => Number(id));
+
+          if (ids.some(isNaN)) {
+            return helpers.error("any.invalid");
+          }
+
+          console.log(ids);
+
+          return ids;
+        } catch (err) {
+          return helpers.error("any.invalid");
+        }
+      }),
     designation_id: Joi.number().optional(),
     blood_group: Joi.number().optional(),
     salary: Joi.number().optional(),
     status: Joi.boolean().optional(),
-    mobile_no: Joi.string().allow("").optional(),
+    contact_no: Joi.string().allow("").optional(),
     dob: Joi.string().optional(),
     appointment_date: Joi.string().optional(),
     joining_date: Joi.string().optional(),

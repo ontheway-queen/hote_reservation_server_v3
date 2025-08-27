@@ -6,8 +6,10 @@ import {
 } from "../../appAdmin/utlis/interfaces/hr.interface";
 import {
   ICreatedepartment,
+  ICreatedesignation,
   ICreatePayrollMonths,
   IUpdatedepartment,
+  IUpdatedesignation,
   IUpdatePayrollMonths,
 } from "../../appAdmin/utlis/interfaces/setting.interface";
 import { TDB } from "../../common/types/commontypes";
@@ -21,14 +23,107 @@ class HrModel extends Schema {
     this.db = db;
   }
 
-  // create  Payroll Months
+  public async createDesignation(payload: ICreatedesignation) {
+    return await this.db("designation")
+      .withSchema(this.HR_SCHEMA)
+      .insert(payload);
+  }
+
+  public async getAllDesignation(payload: {
+    limit?: string;
+    skip?: string;
+    name: string;
+    status?: string;
+    hotel_code: number;
+    excludeId?: number;
+  }) {
+    const { limit, skip, hotel_code, name, status, excludeId } = payload;
+
+    const dtbs = this.db("designation as de");
+
+    if (limit && skip) {
+      dtbs.limit(parseInt(limit as string));
+      dtbs.offset(parseInt(skip as string));
+    }
+
+    const data = await dtbs
+      .withSchema(this.HR_SCHEMA)
+      .select(
+        "de.id",
+        "de.hotel_code",
+        "de.name as designation_name",
+        "de.status",
+        "de.is_deleted",
+        "de.created_by as created_by_id",
+        "ua.name as created_by_name"
+      )
+
+      .joinRaw(`LEFT JOIN ??.user_admin as ua ON ua.id = de.created_by`, [
+        this.RESERVATION_SCHEMA,
+      ])
+      .where(function () {
+        this.whereNull("de.hotel_code").orWhere("de.hotel_code", hotel_code);
+      })
+      .andWhere("de.is_deleted", false)
+      .andWhere(function () {
+        if (name) {
+          this.andWhere("de.name", "ilike", `%${name}%`);
+        }
+        if (status) {
+          this.andWhere("de.status", status);
+        }
+        if (excludeId) {
+          this.andWhere("de.id", "!=", excludeId);
+        }
+      })
+      .orderBy("de.id", "desc");
+
+    const total = await this.db("designation as de")
+      .withSchema(this.HR_SCHEMA)
+      .count("de.id as total")
+      .where(function () {
+        this.whereNull("de.hotel_code").orWhere("de.hotel_code", hotel_code);
+      })
+      .andWhere("de.is_deleted", false)
+      .andWhere(function () {
+        if (name) {
+          this.andWhere("de.name", "ilike", `%${name}%`);
+        }
+        if (status) {
+          this.andWhere("de.status", status);
+        }
+        if (excludeId) {
+          this.andWhere("de.id", "!=", excludeId);
+        }
+      });
+
+    return { total: total[0].total, data };
+  }
+
+  public async updateDesignation(
+    id: number,
+    hotel_code: number,
+    payload: IUpdatedesignation
+  ) {
+    return await this.db("designation")
+      .withSchema(this.HR_SCHEMA)
+      .where({ id, hotel_code })
+      .update(payload);
+  }
+
+  public async deleteDesignation(id: number, hotel_code: number) {
+    return await this.db("designation")
+      .withSchema(this.HR_SCHEMA)
+      .where({ id, hotel_code })
+      .update({ is_deleted: true });
+  }
+
   public async createPayrollMonths(payload: ICreatePayrollMonths) {
     return await this.db("payroll_months")
       .withSchema(this.HR_SCHEMA)
       .insert(payload);
   }
 
-  // Get All PayrollMonths
   public async getPayrollMonths(payload: {
     limit?: string;
     skip?: string;
@@ -91,7 +186,6 @@ class HrModel extends Schema {
     return { total, data };
   }
 
-  // Update Payroll Months
   public async updatePayrollMonths(id: number, payload: IUpdatePayrollMonths) {
     return await this.db("payroll_months")
       .withSchema(this.HR_SCHEMA)
@@ -100,7 +194,6 @@ class HrModel extends Schema {
       .update(payload);
   }
 
-  // Delete Payroll Months
   public async deletePayrollMonths(id: number) {
     return await this.db("payroll_months")
       .withSchema(this.HR_SCHEMA)
@@ -109,14 +202,12 @@ class HrModel extends Schema {
       .update({ is_deleted: true });
   }
 
-  // create Department
   public async createDepartment(payload: ICreatedepartment) {
     return await this.db("department")
       .withSchema(this.HR_SCHEMA)
       .insert(payload);
   }
 
-  // Get All Department
   public async getAllDepartment(payload: {
     limit?: string;
     skip?: string;
@@ -193,7 +284,6 @@ class HrModel extends Schema {
     return { total: Number(total[0].total), data };
   }
 
-  // Get Single Department
   public async getSingleDepartment(id: number, hotel_code: number) {
     return await this.db("department as d")
       .withSchema(this.HR_SCHEMA)
@@ -215,7 +305,6 @@ class HrModel extends Schema {
       .first();
   }
 
-  // Update Department
   public async updateDepartment(
     id: number,
     hotel_code: number,
@@ -322,7 +411,6 @@ class HrModel extends Schema {
     };
   }
 
-  // Get Single Employee
   public async getSingleEmployee(
     id: number,
     hotel_code: number
@@ -371,7 +459,6 @@ class HrModel extends Schema {
     return data ? data : null;
   }
 
-  // Update Employee
   public async updateEmployee(id: number, payload: IupdateEmployee) {
     console.log({ payload });
     return await this.db("employee")
@@ -380,7 +467,6 @@ class HrModel extends Schema {
       .update(payload);
   }
 
-  // Delete Employee
   public async deleteEmployee(id: number) {
     return await this.db("employee")
       .withSchema(this.HR_SCHEMA)
@@ -388,7 +474,6 @@ class HrModel extends Schema {
       .update({ is_deleted: true });
   }
 
-  // get all employee using department id
   public async getEmployeesByDepartmentId({
     id,
     limit,

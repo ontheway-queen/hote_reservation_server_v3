@@ -48,13 +48,49 @@ class EmployeeValidator {
         });
         this.updateEmployeeValidator = joi_1.default.object({
             name: joi_1.default.string().allow("").optional(),
-            department_id: joi_1.default.number().optional(),
-            res_id: joi_1.default.number().allow("").optional(),
+            department_ids: joi_1.default.string()
+                .optional()
+                .custom((value, helpers) => {
+                try {
+                    let ids;
+                    if (value.startsWith("[") && value.endsWith("]")) {
+                        ids = JSON.parse(value);
+                    }
+                    ids = ids.map((id) => Number(id));
+                    if (ids.some(isNaN)) {
+                        return helpers.error("any.invalid");
+                    }
+                    console.log(ids);
+                    return ids;
+                }
+                catch (err) {
+                    return helpers.error("any.invalid");
+                }
+            }),
+            remove_department_ids: joi_1.default.string()
+                .optional()
+                .custom((value, helpers) => {
+                try {
+                    let ids;
+                    if (value.startsWith("[") && value.endsWith("]")) {
+                        ids = JSON.parse(value);
+                    }
+                    ids = ids.map((id) => Number(id));
+                    if (ids.some(isNaN)) {
+                        return helpers.error("any.invalid");
+                    }
+                    console.log(ids);
+                    return ids;
+                }
+                catch (err) {
+                    return helpers.error("any.invalid");
+                }
+            }),
             designation_id: joi_1.default.number().optional(),
             blood_group: joi_1.default.number().optional(),
             salary: joi_1.default.number().optional(),
             status: joi_1.default.boolean().optional(),
-            mobile_no: joi_1.default.string().allow("").optional(),
+            contact_no: joi_1.default.string().allow("").optional(),
             dob: joi_1.default.string().optional(),
             appointment_date: joi_1.default.string().optional(),
             joining_date: joi_1.default.string().optional(),

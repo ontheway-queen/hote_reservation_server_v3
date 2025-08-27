@@ -108,10 +108,11 @@ export class EmployeeService extends AbstractServices {
     );
 
     if (!data) {
-      throw new CustomError(
-        `The requested employee with ID: ${id} not found.`,
-        this.StatusCode.HTTP_NOT_FOUND
-      );
+      return {
+        success: false,
+        code: this.StatusCode.HTTP_NOT_FOUND,
+        message: this.ResMsg.HTTP_NOT_FOUND,
+      };
     }
 
     return {
@@ -157,26 +158,15 @@ export class EmployeeService extends AbstractServices {
 
   // Delete employee
   public async deleteEmployee(req: Request) {
-    return await this.db.transaction(async (trx) => {
-      const { id } = req.params;
+    const { id } = req.params;
 
-      const model = this.Model.employeeModel(trx);
-      const res = await model.deleteEmployee(parseInt(id));
+    await this.Model.employeeModel().deleteEmployee(parseInt(id));
 
-      if (res === 1) {
-        return {
-          success: true,
-          code: this.StatusCode.HTTP_OK,
-          message: "Employee Profile deleted successfully",
-        };
-      } else {
-        return {
-          success: false,
-          code: this.StatusCode.HTTP_NOT_FOUND,
-          message: "Employee Profile didn't find from this ID",
-        };
-      }
-    });
+    return {
+      success: true,
+      code: this.StatusCode.HTTP_OK,
+      message: "Employee has been deleted",
+    };
   }
 
   // get Employees By Department Id

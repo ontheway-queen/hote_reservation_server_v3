@@ -25,7 +25,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.EmployeeService = void 0;
 const abstract_service_1 = __importDefault(require("../../abstarcts/abstract.service"));
-const customEror_1 = __importDefault(require("../../utils/lib/customEror"));
 class EmployeeService extends abstract_service_1.default {
     constructor() {
         super();
@@ -105,7 +104,11 @@ class EmployeeService extends abstract_service_1.default {
             const { hotel_code } = req.hotel_admin;
             const data = yield this.Model.employeeModel().getSingleEmployee(parseInt(id), hotel_code);
             if (!data) {
-                throw new customEror_1.default(`The requested employee with ID: ${id} not found.`, this.StatusCode.HTTP_NOT_FOUND);
+                return {
+                    success: false,
+                    code: this.StatusCode.HTTP_NOT_FOUND,
+                    message: this.ResMsg.HTTP_NOT_FOUND,
+                };
             }
             return {
                 success: true,
@@ -146,25 +149,13 @@ class EmployeeService extends abstract_service_1.default {
     // Delete employee
     deleteEmployee(req) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
-                const { id } = req.params;
-                const model = this.Model.employeeModel(trx);
-                const res = yield model.deleteEmployee(parseInt(id));
-                if (res === 1) {
-                    return {
-                        success: true,
-                        code: this.StatusCode.HTTP_OK,
-                        message: "Employee Profile deleted successfully",
-                    };
-                }
-                else {
-                    return {
-                        success: false,
-                        code: this.StatusCode.HTTP_NOT_FOUND,
-                        message: "Employee Profile didn't find from this ID",
-                    };
-                }
-            }));
+            const { id } = req.params;
+            yield this.Model.employeeModel().deleteEmployee(parseInt(id));
+            return {
+                success: true,
+                code: this.StatusCode.HTTP_OK,
+                message: "Employee has been deleted",
+            };
         });
     }
     // get Employees By Department Id

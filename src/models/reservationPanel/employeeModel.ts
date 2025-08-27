@@ -48,8 +48,8 @@ class EmployeeModel extends Schema {
         this.db.raw(
           "JSON_AGG(JSON_BUILD_OBJECT('id', d.id, 'name', d.name)) as department"
         ),
+        this.db.raw(`TO_CHAR(e.joining_date, 'YYYY-MM-DD') as joining_date`),
         "e.salary",
-        "e.joining_date",
         "e.status"
       )
       .withSchema(this.HR_SCHEMA)
@@ -119,28 +119,29 @@ class EmployeeModel extends Schema {
     id: number,
     hotel_code: number
   ): Promise<IEmployeeResponse | null> {
-    const data = await this.db("employee as e")
-      .withSchema(this.RESERVATION_SCHEMA)
+    console.log({ id, hotel_code });
+
+    return await this.db("employee as e")
+      .withSchema(this.HR_SCHEMA)
       .select(
         "e.id",
         "e.name",
         "e.email",
-        "e.mobile_no",
+        "e.contact_no",
         "e.photo",
         "e.blood_group as blood_group_id",
         "bg.name as blood_group_name",
-        "dep.id as department_id",
-        "dep.name as department_name",
         "des.id as designation_id",
         "des.name as designation_name",
         "e.salary",
+        this.db.raw(
+          "JSON_AGG(JSON_BUILD_OBJECT('id', d.id, 'name', d.name)) as department"
+        ),
         this.db.raw("to_char(e.dob, 'YYYY-MM-DD') as dob"),
         this.db.raw(
           "to_char(e.appointment_date, 'YYYY-MM-DD') as appointment_date"
         ),
         this.db.raw("to_char(e.joining_date, 'YYYY-MM-DD') as joining_date"),
-        "e.hotel_code",
-        "h.name as hotel_name",
         "ua.id as created_by_id",
         "ua.name as created_by_name",
         "e.address",
@@ -148,19 +149,35 @@ class EmployeeModel extends Schema {
         "e.created_at",
         "e.is_deleted"
       )
-      .join("hotels as h", "h.hotel_code", "e.hotel_code")
-      .join("department as dep", "e.department_id", "dep.id")
-      .join("designation as des", "des.id", "e.designation_id")
-      .join("user_admin as ua", "ua.id", "e.created_by")
-      .joinRaw(`JOIN ?? as bg ON bg.id = e.blood_group`, [
+      .joinRaw("LEFT JOIN ??.hotels as h ON e.hotel_code = h.hotel_code", [
+        this.RESERVATION_SCHEMA,
+      ])
+      .joinRaw("LEFT JOIN ??.user_admin as ua  ON e.created_by = ua.id", [
+        this.RESERVATION_SCHEMA,
+      ])
+      .leftJoin("emp_departments as ed", "e.id", "ed.emp_id")
+      .leftJoin("department as d", "ed.department_id", "d.id")
+      .leftJoin("designation as des", "des.id", "e.designation_id")
+      .joinRaw(`LEFT JOIN ?? as bg ON bg.id = e.blood_group`, [
         `${this.DBO_SCHEMA}.${this.TABLES.blood_group}`,
       ])
       .where("e.id", id)
       .andWhere("e.is_deleted", false)
       .andWhere("e.hotel_code", hotel_code)
+      .groupBy(
+        "e.id",
+        "e.name",
+        "e.email",
+        "e.contact_no",
+        "e.salary",
+        "e.joining_date",
+        "e.status",
+        "bg.name",
+        "des.id",
+        "ua.id",
+        "ua.name"
+      )
       .first();
-
-    return data ? data : null;
   }
 
   // Update Employee
@@ -175,8 +192,8 @@ class EmployeeModel extends Schema {
   // Delete Employee
   public async deleteEmployee(id: number) {
     return await this.db("employee")
-      .withSchema(this.RESERVATION_SCHEMA)
-      .where({ id, is_deleted: false })
+      .withSchema(this.HR_SCHEMA)
+      .where({ id })
       .update({ is_deleted: true });
   }
 

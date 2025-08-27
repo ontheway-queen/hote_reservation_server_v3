@@ -31,23 +31,18 @@ class DesignationSettingController extends abstract_controller_1.default {
         super();
         this.designationSettingService = new setting_designation_service_1.default();
         this.settingValidator = new setting_validator_1.default();
-        //=================== Designation Controller ======================//
-        // Create Designation
         this.createDesignation = this.asyncWrapper.wrap({ bodySchema: this.settingValidator.createdesignationValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
             const _a = yield this.designationSettingService.createDesignation(req), { code } = _a, data = __rest(_a, ["code"]);
             res.status(code).json(data);
         }));
-        // Get All Designation
         this.getAllDesignation = this.asyncWrapper.wrap({ querySchema: this.settingValidator.getAlldesignationQueryValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
             const _b = yield this.designationSettingService.getAllDesignation(req), { code } = _b, data = __rest(_b, ["code"]);
             res.status(code).json(data);
         }));
-        // Update Designation
         this.updateDesignation = this.asyncWrapper.wrap({ bodySchema: this.settingValidator.UpdatedesignationValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
             const _c = yield this.designationSettingService.updateDesignation(req), { code } = _c, data = __rest(_c, ["code"]);
             res.status(code).json(data);
         }));
-        // Delete Designation
         this.deleteDesignation = this.asyncWrapper.wrap({ paramSchema: this.commonValidator.singleParamValidator() }, (req, res) => __awaiter(this, void 0, void 0, function* () {
             const _d = yield this.designationSettingService.deleteDesignation(req), { code } = _d, data = __rest(_d, ["code"]);
             res.status(code).json(data);

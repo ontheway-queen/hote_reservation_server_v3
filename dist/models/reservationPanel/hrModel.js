@@ -18,7 +18,80 @@ class HrModel extends schema_1.default {
         super();
         this.db = db;
     }
-    // create  Payroll Months
+    createDesignation(payload) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("designation")
+                .withSchema(this.HR_SCHEMA)
+                .insert(payload);
+        });
+    }
+    getAllDesignation(payload) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { limit, skip, hotel_code, name, status, excludeId } = payload;
+            const dtbs = this.db("designation as de");
+            if (limit && skip) {
+                dtbs.limit(parseInt(limit));
+                dtbs.offset(parseInt(skip));
+            }
+            const data = yield dtbs
+                .withSchema(this.HR_SCHEMA)
+                .select("de.id", "de.hotel_code", "de.name as designation_name", "de.status", "de.is_deleted", "de.created_by as created_by_id", "ua.name as created_by_name")
+                .joinRaw(`LEFT JOIN ??.user_admin as ua ON ua.id = de.created_by`, [
+                this.RESERVATION_SCHEMA,
+            ])
+                .where(function () {
+                this.whereNull("de.hotel_code").orWhere("de.hotel_code", hotel_code);
+            })
+                .andWhere("de.is_deleted", false)
+                .andWhere(function () {
+                if (name) {
+                    this.andWhere("de.name", "ilike", `%${name}%`);
+                }
+                if (status) {
+                    this.andWhere("de.status", status);
+                }
+                if (excludeId) {
+                    this.andWhere("de.id", "!=", excludeId);
+                }
+            })
+                .orderBy("de.id", "desc");
+            const total = yield this.db("designation as de")
+                .withSchema(this.HR_SCHEMA)
+                .count("de.id as total")
+                .where(function () {
+                this.whereNull("de.hotel_code").orWhere("de.hotel_code", hotel_code);
+            })
+                .andWhere("de.is_deleted", false)
+                .andWhere(function () {
+                if (name) {
+                    this.andWhere("de.name", "ilike", `%${name}%`);
+                }
+                if (status) {
+                    this.andWhere("de.status", status);
+                }
+                if (excludeId) {
+                    this.andWhere("de.id", "!=", excludeId);
+                }
+            });
+            return { total: total[0].total, data };
+        });
+    }
+    updateDesignation(id, hotel_code, payload) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("designation")
+                .withSchema(this.HR_SCHEMA)
+                .where({ id, hotel_code })
+                .update(payload);
+        });
+    }
+    deleteDesignation(id, hotel_code) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("designation")
+                .withSchema(this.HR_SCHEMA)
+                .where({ id, hotel_code })
+                .update({ is_deleted: true });
+        });
+    }
     createPayrollMonths(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("payroll_months")
@@ -26,7 +99,6 @@ class HrModel extends schema_1.default {
                 .insert(payload);
         });
     }
-    // Get All PayrollMonths
     getPayrollMonths(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             const { limit, skip, hotel_code, name, month_id } = payload;
@@ -72,7 +144,6 @@ class HrModel extends schema_1.default {
             return { total, data };
         });
     }
-    // Update Payroll Months
     updatePayrollMonths(id, payload) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("payroll_months")
@@ -82,7 +153,6 @@ class HrModel extends schema_1.default {
                 .update(payload);
         });
     }
-    // Delete Payroll Months
     deletePayrollMonths(id) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("payroll_months")
@@ -92,7 +162,6 @@ class HrModel extends schema_1.default {
                 .update({ is_deleted: true });
         });
     }
-    // create Department
     createDepartment(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("department")
@@ -100,7 +169,6 @@ class HrModel extends schema_1.default {
                 .insert(payload);
         });
     }
-    // Get All Department
     getAllDepartment(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             const { limit, skip, hotel_code, name, status, excludeId, ids } = payload;
@@ -156,7 +224,6 @@ class HrModel extends schema_1.default {
             return { total: Number(total[0].total), data };
         });
     }
-    // Get Single Department
     getSingleDepartment(id, hotel_code) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("department as d")
@@ -171,7 +238,6 @@ class HrModel extends schema_1.default {
                 .first();
         });
     }
-    // Update Department
     updateDepartment(id, hotel_code, payload) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("department")
@@ -250,7 +316,6 @@ class HrModel extends schema_1.default {
             };
         });
     }
-    // Get Single Employee
     getSingleEmployee(id, hotel_code) {
         return __awaiter(this, void 0, void 0, function* () {
             const data = yield this.db("employee as e")
@@ -270,7 +335,6 @@ class HrModel extends schema_1.default {
             return data ? data : null;
         });
     }
-    // Update Employee
     updateEmployee(id, payload) {
         return __awaiter(this, void 0, void 0, function* () {
             console.log({ payload });
@@ -280,7 +344,6 @@ class HrModel extends schema_1.default {
                 .update(payload);
         });
     }
-    // Delete Employee
     deleteEmployee(id) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("employee")
@@ -289,7 +352,6 @@ class HrModel extends schema_1.default {
                 .update({ is_deleted: true });
         });
     }
-    // get all employee using department id
     getEmployeesByDepartmentId({ id, limit, skip, }) {
         return __awaiter(this, void 0, void 0, function* () {
             const dtbs = this.db("employee as e");
