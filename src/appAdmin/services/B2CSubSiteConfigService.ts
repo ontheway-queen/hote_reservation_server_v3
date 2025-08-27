@@ -730,4 +730,77 @@ export class B2CSubSiteConfigService extends AbstractServices {
 			};
 		});
 	}
+
+	// =========================== Amenity Heads =========================== //
+	public async getAllAmenityHeads(req: Request) {
+		return this.db.transaction(async (trx) => {
+			const { status, limit, skip, search } = req.query;
+			const configModel = this.Model.mConfigurationModel(trx);
+			const { data } = await configModel.getAllRoomTypeAmenitiesHead({
+				status: status as string,
+				limit: limit as string,
+				skip: skip as string,
+				search: search as string,
+			});
+			return {
+				success: true,
+				code: this.StatusCode.HTTP_OK,
+				message: this.ResMsg.HTTP_OK,
+				data,
+			};
+		});
+	}
+
+	public async getAllAmenities(req: Request) {
+		return this.db.transaction(async (trx) => {
+			const id = Number(req.params.id);
+			const configModel = this.Model.mConfigurationModel(trx);
+			const { data } = await configModel.getAllRoomTypeAmenities({
+				head_id: id,
+			});
+			return {
+				success: true,
+				code: this.StatusCode.HTTP_OK,
+				message: this.ResMsg.HTTP_OK,
+				data,
+			};
+		});
+	}
+
+	public async addHotelAmenities(req: Request) {
+		return this.db.transaction(async (trx) => {
+			const hotel_code = req.hotel_admin.hotel_code;
+			const { amenity_ids } = req.body;
+
+			const rows = amenity_ids.map((id: number) => ({
+				hotel_code,
+				amenity_id: id,
+			}));
+
+			const configModel = this.Model.b2cConfigurationModel(trx);
+			await configModel.addHotelAmenities(rows);
+
+			return {
+				success: true,
+				code: this.StatusCode.HTTP_OK,
+				message: this.ResMsg.HTTP_OK,
+			};
+		});
+	}
+
+	public async getAllHotelAmenities(req: Request) {
+		return this.db.transaction(async (trx) => {
+			const hotel_code = req.hotel_admin.hotel_code;
+
+			const configModel = this.Model.b2cConfigurationModel(trx);
+			const data = await configModel.getAllHotelAmenities(hotel_code);
+
+			return {
+				success: true,
+				code: this.StatusCode.HTTP_OK,
+				message: this.ResMsg.HTTP_OK,
+				data,
+			};
+		});
+	}
 }

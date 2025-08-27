@@ -196,6 +196,43 @@ class B2CSiteConfigController extends abstract_controller_1.default {
                 this.error(data.message, code);
             }
         }));
+        // =========================== Amenity Heads =========================== //
+        this.getAllAmenityHeads = this.asyncWrapper.wrap(null, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _y = yield this.service.getAllAmenityHeads(req), { code } = _y, data = __rest(_y, ["code"]);
+            if (data.success) {
+                res.status(code).json(data);
+            }
+            else {
+                this.error(data.message, code);
+            }
+        }));
+        this.getAllAmenities = this.asyncWrapper.wrap({ paramSchema: this.commonValidator.singleParamValidator("id") }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _z = yield this.service.getAllAmenities(req), { code } = _z, data = __rest(_z, ["code"]);
+            if (data.success) {
+                res.status(code).json(data);
+            }
+            else {
+                this.error(data.message, code);
+            }
+        }));
+        this.addHotelAmenities = this.asyncWrapper.wrap(null, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _0 = yield this.service.addHotelAmenities(req), { code } = _0, data = __rest(_0, ["code"]);
+            if (data.success) {
+                res.status(code).json(data);
+            }
+            else {
+                this.error(data.message, code);
+            }
+        }));
+        this.getAllHotelAmenities = this.asyncWrapper.wrap(null, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _1 = yield this.service.getAllHotelAmenities(req), { code } = _1, data = __rest(_1, ["code"]);
+            if (data.success) {
+                res.status(code).json(data);
+            }
+            else {
+                this.error(data.message, code);
+            }
+        }));
     }
 }
 exports.B2CSiteConfigController = B2CSiteConfigController;

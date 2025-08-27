@@ -84,5 +84,19 @@ export default class B2CSiteConfigRouter extends AbstractRouter {
 			.delete(this.controller.deleteFaqHead);
 
 		this.router.route("/faq").post(this.controller.createFaq);
+
+		// =========================== Amenity Heads =========================== //
+		this.router
+			.route("/amenity-heads")
+			.get(this.controller.getAllAmenityHeads);
+
+		this.router
+			.route("/amenity-heads/:id")
+			.get(this.controller.getAllAmenities);
+
+		this.router
+			.route("/hotel-amenities")
+			.post(this.controller.addHotelAmenities)
+			.get(this.controller.getAllHotelAmenities);
 	}
 }

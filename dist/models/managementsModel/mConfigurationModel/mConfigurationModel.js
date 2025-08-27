@@ -187,7 +187,7 @@ class MConfigurationModel extends schema_1.default {
     // create Room Amenities
     createRoomTypeAmenitiesHead(payload) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("amenities_head")
+            return yield this.db("amenity_heads")
                 .withSchema(this.RESERVATION_SCHEMA)
                 .insert(payload);
         });
@@ -196,14 +196,14 @@ class MConfigurationModel extends schema_1.default {
     getAllRoomTypeAmenitiesHead(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             const { limit, skip, search, status } = payload;
-            const dtbs = this.db("amenities_head");
+            const dtbs = this.db("amenity_heads");
             if (limit && skip) {
                 dtbs.limit(parseInt(limit));
                 dtbs.offset(parseInt(skip));
             }
             const data = yield dtbs
                 .withSchema(this.RESERVATION_SCHEMA)
-                .select("id", "name", "icon", "status")
+                .select("id", "name", "status")
                 .where(function () {
                 if (search) {
                     this.andWhere("name", "like", `%${search}%`);
@@ -219,7 +219,7 @@ class MConfigurationModel extends schema_1.default {
     // Update Room Amenities
     updateRoomTypeAmenitiesHead(id, payload) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("amenities_head")
+            return yield this.db("amenity_heads")
                 .withSchema(this.RESERVATION_SCHEMA)
                 .where({ id })
                 .update(payload);
@@ -236,7 +236,7 @@ class MConfigurationModel extends schema_1.default {
     // Get All Room Amenities
     getAllRoomTypeAmenities(payload) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { limit, skip, search, status, rt_ids } = payload;
+            const { limit, skip, search, status, head_id } = payload;
             const dtbs = this.db("amenities");
             if (limit && skip) {
                 dtbs.limit(parseInt(limit));
@@ -252,8 +252,8 @@ class MConfigurationModel extends schema_1.default {
                 if (status) {
                     this.andWhere("status", status);
                 }
-                if (rt_ids) {
-                    this.whereIn("id", rt_ids);
+                if (head_id) {
+                    this.andWhere("head_id", head_id);
                 }
             })
                 .orderBy("id", "desc");
@@ -267,8 +267,8 @@ class MConfigurationModel extends schema_1.default {
                 if (status) {
                     this.andWhere("status", status);
                 }
-                if (rt_ids) {
-                    this.whereIn("id", rt_ids);
+                if (head_id) {
+                    this.andWhere("head_id", head_id);
                 }
             });
             return { total: total[0].total, data };

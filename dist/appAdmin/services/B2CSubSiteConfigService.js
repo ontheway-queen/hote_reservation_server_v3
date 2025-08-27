@@ -612,6 +612,78 @@ class B2CSubSiteConfigService extends abstract_service_1.default {
             }));
         });
     }
+    // =========================== Amenity Heads =========================== //
+    getAllAmenityHeads(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
+                const { status, limit, skip, search } = req.query;
+                const configModel = this.Model.mConfigurationModel(trx);
+                const { data } = yield configModel.getAllRoomTypeAmenitiesHead({
+                    status: status,
+                    limit: limit,
+                    skip: skip,
+                    search: search,
+                });
+                return {
+                    success: true,
+                    code: this.StatusCode.HTTP_OK,
+                    message: this.ResMsg.HTTP_OK,
+                    data,
+                };
+            }));
+        });
+    }
+    getAllAmenities(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
+                const id = Number(req.params.id);
+                const configModel = this.Model.mConfigurationModel(trx);
+                const { data } = yield configModel.getAllRoomTypeAmenities({
+                    head_id: id,
+                });
+                return {
+                    success: true,
+                    code: this.StatusCode.HTTP_OK,
+                    message: this.ResMsg.HTTP_OK,
+                    data,
+                };
+            }));
+        });
+    }
+    addHotelAmenities(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
+                const hotel_code = req.hotel_admin.hotel_code;
+                const { amenity_ids } = req.body;
+                const rows = amenity_ids.map((id) => ({
+                    hotel_code,
+                    amenity_id: id,
+                }));
+                const configModel = this.Model.b2cConfigurationModel(trx);
+                yield configModel.addHotelAmenities(rows);
+                return {
+                    success: true,
+                    code: this.StatusCode.HTTP_OK,
+                    message: this.ResMsg.HTTP_OK,
+                };
+            }));
+        });
+    }
+    getAllHotelAmenities(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
+                const hotel_code = req.hotel_admin.hotel_code;
+                const configModel = this.Model.b2cConfigurationModel(trx);
+                const data = yield configModel.getAllHotelAmenities(hotel_code);
+                return {
+                    success: true,
+                    code: this.StatusCode.HTTP_OK,
+                    message: this.ResMsg.HTTP_OK,
+                    data,
+                };
+            }));
+        });
+    }
 }
 exports.B2CSubSiteConfigService = B2CSubSiteConfigService;
 //# sourceMappingURL=B2CSubSiteConfigService.js.map

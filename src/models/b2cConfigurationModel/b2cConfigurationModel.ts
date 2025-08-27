@@ -625,4 +625,33 @@ export default class AgencyB2CConfigModel extends Schema {
 			.withSchema(this.RESERVATION_SCHEMA)
 			.where("faq_head_id", head_id);
 	}
+
+	// =========================== Hotel Amenities =========================== //
+	public async addHotelAmenities(
+		payload: {
+			hotel_code: number;
+			amenity_id: number;
+		}[]
+	) {
+		return await this.db("hotel_amenities")
+			.withSchema(this.RESERVATION_SCHEMA)
+			.insert(payload);
+	}
+
+	public async getAllHotelAmenities(hotel_code: number) {
+		return await this.db("hotel_amenities as ha")
+			.withSchema(this.RESERVATION_SCHEMA)
+			.select(
+				"a.id",
+				"ha.hotel_code",
+				"a.head_id",
+				"a.name",
+				"a.description",
+				"a.icon",
+				"a.status"
+			)
+			.join("amenities as a", "a.id", "ha.amenity_id")
+			.where("hotel_code", hotel_code)
+			.andWhere("is_deleted", false);
+	}
 }

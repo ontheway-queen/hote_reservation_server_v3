@@ -256,4 +256,57 @@ export class B2CSiteConfigController extends AbstractController {
 			}
 		}
 	);
+
+	// =========================== Amenity Heads =========================== //
+	public getAllAmenityHeads = this.asyncWrapper.wrap(
+		null,
+		async (req: Request, res: Response) => {
+			const { code, ...data } = await this.service.getAllAmenityHeads(
+				req
+			);
+			if (data.success) {
+				res.status(code).json(data);
+			} else {
+				this.error(data.message, code);
+			}
+		}
+	);
+
+	public getAllAmenities = this.asyncWrapper.wrap(
+		{ paramSchema: this.commonValidator.singleParamValidator("id") },
+		async (req: Request, res: Response) => {
+			const { code, ...data } = await this.service.getAllAmenities(req);
+			if (data.success) {
+				res.status(code).json(data);
+			} else {
+				this.error(data.message, code);
+			}
+		}
+	);
+
+	public addHotelAmenities = this.asyncWrapper.wrap(
+		null,
+		async (req: Request, res: Response) => {
+			const { code, ...data } = await this.service.addHotelAmenities(req);
+			if (data.success) {
+				res.status(code).json(data);
+			} else {
+				this.error(data.message, code);
+			}
+		}
+	);
+
+	public getAllHotelAmenities = this.asyncWrapper.wrap(
+		null,
+		async (req: Request, res: Response) => {
+			const { code, ...data } = await this.service.getAllHotelAmenities(
+				req
+			);
+			if (data.success) {
+				res.status(code).json(data);
+			} else {
+				this.error(data.message, code);
+			}
+		}
+	);
 }

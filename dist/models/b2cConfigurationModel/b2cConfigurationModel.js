@@ -498,6 +498,24 @@ class AgencyB2CConfigModel extends schema_1.default {
                 .where("faq_head_id", head_id);
         });
     }
+    // =========================== Hotel Amenities =========================== //
+    addHotelAmenities(payload) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("hotel_amenities")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .insert(payload);
+        });
+    }
+    getAllHotelAmenities(hotel_code) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("hotel_amenities as ha")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .select("a.id", "ha.hotel_code", "a.head_id", "a.name", "a.description", "a.icon", "a.status")
+                .join("amenities as a", "a.id", "ha.amenity_id")
+                .where("hotel_code", hotel_code)
+                .andWhere("is_deleted", false);
+        });
+    }
 }
 exports.default = AgencyB2CConfigModel;
 //# sourceMappingURL=b2cConfigurationModel.js.map
