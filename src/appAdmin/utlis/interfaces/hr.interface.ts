@@ -1,20 +1,33 @@
 export interface IcreateEmployeeReqBody {
   name: string;
   photo?: string;
-  department_id: number[];
+  department_ids: number[];
   designation_id: number;
   blood_group?: string;
   salary: number;
   email?: string;
-  mobile_no: string;
+  contact_no: string;
   dob?: string;
   appointment_date?: string;
   joining_date?: string;
   address?: string;
+  created_by?: number;
 }
 
-export interface IcreateEmployee extends IcreateEmployeeReqBody {
+export interface IcreateEmployee {
   hotel_code: number;
+  name: string;
+  photo?: string;
+  designation_id: number;
+  blood_group?: string;
+  salary: number;
+  email?: string;
+  contact_no: string;
+  dob?: string;
+  appointment_date?: string;
+  joining_date?: string;
+  address?: string;
+  created_by: number;
 }
 
 export interface IupdateEmployee {

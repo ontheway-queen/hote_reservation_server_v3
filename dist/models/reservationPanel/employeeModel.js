@@ -36,9 +36,10 @@ class EmployeeModel extends schema_1.default {
                 dtbs.offset(parseInt(skip));
             }
             const data = yield dtbs
-                .select("e.id", "e.name", "e.email", "e.mobile_no", "d.name as department", "de.name as designation", "e.salary", "e.joining_date", "e.status")
-                .withSchema(this.RESERVATION_SCHEMA)
-                .leftJoin("department as d", "e.department_id", "d.id")
+                .select("e.id", "e.name", "e.email", "e.contact_no", this.db.raw("JSON_AGG(JSON_BUILD_OBJECT('id', d.id, 'name', d.name)) as department"), "e.salary", "e.joining_date", "e.status")
+                .withSchema(this.HR_SCHEMA)
+                .leftJoin("emp_departments as ed", "e.id", "ed.emp_id")
+                .leftJoin("department as d", "ed.department_id", "d.id")
                 .leftJoin("designation as de", "e.designation_id", "de.id")
                 .where("e.hotel_code", hotel_code)
                 .andWhere("e.is_deleted", false)
@@ -57,11 +58,13 @@ class EmployeeModel extends schema_1.default {
                     this.where("de.name", "like", `%${designation}%`);
                 }
             })
+                .groupBy("e.id", "e.name", "e.email", "e.contact_no", "e.salary", "e.joining_date", "e.status")
                 .orderBy("e.id", "desc");
             const total = yield this.db("employee as e")
-                .withSchema(this.RESERVATION_SCHEMA)
+                .withSchema(this.HR_SCHEMA)
                 .count("e.id as total")
-                .leftJoin("department as d", "e.department_id", "d.id")
+                .leftJoin("emp_departments as ed", "e.id", "ed.emp_id")
+                .leftJoin("department as d", "ed.department_id", "d.id")
                 .leftJoin("designation as de", "e.designation_id", "de.id")
                 .where("e.hotel_code", hotel_code)
                 .andWhere("e.is_deleted", false)

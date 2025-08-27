@@ -34,18 +34,19 @@ class EmployeeService extends abstract_service_1.default {
     createEmployee(req) {
         return __awaiter(this, void 0, void 0, function* () {
             const { hotel_code, id } = req.hotel_admin;
-            const body = req.body;
+            const _a = req.body, { department_ids, designation_id } = _a, rest = __rest(_a, ["department_ids", "designation_id"]);
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
                 const files = req.files || [];
                 if (files.length) {
-                    body["photo"] = files[0].filename;
+                    rest["photo"] = files[0].filename;
                 }
                 const hrModel = this.Model.hrModel(trx);
                 const { total } = yield hrModel.getAllDepartment({
-                    ids: body.department_id,
+                    ids: department_ids,
                     hotel_code,
                 });
-                if (total !== body.department_id.length) {
+                console.log({ total });
+                if (total !== department_ids.length) {
                     return {
                         success: false,
                         code: this.StatusCode.HTTP_BAD_REQUEST,
@@ -53,7 +54,7 @@ class EmployeeService extends abstract_service_1.default {
                     };
                 }
                 const { data } = yield hrModel.getAllEmployee({
-                    key: body.email,
+                    key: rest.email,
                     hotel_code,
                 });
                 if (data.length) {
@@ -63,7 +64,13 @@ class EmployeeService extends abstract_service_1.default {
                         message: "Employee already exist",
                     };
                 }
-                yield hrModel.insertEmployee(Object.assign(Object.assign({}, req.body), { hotel_code, created_by: id }));
+                const [insertRes] = yield hrModel.insertEmployee(Object.assign(Object.assign({}, rest), { hotel_code,
+                    designation_id, created_by: id }));
+                // insert into employee_departments
+                yield hrModel.insertIntoEmpDepartment(department_ids.map((dept_id) => ({
+                    emp_id: insertRes.id,
+                    department_id: dept_id,
+                })));
                 return {
                     success: true,
                     code: this.StatusCode.HTTP_SUCCESSFUL,
@@ -77,8 +84,7 @@ class EmployeeService extends abstract_service_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             const { hotel_code } = req.hotel_admin;
             const { key, department, designation } = req.query;
-            const employeeModel = this.Model.employeeModel();
-            const { data, total } = yield employeeModel.getAllEmployee({
+            const { data, total } = yield this.Model.employeeModel().getAllEmployee({
                 key: key,
                 hotel_code,
                 department: department,

@@ -8,8 +8,26 @@ class EmployeeValidator {
     constructor() {
         this.createEmployeeValidator = joi_1.default.object({
             name: joi_1.default.string().allow("").required(),
-            department_id: joi_1.default.number().required(),
-            designation_id: joi_1.default.array().items(joi_1.default.number()).required(),
+            department_ids: joi_1.default.string()
+                .required()
+                .custom((value, helpers) => {
+                try {
+                    let ids;
+                    if (value.startsWith("[") && value.endsWith("]")) {
+                        ids = JSON.parse(value);
+                    }
+                    ids = ids.map((id) => Number(id));
+                    if (ids.some(isNaN)) {
+                        return helpers.error("any.invalid");
+                    }
+                    console.log(ids);
+                    return ids;
+                }
+                catch (err) {
+                    return helpers.error("any.invalid");
+                }
+            }),
+            designation_id: joi_1.default.string().required(),
             blood_group: joi_1.default.number().optional(),
             salary: joi_1.default.number().optional(),
             email: joi_1.default.string().allow("").optional(),

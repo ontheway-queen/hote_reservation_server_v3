@@ -4,6 +4,7 @@ class Schema {
     constructor() {
         this.PUBLIC_SCHEMA = "public";
         this.RESERVATION_SCHEMA = "hotel_reservation";
+        this.HR_SCHEMA = "hr";
         this.DBO_SCHEMA = "dbo";
         this.BTOC_SCHEMA = "btoc";
         this.M_SCHEMA = "management";

@@ -15,23 +15,26 @@ export class EmployeeService extends AbstractServices {
   // create employee
   public async createEmployee(req: Request) {
     const { hotel_code, id } = req.hotel_admin;
-    const body = req.body as IcreateEmployeeReqBody;
+    const { department_ids, designation_id, ...rest } =
+      req.body as IcreateEmployeeReqBody;
 
     return await this.db.transaction(async (trx) => {
       const files = (req.files as Express.Multer.File[]) || [];
 
       if (files.length) {
-        body["photo"] = files[0].filename;
+        rest["photo"] = files[0].filename;
       }
 
       const hrModel = this.Model.hrModel(trx);
 
       const { total } = await hrModel.getAllDepartment({
-        ids: body.department_id,
+        ids: department_ids,
         hotel_code,
       });
 
-      if (total !== body.department_id.length) {
+      console.log({ total });
+
+      if (total !== department_ids.length) {
         return {
           success: false,
           code: this.StatusCode.HTTP_BAD_REQUEST,
@@ -39,7 +42,7 @@ export class EmployeeService extends AbstractServices {
         };
       }
       const { data } = await hrModel.getAllEmployee({
-        key: body.email,
+        key: rest.email,
         hotel_code,
       });
 
@@ -51,11 +54,20 @@ export class EmployeeService extends AbstractServices {
         };
       }
 
-      await hrModel.insertEmployee({
-        ...req.body,
+      const [insertRes] = await hrModel.insertEmployee({
+        ...rest,
         hotel_code,
+        designation_id,
         created_by: id,
       });
+
+      // insert into employee_departments
+      await hrModel.insertIntoEmpDepartment(
+        department_ids.map((dept_id) => ({
+          emp_id: insertRes.id,
+          department_id: dept_id,
+        }))
+      );
 
       return {
         success: true,
@@ -70,9 +82,7 @@ export class EmployeeService extends AbstractServices {
     const { hotel_code } = req.hotel_admin;
     const { key, department, designation } = req.query;
 
-    const employeeModel = this.Model.employeeModel();
-
-    const { data, total } = await employeeModel.getAllEmployee({
+    const { data, total } = await this.Model.employeeModel().getAllEmployee({
       key: key as string,
       hotel_code,
       department: department as string,
