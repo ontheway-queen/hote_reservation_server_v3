@@ -25,13 +25,14 @@ class AgencyB2CConfigModel extends schema_1.default {
                 .insert(payload, "id");
         });
     }
-    getHeroBGContent(query) {
+    getHeroBGContent(query, with_total = false) {
+        var _a;
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("hero_bg_content")
+            const data = yield this.db("hero_bg_content")
                 .withSchema(this.BTOC_SCHEMA)
                 .select("*")
                 .orderBy("order_number", "asc")
-                .andWhere("agency_id", query.agency_id)
+                .andWhere("hotel_code", query.hotel_code)
                 .where((qb) => {
                 if (query.status !== undefined) {
                     qb.andWhere("status", query.status);
@@ -39,7 +40,25 @@ class AgencyB2CConfigModel extends schema_1.default {
                 if (query.type) {
                     qb.andWhere("type", query.type);
                 }
-            });
+            })
+                .limit(query.limit ? parseInt(query.limit) : 100)
+                .offset(query.skip ? parseInt(query.skip) : 0);
+            let total = [];
+            if (with_total) {
+                total = yield this.db("hero_bg_content")
+                    .withSchema(this.BTOC_SCHEMA)
+                    .count("id AS total")
+                    .andWhere("hotel_code", query.hotel_code)
+                    .where((qb) => {
+                    if (query.status !== undefined) {
+                        qb.andWhere("status", query.status);
+                    }
+                    if (query.type) {
+                        qb.andWhere("type", query.type);
+                    }
+                });
+            }
+            return { data, total: Number((_a = total[0]) === null || _a === void 0 ? void 0 : _a.total) || 0 };
         });
     }
     checkHeroBGContent(query) {
@@ -48,7 +67,7 @@ class AgencyB2CConfigModel extends schema_1.default {
                 .withSchema(this.BTOC_SCHEMA)
                 .select("*")
                 .orderBy("order_number", "asc")
-                .andWhere("agency_id", query.agency_id)
+                .andWhere("hotel_code", query.hotel_code)
                 .andWhere("id", query.id);
         });
     }
@@ -57,7 +76,7 @@ class AgencyB2CConfigModel extends schema_1.default {
             return yield this.db("hero_bg_content")
                 .withSchema(this.BTOC_SCHEMA)
                 .select("*")
-                .where("agency_id", query.agency_id)
+                .where("hotel_code", query.hotel_code)
                 .orderBy("order_number", "desc")
                 .first();
         });
@@ -67,7 +86,7 @@ class AgencyB2CConfigModel extends schema_1.default {
             return yield this.db("hero_bg_content")
                 .withSchema(this.BTOC_SCHEMA)
                 .update(payload)
-                .where("agency_id", where.agency_id)
+                .where("hotel_code", where.hotel_code)
                 .where("id", where.id);
         });
     }
@@ -76,7 +95,7 @@ class AgencyB2CConfigModel extends schema_1.default {
             return yield this.db("hero_bg_content")
                 .withSchema(this.BTOC_SCHEMA)
                 .del()
-                .where("agency_id", where.agency_id)
+                .where("hotel_code", where.hotel_code)
                 .where("id", where.id);
         });
     }
@@ -99,7 +118,7 @@ class AgencyB2CConfigModel extends schema_1.default {
                 .joinRaw(`LEFT JOIN public.city AS dci ON da.city = dci.id`)
                 .joinRaw(`LEFT JOIN public.city AS aci ON aa.city = aci.id`)
                 .orderBy("pd.order_number", "asc")
-                .andWhere("pd.agency_id", query.agency_id)
+                .andWhere("pd.hotel_code", query.hotel_code)
                 .where((qb) => {
                 if (query.status !== undefined) {
                     qb.andWhere("pd.status", query.status);
@@ -113,7 +132,7 @@ class AgencyB2CConfigModel extends schema_1.default {
                 .withSchema(this.BTOC_SCHEMA)
                 .select("*")
                 .orderBy("order_number", "asc")
-                .andWhere("agency_id", query.agency_id)
+                .andWhere("hotel_code", query.hotel_code)
                 .andWhere("id", query.id)
                 .first();
         });
@@ -123,7 +142,7 @@ class AgencyB2CConfigModel extends schema_1.default {
             return yield this.db("popular_destination")
                 .withSchema(this.BTOC_SCHEMA)
                 .select("*")
-                .where("agency_id", query.agency_id)
+                .where("hotel_code", query.hotel_code)
                 .orderBy("order_number", "desc")
                 .first();
         });
@@ -133,7 +152,7 @@ class AgencyB2CConfigModel extends schema_1.default {
             return yield this.db("popular_destination")
                 .withSchema(this.BTOC_SCHEMA)
                 .update(payload)
-                .where("agency_id", where.agency_id)
+                .where("hotel_code", where.hotel_code)
                 .where("id", where.id);
         });
     }
@@ -142,7 +161,7 @@ class AgencyB2CConfigModel extends schema_1.default {
             return yield this.db("popular_destination")
                 .withSchema(this.BTOC_SCHEMA)
                 .del()
-                .where("agency_id", where.agency_id)
+                .where("hotel_code", where.hotel_code)
                 .where("id", where.id);
         });
     }
@@ -160,7 +179,7 @@ class AgencyB2CConfigModel extends schema_1.default {
                 .select("pp.*", "c.name AS country_name")
                 .joinRaw(`LEFT JOIN public.country AS c ON pp.country_id = c.id`)
                 .orderBy("pp.order_number", "asc")
-                .andWhere("pp.agency_id", query.agency_id)
+                .andWhere("pp.hotel_code", query.hotel_code)
                 .where((qb) => {
                 if (query.status !== undefined) {
                     qb.andWhere("pp.status", query.status);
@@ -173,7 +192,7 @@ class AgencyB2CConfigModel extends schema_1.default {
             return yield this.db("popular_places")
                 .withSchema(this.BTOC_SCHEMA)
                 .select("*")
-                .andWhere("agency_id", query.agency_id)
+                .andWhere("hotel_code", query.hotel_code)
                 .andWhere("id", query.id)
                 .first();
         });
@@ -183,7 +202,7 @@ class AgencyB2CConfigModel extends schema_1.default {
             return yield this.db("popular_places")
                 .withSchema(this.BTOC_SCHEMA)
                 .select("*")
-                .where("agency_id", query.agency_id)
+                .where("hotel_code", query.hotel_code)
                 .orderBy("order_number", "desc")
                 .first();
         });
@@ -193,7 +212,7 @@ class AgencyB2CConfigModel extends schema_1.default {
             return yield this.db("popular_places")
                 .withSchema(this.BTOC_SCHEMA)
                 .update(payload)
-                .where("agency_id", where.agency_id)
+                .where("hotel_code", where.hotel_code)
                 .andWhere("id", where.id);
         });
     }
@@ -202,7 +221,7 @@ class AgencyB2CConfigModel extends schema_1.default {
             return yield this.db("popular_places")
                 .withSchema(this.BTOC_SCHEMA)
                 .del()
-                .where("agency_id", where.agency_id)
+                .where("hotel_code", where.hotel_code)
                 .where("id", where.id);
         });
     }
@@ -237,19 +256,35 @@ class AgencyB2CConfigModel extends schema_1.default {
                 .insert(payload, "id");
         });
     }
-    getSocialLink(query) {
+    getSocialLink(query, with_total = false) {
+        var _a;
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("social_links AS sl")
+            const data = yield this.db("social_links AS sl")
                 .withSchema(this.BTOC_SCHEMA)
                 .select("sl.id", "sl.link", "sl.status", "sl.order_number", "sl.social_media_id", "sm.name AS media", "sm.logo")
-                .joinRaw(`LEFT JOIN btoc.social_media AS sm ON sl.social_media_id = sm.id`)
+                .joinRaw(`LEFT JOIN public.social_media AS sm ON sl.social_media_id = sm.id`)
                 .orderBy("sl.order_number", "asc")
                 .andWhere("sl.hotel_code", query.hotel_code)
                 .where((qb) => {
                 if (query.status !== undefined) {
                     qb.andWhere("sl.status", query.status);
                 }
-            });
+            })
+                .limit(query.limit ? parseInt(query.limit) : 100)
+                .offset(query.skip ? parseInt(query.skip) : 0);
+            let total = [];
+            if (with_total) {
+                total = yield this.db("social_links")
+                    .withSchema(this.BTOC_SCHEMA)
+                    .count("id AS total")
+                    .andWhere("hotel_code", query.hotel_code)
+                    .where((qb) => {
+                    if (query.status !== undefined) {
+                        qb.andWhere("status", query.status);
+                    }
+                });
+            }
+            return { data, total: Number((_a = total[0]) === null || _a === void 0 ? void 0 : _a.total) || 0 };
         });
     }
     checkSocialLink(query) {
@@ -306,18 +341,32 @@ class AgencyB2CConfigModel extends schema_1.default {
                 .insert(payload);
         });
     }
-    getHotDeals(query) {
+    getHotDeals(query, with_total = false) {
+        var _a;
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("hot_deals")
+            const data = yield this.db("hot_deals")
                 .withSchema(this.BTOC_SCHEMA)
                 .select("*")
                 .orderBy("order_number", "asc")
-                .andWhere("agency_id", query.agency_id)
+                .andWhere("hotel_code", query.hotel_code)
                 .where((qb) => {
                 if (query.status !== undefined) {
                     qb.andWhere("status", query.status);
                 }
             });
+            let total = [];
+            if (with_total) {
+                total = yield this.db("hot_deals")
+                    .withSchema(this.BTOC_SCHEMA)
+                    .count("id AS total")
+                    .andWhere("hotel_code", query.hotel_code)
+                    .where((qb) => {
+                    if (query.status !== undefined) {
+                        qb.andWhere("status", query.status);
+                    }
+                });
+            }
+            return { data, total: Number((_a = total[0]) === null || _a === void 0 ? void 0 : _a.total) || 0 };
         });
     }
     checkHotDeals(query) {
@@ -325,7 +374,7 @@ class AgencyB2CConfigModel extends schema_1.default {
             return yield this.db("hot_deals")
                 .withSchema(this.BTOC_SCHEMA)
                 .select("*")
-                .andWhere("agency_id", query.agency_id)
+                .andWhere("hotel_code", query.hotel_code)
                 .andWhere("id", query.id)
                 .first();
         });
@@ -335,7 +384,7 @@ class AgencyB2CConfigModel extends schema_1.default {
             return yield this.db("hot_deals")
                 .withSchema(this.BTOC_SCHEMA)
                 .select("*")
-                .where("agency_id", query.agency_id)
+                .where("hotel_code", query.hotel_code)
                 .orderBy("order_number", "desc")
                 .first();
         });
@@ -345,7 +394,7 @@ class AgencyB2CConfigModel extends schema_1.default {
             return yield this.db("hot_deals")
                 .withSchema(this.BTOC_SCHEMA)
                 .update(payload)
-                .where("agency_id", where.agency_id)
+                .where("hotel_code", where.hotel_code)
                 .andWhere("id", where.id);
         });
     }
@@ -420,7 +469,7 @@ class AgencyB2CConfigModel extends schema_1.default {
             return yield this.db("pop_up_banner")
                 .withSchema(this.BTOC_SCHEMA)
                 .select("*")
-                .andWhere("agency_id", query.agency_id)
+                .andWhere("hotel_code", query.hotel_code)
                 .andWhere("status", query.status)
                 .first();
         });
@@ -438,7 +487,7 @@ class AgencyB2CConfigModel extends schema_1.default {
             return yield this.db("pop_up_banner")
                 .withSchema(this.BTOC_SCHEMA)
                 .del()
-                .where("agency_id", where.agency_id)
+                .where("hotel_code", where.hotel_code)
                 .where("id", where.id);
         });
     }

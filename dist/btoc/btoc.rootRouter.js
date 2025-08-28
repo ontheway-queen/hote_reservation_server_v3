@@ -24,7 +24,7 @@ class BtocRootRouter {
             .route("/hotel/recheck")
             .post(this.authChecker.whiteLabelTokenVerfiy, this.controller.recheck);
         this.router.use("/hotel", this.authChecker.whiteLabelTokenVerfiy, this.authChecker.btocUserAuthChecker, new btoc_hotel_router_1.BtocHotelRouter().router);
-        this.router.use("/configuration", this.authChecker.whiteLabelTokenVerfiy, new btocConfig_router_1.BtocConfigRouter().router);
+        this.router.use("/config", this.authChecker.whiteLabelTokenVerfiy, new btocConfig_router_1.BtocConfigRouter().router);
     }
 }
 exports.BtocRootRouter = BtocRootRouter;
