@@ -451,7 +451,7 @@ export class ReservationModel extends Schema {
       unit_base_rate?: number;
       base_rate?: number;
       changed_rate?: number;
-      status?: "checked_in" | "checked_out" | "confirmed" | "canceled";
+      status?: "checked_in" | "checked_out" | "confirmed";
       checked_out_at?: string;
       checked_in_at?: string;
     },

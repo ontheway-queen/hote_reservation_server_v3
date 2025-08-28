@@ -2,12 +2,10 @@ import { Request, Response } from "express";
 import AbstractController from "../../abstarcts/abstract.controller";
 import ReportService from "../services/report.dashBoard.service";
 import DashBoardValidator from "../utlis/validator/dashboard.validator";
-import ReportValidator from "../utlis/validator/reports.validator";
 
 class ReportController extends AbstractController {
   private reportService = new ReportService();
   private dashBoardValidator = new DashBoardValidator();
-  private reportValidator = new ReportValidator();
   constructor() {
     super();
   }
@@ -96,15 +94,6 @@ class ReportController extends AbstractController {
     }
   );
 
-  public getAllReservationByRoom = this.asyncWrapper.wrap(
-    { querySchema: this.reportValidator.getAllReservationByRoom },
-    async (req: Request, res: Response) => {
-      const { code, ...data } =
-        await this.reportService.getAllReservationByRoom(req);
-
-      res.status(code).json(data);
-    }
-  );
   public getRoomReport = this.asyncWrapper.wrap(
     { querySchema: this.dashBoardValidator.getAllRoomsQueryValidator },
     async (req: Request, res: Response) => {

@@ -354,6 +354,37 @@ class DashBoardModel extends schema_1.default {
     }
     getRoomReport({ current_date, hotel_code, limit, skip, }) {
         return __awaiter(this, void 0, void 0, function* () {
+            // return await this.db("room_types as rt")
+            //   .withSchema(this.RESERVATION_SCHEMA)
+            //   .select(
+            //     "rt.id as room_type_id",
+            //     "rt.name",
+            //     "rt.hotel_code",
+            //     this.db.raw(
+            //       `
+            //     COALESCE((
+            //       SELECT json_build_object(
+            //         'total_rooms', ra.total_rooms,
+            //         'booked_rooms', ra.booked_rooms,
+            //         'hold_rooms', ra.hold_rooms,
+            //         'available_rooms', ra.available_rooms,
+            //         'stop_sell', ra.stop_sell
+            //       )
+            //       FROM hotel_reservation.room_availability as ra
+            //       WHERE rt.id = ra.room_type_id AND ra.date = ?
+            //     ), json_build_object(
+            //       'total_rooms', 0,
+            //       'booked_rooms', 0,
+            //       'hold_rooms', 0,
+            //       'available_rooms', 0,
+            //       'stop_sell', false
+            //     )) as availability
+            //     `,
+            //       [current_date]
+            //     )
+            //   )
+            //   .where("rt.hotel_code", hotel_code)
+            //   .andWhere("rt.is_deleted", false);
             return yield this.db("room_types as rt")
                 .withSchema(this.RESERVATION_SCHEMA)
                 .select("rt.id as room_type_id", "rt.name", "rt.hotel_code", this.db.raw(`

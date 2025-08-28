@@ -165,26 +165,6 @@ class ReportService extends abstract_service_1.default {
             };
         });
     }
-    getAllReservationByRoom(req) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const { data, total } = yield this.Model.reportModel().getAllReservationByRoom({
-                hotel_code: req.hotel_admin.hotel_code,
-                room_id: Number(req.query.room_id),
-                checkin: req.query.checkin,
-                checkout: req.query.checkout,
-                status: req.query.status,
-                booking_type: req.query.booking_type,
-                limit: req.query.limit,
-                skip: req.query.skip,
-            });
-            return {
-                success: true,
-                code: this.StatusCode.HTTP_OK,
-                total,
-                data,
-            };
-        });
-    }
     // Dashboard Acount Report
     getAccountReport(req) {
         return __awaiter(this, void 0, void 0, function* () {

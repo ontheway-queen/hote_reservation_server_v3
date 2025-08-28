@@ -181,27 +181,6 @@ class ReportService extends AbstractServices {
     };
   }
 
-  public async getAllReservationByRoom(req: Request) {
-    const { data, total } =
-      await this.Model.reportModel().getAllReservationByRoom({
-        hotel_code: req.hotel_admin.hotel_code,
-        room_id: Number(req.query.room_id),
-        checkin: req.query.checkin as string,
-        checkout: req.query.checkout as string,
-        status: req.query.status as string,
-        booking_type: req.query.booking_type as string,
-        limit: req.query.limit as string,
-        skip: req.query.skip as string,
-      });
-
-    return {
-      success: true,
-      code: this.StatusCode.HTTP_OK,
-      total,
-      data,
-    };
-  }
-
   // Dashboard Acount Report
   public async getAccountReport(req: Request) {
     const { from_date, to_date, ac_type } = req.query;

@@ -231,9 +231,9 @@ class MConfigurationModel extends Schema {
 	// create Room Amenities
 	public async createRoomTypeAmenitiesHead(payload: {
 		name: string;
-		icon: string;
+		order_number: number;
 	}) {
-		return await this.db("amenities_head")
+		return await this.db("amenity_heads")
 			.withSchema(this.RESERVATION_SCHEMA)
 			.insert(payload);
 	}
@@ -247,7 +247,7 @@ class MConfigurationModel extends Schema {
 	}) {
 		const { limit, skip, search, status } = payload;
 
-		const dtbs = this.db("amenities_head");
+		const dtbs = this.db("amenity_heads");
 
 		if (limit && skip) {
 			dtbs.limit(parseInt(limit as string));
@@ -256,7 +256,7 @@ class MConfigurationModel extends Schema {
 
 		const data = await dtbs
 			.withSchema(this.RESERVATION_SCHEMA)
-			.select("id", "name", "icon", "status")
+			.select("id", "name", "status")
 			.where(function () {
 				if (search) {
 					this.andWhere("name", "like", `%${search}%`);
@@ -275,7 +275,7 @@ class MConfigurationModel extends Schema {
 		id: number,
 		payload: { name: string; status: number }
 	) {
-		return await this.db("amenities_head")
+		return await this.db("amenity_heads")
 			.withSchema(this.RESERVATION_SCHEMA)
 			.where({ id })
 			.update(payload);
@@ -285,7 +285,7 @@ class MConfigurationModel extends Schema {
 	public async createRoomTypeAmenities(payload: {
 		name: string;
 		icon: string;
-		rtahead_id: number;
+		head_id: number;
 	}) {
 		return await this.db("amenities")
 			.withSchema(this.RESERVATION_SCHEMA)
@@ -299,9 +299,9 @@ class MConfigurationModel extends Schema {
 		status?: string;
 		search?: string;
 		hotel_code?: number;
-		rt_ids?: number[];
+		head_id?: number;
 	}) {
-		const { limit, skip, search, status, rt_ids } = payload;
+		const { limit, skip, search, status, head_id } = payload;
 
 		const dtbs = this.db("amenities");
 
@@ -320,8 +320,8 @@ class MConfigurationModel extends Schema {
 				if (status) {
 					this.andWhere("status", status);
 				}
-				if (rt_ids) {
-					this.whereIn("id", rt_ids);
+				if (head_id) {
+					this.andWhere("head_id", head_id);
 				}
 			})
 			.orderBy("id", "desc");
@@ -337,8 +337,8 @@ class MConfigurationModel extends Schema {
 					this.andWhere("status", status);
 				}
 
-				if (rt_ids) {
-					this.whereIn("id", rt_ids);
+				if (head_id) {
+					this.andWhere("head_id", head_id);
 				}
 			});
 

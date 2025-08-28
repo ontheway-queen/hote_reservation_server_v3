@@ -81,17 +81,5 @@ class ReportValidator {
     to_date: Joi.string().required(),
     head_id: Joi.number().integer().required(),
   });
-
-  public getAllReservationByRoom = Joi.object({
-    room_id: Joi.number().required(),
-    checkin: Joi.string().allow("").optional(),
-    checkout: Joi.string().allow("").optional(),
-    status: Joi.string()
-      .allow("pending", "confirmed", "canceled", "rejected", "")
-      .optional(),
-    booking_type: Joi.string().allow("B", "C", "H", "").optional(),
-    limit: Joi.string().allow("").optional(),
-    skip: Joi.string().allow("").optional(),
-  });
 }
 export default ReportValidator;

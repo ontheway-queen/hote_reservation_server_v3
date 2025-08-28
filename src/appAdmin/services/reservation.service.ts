@@ -1048,12 +1048,6 @@ export class ReservationService extends AbstractServices {
           booking_id
         );
 
-        // update booking rooms
-        await this.Model.reservationModel().updateAllBookingRoomsByBookingID(
-          { status: "canceled" },
-          { booking_id }
-        );
-
         // Availability
         await sub.updateRoomAvailabilityService({
           reservation_type: "hold_decrease",

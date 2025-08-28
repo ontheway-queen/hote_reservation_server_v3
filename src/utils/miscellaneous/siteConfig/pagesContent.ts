@@ -1,4 +1,4 @@
-import { ICreateHotelB2CHeroBgContentPayload } from "../../../appAdmin/utlis/interfaces/configuration.interface";
+import { ICreateAgencyB2CHeroBgContentPayload } from "../../../appAdmin/utlis/interfaces/configuration.interface";
 
 export const aboutUsContent = (site_name: string, site_address: string) => {
   return `<div style="font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f8f9fa; color: #333; line-height: 1.6;">
@@ -497,7 +497,7 @@ export const privacyAndPolicy = (site_name: string) => {
 
 export const heroBG = (
   hotel_code: number
-): ICreateHotelB2CHeroBgContentPayload[] => {
+): ICreateAgencyB2CHeroBgContentPayload[] => {
   return [
     {
       hotel_code,

@@ -759,8 +759,6 @@ class ReservationService extends abstract_service_1.default {
                         booking_type: "H",
                         status: "canceled",
                     }, hotel_code, booking_id);
-                    // update booking rooms
-                    yield this.Model.reservationModel().updateAllBookingRoomsByBookingID({ status: "canceled" }, { booking_id });
                     // Availability
                     yield sub.updateRoomAvailabilityService({
                         reservation_type: "hold_decrease",

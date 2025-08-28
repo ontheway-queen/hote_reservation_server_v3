@@ -15,7 +15,6 @@ import {
 } from "../../appAdmin/utlis/interfaces/doubleEntry.interface";
 import { body } from "express-validator";
 import { v4 as uuidv4 } from "uuid";
-import { SiteConfigSupportService } from "../../appAdmin/services/subServices/siteConfigSupport.service";
 class MHotelService extends AbstractServices {
   constructor() {
     super();
@@ -138,7 +137,7 @@ class MHotelService extends AbstractServices {
         description,
         postal_code,
         expiry_date,
-        white_label_token: white_label ? uuidv4() : "",
+        white_label_token: uuidv4(),
         white_label,
       });
 
@@ -240,20 +239,6 @@ class MHotelService extends AbstractServices {
         hotel_code,
         owner: true,
       });
-
-      // ________________ BTOC CONFIG ____________________//
-
-      if (white_label) {
-        const siteService = new SiteConfigSupportService(trx);
-        await siteService.insertSiteConfigData({
-          hotel_code,
-          address,
-          email: hotel_email,
-          phone,
-          site_name: hotel_name,
-          logo: logoFilename,
-        });
-      }
 
       await Lib.sendEmail(
         hotel_email,
@@ -389,10 +374,6 @@ class MHotelService extends AbstractServices {
           Object.entries({
             ...hotelData,
             expiry_date,
-            white_label,
-            white_label_token: white_label
-              ? existingHotel.white_label_token
-              : uuidv4(),
             name: hotel_name,
           }).filter(([_, value]) => value !== undefined)
         );
@@ -458,26 +439,6 @@ class MHotelService extends AbstractServices {
         await model.deleteHotelImage(remove_hotel_images, hotel_code);
       }
 
-      if (white_label) {
-        const configModel = this.Model.b2cConfigurationModel(trx);
-
-        const checkConfig = await configModel.getSiteConfig({
-          hotel_code,
-        });
-
-        if (!checkConfig) {
-          const siteService = new SiteConfigSupportService(trx);
-
-          await siteService.insertSiteConfigData({
-            hotel_code,
-            address: "",
-            email: existingHotel.hotel_email as string,
-            phone: existingHotel.phone as string,
-            site_name: hotel_name as string,
-            logo: existingHotel.logo as string,
-          });
-        }
-      }
       return {
         success: true,
         code: this.StatusCode.HTTP_OK,

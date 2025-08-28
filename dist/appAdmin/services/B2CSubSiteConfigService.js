@@ -25,6 +25,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.B2CSubSiteConfigService = void 0;
 const abstract_service_1 = __importDefault(require("../../abstarcts/abstract.service"));
+const customEror_1 = __importDefault(require("../../utils/lib/customEror"));
 class B2CSubSiteConfigService extends abstract_service_1.default {
     constructor() {
         super();
@@ -132,7 +133,9 @@ class B2CSubSiteConfigService extends abstract_service_1.default {
             });
             yield configModel.updateConfig(payload, { hotel_code });
             if (payload.about_us_thumbnail && (checkConfig === null || checkConfig === void 0 ? void 0 : checkConfig.about_us_thumbnail)) {
-                yield this.manageFile.deleteFromCloud([checkConfig.about_us_thumbnail]);
+                yield this.manageFile.deleteFromCloud([
+                    checkConfig.about_us_thumbnail,
+                ]);
             }
             return {
                 success: true,
@@ -193,7 +196,9 @@ class B2CSubSiteConfigService extends abstract_service_1.default {
             });
             yield configModel.updateConfig(payload, { hotel_code });
             if (payload.contact_us_content && (checkConfig === null || checkConfig === void 0 ? void 0 : checkConfig.contact_us_content)) {
-                yield this.manageFile.deleteFromCloud([checkConfig.contact_us_content]);
+                yield this.manageFile.deleteFromCloud([
+                    checkConfig.contact_us_content,
+                ]);
             }
             return {
                 success: true,
@@ -371,10 +376,14 @@ class B2CSubSiteConfigService extends abstract_service_1.default {
                         message: "Social media not found",
                     };
                 }
-                const lastNo = yield configModel.getSocialLinkLastNo({ hotel_code });
+                const lastNo = yield configModel.getSocialLinkLastNo({
+                    hotel_code,
+                });
                 const payload = {
                     hotel_code,
-                    order_number: (lastNo === null || lastNo === void 0 ? void 0 : lastNo.order_number) ? lastNo.order_number + 1 : 1,
+                    order_number: (lastNo === null || lastNo === void 0 ? void 0 : lastNo.order_number)
+                        ? lastNo.order_number + 1
+                        : 1,
                     link: body.link,
                     social_media_id: body.social_media_id,
                 };
@@ -462,6 +471,215 @@ class B2CSubSiteConfigService extends abstract_service_1.default {
                     data: {
                         thumbnail: payload.thumbnail,
                     },
+                };
+            }));
+        });
+    }
+    // =========================== FAQ =========================== //
+    getAllFaqHeads(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
+                const { hotel_code } = req.hotel_admin;
+                const configModel = this.Model.b2cConfigurationModel(trx);
+                const heads = yield configModel.getAllFaqHeads({ hotel_code });
+                return {
+                    success: true,
+                    code: this.StatusCode.HTTP_OK,
+                    message: this.ResMsg.HTTP_OK,
+                    data: heads,
+                };
+            }));
+        });
+    }
+    createFaqHead(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
+                const { hotel_code } = req.hotel_admin;
+                const configModel = this.Model.b2cConfigurationModel(trx);
+                const isHeadExists = yield configModel.getAllFaqHeads({
+                    hotel_code,
+                    order: req.body.order_number,
+                });
+                if (isHeadExists.length > 0) {
+                    throw new customEror_1.default("FAQ Head with same order already exists", this.StatusCode.HTTP_BAD_REQUEST);
+                }
+                console.log({ isHeadExists });
+                const head = yield configModel.createFaqHead({
+                    hotel_code,
+                    title: req.body.title,
+                    order_number: req.body.order_number,
+                });
+                return {
+                    success: true,
+                    code: this.StatusCode.HTTP_OK,
+                    message: this.ResMsg.HTTP_OK,
+                    data: head,
+                };
+            }));
+        });
+    }
+    updateFaqHead(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
+                const { id } = req.params;
+                const { hotel_code } = req.hotel_admin;
+                const { order_number, title } = req.body;
+                const configModel = this.Model.b2cConfigurationModel(trx);
+                const isHeadExists = yield configModel.getAllFaqHeads({
+                    hotel_code,
+                    order: order_number,
+                });
+                if (isHeadExists.length > 0) {
+                    throw new customEror_1.default("FAQ Head with same order already exists", this.StatusCode.HTTP_BAD_REQUEST);
+                }
+                const head = yield configModel.updateFaqHead({
+                    title,
+                    order_number,
+                }, { id: Number(id) });
+                return {
+                    success: true,
+                    code: this.StatusCode.HTTP_OK,
+                    message: this.ResMsg.HTTP_OK,
+                    data: head,
+                };
+            }));
+        });
+    }
+    deleteFaqHead(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
+                const { id } = req.params;
+                const { hotel_code } = req.hotel_admin;
+                const configModel = this.Model.b2cConfigurationModel(trx);
+                const isHeadExists = yield configModel.getAllFaqHeads({
+                    hotel_code,
+                    id: Number(id),
+                });
+                if (isHeadExists.length < 1) {
+                    throw new customEror_1.default("FAQ Head with does not exists", this.StatusCode.HTTP_BAD_REQUEST);
+                }
+                yield configModel.deleteFaqHead({ id: Number(id) });
+                return {
+                    success: true,
+                    code: this.StatusCode.HTTP_OK,
+                    message: this.ResMsg.HTTP_OK,
+                };
+            }));
+        });
+    }
+    getSingleFaqHeadWithFaq(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
+                const { id } = req.params;
+                const { hotel_code } = req.hotel_admin;
+                const configModel = this.Model.b2cConfigurationModel(trx);
+                const head = yield configModel.getAllFaqHeads({
+                    hotel_code,
+                    id: Number(id),
+                });
+                if (head.length < 1) {
+                    throw new customEror_1.default("FAQ head not found", this.StatusCode.HTTP_NOT_FOUND);
+                }
+                const data = yield configModel.getFaqsByHeadId(Number(id));
+                return {
+                    success: true,
+                    code: this.StatusCode.HTTP_OK,
+                    message: this.ResMsg.HTTP_OK,
+                    data,
+                };
+            }));
+        });
+    }
+    createFaq(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
+                const { hotel_code } = req.hotel_admin;
+                const configModel = this.Model.b2cConfigurationModel(trx);
+                const isHeadExists = yield configModel.getAllFaqHeads({
+                    hotel_code,
+                    id: Number(req.body.faq_head_id),
+                });
+                if (isHeadExists.length < 1) {
+                    throw new customEror_1.default("FAQ Head with id does not exists", this.StatusCode.HTTP_BAD_REQUEST);
+                }
+                const faq = yield configModel.createFaq(req.body);
+                return {
+                    success: true,
+                    code: this.StatusCode.HTTP_OK,
+                    message: this.ResMsg.HTTP_OK,
+                    data: faq,
+                };
+            }));
+        });
+    }
+    // =========================== Amenity Heads =========================== //
+    getAllAmenityHeads(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
+                const { status, limit, skip, search } = req.query;
+                const configModel = this.Model.mConfigurationModel(trx);
+                const { data } = yield configModel.getAllRoomTypeAmenitiesHead({
+                    status: status,
+                    limit: limit,
+                    skip: skip,
+                    search: search,
+                });
+                return {
+                    success: true,
+                    code: this.StatusCode.HTTP_OK,
+                    message: this.ResMsg.HTTP_OK,
+                    data,
+                };
+            }));
+        });
+    }
+    getAllAmenities(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
+                const id = Number(req.params.id);
+                const configModel = this.Model.mConfigurationModel(trx);
+                const { data } = yield configModel.getAllRoomTypeAmenities({
+                    head_id: id,
+                });
+                return {
+                    success: true,
+                    code: this.StatusCode.HTTP_OK,
+                    message: this.ResMsg.HTTP_OK,
+                    data,
+                };
+            }));
+        });
+    }
+    addHotelAmenities(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
+                const hotel_code = req.hotel_admin.hotel_code;
+                const { amenity_ids } = req.body;
+                const rows = amenity_ids.map((id) => ({
+                    hotel_code,
+                    amenity_id: id,
+                }));
+                const configModel = this.Model.b2cConfigurationModel(trx);
+                yield configModel.addHotelAmenities(rows);
+                return {
+                    success: true,
+                    code: this.StatusCode.HTTP_OK,
+                    message: this.ResMsg.HTTP_OK,
+                };
+            }));
+        });
+    }
+    getAllHotelAmenities(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
+                const hotel_code = req.hotel_admin.hotel_code;
+                const configModel = this.Model.b2cConfigurationModel(trx);
+                const data = yield configModel.getAllHotelAmenities(hotel_code);
+                return {
+                    success: true,
+                    code: this.StatusCode.HTTP_OK,
+                    message: this.ResMsg.HTTP_OK,
+                    data,
                 };
             }));
         });
