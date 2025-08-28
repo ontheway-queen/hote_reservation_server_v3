@@ -196,7 +196,6 @@ class B2CSiteConfigController extends abstract_controller_1.default {
                 this.error(data.message, code);
             }
         }));
-        // =========================== Amenity Heads =========================== //
         this.getAllAmenityHeads = this.asyncWrapper.wrap(null, (req, res) => __awaiter(this, void 0, void 0, function* () {
             const _y = yield this.service.getAllAmenityHeads(req), { code } = _y, data = __rest(_y, ["code"]);
             if (data.success) {

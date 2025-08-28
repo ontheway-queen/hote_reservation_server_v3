@@ -133,9 +133,7 @@ class B2CSubSiteConfigService extends abstract_service_1.default {
             });
             yield configModel.updateConfig(payload, { hotel_code });
             if (payload.about_us_thumbnail && (checkConfig === null || checkConfig === void 0 ? void 0 : checkConfig.about_us_thumbnail)) {
-                yield this.manageFile.deleteFromCloud([
-                    checkConfig.about_us_thumbnail,
-                ]);
+                yield this.manageFile.deleteFromCloud([checkConfig.about_us_thumbnail]);
             }
             return {
                 success: true,
@@ -196,9 +194,7 @@ class B2CSubSiteConfigService extends abstract_service_1.default {
             });
             yield configModel.updateConfig(payload, { hotel_code });
             if (payload.contact_us_content && (checkConfig === null || checkConfig === void 0 ? void 0 : checkConfig.contact_us_content)) {
-                yield this.manageFile.deleteFromCloud([
-                    checkConfig.contact_us_content,
-                ]);
+                yield this.manageFile.deleteFromCloud([checkConfig.contact_us_content]);
             }
             return {
                 success: true,
@@ -381,9 +377,7 @@ class B2CSubSiteConfigService extends abstract_service_1.default {
                 });
                 const payload = {
                     hotel_code,
-                    order_number: (lastNo === null || lastNo === void 0 ? void 0 : lastNo.order_number)
-                        ? lastNo.order_number + 1
-                        : 1,
+                    order_number: (lastNo === null || lastNo === void 0 ? void 0 : lastNo.order_number) ? lastNo.order_number + 1 : 1,
                     link: body.link,
                     social_media_id: body.social_media_id,
                 };
@@ -618,7 +612,7 @@ class B2CSubSiteConfigService extends abstract_service_1.default {
             return this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
                 const { status, limit, skip, search } = req.query;
                 const configModel = this.Model.mConfigurationModel(trx);
-                const { data } = yield configModel.getAllRoomTypeAmenitiesHead({
+                const { data } = yield configModel.getAllAmenitiesHead({
                     status: status,
                     limit: limit,
                     skip: skip,
@@ -638,7 +632,7 @@ class B2CSubSiteConfigService extends abstract_service_1.default {
             return this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
                 const id = Number(req.params.id);
                 const configModel = this.Model.mConfigurationModel(trx);
-                const { data } = yield configModel.getAllRoomTypeAmenities({
+                const { data } = yield configModel.getAllAmenities({
                     head_id: id,
                 });
                 return {

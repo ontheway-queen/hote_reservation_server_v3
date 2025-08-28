@@ -42,24 +42,24 @@ class MConfigurationValidator {
             status: joi_1.default.string().valid("active", "blocked").optional(),
         });
         //=================== Room type Amenities validation ======================//
-        this.createRoomTypeAmenitiesHeadValidator = joi_1.default.object({
+        this.createAmenitiesHeadValidator = joi_1.default.object({
             name: joi_1.default.string().allow().required(),
         });
-        this.UpdateRoomTypeAmenitiesHeadValidator = joi_1.default.object({
+        this.UpdateAmenitiesHeadValidator = joi_1.default.object({
             name: joi_1.default.string().optional(),
             status: joi_1.default.bool().optional(),
         });
-        this.createRoomTypeAmenitiesValidator = joi_1.default.object({
+        this.createAmenitiesValidator = joi_1.default.object({
             name: joi_1.default.string().allow().required(),
             rtahead_id: joi_1.default.number().required(),
         });
-        this.getAllRoomTypeAmenitiesQueryValidator = joi_1.default.object({
+        this.getAllAmenitiesQueryValidator = joi_1.default.object({
             limit: joi_1.default.string().allow("").optional(),
             skip: joi_1.default.string().allow("").optional(),
             search: joi_1.default.string().allow("").optional(),
             status: joi_1.default.string().allow("").optional(),
         });
-        this.UpdateRoomTypeAmenitiesValidator = joi_1.default.object({
+        this.UpdateAmenitiesValidator = joi_1.default.object({
             name: joi_1.default.string().optional(),
             status: joi_1.default.bool().optional(),
             rtahead_id: joi_1.default.number().optional(),

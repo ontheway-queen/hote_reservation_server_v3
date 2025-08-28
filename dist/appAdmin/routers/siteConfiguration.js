@@ -52,7 +52,6 @@ class B2CSiteConfigRouter extends abstract_router_1.default {
             .route("/pop-up-banner")
             .get(this.controller.getPopUpBanner)
             .post(this.uploader.cloudUploadRaw(this.fileFolders.B2C_SITE_CONFIG_POP_UP), this.controller.upSertPopUpBanner);
-        // =========================== FAQ =========================== //
         this.router
             .route("/faq-head")
             .get(this.controller.getAllFaqHeads)
@@ -63,10 +62,7 @@ class B2CSiteConfigRouter extends abstract_router_1.default {
             .patch(this.controller.updateFaqHead)
             .delete(this.controller.deleteFaqHead);
         this.router.route("/faq").post(this.controller.createFaq);
-        // =========================== Amenity Heads =========================== //
-        this.router
-            .route("/amenity-heads")
-            .get(this.controller.getAllAmenityHeads);
+        this.router.route("/amenity-heads").get(this.controller.getAllAmenityHeads);
         this.router
             .route("/amenity-heads/:id")
             .get(this.controller.getAllAmenities);

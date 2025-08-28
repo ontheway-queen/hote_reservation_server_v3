@@ -12,9 +12,7 @@ class MConfigurationRouter extends abstract_router_1.default {
         this.callRouter();
     }
     callRouter() {
-        this.router
-            .route("/accommodation")
-            .get(this.controller.getAllAccomodation);
+        this.router.route("/accommodation").get(this.controller.getAllAccomodation);
         this.router
             .route("/accommodation/:id")
             .get(this.controller.getAllAccomodation);
@@ -41,22 +39,22 @@ class MConfigurationRouter extends abstract_router_1.default {
         //create and get room amenities amenities head
         this.router
             .route("/room-type-amenities-head")
-            .post(this.controller.createRoomTypeAmenitiesHead)
-            .get(this.controller.getAllRoomTypeAmenitiesHead);
+            .post(this.controller.createAmenitiesHead)
+            .get(this.controller.getAllAmenitiesHead);
         // update and delete room type amenities
         this.router
             .route("/room-type-amenities-head/:id")
-            .patch(this.controller.updateRoomTypeAmenitiesHead);
+            .patch(this.controller.updateAmenitiesHead);
         // room type amenities
         this.router
             .route("/room-type-amenities")
-            .post(this.uploader.cloudUploadRaw("room-type-amenities-icons"), this.controller.createRoomTypeAmenities)
-            .get(this.controller.getAllRoomTypeAmenities);
+            .post(this.uploader.cloudUploadRaw("room-type-amenities-icons"), this.controller.createAmenities)
+            .get(this.controller.getAllAmenities);
         // update and delete room type amenities
         this.router
             .route("/room-type-amenities/:id")
-            .patch(this.uploader.cloudUploadRaw("room-type-amenities-icons"), this.controller.updateRoomTypeAmenities)
-            .delete(this.controller.deleteRoomTypeAmenities);
+            .patch(this.uploader.cloudUploadRaw("room-type-amenities-icons"), this.controller.updateAmenities)
+            .delete(this.controller.deleteAmenities);
     }
 }
 exports.default = MConfigurationRouter;
