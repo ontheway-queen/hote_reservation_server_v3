@@ -269,6 +269,24 @@ class HrModel extends schema_1.default {
                 .insert(payload);
         });
     }
+    hasEmpDepartmentAlreadyExist(emp_id, ids) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("emp_departments")
+                .withSchema(this.HR_SCHEMA)
+                .select("department_id")
+                .whereIn("department_id", ids)
+                .andWhere({ emp_id });
+        });
+    }
+    removeDepartmentFromEmployee(emp_id, removeIds) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("emp_departments")
+                .withSchema(this.HR_SCHEMA)
+                .del()
+                .whereIn("department_id", removeIds)
+                .where("emp_id", emp_id);
+        });
+    }
     getAllEmployee(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             const { key, hotel_code, limit, skip, department, designation } = payload;

@@ -26,12 +26,15 @@ class EmployeeModel extends Schema {
   public async getAllEmployee(payload: {
     limit?: string;
     skip?: string;
+    status?: string;
     key?: string;
     hotel_code: number;
     department?: string;
     designation?: string;
   }): Promise<{ data: IEmployeeListResponse[]; total: number }> {
-    const { key, hotel_code, limit, skip, department, designation } = payload;
+    const { key, hotel_code, limit, skip, department, designation, status } =
+      payload;
+    console.log(payload);
     const dtbs = this.db("employee as e");
 
     if (limit && skip) {
@@ -50,7 +53,9 @@ class EmployeeModel extends Schema {
         ),
         this.db.raw(`TO_CHAR(e.joining_date, 'YYYY-MM-DD') as joining_date`),
         "e.salary",
-        "e.status"
+        "e.status",
+        "de.name as designation_name",
+        "de.id as designation_id"
       )
       .withSchema(this.HR_SCHEMA)
       .leftJoin("emp_departments as ed", "e.id", "ed.emp_id")
@@ -64,13 +69,17 @@ class EmployeeModel extends Schema {
             .orWhere("e.email", "like", `%${key}%`)
             .orWhere("d.name", "like", `%${key}%`);
         }
-      })
-      .andWhere(function () {
-        if (department) {
-          this.where("d.name", "like", `%${department}%`);
+
+        if (status) {
+          this.where("e.status", status);
         }
+
+        if (department) {
+          this.where("d.id", department);
+        }
+
         if (designation) {
-          this.where("de.name", "like", `%${designation}%`);
+          this.where("de.id", designation);
         }
       })
       .groupBy(
@@ -80,7 +89,9 @@ class EmployeeModel extends Schema {
         "e.contact_no",
         "e.salary",
         "e.joining_date",
-        "e.status"
+        "e.status",
+        "de.name",
+        "de.id"
       )
       .orderBy("e.id", "desc");
 

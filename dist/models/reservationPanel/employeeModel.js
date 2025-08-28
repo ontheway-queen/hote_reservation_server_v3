@@ -29,14 +29,15 @@ class EmployeeModel extends schema_1.default {
     // Get All Employee Model
     getAllEmployee(payload) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { key, hotel_code, limit, skip, department, designation } = payload;
+            const { key, hotel_code, limit, skip, department, designation, status } = payload;
+            console.log(payload);
             const dtbs = this.db("employee as e");
             if (limit && skip) {
                 dtbs.limit(parseInt(limit));
                 dtbs.offset(parseInt(skip));
             }
             const data = yield dtbs
-                .select("e.id", "e.name", "e.email", "e.contact_no", this.db.raw("JSON_AGG(JSON_BUILD_OBJECT('id', d.id, 'name', d.name)) as department"), this.db.raw(`TO_CHAR(e.joining_date, 'YYYY-MM-DD') as joining_date`), "e.salary", "e.status")
+                .select("e.id", "e.name", "e.email", "e.contact_no", this.db.raw("JSON_AGG(JSON_BUILD_OBJECT('id', d.id, 'name', d.name)) as department"), this.db.raw(`TO_CHAR(e.joining_date, 'YYYY-MM-DD') as joining_date`), "e.salary", "e.status", "de.name as designation_name", "de.id as designation_id")
                 .withSchema(this.HR_SCHEMA)
                 .leftJoin("emp_departments as ed", "e.id", "ed.emp_id")
                 .leftJoin("department as d", "ed.department_id", "d.id")
@@ -49,16 +50,17 @@ class EmployeeModel extends schema_1.default {
                         .orWhere("e.email", "like", `%${key}%`)
                         .orWhere("d.name", "like", `%${key}%`);
                 }
-            })
-                .andWhere(function () {
+                if (status) {
+                    this.where("e.status", status);
+                }
                 if (department) {
-                    this.where("d.name", "like", `%${department}%`);
+                    this.where("d.id", department);
                 }
                 if (designation) {
-                    this.where("de.name", "like", `%${designation}%`);
+                    this.where("de.id", designation);
                 }
             })
-                .groupBy("e.id", "e.name", "e.email", "e.contact_no", "e.salary", "e.joining_date", "e.status")
+                .groupBy("e.id", "e.name", "e.email", "e.contact_no", "e.salary", "e.joining_date", "e.status", "de.name", "de.id")
                 .orderBy("e.id", "desc");
             const total = yield this.db("employee as e")
                 .withSchema(this.HR_SCHEMA)

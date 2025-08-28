@@ -29,7 +29,6 @@ class EmployeeService extends abstract_service_1.default {
     constructor() {
         super();
     }
-    // create employee
     createEmployee(req) {
         return __awaiter(this, void 0, void 0, function* () {
             const { hotel_code, id } = req.hotel_admin;
@@ -78,16 +77,16 @@ class EmployeeService extends abstract_service_1.default {
             }));
         });
     }
-    // get all Employee
     getAllEmployee(req) {
         return __awaiter(this, void 0, void 0, function* () {
             const { hotel_code } = req.hotel_admin;
-            const { key, department, designation } = req.query;
+            const { key, designation_id, department_id, status } = req.query;
             const { data, total } = yield this.Model.employeeModel().getAllEmployee({
                 key: key,
                 hotel_code,
-                department: department,
-                designation: designation,
+                department: department_id,
+                designation: designation_id,
+                status: status,
             });
             return {
                 success: true,
@@ -97,7 +96,6 @@ class EmployeeService extends abstract_service_1.default {
             };
         });
     }
-    // get Single Employee
     getSingleEmployee(req) {
         return __awaiter(this, void 0, void 0, function* () {
             const { id } = req.params;
@@ -117,36 +115,63 @@ class EmployeeService extends abstract_service_1.default {
             };
         });
     }
-    // update employee
     updateEmployee(req) {
         return __awaiter(this, void 0, void 0, function* () {
+            const { hotel_code, id } = req.hotel_admin;
+            const _a = req.body, { new_department_ids, remove_department_ids } = _a, rest = __rest(_a, ["new_department_ids", "remove_department_ids"]);
+            console.log(req.body);
+            const emp_id = Number(req.params.id);
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
-                const { id } = req.params;
-                const _a = req.body, { email } = _a, rest = __rest(_a, ["email"]);
                 const files = req.files || [];
                 if (files.length) {
                     rest["photo"] = files[0].filename;
                 }
-                const model = this.Model.employeeModel(trx);
-                const res = yield model.updateEmployee(parseInt(id), Object.assign(Object.assign({}, rest), { email }));
-                if (res === 1) {
-                    return {
-                        success: true,
-                        code: this.StatusCode.HTTP_OK,
-                        message: "Employee Profile updated successfully",
-                    };
+                const hrModel = this.Model.hrModel(trx);
+                if (new_department_ids === null || new_department_ids === void 0 ? void 0 : new_department_ids.length) {
+                    const { total } = yield hrModel.getAllDepartment({
+                        ids: new_department_ids,
+                        hotel_code,
+                    });
+                    console.log({ total });
+                    if (total !== new_department_ids.length) {
+                        return {
+                            success: false,
+                            code: this.StatusCode.HTTP_BAD_REQUEST,
+                            message: "Department not found from given id",
+                        };
+                    }
+                    const alreadyHasDeptId = yield hrModel.hasEmpDepartmentAlreadyExist(emp_id, new_department_ids);
+                    let uniqueIds = [];
+                    if (alreadyHasDeptId.length) {
+                        new_department_ids.forEach((id) => {
+                            const found = alreadyHasDeptId.find((item) => item.department_id == id);
+                            if (!found) {
+                                uniqueIds.push(id);
+                            }
+                        });
+                    }
+                    else {
+                        uniqueIds = new_department_ids;
+                    }
+                    yield hrModel.insertIntoEmpDepartment(uniqueIds.map((dept_id) => ({
+                        emp_id,
+                        department_id: dept_id,
+                    })));
                 }
-                else {
-                    return {
-                        success: false,
-                        code: this.StatusCode.HTTP_NOT_FOUND,
-                        message: "Employee Profile didn't find from this ID",
-                    };
+                if (remove_department_ids === null || remove_department_ids === void 0 ? void 0 : remove_department_ids.length) {
+                    yield hrModel.removeDepartmentFromEmployee(emp_id, remove_department_ids.map((dept_id) => dept_id));
                 }
+                if (Object.keys(rest).length) {
+                    yield hrModel.updateEmployee(emp_id, rest);
+                }
+                return {
+                    success: true,
+                    code: this.StatusCode.HTTP_OK,
+                    message: this.ResMsg.HTTP_OK,
+                };
             }));
         });
     }
-    // Delete employee
     deleteEmployee(req) {
         return __awaiter(this, void 0, void 0, function* () {
             const { id } = req.params;
@@ -158,7 +183,6 @@ class EmployeeService extends abstract_service_1.default {
             };
         });
     }
-    // get Employees By Department Id
     getEmployeesByDepartmentId(req) {
         return __awaiter(this, void 0, void 0, function* () {
             const id = req.params.id;

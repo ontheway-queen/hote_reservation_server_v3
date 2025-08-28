@@ -38,17 +38,16 @@ class EmployeeValidator {
             address: joi_1.default.string().allow("").optional(),
         });
         this.getAllEmployeeQueryValidator = joi_1.default.object({
-            status: joi_1.default.string().valid("0", "1"),
-            category: joi_1.default.string().allow("").optional(),
+            status: joi_1.default.boolean().optional(),
             key: joi_1.default.string().allow("").optional(),
             limit: joi_1.default.string().allow("").optional(),
             skip: joi_1.default.string().allow("").optional(),
-            department: joi_1.default.string().allow("").optional(),
-            designation: joi_1.default.string().allow("").optional(),
+            department_id: joi_1.default.string().allow("").optional(),
+            designation_id: joi_1.default.string().allow("").optional(),
         });
         this.updateEmployeeValidator = joi_1.default.object({
             name: joi_1.default.string().allow("").optional(),
-            department_ids: joi_1.default.string()
+            new_department_ids: joi_1.default.string()
                 .optional()
                 .custom((value, helpers) => {
                 try {

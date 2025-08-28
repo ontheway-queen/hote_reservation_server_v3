@@ -36,18 +36,17 @@ class EmployeeValidator {
   });
 
   getAllEmployeeQueryValidator = Joi.object({
-    status: Joi.string().valid("0", "1"),
-    category: Joi.string().allow("").optional(),
+    status: Joi.boolean().optional(),
     key: Joi.string().allow("").optional(),
     limit: Joi.string().allow("").optional(),
     skip: Joi.string().allow("").optional(),
-    department: Joi.string().allow("").optional(),
-    designation: Joi.string().allow("").optional(),
+    department_id: Joi.string().allow("").optional(),
+    designation_id: Joi.string().allow("").optional(),
   });
 
   updateEmployeeValidator = Joi.object({
     name: Joi.string().allow("").optional(),
-    department_ids: Joi.string()
+    new_department_ids: Joi.string()
       .optional()
       .custom((value, helpers) => {
         try {

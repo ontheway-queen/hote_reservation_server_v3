@@ -338,6 +338,28 @@ class HrModel extends Schema {
       .insert(payload);
   }
 
+  public async hasEmpDepartmentAlreadyExist(
+    emp_id: number,
+    ids: number[]
+  ): Promise<{ department_id: number }[]> {
+    return await this.db("emp_departments")
+      .withSchema(this.HR_SCHEMA)
+      .select("department_id")
+      .whereIn("department_id", ids)
+      .andWhere({ emp_id });
+  }
+
+  public async removeDepartmentFromEmployee(
+    emp_id: number,
+    removeIds: number[]
+  ) {
+    return await this.db("emp_departments")
+      .withSchema(this.HR_SCHEMA)
+      .del()
+      .whereIn("department_id", removeIds)
+      .where("emp_id", emp_id);
+  }
+
   public async getAllEmployee(payload: {
     limit?: string;
     skip?: string;
@@ -459,7 +481,7 @@ class HrModel extends Schema {
     return data ? data : null;
   }
 
-  public async updateEmployee(id: number, payload: IupdateEmployee) {
+  public async updateEmployee(id: number, payload: Partial<IupdateEmployee>) {
     console.log({ payload });
     return await this.db("employee")
       .withSchema(this.HR_SCHEMA)

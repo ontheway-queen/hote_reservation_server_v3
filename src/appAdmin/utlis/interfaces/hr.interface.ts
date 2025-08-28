@@ -1,3 +1,19 @@
+export interface IupdateEmployeeReqBody {
+  name: string;
+  photo: string;
+  new_department_ids: number[];
+  remove_department_ids: number[];
+  designation_id: number;
+  blood_group: string;
+  salary: number;
+  email: string;
+  contact_no: string;
+  dob: string;
+  appointment_date: string;
+  joining_date: string;
+  address: string;
+  created_by: number;
+}
 export interface IcreateEmployeeReqBody {
   name: string;
   photo?: string;
@@ -32,18 +48,17 @@ export interface IcreateEmployee {
 
 export interface IupdateEmployee {
   name: string;
-  email: string;
-  photo?: string;
-  department_id: number;
+  photo: string;
   designation_id: number;
+  blood_group: string;
   salary: number;
-  mobile_no: string;
-  dob?: string;
-  appointment_date?: string;
-  joining_date?: string;
-  address?: string;
-  status?: boolean;
-  blood_group?: string;
+  email: string;
+  contact_no: string;
+  dob: string;
+  appointment_date: string;
+  joining_date: string;
+  address: string;
+  created_by: number;
 }
 
 export interface IEmployeeListResponse {
