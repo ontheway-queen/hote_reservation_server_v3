@@ -8,8 +8,26 @@ class EmployeeValidator {
     constructor() {
         this.createEmployeeValidator = joi_1.default.object({
             name: joi_1.default.string().allow("").required(),
-            department_id: joi_1.default.number().required(),
-            designation_id: joi_1.default.array().items(joi_1.default.number()).required(),
+            department_ids: joi_1.default.string()
+                .required()
+                .custom((value, helpers) => {
+                try {
+                    let ids;
+                    if (value.startsWith("[") && value.endsWith("]")) {
+                        ids = JSON.parse(value);
+                    }
+                    ids = ids.map((id) => Number(id));
+                    if (ids.some(isNaN)) {
+                        return helpers.error("any.invalid");
+                    }
+                    console.log(ids);
+                    return ids;
+                }
+                catch (err) {
+                    return helpers.error("any.invalid");
+                }
+            }),
+            designation_id: joi_1.default.string().required(),
             blood_group: joi_1.default.number().optional(),
             salary: joi_1.default.number().optional(),
             email: joi_1.default.string().allow("").optional(),
@@ -20,23 +38,58 @@ class EmployeeValidator {
             address: joi_1.default.string().allow("").optional(),
         });
         this.getAllEmployeeQueryValidator = joi_1.default.object({
-            status: joi_1.default.string().valid("0", "1"),
-            category: joi_1.default.string().allow("").optional(),
+            status: joi_1.default.boolean().optional(),
             key: joi_1.default.string().allow("").optional(),
             limit: joi_1.default.string().allow("").optional(),
             skip: joi_1.default.string().allow("").optional(),
-            department: joi_1.default.string().allow("").optional(),
-            designation: joi_1.default.string().allow("").optional(),
+            department_id: joi_1.default.string().allow("").optional(),
+            designation_id: joi_1.default.string().allow("").optional(),
         });
         this.updateEmployeeValidator = joi_1.default.object({
             name: joi_1.default.string().allow("").optional(),
-            department_id: joi_1.default.number().optional(),
-            res_id: joi_1.default.number().allow("").optional(),
+            new_department_ids: joi_1.default.string()
+                .optional()
+                .custom((value, helpers) => {
+                try {
+                    let ids;
+                    if (value.startsWith("[") && value.endsWith("]")) {
+                        ids = JSON.parse(value);
+                    }
+                    ids = ids.map((id) => Number(id));
+                    if (ids.some(isNaN)) {
+                        return helpers.error("any.invalid");
+                    }
+                    console.log(ids);
+                    return ids;
+                }
+                catch (err) {
+                    return helpers.error("any.invalid");
+                }
+            }),
+            remove_department_ids: joi_1.default.string()
+                .optional()
+                .custom((value, helpers) => {
+                try {
+                    let ids;
+                    if (value.startsWith("[") && value.endsWith("]")) {
+                        ids = JSON.parse(value);
+                    }
+                    ids = ids.map((id) => Number(id));
+                    if (ids.some(isNaN)) {
+                        return helpers.error("any.invalid");
+                    }
+                    console.log(ids);
+                    return ids;
+                }
+                catch (err) {
+                    return helpers.error("any.invalid");
+                }
+            }),
             designation_id: joi_1.default.number().optional(),
             blood_group: joi_1.default.number().optional(),
             salary: joi_1.default.number().optional(),
             status: joi_1.default.boolean().optional(),
-            mobile_no: joi_1.default.string().allow("").optional(),
+            contact_no: joi_1.default.string().allow("").optional(),
             dob: joi_1.default.string().optional(),
             appointment_date: joi_1.default.string().optional(),
             joining_date: joi_1.default.string().optional(),

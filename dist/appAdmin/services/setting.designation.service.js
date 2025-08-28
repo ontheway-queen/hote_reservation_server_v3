@@ -13,22 +13,18 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const abstract_service_1 = __importDefault(require("../../abstarcts/abstract.service"));
-const Setting_Model_1 = __importDefault(require("../../models/reservationPanel/Setting.Model"));
 class DesignationSettingService extends abstract_service_1.default {
     constructor() {
         super();
     }
-    //=================== designation service ======================//
-    // create designation
     createDesignation(req) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
                 console.log(req.hotel_admin);
                 const { hotel_code, id } = req.hotel_admin;
                 const { name } = req.body;
-                // designation check
-                const settingModel = this.Model.settingModel();
-                const { data } = yield settingModel.getAllDesignation({
+                const model = this.Model.hrModel(trx);
+                const { data } = yield model.getAllDesignation({
                     name,
                     hotel_code,
                 });
@@ -39,8 +35,6 @@ class DesignationSettingService extends abstract_service_1.default {
                         message: "Designation name already exists, give another unique designation name",
                     };
                 }
-                // model
-                const model = new Setting_Model_1.default(trx);
                 yield model.createDesignation({
                     hotel_code,
                     name,
@@ -59,8 +53,7 @@ class DesignationSettingService extends abstract_service_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             const { hotel_code } = req.hotel_admin;
             const { limit, skip, name, status } = req.query;
-            const model = this.Model.settingModel();
-            const { data, total } = yield model.getAllDesignation({
+            const { data, total } = yield this.Model.hrModel().getAllDesignation({
                 status: status,
                 limit: limit,
                 skip: skip,
@@ -82,7 +75,7 @@ class DesignationSettingService extends abstract_service_1.default {
                 const { hotel_code } = req.hotel_admin;
                 const { id } = req.params;
                 const updatePayload = req.body;
-                const model = this.Model.settingModel(trx);
+                const model = this.Model.hrModel(trx);
                 const { data } = yield model.getAllDesignation({
                     name: updatePayload.name,
                     hotel_code,
@@ -113,7 +106,7 @@ class DesignationSettingService extends abstract_service_1.default {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
                 const { hotel_code } = req.hotel_admin;
                 const { id } = req.params;
-                const model = this.Model.settingModel(trx);
+                const model = this.Model.hrModel(trx);
                 yield model.deleteDesignation(parseInt(id), hotel_code);
                 return {
                     success: true,

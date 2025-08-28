@@ -5,6 +5,7 @@ import CustomError from "../../utils/lib/customEror";
 import {
   IcreateEmployeeReqBody,
   IupdateEmployee,
+  IupdateEmployeeReqBody,
 } from "../utlis/interfaces/hr.interface";
 
 export class EmployeeService extends AbstractServices {
@@ -12,26 +13,28 @@ export class EmployeeService extends AbstractServices {
     super();
   }
 
-  // create employee
   public async createEmployee(req: Request) {
     const { hotel_code, id } = req.hotel_admin;
-    const body = req.body as IcreateEmployeeReqBody;
+    const { department_ids, designation_id, ...rest } =
+      req.body as IcreateEmployeeReqBody;
 
     return await this.db.transaction(async (trx) => {
       const files = (req.files as Express.Multer.File[]) || [];
 
       if (files.length) {
-        body["photo"] = files[0].filename;
+        rest["photo"] = files[0].filename;
       }
 
       const hrModel = this.Model.hrModel(trx);
 
       const { total } = await hrModel.getAllDepartment({
-        ids: body.department_id,
+        ids: department_ids,
         hotel_code,
       });
 
-      if (total !== body.department_id.length) {
+      console.log({ total });
+
+      if (total !== department_ids.length) {
         return {
           success: false,
           code: this.StatusCode.HTTP_BAD_REQUEST,
@@ -39,7 +42,7 @@ export class EmployeeService extends AbstractServices {
         };
       }
       const { data } = await hrModel.getAllEmployee({
-        key: body.email,
+        key: rest.email,
         hotel_code,
       });
 
@@ -51,11 +54,20 @@ export class EmployeeService extends AbstractServices {
         };
       }
 
-      await hrModel.insertEmployee({
-        ...req.body,
+      const [insertRes] = await hrModel.insertEmployee({
+        ...rest,
         hotel_code,
+        designation_id,
         created_by: id,
       });
+
+      // insert into employee_departments
+      await hrModel.insertIntoEmpDepartment(
+        department_ids.map((dept_id) => ({
+          emp_id: insertRes.id,
+          department_id: dept_id,
+        }))
+      );
 
       return {
         success: true,
@@ -65,18 +77,16 @@ export class EmployeeService extends AbstractServices {
     });
   }
 
-  // get all Employee
   public async getAllEmployee(req: Request) {
     const { hotel_code } = req.hotel_admin;
-    const { key, department, designation } = req.query;
+    const { key, designation_id, department_id, status } = req.query;
 
-    const employeeModel = this.Model.employeeModel();
-
-    const { data, total } = await employeeModel.getAllEmployee({
+    const { data, total } = await this.Model.employeeModel().getAllEmployee({
       key: key as string,
       hotel_code,
-      department: department as string,
-      designation: designation as string,
+      department: department_id as string,
+      designation: designation_id as string,
+      status: status as string,
     });
 
     return {
@@ -87,7 +97,6 @@ export class EmployeeService extends AbstractServices {
     };
   }
 
-  // get Single Employee
   public async getSingleEmployee(req: Request) {
     const { id } = req.params;
     const { hotel_code } = req.hotel_admin;
@@ -98,10 +107,11 @@ export class EmployeeService extends AbstractServices {
     );
 
     if (!data) {
-      throw new CustomError(
-        `The requested employee with ID: ${id} not found.`,
-        this.StatusCode.HTTP_NOT_FOUND
-      );
+      return {
+        success: false,
+        code: this.StatusCode.HTTP_NOT_FOUND,
+        message: this.ResMsg.HTTP_NOT_FOUND,
+      };
     }
 
     return {
@@ -111,65 +121,100 @@ export class EmployeeService extends AbstractServices {
     };
   }
 
-  // update employee
   public async updateEmployee(req: Request) {
-    return await this.db.transaction(async (trx) => {
-      const { id } = req.params;
-      const { email, ...rest } = req.body as IupdateEmployee;
+    const { hotel_code, id } = req.hotel_admin;
+    const { new_department_ids, remove_department_ids, ...rest } =
+      req.body as Partial<IupdateEmployeeReqBody>;
 
+    console.log(req.body);
+
+    const emp_id = Number(req.params.id);
+
+    return await this.db.transaction(async (trx) => {
       const files = (req.files as Express.Multer.File[]) || [];
 
       if (files.length) {
         rest["photo"] = files[0].filename;
       }
 
-      const model = this.Model.employeeModel(trx);
-      const res = await model.updateEmployee(parseInt(id), {
-        ...rest,
-        email,
-      });
+      const hrModel = this.Model.hrModel(trx);
 
-      if (res === 1) {
-        return {
-          success: true,
-          code: this.StatusCode.HTTP_OK,
-          message: "Employee Profile updated successfully",
-        };
-      } else {
-        return {
-          success: false,
-          code: this.StatusCode.HTTP_NOT_FOUND,
-          message: "Employee Profile didn't find from this ID",
-        };
+      if (new_department_ids?.length) {
+        const { total } = await hrModel.getAllDepartment({
+          ids: new_department_ids,
+          hotel_code,
+        });
+
+        console.log({ total });
+
+        if (total !== new_department_ids.length) {
+          return {
+            success: false,
+            code: this.StatusCode.HTTP_BAD_REQUEST,
+            message: "Department not found from given id",
+          };
+        }
+
+        const alreadyHasDeptId = await hrModel.hasEmpDepartmentAlreadyExist(
+          emp_id,
+          new_department_ids
+        );
+
+        let uniqueIds: number[] = [];
+
+        if (alreadyHasDeptId.length) {
+          new_department_ids.forEach((id) => {
+            const found = alreadyHasDeptId.find(
+              (item) => item.department_id == id
+            );
+
+            if (!found) {
+              uniqueIds.push(id);
+            }
+          });
+        } else {
+          uniqueIds = new_department_ids;
+        }
+
+        await hrModel.insertIntoEmpDepartment(
+          uniqueIds.map((dept_id) => ({
+            emp_id,
+            department_id: dept_id,
+          }))
+        );
       }
+
+      if (remove_department_ids?.length) {
+        await hrModel.removeDepartmentFromEmployee(
+          emp_id,
+          remove_department_ids.map((dept_id) => dept_id)
+        );
+      }
+
+      if (Object.keys(rest).length) {
+        await hrModel.updateEmployee(emp_id, rest);
+      }
+
+      return {
+        success: true,
+        code: this.StatusCode.HTTP_OK,
+        message: this.ResMsg.HTTP_OK,
+      };
     });
   }
 
-  // Delete employee
   public async deleteEmployee(req: Request) {
-    return await this.db.transaction(async (trx) => {
-      const { id } = req.params;
+    const { id } = req.params;
 
-      const model = this.Model.employeeModel(trx);
-      const res = await model.deleteEmployee(parseInt(id));
+    await this.Model.employeeModel().deleteEmployee(parseInt(id));
 
-      if (res === 1) {
-        return {
-          success: true,
-          code: this.StatusCode.HTTP_OK,
-          message: "Employee Profile deleted successfully",
-        };
-      } else {
-        return {
-          success: false,
-          code: this.StatusCode.HTTP_NOT_FOUND,
-          message: "Employee Profile didn't find from this ID",
-        };
-      }
-    });
+    return {
+      success: true,
+      code: this.StatusCode.HTTP_OK,
+      message: "Employee has been deleted",
+    };
   }
 
-  // get Employees By Department Id
   public async getEmployeesByDepartmentId(req: Request) {
     const id = req.params.id;
     const { limit, skip } = req.query;

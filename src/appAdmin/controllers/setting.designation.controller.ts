@@ -10,9 +10,6 @@ class DesignationSettingController extends AbstractController {
     super();
   }
 
-  //=================== Designation Controller ======================//
-
-  // Create Designation
   public createDesignation = this.asyncWrapper.wrap(
     { bodySchema: this.settingValidator.createdesignationValidator },
     async (req: Request, res: Response) => {
@@ -23,7 +20,6 @@ class DesignationSettingController extends AbstractController {
     }
   );
 
-  // Get All Designation
   public getAllDesignation = this.asyncWrapper.wrap(
     { querySchema: this.settingValidator.getAlldesignationQueryValidator },
     async (req: Request, res: Response) => {
@@ -34,7 +30,6 @@ class DesignationSettingController extends AbstractController {
     }
   );
 
-  // Update Designation
   public updateDesignation = this.asyncWrapper.wrap(
     { bodySchema: this.settingValidator.UpdatedesignationValidator },
     async (req: Request, res: Response) => {
@@ -45,7 +40,6 @@ class DesignationSettingController extends AbstractController {
     }
   );
 
-  // Delete Designation
   public deleteDesignation = this.asyncWrapper.wrap(
     { paramSchema: this.commonValidator.singleParamValidator() },
     async (req: Request, res: Response) => {
