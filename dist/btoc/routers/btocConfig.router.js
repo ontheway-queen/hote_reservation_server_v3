@@ -26,6 +26,7 @@ class BtocConfigRouter extends abstract_router_1.default {
         this.router
             .route("/terms-and-conditions")
             .get(this.controller.GetTermsAndConditionsPageData);
+        this.router.route("/pop-up").get(this.controller.getPopUpBanner);
         this.router.route("/accounts").get(this.controller.GetAccountsData);
     }
 }

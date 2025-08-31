@@ -191,6 +191,22 @@ export class BtocConfigService extends AbstractServices {
     });
   }
 
+  public async getPopUpBanner(req: Request) {
+    const configModel = this.Model.b2cConfigurationModel();
+    const { hotel_code } = req.web_token;
+
+    const popUpBanners = await configModel.getPopUpBanner({ hotel_code });
+
+    return {
+      success: true,
+      code: this.StatusCode.HTTP_OK,
+      message: this.ResMsg.HTTP_OK,
+      data: {
+        b2c: popUpBanners,
+      },
+    };
+  }
+
   public async GetAccountsData(req: Request) {
     const { hotel_code } = req.web_token;
 
