@@ -4,7 +4,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const abstract_router_1 = __importDefault(require("../../abstarcts/abstract.router"));
+const configuration_router_1 = __importDefault(require("./configuration.router"));
 const employee_router_1 = __importDefault(require("./employee.router"));
+const employeeAllowances_router_1 = __importDefault(require("./employeeAllowances.router"));
+const employeeDeductions_router_1 = __importDefault(require("./employeeDeductions.router"));
 const payRoll_router_1 = __importDefault(require("./payRoll.router"));
 const setting_department_router_1 = __importDefault(require("./setting.department.router"));
 const setting_designation_router_1 = __importDefault(require("./setting.designation.router"));
@@ -20,6 +23,9 @@ class HrRouter extends abstract_router_1.default {
         this.router.use("/payroll-month", new setting_payroll_month_router_1.default().router);
         this.router.use("/payroll", new payRoll_router_1.default().router);
         this.router.use("/employee", new employee_router_1.default().router);
+        this.router.use("/configuration", new configuration_router_1.default().router);
+        this.router.use("/employee-allowances", new employeeAllowances_router_1.default().router);
+        this.router.use("/employee-deductions", new employeeDeductions_router_1.default().router);
     }
 }
 exports.default = HrRouter;

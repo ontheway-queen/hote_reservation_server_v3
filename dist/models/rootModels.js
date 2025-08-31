@@ -3,7 +3,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const b2cConfigurationModel_1 = __importDefault(require("./b2cConfigurationModel/b2cConfigurationModel"));
+const btoc_model_1 = require("./btocModels/btoc.model");
 const commonModel_1 = __importDefault(require("./commonModel/commonModel"));
+const dboModel_1 = __importDefault(require("./commonModel/dboModel"));
 const mAdministration_model_1 = __importDefault(require("./managementsModel/mAdministrationModel/mAdministration.model"));
 const mConfigurationModel_1 = __importDefault(require("./managementsModel/mConfigurationModel/mConfigurationModel"));
 const accountModel_1 = __importDefault(require("./reservationPanel/accountModel/accountModel"));
@@ -13,21 +16,18 @@ const expenseModel_1 = __importDefault(require("./reservationPanel/expenseModel"
 const guestModel_1 = __importDefault(require("./reservationPanel/guestModel"));
 const hotel_model_1 = __importDefault(require("./reservationPanel/hotel.model"));
 const hotelInvoiceModel_1 = __importDefault(require("./reservationPanel/hotelInvoiceModel"));
+const hrModel_1 = __importDefault(require("./reservationPanel/hrModel"));
 const common_inventory_model_1 = __importDefault(require("./reservationPanel/inventoryModel/common.inventory.model"));
 const product_inventory_model_1 = __importDefault(require("./reservationPanel/inventoryModel/product.inventory.model"));
 const puschase_inventory_model_1 = __importDefault(require("./reservationPanel/inventoryModel/puschase.inventory.model"));
 const stock_inventory_model_1 = __importDefault(require("./reservationPanel/inventoryModel/stock.inventory.model"));
+const payment_model_1 = __importDefault(require("./reservationPanel/paymentModel/payment.model"));
 const payRollModel_1 = __importDefault(require("./reservationPanel/payRollModel"));
 const rAdministration_model_1 = __importDefault(require("./reservationPanel/rAdministration.model"));
 const ReportModel_1 = __importDefault(require("./reservationPanel/ReportModel/ReportModel"));
+const reservation_model_1 = require("./reservationPanel/reservation.model");
 const Room_Model_1 = __importDefault(require("./reservationPanel/Room.Model"));
 const Setting_Model_1 = __importDefault(require("./reservationPanel/Setting.Model"));
-const reservation_model_1 = require("./reservationPanel/reservation.model");
-const dboModel_1 = __importDefault(require("./commonModel/dboModel"));
-const btoc_model_1 = require("./btocModels/btoc.model");
-const payment_model_1 = __importDefault(require("./reservationPanel/paymentModel/payment.model"));
-const b2cConfigurationModel_1 = __importDefault(require("./b2cConfigurationModel/b2cConfigurationModel"));
-const hrModel_1 = __importDefault(require("./reservationPanel/hrModel"));
 class Models {
     constructor(db) {
         this.db = db;
