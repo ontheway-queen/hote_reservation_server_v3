@@ -348,9 +348,8 @@ export default class AgencyB2CConfigModel extends Schema {
         "sm.name AS media",
         "sm.logo"
       )
-      .joinRaw(
-        `LEFT JOIN public.social_media AS sm ON sl.social_media_id = sm.id`
-      )
+
+      .leftJoin("social_media AS sm", "sl.social_media_id", "sm.id")
       .orderBy("sl.order_number", "asc")
       .andWhere("sl.hotel_code", query.hotel_code)
       .where((qb) => {
@@ -572,9 +571,6 @@ export default class AgencyB2CConfigModel extends Schema {
       .where((qb) => {
         if (query.status !== undefined) {
           qb.andWhere("status", query.status);
-        }
-        if (query.pop_up_for) {
-          qb.andWhere("pop_up_for", query.pop_up_for);
         }
       });
   }

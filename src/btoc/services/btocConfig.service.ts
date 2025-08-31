@@ -9,6 +9,7 @@ export class BtocConfigService extends AbstractServices {
   public async GetHomePageData(req: Request) {
     return this.db.transaction(async (trx) => {
       const { hotel_code } = req.web_token;
+
       const configModel = this.Model.b2cConfigurationModel(trx);
       const siteConfig = await configModel.getSiteConfig({ hotel_code });
 
@@ -19,7 +20,7 @@ export class BtocConfigService extends AbstractServices {
           message: this.ResMsg.HTTP_NOT_FOUND,
         };
       }
-
+      console.log({ siteConfig });
       const {
         hotel_code: no_need_agency_id,
         id,
@@ -54,7 +55,6 @@ export class BtocConfigService extends AbstractServices {
 
       const popUpBanner = await configModel.getPopUpBanner({
         hotel_code,
-        pop_up_for: "WEB",
         status: true,
       });
 

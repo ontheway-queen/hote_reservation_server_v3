@@ -42,6 +42,7 @@ class BtocConfigService extends abstract_service_1.default {
                         message: this.ResMsg.HTTP_NOT_FOUND,
                     };
                 }
+                console.log({ siteConfig });
                 const { hotel_code: no_need_agency_id, id, about_us_content, contact_us_content, about_us_thumbnail, contact_us_thumbnail, privacy_policy_content, updated_by, updated_by_name, terms_and_conditions_content, last_updated } = siteConfig, restData = __rest(siteConfig, ["hotel_code", "id", "about_us_content", "contact_us_content", "about_us_thumbnail", "contact_us_thumbnail", "privacy_policy_content", "updated_by", "updated_by_name", "terms_and_conditions_content", "last_updated"]);
                 const hero_bg_data = yield configModel.getHeroBGContent({
                     hotel_code,
@@ -58,7 +59,6 @@ class BtocConfigService extends abstract_service_1.default {
                 console.log({ social_links });
                 const popUpBanner = yield configModel.getPopUpBanner({
                     hotel_code,
-                    pop_up_for: "WEB",
                     status: true,
                 });
                 return {

@@ -262,7 +262,7 @@ class AgencyB2CConfigModel extends schema_1.default {
             const data = yield this.db("social_links AS sl")
                 .withSchema(this.BTOC_SCHEMA)
                 .select("sl.id", "sl.link", "sl.status", "sl.order_number", "sl.social_media_id", "sm.name AS media", "sm.logo")
-                .joinRaw(`LEFT JOIN public.social_media AS sm ON sl.social_media_id = sm.id`)
+                .leftJoin("social_media AS sm", "sl.social_media_id", "sm.id")
                 .orderBy("sl.order_number", "asc")
                 .andWhere("sl.hotel_code", query.hotel_code)
                 .where((qb) => {
@@ -457,9 +457,6 @@ class AgencyB2CConfigModel extends schema_1.default {
                 .where((qb) => {
                 if (query.status !== undefined) {
                     qb.andWhere("status", query.status);
-                }
-                if (query.pop_up_for) {
-                    qb.andWhere("pop_up_for", query.pop_up_for);
                 }
             });
         });
