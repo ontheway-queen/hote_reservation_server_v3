@@ -2,22 +2,20 @@ import { Router } from "express";
 import HotelInventoryRouter from "../appInventory/routers/inventory.app.router";
 import AuthChecker from "../common/middleware/authChecker/authChecker";
 import AccountRouter from "./routers/account.router";
+import AdminBtocHandlerRouter from "./routers/adminBtocHandler.router";
 import AdministrationRouter from "./routers/administration.router";
+import CommonRouter from "./routers/common.router";
 import ExpenseRouter from "./routers/expense.router";
+import FolioRouter from "./routers/folio.router";
 import GuestRouter from "./routers/guest.router";
+import HrRouter from "./routers/hr.router";
 import InvoiceRouter from "./routers/invoice.router";
 import MoneyRecieptRouter from "./routers/money-reciept.router";
-import PayRollRouter from "./routers/payRoll.router";
 import ReportRouter from "./routers/reports.router";
 import { ReservationRouter } from "./routers/reservation.router";
 import RoomGuestRouter from "./routers/room.guest.router";
 import RoomRouter from "./routers/room.router";
 import SettingRouter from "./routers/setting.router";
-import FolioRouter from "./routers/folio.router";
-import EmployeeSettingRouter from "./routers/employee.router";
-import CommonRouter from "./routers/common.router";
-import AdminBtocHandlerRouter from "./routers/adminBtocHandler.router";
-import HrRouter from "./routers/hr.router";
 
 export class ReservationRootRouter {
   public router = Router();

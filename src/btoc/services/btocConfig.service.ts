@@ -6,116 +6,214 @@ export class BtocConfigService extends AbstractServices {
     super();
   }
 
-  // get Site Configuration
-  //   public async getSiteConfiguration(req: Request) {
-  //     const { hotel_code } = req.web_token;
-  //     const configurationModel = this.Model.b2cConfigurationModel();
-  //     const data = await configurationModel.getSiteConfig({
-  //       hotel_code,
-  //     });
-  //     if (!data) {
-  //       return {
-  //         success: false,
-  //         message: "No site configuration found!",
-  //         code: this.StatusCode.HTTP_NOT_FOUND,
-  //       };
-  //     }
+  public async GetHomePageData(req: Request) {
+    return this.db.transaction(async (trx) => {
+      const { hotel_code } = req.web_token;
 
-  //     return {
-  //       success: false,
-  //       message: "Site configuration fetched successfully!",
-  //       code: this.StatusCode.HTTP_OK,
-  //       data,
-  //     };
-  //   }
+      const configModel = this.Model.b2cConfigurationModel(trx);
+      const siteConfig = await configModel.getSiteConfig({ hotel_code });
 
-  //   // get pop up banner
-  //   public async getPopUpBannerConfiguration(req: Request) {
-  //     const { hotel_code } = req.web_token;
-  //     const configurationModel = this.Model.b2cConfigurationModel();
-  //     const data = await configurationModel.getPopUpBanner({
-  //       hotel_code,
-  //     });
-  //     if (!data) {
-  //       return {
-  //         success: false,
-  //         message: "No pop up banner found!",
-  //         code: this.StatusCode.HTTP_NOT_FOUND,
-  //       };
-  //     }
+      if (!siteConfig) {
+        return {
+          success: false,
+          code: this.StatusCode.HTTP_NOT_FOUND,
+          message: this.ResMsg.HTTP_NOT_FOUND,
+        };
+      }
+      console.log({ siteConfig });
+      const {
+        hotel_code: no_need_agency_id,
+        id,
+        about_us_content,
+        contact_us_content,
+        about_us_thumbnail,
+        contact_us_thumbnail,
+        privacy_policy_content,
+        updated_by,
+        updated_by_name,
+        terms_and_conditions_content,
+        last_updated,
+        ...restData
+      } = siteConfig;
 
-  //     return {
-  //       success: false,
-  //       message: "Pop up banner fetched successfully!",
-  //       code: this.StatusCode.HTTP_OK,
-  //       data,
-  //     };
-  //   }
+      const hero_bg_data = await configModel.getHeroBGContent({
+        hotel_code,
+        status: true,
+      });
 
-  //   // get hero bg content
-  //   public async getHeroBgContent(req: Request) {
-  //     const { hotel_code } = req.web_token;
-  //     const configurationModel = this.Model.b2cConfigurationModel();
-  //     const data = await configurationModel.getHeroBgContent({
-  //       hotel_code,
-  //     });
-  //     if (data && data.length < 1) {
-  //       return {
-  //         success: false,
-  //         message: "No hero bg content found!",
-  //         code: this.StatusCode.HTTP_NOT_FOUND,
-  //       };
-  //     }
+      const hot_deals = await configModel.getHotDeals({
+        hotel_code,
+        status: true,
+      });
 
-  //     return {
-  //       success: false,
-  //       message: "Hero BG content fetched successfully!",
-  //       code: this.StatusCode.HTTP_OK,
-  //       data,
-  //     };
-  //   }
+      const social_links = await configModel.getSocialLink({
+        hotel_code,
+        status: true,
+      });
 
-  //   public async getHotDeals(req: Request) {
-  //     const { hotel_code } = req.web_token;
-  //     const configurationModel = this.Model.b2cConfigurationModel();
-  //     const data = await configurationModel.getHotDeals({
-  //       hotel_code,
-  //     });
-  //     if (data && data.length < 1) {
-  //       return {
-  //         success: false,
-  //         message: "No Hot deals found!",
-  //         code: this.StatusCode.HTTP_NOT_FOUND,
-  //       };
-  //     }
+      console.log({ social_links });
 
-  //     return {
-  //       success: false,
-  //       message: "Hot Deals fetched successfully!",
-  //       code: this.StatusCode.HTTP_OK,
-  //       data,
-  //     };
-  //   }
+      const popUpBanner = await configModel.getPopUpBanner({
+        hotel_code,
+        status: true,
+      });
 
-  //   public async getSocialLinks(req: Request) {
-  //     const { hotel_code } = req.web_token;
-  //     const configurationModel = this.Model.b2cConfigurationModel();
-  //     const data = await configurationModel.getSocialLinks({
-  //       hotel_code,
-  //     });
-  //     if (data && data.length < 1) {
-  //       return {
-  //         success: false,
-  //         message: "No social links found!",
-  //         code: this.StatusCode.HTTP_NOT_FOUND,
-  //       };
-  //     }
+      return {
+        success: true,
+        code: this.StatusCode.HTTP_OK,
+        message: this.ResMsg.HTTP_OK,
+        data: {
+          site_data: restData,
+          hero_bg_data: hero_bg_data.data,
+          hot_deals: hot_deals.data,
 
-  //     return {
-  //       success: false,
-  //       message: "Social Links fetched successfully!",
-  //       code: this.StatusCode.HTTP_OK,
-  //       data,
-  //     };
-  //   }
+          social_links: social_links.data,
+          popup: {
+            allow: popUpBanner.length ? true : false,
+            pop_up_data: popUpBanner[0],
+          },
+        },
+      };
+    });
+  }
+
+  public async GetAboutUsPageData(req: Request) {
+    return this.db.transaction(async (trx) => {
+      const { hotel_code } = req.web_token;
+
+      const configModel = this.Model.b2cConfigurationModel(trx);
+      const siteConfig = await configModel.getSiteConfig({ hotel_code });
+
+      if (!siteConfig) {
+        return {
+          success: false,
+          code: this.StatusCode.HTTP_NOT_FOUND,
+          message: this.ResMsg.HTTP_NOT_FOUND,
+        };
+      }
+
+      const { about_us_content, about_us_thumbnail } = siteConfig;
+
+      return {
+        success: true,
+        code: this.StatusCode.HTTP_OK,
+        message: this.ResMsg.HTTP_OK,
+        data: {
+          about_us_content,
+          about_us_thumbnail,
+        },
+      };
+    });
+  }
+
+  public async GetContactUsPageData(req: Request) {
+    return this.db.transaction(async (trx) => {
+      const { hotel_code } = req.web_token;
+
+      const configModel = this.Model.b2cConfigurationModel(trx);
+      const siteConfig = await configModel.getSiteConfig({ hotel_code });
+
+      if (!siteConfig) {
+        return {
+          success: false,
+          code: this.StatusCode.HTTP_NOT_FOUND,
+          message: this.ResMsg.HTTP_NOT_FOUND,
+        };
+      }
+
+      const { contact_us_content, contact_us_thumbnail } = siteConfig;
+
+      return {
+        success: true,
+        code: this.StatusCode.HTTP_OK,
+        message: this.ResMsg.HTTP_OK,
+        data: {
+          contact_us_content,
+          contact_us_thumbnail,
+        },
+      };
+    });
+  }
+
+  public async GetPrivacyPolicyPageData(req: Request) {
+    return this.db.transaction(async (trx) => {
+      const { hotel_code } = req.web_token;
+
+      const configModel = this.Model.b2cConfigurationModel(trx);
+      const siteConfig = await configModel.getSiteConfig({ hotel_code });
+
+      if (!siteConfig) {
+        return {
+          success: false,
+          code: this.StatusCode.HTTP_NOT_FOUND,
+          message: this.ResMsg.HTTP_NOT_FOUND,
+        };
+      }
+
+      const { privacy_policy_content } = siteConfig;
+
+      return {
+        success: true,
+        code: this.StatusCode.HTTP_OK,
+        message: this.ResMsg.HTTP_OK,
+        data: {
+          privacy_policy_content,
+        },
+      };
+    });
+  }
+
+  public async GetTermsAndConditionsPageData(req: Request) {
+    return this.db.transaction(async (trx) => {
+      const { hotel_code } = req.web_token;
+
+      const configModel = this.Model.b2cConfigurationModel(trx);
+      const siteConfig = await configModel.getSiteConfig({ hotel_code });
+
+      if (!siteConfig) {
+        return {
+          success: false,
+          code: this.StatusCode.HTTP_NOT_FOUND,
+          message: this.ResMsg.HTTP_NOT_FOUND,
+        };
+      }
+
+      const { terms_and_conditions_content } = siteConfig;
+
+      return {
+        success: true,
+        code: this.StatusCode.HTTP_OK,
+        message: this.ResMsg.HTTP_OK,
+        data: {
+          terms_and_conditions_content,
+        },
+      };
+    });
+  }
+
+  public async getPopUpBanner(req: Request) {
+    const configModel = this.Model.b2cConfigurationModel();
+    const { hotel_code } = req.web_token;
+
+    const popUpBanners = await configModel.getPopUpBanner({ hotel_code });
+
+    return {
+      success: true,
+      code: this.StatusCode.HTTP_OK,
+      message: this.ResMsg.HTTP_OK,
+      data: {
+        b2c: popUpBanners,
+      },
+    };
+  }
+
+  public async GetAccountsData(req: Request) {
+    const { hotel_code } = req.web_token;
+
+    return {
+      success: true,
+      code: this.StatusCode.HTTP_OK,
+      message: this.ResMsg.HTTP_OK,
+    };
+  }
 }

@@ -242,14 +242,12 @@ class MConfigurationService extends abstract_service_1.default {
             };
         });
     }
-    //=================== Room type Amenities ======================//
-    // create Room Amenities head
-    createRoomTypeAmenitiesHead(req) {
+    createAmenitiesHead(req) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
                 // room amenities
                 const model = this.Model.mConfigurationModel(trx);
-                const { data } = yield model.getAllRoomTypeAmenitiesHead({
+                const { data } = yield model.getAllAmenitiesHead({
                     search: req.body.name,
                 });
                 if (data.length) {
@@ -259,7 +257,7 @@ class MConfigurationService extends abstract_service_1.default {
                         message: "Room type amenities head already exists",
                     };
                 }
-                yield model.createRoomTypeAmenitiesHead(req.body);
+                yield model.createAmenitiesHead(req.body);
                 return {
                     success: true,
                     code: this.StatusCode.HTTP_SUCCESSFUL,
@@ -268,11 +266,10 @@ class MConfigurationService extends abstract_service_1.default {
             }));
         });
     }
-    // Get All Room Amenities head
-    getAllRoomTypeAmenitiesHead(req) {
+    getAllAmenitiesHead(req) {
         return __awaiter(this, void 0, void 0, function* () {
             const { limit, skip, search, status } = req.query;
-            const { data } = yield this.Model.mConfigurationModel().getAllRoomTypeAmenitiesHead({
+            const { data } = yield this.Model.mConfigurationModel().getAllAmenitiesHead({
                 status: status,
                 limit: limit,
                 skip: skip,
@@ -285,16 +282,14 @@ class MConfigurationService extends abstract_service_1.default {
             };
         });
     }
-    // Update Room type Amenities head
-    updateRoomTypeAmenitiesHead(req) {
+    updateAmenitiesHead(req) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
                 const { id } = req.params;
                 const model = this.Model.mConfigurationModel(trx);
-                const { data } = yield model.getAllRoomTypeAmenitiesHead({
+                const { data } = yield model.getAllAmenitiesHead({
                     search: req.body.name,
                 });
-                console.log({ data });
                 if (data.length) {
                     return {
                         success: false,
@@ -302,8 +297,7 @@ class MConfigurationService extends abstract_service_1.default {
                         message: "Room type amenities head already exists",
                     };
                 }
-                console.log({ id });
-                yield model.updateRoomTypeAmenitiesHead(parseInt(id), req.body);
+                yield model.updateAmenitiesHead(parseInt(id), req.body);
                 return {
                     success: true,
                     code: this.StatusCode.HTTP_OK,
@@ -312,8 +306,7 @@ class MConfigurationService extends abstract_service_1.default {
             }));
         });
     }
-    // create Room Amenities
-    createRoomTypeAmenities(req) {
+    createAmenities(req) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
                 const files = req.files || [];
@@ -322,7 +315,7 @@ class MConfigurationService extends abstract_service_1.default {
                 }
                 // room amenities
                 const settingModel = this.Model.mConfigurationModel(trx);
-                const { data } = yield settingModel.getAllRoomTypeAmenities({
+                const { data } = yield settingModel.getAllAmenities({
                     search: req.body.name,
                 });
                 if (data.length) {
@@ -332,7 +325,7 @@ class MConfigurationService extends abstract_service_1.default {
                         message: "Room type amenities already exists",
                     };
                 }
-                yield settingModel.createRoomTypeAmenities(req.body);
+                yield settingModel.createAmenities(req.body);
                 return {
                     success: true,
                     code: this.StatusCode.HTTP_SUCCESSFUL,
@@ -341,12 +334,11 @@ class MConfigurationService extends abstract_service_1.default {
             }));
         });
     }
-    // Get All Room Amenities
-    getAllRoomTypeAmenities(req) {
+    getAllAmenities(req) {
         return __awaiter(this, void 0, void 0, function* () {
             const { limit, skip, search, status } = req.query;
             const model = this.Model.mConfigurationModel();
-            const { data, total } = yield model.getAllRoomTypeAmenities({
+            const { data, total } = yield model.getAllAmenities({
                 status: status,
                 limit: limit,
                 skip: skip,
@@ -360,8 +352,7 @@ class MConfigurationService extends abstract_service_1.default {
             };
         });
     }
-    // Update Room Amenities
-    updateRoomTypeAmenities(req) {
+    updateAmenities(req) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
                 var _a;
@@ -372,7 +363,7 @@ class MConfigurationService extends abstract_service_1.default {
                     req.body["icon"] = files[0].filename;
                 }
                 if ((_a = req.body) === null || _a === void 0 ? void 0 : _a.name) {
-                    const { data } = yield model.getAllRoomTypeAmenities({
+                    const { data } = yield model.getAllAmenities({
                         search: req.body.name,
                     });
                     if (data.length) {
@@ -383,7 +374,7 @@ class MConfigurationService extends abstract_service_1.default {
                         };
                     }
                 }
-                yield model.updateRoomTypeAmenities(parseInt(id), req.body);
+                yield model.updateAmenities(parseInt(id), req.body);
                 return {
                     success: true,
                     code: this.StatusCode.HTTP_OK,
@@ -392,13 +383,12 @@ class MConfigurationService extends abstract_service_1.default {
             }));
         });
     }
-    // Delete Room Amenities
-    deleteRoomTypeAmenities(req) {
+    deleteAmenities(req) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
                 const { id } = req.params;
                 const model = this.Model.mConfigurationModel(trx);
-                yield model.deleteRoomTypeAmenities(parseInt(id));
+                yield model.deleteAmenities(parseInt(id));
                 return {
                     success: true,
                     code: this.StatusCode.HTTP_OK,

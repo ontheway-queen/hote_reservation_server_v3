@@ -87,40 +87,32 @@ class MConfigurationController extends abstract_controller_1.default {
             const _l = yield this.service.getAllPermission(req), { code } = _l, data = __rest(_l, ["code"]);
             res.status(code).json(data);
         }));
-        //=================== Room Amenities Controller ======================//
-        // Create Room Amenities head
-        this.createRoomTypeAmenitiesHead = this.asyncWrapper.wrap({ bodySchema: this.validator.createRoomTypeAmenitiesHeadValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _m = yield this.service.createRoomTypeAmenitiesHead(req), { code } = _m, data = __rest(_m, ["code"]);
+        this.createAmenitiesHead = this.asyncWrapper.wrap({ bodySchema: this.validator.createAmenitiesHeadValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _m = yield this.service.createAmenitiesHead(req), { code } = _m, data = __rest(_m, ["code"]);
             res.status(code).json(data);
         }));
-        // Get All Room type Amenities head
-        this.getAllRoomTypeAmenitiesHead = this.asyncWrapper.wrap({ querySchema: this.validator.getAllRoomTypeAmenitiesQueryValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _o = yield this.service.getAllRoomTypeAmenitiesHead(req), { code } = _o, data = __rest(_o, ["code"]);
+        this.getAllAmenitiesHead = this.asyncWrapper.wrap({ querySchema: this.validator.getAllAmenitiesQueryValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _o = yield this.service.getAllAmenitiesHead(req), { code } = _o, data = __rest(_o, ["code"]);
             res.status(code).json(data);
         }));
-        // Update Room Amenities jead
-        this.updateRoomTypeAmenitiesHead = this.asyncWrapper.wrap({ bodySchema: this.validator.UpdateRoomTypeAmenitiesHeadValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _p = yield this.service.updateRoomTypeAmenitiesHead(req), { code } = _p, data = __rest(_p, ["code"]);
+        this.updateAmenitiesHead = this.asyncWrapper.wrap({ bodySchema: this.validator.UpdateAmenitiesHeadValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _p = yield this.service.updateAmenitiesHead(req), { code } = _p, data = __rest(_p, ["code"]);
             res.status(code).json(data);
         }));
-        // Create Room Amenities
-        this.createRoomTypeAmenities = this.asyncWrapper.wrap({ bodySchema: this.validator.createRoomTypeAmenitiesValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _q = yield this.service.createRoomTypeAmenities(req), { code } = _q, data = __rest(_q, ["code"]);
+        this.createAmenities = this.asyncWrapper.wrap({ bodySchema: this.validator.createAmenitiesValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _q = yield this.service.createAmenities(req), { code } = _q, data = __rest(_q, ["code"]);
             res.status(code).json(data);
         }));
-        // Get All Room type Amenities
-        this.getAllRoomTypeAmenities = this.asyncWrapper.wrap({ querySchema: this.validator.getAllRoomTypeAmenitiesQueryValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _r = yield this.service.getAllRoomTypeAmenities(req), { code } = _r, data = __rest(_r, ["code"]);
+        this.getAllAmenities = this.asyncWrapper.wrap({ querySchema: this.validator.getAllAmenitiesQueryValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _r = yield this.service.getAllAmenities(req), { code } = _r, data = __rest(_r, ["code"]);
             res.status(code).json(data);
         }));
-        // Update Room Amenities
-        this.updateRoomTypeAmenities = this.asyncWrapper.wrap({ bodySchema: this.validator.UpdateRoomTypeAmenitiesValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _s = yield this.service.updateRoomTypeAmenities(req), { code } = _s, data = __rest(_s, ["code"]);
+        this.updateAmenities = this.asyncWrapper.wrap({ bodySchema: this.validator.UpdateAmenitiesValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _s = yield this.service.updateAmenities(req), { code } = _s, data = __rest(_s, ["code"]);
             res.status(code).json(data);
         }));
-        // Delete Room type Amenities
-        this.deleteRoomTypeAmenities = this.asyncWrapper.wrap({ paramSchema: this.commonValidator.singleParamValidator() }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _t = yield this.service.deleteRoomTypeAmenities(req), { code } = _t, data = __rest(_t, ["code"]);
+        this.deleteAmenities = this.asyncWrapper.wrap({ paramSchema: this.commonValidator.singleParamValidator() }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _t = yield this.service.deleteAmenities(req), { code } = _t, data = __rest(_t, ["code"]);
             res.status(code).json(data);
         }));
     }

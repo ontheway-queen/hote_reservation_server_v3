@@ -40,9 +40,7 @@ class MConfigurationModel extends schema_1.default {
     }
     insertCity(body) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("city")
-                .withSchema(this.PUBLIC_SCHEMA)
-                .insert(body);
+            return yield this.db("city").withSchema(this.PUBLIC_SCHEMA).insert(body);
         });
     }
     getAllCity({ limit, skip, search, country_code, }) {
@@ -183,17 +181,14 @@ class MConfigurationModel extends schema_1.default {
                 .delete();
         });
     }
-    // ----------------- room type amenities ------------------ //
-    // create Room Amenities
-    createRoomTypeAmenitiesHead(payload) {
+    createAmenitiesHead(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("amenity_heads")
                 .withSchema(this.RESERVATION_SCHEMA)
                 .insert(payload);
         });
     }
-    // Get All Room Amenities head
-    getAllRoomTypeAmenitiesHead(payload) {
+    getAllAmenitiesHead(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             const { limit, skip, search, status } = payload;
             const dtbs = this.db("amenity_heads");
@@ -216,8 +211,7 @@ class MConfigurationModel extends schema_1.default {
             return { data };
         });
     }
-    // Update Room Amenities
-    updateRoomTypeAmenitiesHead(id, payload) {
+    updateAmenitiesHead(id, payload) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("amenity_heads")
                 .withSchema(this.RESERVATION_SCHEMA)
@@ -225,16 +219,14 @@ class MConfigurationModel extends schema_1.default {
                 .update(payload);
         });
     }
-    // create Room Amenities
-    createRoomTypeAmenities(payload) {
+    createAmenities(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("amenities")
                 .withSchema(this.RESERVATION_SCHEMA)
                 .insert(payload);
         });
     }
-    // Get All Room Amenities
-    getAllRoomTypeAmenities(payload) {
+    getAllAmenities(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             const { limit, skip, search, status, head_id } = payload;
             const dtbs = this.db("amenities");
@@ -274,8 +266,7 @@ class MConfigurationModel extends schema_1.default {
             return { total: total[0].total, data };
         });
     }
-    // Update Room  type Amenities
-    updateRoomTypeAmenities(id, payload) {
+    updateAmenities(id, payload) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("amenities")
                 .withSchema(this.RESERVATION_SCHEMA)
@@ -283,8 +274,7 @@ class MConfigurationModel extends schema_1.default {
                 .update(payload);
         });
     }
-    // Delete Room Amenities
-    deleteRoomTypeAmenities(id) {
+    deleteAmenities(id) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("hotel_room_amenities_head")
                 .withSchema(this.RESERVATION_SCHEMA)

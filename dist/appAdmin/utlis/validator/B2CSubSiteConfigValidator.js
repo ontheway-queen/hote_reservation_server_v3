@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.B2CSubSiteConfigValidator = void 0;
 const joi_1 = __importDefault(require("joi"));
+const constants_1 = require("../../../utils/miscellaneous/constants");
 class B2CSubSiteConfigValidator {
     constructor() {
         this.SiteConfigEmail = joi_1.default.array().min(1).items({
@@ -39,9 +40,7 @@ class B2CSubSiteConfigValidator {
                     const { error } = this.SiteConfigEmail.validate(parsed);
                     if (error) {
                         return helpers.error("any.invalid", {
-                            message: error.details
-                                .map((d) => d.message)
-                                .join(", "),
+                            message: error.details.map((d) => d.message).join(", "),
                         });
                     }
                     return parsed;
@@ -60,9 +59,7 @@ class B2CSubSiteConfigValidator {
                     const { error } = this.SiteConfigPhone.validate(parsed);
                     if (error) {
                         return helpers.error("any.invalid", {
-                            message: error.details
-                                .map((d) => d.message)
-                                .join(", "),
+                            message: error.details.map((d) => d.message).join(", "),
                         });
                     }
                     return parsed;
@@ -81,9 +78,7 @@ class B2CSubSiteConfigValidator {
                     const { error } = this.SiteConfigAddress.validate(parsed);
                     if (error) {
                         return helpers.error("any.invalid", {
-                            message: error.details
-                                .map((d) => d.message)
-                                .join(", "),
+                            message: error.details.map((d) => d.message).join(", "),
                         });
                     }
                     return parsed;
@@ -123,6 +118,20 @@ class B2CSubSiteConfigValidator {
             link: joi_1.default.string().optional().trim(),
             status: joi_1.default.boolean().optional(),
             description: joi_1.default.string().optional().trim(),
+        });
+        this.createHeroBGContent = joi_1.default.object({
+            type: joi_1.default.string().valid(constants_1.CONTENT_TYPE_PHOTO, constants_1.CONTENT_TYPE_VIDEO).required(),
+            quote: joi_1.default.string().optional().trim(),
+            sub_quote: joi_1.default.string().optional().trim(),
+            tab: joi_1.default.string().valid(constants_1.FUNCTION_TYPE_HOTEL).optional(),
+        });
+        this.updateHeroBGContent = joi_1.default.object({
+            type: joi_1.default.string().valid(constants_1.CONTENT_TYPE_PHOTO, constants_1.CONTENT_TYPE_VIDEO).optional(),
+            quote: joi_1.default.string().optional().trim(),
+            sub_quote: joi_1.default.string().optional().trim(),
+            status: joi_1.default.boolean().optional(),
+            order_number: joi_1.default.number().optional(),
+            tab: joi_1.default.string().valid(constants_1.FUNCTION_TYPE_HOTEL).optional(),
         });
         // =========================== FAQ =========================== //
         this.createFaqHead = joi_1.default.object({

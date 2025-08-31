@@ -45,28 +45,28 @@ class MConfigurationValidator {
 
   //=================== Room type Amenities validation ======================//
 
-  public createRoomTypeAmenitiesHeadValidator = Joi.object({
+  public createAmenitiesHeadValidator = Joi.object({
     name: Joi.string().allow().required(),
   });
 
-  public UpdateRoomTypeAmenitiesHeadValidator = Joi.object({
+  public UpdateAmenitiesHeadValidator = Joi.object({
     name: Joi.string().optional(),
     status: Joi.bool().optional(),
   });
 
-  public createRoomTypeAmenitiesValidator = Joi.object({
+  public createAmenitiesValidator = Joi.object({
     name: Joi.string().allow().required(),
     rtahead_id: Joi.number().required(),
   });
 
-  public getAllRoomTypeAmenitiesQueryValidator = Joi.object({
+  public getAllAmenitiesQueryValidator = Joi.object({
     limit: Joi.string().allow("").optional(),
     skip: Joi.string().allow("").optional(),
     search: Joi.string().allow("").optional(),
     status: Joi.string().allow("").optional(),
   });
 
-  public UpdateRoomTypeAmenitiesValidator = Joi.object({
+  public UpdateAmenitiesValidator = Joi.object({
     name: Joi.string().optional(),
     status: Joi.bool().optional(),
     rtahead_id: Joi.number().optional(),

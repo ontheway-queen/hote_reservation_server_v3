@@ -24,22 +24,24 @@ export interface IUpdateAgencyB2CHeroBgContentPayload {
 }
 
 export interface IGetAgencyB2CHeroBgContentQuery {
-  agency_id: number;
+  hotel_code: number;
   status?: boolean;
   type?: typeof CONTENT_TYPE_PHOTO | typeof CONTENT_TYPE_VIDEO;
+  limit?: string;
+  skip?: string;
 }
 
 export interface IGetAgencyB2CHeroBgContentData {
   id: number;
   type: typeof CONTENT_TYPE_PHOTO | typeof CONTENT_TYPE_VIDEO;
-  agency_id: number;
+  hotel_code: number;
   order_number: number;
   content: string;
   status: boolean;
 }
 
 export interface ICreateAgencyB2CPopularDestinationPayload {
-  agency_id: number;
+  hotel_code: number;
   thumbnail: string;
   order_number: number;
   from_airport: number;
@@ -53,13 +55,13 @@ export interface IUpdateAgencyB2CPopularDestinationPayload {
 }
 
 export interface IGetAgencyB2CPopularDestinationQuery {
-  agency_id: number;
+  hotel_code: number;
   status?: boolean;
 }
 
 export interface IGetAgencyB2CPopularDestinationData {
   id: number;
-  agency_id: number;
+  hotel_code: number;
   thumbnail: string;
   order_number: number;
   from_airport: number;
@@ -77,7 +79,7 @@ export interface IGetAgencyB2CPopularDestinationData {
 
 export interface IGetAgencyB2CPopularDestinationLastNoData {
   id: number;
-  agency_id: number;
+  hotel_code: number;
   thumbnail: string;
   order_number: number;
   country_id: number;
@@ -87,7 +89,7 @@ export interface IGetAgencyB2CPopularDestinationLastNoData {
 }
 
 export interface ICreateAgencyB2CPopularPlace {
-  agency_id: number;
+  hotel_code: number;
   thumbnail: string;
   order_number: number;
   short_description?: string;
@@ -98,13 +100,13 @@ export interface ICreateAgencyB2CPopularPlace {
 }
 
 export interface IGetAgencyB2CPopularPlaceQuery {
-  agency_id: number;
+  hotel_code: number;
   status?: boolean;
 }
 
 export interface IGetAgencyB2CPopularPlaceData {
   id: number;
-  agency_id: number;
+  hotel_code: number;
   thumbnail: string;
   order_number: number;
   short_description?: string;
@@ -128,7 +130,7 @@ export interface IUpdateAgencyB2CPopularPlace {
 }
 
 export interface ICreateAgencyB2CSiteConfig {
-  agency_id: number;
+  hotel_code: number;
   main_logo?: string;
   favicon?: string;
   site_thumbnail?: string;
@@ -243,6 +245,8 @@ export interface ICreateAgencyB2CSocialLinkPayload {
 export interface IGetAgencyB2CSocialLinkQuery {
   hotel_code: number;
   status?: boolean;
+  limit?: string;
+  skip?: string;
 }
 
 export interface IGetAgencyB2CSocialLinkData {
@@ -270,7 +274,7 @@ export interface IUpdateAgencyB2CSocialLinkPayload {
 }
 
 export interface ICreateAgencyB2CHotDeals {
-  agency_id: number;
+  hotel_code: number;
   title: string;
   thumbnail: string;
   link: string;
@@ -278,13 +282,15 @@ export interface ICreateAgencyB2CHotDeals {
 }
 
 export interface IGetAgencyB2CHotDealsQuery {
-  agency_id: number;
+  hotel_code: number;
   status?: boolean;
+  limit?: string;
+  skip?: string;
 }
 
 export interface IGetAgencyB2CHotDealsData {
   id: number;
-  agency_id: number;
+  hotel_code: number;
   title: string;
   thumbnail: string;
   link: string;
@@ -317,7 +323,7 @@ export interface IGetAgencyB2CPopUpBannerQuery {
 
 export interface IGetAgencyB2CPopUpBannerData {
   id: number;
-  agency_id: number;
+  hotel_code: number;
   title: string;
   thumbnail: string;
   link: string;
@@ -356,4 +362,30 @@ export interface IUpSertPopUpBannerReqBody {
   status?: boolean;
   description?: string;
   link?: string;
+}
+
+export interface ICreateHeroBGContentReqBody {
+  type: typeof CONTENT_TYPE_PHOTO | typeof CONTENT_TYPE_VIDEO;
+  quote?: string;
+  sub_quote?: string;
+  tab?: typeof FUNCTION_TYPE_HOTEL;
+}
+
+export interface IUpdateHeroBGContentReqBody {
+  type?: typeof CONTENT_TYPE_PHOTO | typeof CONTENT_TYPE_VIDEO;
+  quote?: string;
+  sub_quote?: string;
+  tab?: typeof FUNCTION_TYPE_HOTEL;
+
+  status?: boolean;
+  order_number?: number;
+}
+
+export interface IUpdateAgencyB2CHeroBgContentPayload {
+  order_number?: number;
+  type?: typeof CONTENT_TYPE_PHOTO | typeof CONTENT_TYPE_VIDEO;
+  content?: string;
+  quote?: string;
+  sub_quote?: string;
+  tab?: typeof FUNCTION_TYPE_HOTEL;
 }
