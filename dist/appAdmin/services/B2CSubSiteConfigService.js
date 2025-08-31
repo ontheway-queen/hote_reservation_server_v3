@@ -26,6 +26,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.B2CSubSiteConfigService = void 0;
 const abstract_service_1 = __importDefault(require("../../abstarcts/abstract.service"));
 const customEror_1 = __importDefault(require("../../utils/lib/customEror"));
+const pagesContent_1 = require("../../utils/miscellaneous/siteConfig/pagesContent");
 class B2CSubSiteConfigService extends abstract_service_1.default {
     constructor() {
         super();
@@ -465,6 +466,129 @@ class B2CSubSiteConfigService extends abstract_service_1.default {
                     data: {
                         thumbnail: payload.thumbnail,
                     },
+                };
+            }));
+        });
+    }
+    getHeroBGContent(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const configModel = this.Model.b2cConfigurationModel();
+            const { hotel_code, id: user_id } = req.hotel_admin;
+            const { limit, skip } = req.query;
+            const { data, total } = yield configModel.getHeroBGContent({
+                hotel_code,
+                limit,
+                skip,
+            }, true);
+            return {
+                success: true,
+                code: this.StatusCode.HTTP_OK,
+                message: this.ResMsg.HTTP_OK,
+                data,
+                total,
+            };
+        });
+    }
+    createHeroBGContent(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
+                const configModel = this.Model.b2cConfigurationModel(trx);
+                const { hotel_code, id: user_id } = req.hotel_admin;
+                const body = req.body;
+                const files = req.files || [];
+                if (!files.length) {
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_BAD_REQUEST,
+                        message: "Content is required",
+                    };
+                }
+                const lastOrderNumber = yield configModel.getHeroBGContentLastNo({
+                    hotel_code,
+                });
+                const heroBG = yield configModel.insertHeroBGContent(Object.assign(Object.assign({ hotel_code }, body), { content: files[0].filename, order_number: lastOrderNumber ? lastOrderNumber.order_number + 1 : 1 }));
+                return {
+                    success: true,
+                    code: this.StatusCode.HTTP_OK,
+                    message: this.ResMsg.HTTP_OK,
+                    data: {
+                        content: files[0].filename,
+                        id: heroBG[0].id,
+                    },
+                };
+            }));
+        });
+    }
+    updateHeroBGContent(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
+                const body = req.body;
+                const { hotel_code, id: user_id } = req.hotel_admin;
+                const configModel = this.Model.b2cConfigurationModel(trx);
+                const id = Number(req.params.id);
+                const check = yield configModel.checkHeroBGContent({ hotel_code, id });
+                if (!check.length) {
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_NOT_FOUND,
+                        message: this.ResMsg.HTTP_NOT_FOUND,
+                    };
+                }
+                const files = req.files || [];
+                const payload = body;
+                if (files.length) {
+                    payload.content = files[0].filename;
+                }
+                if (!Object.keys(payload).length) {
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_BAD_REQUEST,
+                        message: this.ResMsg.HTTP_BAD_REQUEST,
+                    };
+                }
+                yield configModel.updateHeroBGContent(payload, { hotel_code, id });
+                if (payload.content && check[0].content) {
+                    const heroContent = (0, pagesContent_1.heroBG)(hotel_code);
+                    const found = heroContent.find((item) => item.content === check[0].content);
+                    if (!found) {
+                        yield this.manageFile.deleteFromCloud([check[0].content]);
+                    }
+                }
+                return {
+                    success: true,
+                    code: this.StatusCode.HTTP_OK,
+                    message: this.ResMsg.HTTP_OK,
+                    data: { content: payload.content },
+                };
+            }));
+        });
+    }
+    deleteHeroBGContent(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
+                const { hotel_code, id: user_id } = req.hotel_admin;
+                const configModel = this.Model.b2cConfigurationModel(trx);
+                const id = Number(req.params.id);
+                const check = yield configModel.checkHeroBGContent({ hotel_code, id });
+                if (!check.length) {
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_NOT_FOUND,
+                        message: this.ResMsg.HTTP_NOT_FOUND,
+                    };
+                }
+                yield configModel.deleteHeroBGContent({ hotel_code, id });
+                if (check[0].content) {
+                    const heroContent = (0, pagesContent_1.heroBG)(hotel_code);
+                    const found = heroContent.find((item) => item.content === check[0].content);
+                    if (!found) {
+                        yield this.manageFile.deleteFromCloud([check[0].content]);
+                    }
+                }
+                return {
+                    success: true,
+                    code: this.StatusCode.HTTP_OK,
+                    message: this.ResMsg.HTTP_OK,
                 };
             }));
         });

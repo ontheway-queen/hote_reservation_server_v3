@@ -180,6 +180,51 @@ export class B2CSiteConfigController extends AbstractController {
     }
   );
 
+  public getHeroBGContent = this.asyncWrapper.wrap(
+    null,
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.getHeroBGContent(req);
+      res.status(code).json(data);
+    }
+  );
+
+  public createHeroBGContent = this.asyncWrapper.wrap(
+    { bodySchema: this.validator.createHeroBGContent },
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.createHeroBGContent(req);
+      if (data.success) {
+        res.status(code).json(data);
+      } else {
+        this.error(data.message, code);
+      }
+    }
+  );
+
+  public updateHeroBGContent = this.asyncWrapper.wrap(
+    {
+      paramSchema: this.commonValidator.singleParamValidator(),
+      bodySchema: this.validator.updateHeroBGContent,
+    },
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.updateHeroBGContent(req);
+      if (data.success) {
+        res.status(code).json(data);
+      } else {
+        this.error(data.message, code);
+      }
+    }
+  );
+
+  public deleteHeroBGContent = this.asyncWrapper.wrap(
+    {
+      paramSchema: this.commonValidator.singleParamValidator(),
+    },
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.deleteHeroBGContent(req);
+      res.status(code).json(data);
+    }
+  );
+
   // =========================== FAQ =========================== //
   public getAllFaqHeads = this.asyncWrapper.wrap(
     null,

@@ -14,37 +14,12 @@ class AdminBtocHandlerRouter extends abstract_router_1.default {
     callRouter() {
         this.router.use("/site-config", new siteConfiguration_1.default().router);
         // this.router
-        //   .route("/site-configuration")
-        //   .get(this.controller.getSiteConfiguration)
-        //   .patch(
-        //     this.uploader.cloudUploadRaw(this.fileFolders.BTOC_SITE_CONFIG_FILES),
-        //     this.controller.updateSiteConfig
-        //   );
-        // this.router
         //   .route("/pop-up-banner")
         //   .get(this.controller.getPopUpBannerConfiguration)
         //   .patch(
         //     this.uploader.cloudUploadRaw(this.fileFolders.BTOC_SITE_CONFIG_FILES),
         //     this.controller.updatePopUpBanner
         //   );
-        // this.router
-        //   .route("/hero-bg")
-        //   .get(this.controller.getHeroBGContent)
-        //   .post(
-        //     this.uploader.cloudUploadRaw(
-        //       this.fileFolders.BTOC_SITE_CONFIG_HERO_BG_FILES
-        //     ),
-        //     this.controller.createHeroBGContent
-        //   );
-        // this.router
-        //   .route("/hero-bg/:id")
-        //   .patch(
-        //     this.uploader.cloudUploadRaw(
-        //       this.fileFolders.BTOC_SITE_CONFIG_HERO_BG_FILES
-        //     ),
-        //     this.controller.updateHeroBGContent
-        //   )
-        //   .delete(this.controller.deleteHeroBGContent);
         // this.router
         //   .route("/hot-deals")
         //   .get(this.controller.getHotDeals)

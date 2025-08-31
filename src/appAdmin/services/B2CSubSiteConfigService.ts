@@ -3,12 +3,16 @@ import AbstractServices from "../../abstarcts/abstract.service";
 import {
   IB2CSubUpdateSiteConfigReqBody,
   ICreateAgencyB2CSocialLinkPayload,
+  ICreateHeroBGContentReqBody,
+  IUpdateAgencyB2CHeroBgContentPayload,
   IUpdateAgencyB2CPopUpBannerPayload,
   IUpdateAgencyB2CSiteConfigPayload,
   IUpdateAgencyB2CSocialLinkPayload,
+  IUpdateHeroBGContentReqBody,
   IUpSertPopUpBannerReqBody,
 } from "../utlis/interfaces/configuration.interface";
 import CustomError from "../../utils/lib/customEror";
+import { heroBG } from "../../utils/miscellaneous/siteConfig/pagesContent";
 
 export class B2CSubSiteConfigService extends AbstractServices {
   constructor() {
@@ -551,6 +555,168 @@ export class B2CSubSiteConfigService extends AbstractServices {
         data: {
           thumbnail: payload.thumbnail,
         },
+      };
+    });
+  }
+
+  public async getHeroBGContent(req: Request) {
+    const configModel = this.Model.b2cConfigurationModel();
+    const { hotel_code, id: user_id } = req.hotel_admin;
+
+    const { limit, skip } = req.query as { limit?: string; skip?: string };
+
+    const { data, total } = await configModel.getHeroBGContent(
+      {
+        hotel_code,
+        limit,
+        skip,
+      },
+      true
+    );
+
+    return {
+      success: true,
+      code: this.StatusCode.HTTP_OK,
+      message: this.ResMsg.HTTP_OK,
+      data,
+      total,
+    };
+  }
+
+  public async createHeroBGContent(req: Request) {
+    return this.db.transaction(async (trx) => {
+      const configModel = this.Model.b2cConfigurationModel(trx);
+      const { hotel_code, id: user_id } = req.hotel_admin;
+
+      const body = req.body as ICreateHeroBGContentReqBody;
+
+      const files = (req.files as Express.Multer.File[]) || [];
+
+      if (!files.length) {
+        return {
+          success: false,
+          code: this.StatusCode.HTTP_BAD_REQUEST,
+          message: "Content is required",
+        };
+      }
+
+      const lastOrderNumber = await configModel.getHeroBGContentLastNo({
+        hotel_code,
+      });
+
+      const heroBG = await configModel.insertHeroBGContent({
+        hotel_code,
+        ...body,
+        content: files[0].filename,
+        order_number: lastOrderNumber ? lastOrderNumber.order_number + 1 : 1,
+      });
+
+      return {
+        success: true,
+        code: this.StatusCode.HTTP_OK,
+        message: this.ResMsg.HTTP_OK,
+        data: {
+          content: files[0].filename,
+          id: heroBG[0].id,
+        },
+      };
+    });
+  }
+
+  public async updateHeroBGContent(req: Request) {
+    return this.db.transaction(async (trx) => {
+      const body = req.body as IUpdateHeroBGContentReqBody;
+      const { hotel_code, id: user_id } = req.hotel_admin;
+
+      const configModel = this.Model.b2cConfigurationModel(trx);
+
+      const id = Number(req.params.id);
+
+      const check = await configModel.checkHeroBGContent({ hotel_code, id });
+
+      if (!check.length) {
+        return {
+          success: false,
+          code: this.StatusCode.HTTP_NOT_FOUND,
+          message: this.ResMsg.HTTP_NOT_FOUND,
+        };
+      }
+
+      const files = (req.files as Express.Multer.File[]) || [];
+
+      const payload: IUpdateAgencyB2CHeroBgContentPayload = body;
+
+      if (files.length) {
+        payload.content = files[0].filename;
+      }
+
+      if (!Object.keys(payload).length) {
+        return {
+          success: false,
+          code: this.StatusCode.HTTP_BAD_REQUEST,
+          message: this.ResMsg.HTTP_BAD_REQUEST,
+        };
+      }
+
+      await configModel.updateHeroBGContent(payload, { hotel_code, id });
+
+      if (payload.content && check[0].content) {
+        const heroContent = heroBG(hotel_code);
+
+        const found = heroContent.find(
+          (item) => item.content === check[0].content
+        );
+
+        if (!found) {
+          await this.manageFile.deleteFromCloud([check[0].content]);
+        }
+      }
+
+      return {
+        success: true,
+        code: this.StatusCode.HTTP_OK,
+        message: this.ResMsg.HTTP_OK,
+        data: { content: payload.content },
+      };
+    });
+  }
+
+  public async deleteHeroBGContent(req: Request) {
+    return this.db.transaction(async (trx) => {
+      const { hotel_code, id: user_id } = req.hotel_admin;
+
+      const configModel = this.Model.b2cConfigurationModel(trx);
+
+      const id = Number(req.params.id);
+
+      const check = await configModel.checkHeroBGContent({ hotel_code, id });
+
+      if (!check.length) {
+        return {
+          success: false,
+          code: this.StatusCode.HTTP_NOT_FOUND,
+          message: this.ResMsg.HTTP_NOT_FOUND,
+        };
+      }
+
+      await configModel.deleteHeroBGContent({ hotel_code, id });
+
+      if (check[0].content) {
+        const heroContent = heroBG(hotel_code);
+
+        const found = heroContent.find(
+          (item) => item.content === check[0].content
+        );
+
+        if (!found) {
+          await this.manageFile.deleteFromCloud([check[0].content]);
+        }
+      }
+
+      return {
+        success: true,
+        code: this.StatusCode.HTTP_OK,
+        message: this.ResMsg.HTTP_OK,
       };
     });
   }

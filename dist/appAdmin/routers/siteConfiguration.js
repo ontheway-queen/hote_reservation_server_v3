@@ -53,6 +53,18 @@ class B2CSiteConfigRouter extends abstract_router_1.default {
             .get(this.controller.getPopUpBanner)
             .post(this.uploader.cloudUploadRaw(this.fileFolders.B2C_SITE_CONFIG_POP_UP), this.controller.upSertPopUpBanner);
         this.router
+            .route("/hero-bg")
+            .get(this.controller.getHeroBGContent)
+            .post(this.uploader.cloudUploadRaw(this.fileFolders.B2C_SITE_CONFIG_HERO_BG, [
+            "content",
+        ]), this.controller.createHeroBGContent);
+        this.router
+            .route("/hero-bg/:id")
+            .patch(this.uploader.cloudUploadRaw(this.fileFolders.B2C_SITE_CONFIG_HERO_BG, [
+            "content",
+        ]), this.controller.updateHeroBGContent)
+            .delete(this.controller.deleteHeroBGContent);
+        this.router
             .route("/faq-head")
             .get(this.controller.getAllFaqHeads)
             .post(this.controller.createFaqHead);

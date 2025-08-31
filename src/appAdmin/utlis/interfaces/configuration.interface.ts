@@ -363,3 +363,29 @@ export interface IUpSertPopUpBannerReqBody {
   description?: string;
   link?: string;
 }
+
+export interface ICreateHeroBGContentReqBody {
+  type: typeof CONTENT_TYPE_PHOTO | typeof CONTENT_TYPE_VIDEO;
+  quote?: string;
+  sub_quote?: string;
+  tab?: typeof FUNCTION_TYPE_HOTEL;
+}
+
+export interface IUpdateHeroBGContentReqBody {
+  type?: typeof CONTENT_TYPE_PHOTO | typeof CONTENT_TYPE_VIDEO;
+  quote?: string;
+  sub_quote?: string;
+  tab?: typeof FUNCTION_TYPE_HOTEL;
+
+  status?: boolean;
+  order_number?: number;
+}
+
+export interface IUpdateAgencyB2CHeroBgContentPayload {
+  order_number?: number;
+  type?: typeof CONTENT_TYPE_PHOTO | typeof CONTENT_TYPE_VIDEO;
+  content?: string;
+  quote?: string;
+  sub_quote?: string;
+  tab?: typeof FUNCTION_TYPE_HOTEL;
+}

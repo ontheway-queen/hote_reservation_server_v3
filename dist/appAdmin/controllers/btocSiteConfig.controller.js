@@ -141,9 +141,40 @@ class B2CSiteConfigController extends abstract_controller_1.default {
                 this.error(data.message, code);
             }
         }));
+        this.getHeroBGContent = this.asyncWrapper.wrap(null, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _s = yield this.service.getHeroBGContent(req), { code } = _s, data = __rest(_s, ["code"]);
+            res.status(code).json(data);
+        }));
+        this.createHeroBGContent = this.asyncWrapper.wrap({ bodySchema: this.validator.createHeroBGContent }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _t = yield this.service.createHeroBGContent(req), { code } = _t, data = __rest(_t, ["code"]);
+            if (data.success) {
+                res.status(code).json(data);
+            }
+            else {
+                this.error(data.message, code);
+            }
+        }));
+        this.updateHeroBGContent = this.asyncWrapper.wrap({
+            paramSchema: this.commonValidator.singleParamValidator(),
+            bodySchema: this.validator.updateHeroBGContent,
+        }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _u = yield this.service.updateHeroBGContent(req), { code } = _u, data = __rest(_u, ["code"]);
+            if (data.success) {
+                res.status(code).json(data);
+            }
+            else {
+                this.error(data.message, code);
+            }
+        }));
+        this.deleteHeroBGContent = this.asyncWrapper.wrap({
+            paramSchema: this.commonValidator.singleParamValidator(),
+        }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _v = yield this.service.deleteHeroBGContent(req), { code } = _v, data = __rest(_v, ["code"]);
+            res.status(code).json(data);
+        }));
         // =========================== FAQ =========================== //
         this.getAllFaqHeads = this.asyncWrapper.wrap(null, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _s = yield this.service.getAllFaqHeads(req), { code } = _s, data = __rest(_s, ["code"]);
+            const _w = yield this.service.getAllFaqHeads(req), { code } = _w, data = __rest(_w, ["code"]);
             if (data.success) {
                 res.status(code).json(data);
             }
@@ -152,7 +183,7 @@ class B2CSiteConfigController extends abstract_controller_1.default {
             }
         }));
         this.createFaqHead = this.asyncWrapper.wrap({ bodySchema: this.validator.createFaqHead }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _t = yield this.service.createFaqHead(req), { code } = _t, data = __rest(_t, ["code"]);
+            const _x = yield this.service.createFaqHead(req), { code } = _x, data = __rest(_x, ["code"]);
             if (data.success) {
                 res.status(code).json(data);
             }
@@ -161,7 +192,7 @@ class B2CSiteConfigController extends abstract_controller_1.default {
             }
         }));
         this.updateFaqHead = this.asyncWrapper.wrap({ bodySchema: this.validator.createFaqHead }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _u = yield this.service.updateFaqHead(req), { code } = _u, data = __rest(_u, ["code"]);
+            const _y = yield this.service.updateFaqHead(req), { code } = _y, data = __rest(_y, ["code"]);
             if (data.success) {
                 res.status(code).json(data);
             }
@@ -170,7 +201,7 @@ class B2CSiteConfigController extends abstract_controller_1.default {
             }
         }));
         this.deleteFaqHead = this.asyncWrapper.wrap({ paramSchema: this.commonValidator.singleParamValidator() }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _v = yield this.service.deleteFaqHead(req), { code } = _v, data = __rest(_v, ["code"]);
+            const _z = yield this.service.deleteFaqHead(req), { code } = _z, data = __rest(_z, ["code"]);
             if (data.success) {
                 res.status(code).json(data);
             }
@@ -179,7 +210,7 @@ class B2CSiteConfigController extends abstract_controller_1.default {
             }
         }));
         this.getSingleFaqHeadWithFaq = this.asyncWrapper.wrap(null, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _w = yield this.service.getSingleFaqHeadWithFaq(req), { code } = _w, data = __rest(_w, ["code"]);
+            const _0 = yield this.service.getSingleFaqHeadWithFaq(req), { code } = _0, data = __rest(_0, ["code"]);
             if (data.success) {
                 res.status(code).json(data);
             }
@@ -188,7 +219,7 @@ class B2CSiteConfigController extends abstract_controller_1.default {
             }
         }));
         this.createFaq = this.asyncWrapper.wrap({ bodySchema: this.validator.createFaq }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _x = yield this.service.createFaq(req), { code } = _x, data = __rest(_x, ["code"]);
+            const _1 = yield this.service.createFaq(req), { code } = _1, data = __rest(_1, ["code"]);
             if (data.success) {
                 res.status(code).json(data);
             }
@@ -197,7 +228,7 @@ class B2CSiteConfigController extends abstract_controller_1.default {
             }
         }));
         this.getAllAmenityHeads = this.asyncWrapper.wrap(null, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _y = yield this.service.getAllAmenityHeads(req), { code } = _y, data = __rest(_y, ["code"]);
+            const _2 = yield this.service.getAllAmenityHeads(req), { code } = _2, data = __rest(_2, ["code"]);
             if (data.success) {
                 res.status(code).json(data);
             }
@@ -206,7 +237,7 @@ class B2CSiteConfigController extends abstract_controller_1.default {
             }
         }));
         this.getAllAmenities = this.asyncWrapper.wrap({ paramSchema: this.commonValidator.singleParamValidator("id") }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _z = yield this.service.getAllAmenities(req), { code } = _z, data = __rest(_z, ["code"]);
+            const _3 = yield this.service.getAllAmenities(req), { code } = _3, data = __rest(_3, ["code"]);
             if (data.success) {
                 res.status(code).json(data);
             }
@@ -215,7 +246,7 @@ class B2CSiteConfigController extends abstract_controller_1.default {
             }
         }));
         this.addHotelAmenities = this.asyncWrapper.wrap(null, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _0 = yield this.service.addHotelAmenities(req), { code } = _0, data = __rest(_0, ["code"]);
+            const _4 = yield this.service.addHotelAmenities(req), { code } = _4, data = __rest(_4, ["code"]);
             if (data.success) {
                 res.status(code).json(data);
             }
@@ -224,7 +255,7 @@ class B2CSiteConfigController extends abstract_controller_1.default {
             }
         }));
         this.getAllHotelAmenities = this.asyncWrapper.wrap(null, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _1 = yield this.service.getAllHotelAmenities(req), { code } = _1, data = __rest(_1, ["code"]);
+            const _5 = yield this.service.getAllHotelAmenities(req), { code } = _5, data = __rest(_5, ["code"]);
             if (data.success) {
                 res.status(code).json(data);
             }
