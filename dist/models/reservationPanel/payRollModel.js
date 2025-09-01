@@ -122,7 +122,7 @@ class PayRollModel extends schema_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("payroll as p")
                 .withSchema(this.HR_SCHEMA)
-                .select("p.id", "h.name as hotel_name", "h.address as hotel_address", "h.country_code", "h.city_code", "h.postal_code", "e.name as employee_name", "des.name as employee_designation", "e.contact_no as employee_phone", "p.total_allowance", "p.total_deduction", "p.service_charge", "p.total_overtime", "e.salary as base_salary", "p.net_salary", "p.month as salary_date")
+                .select("p.id", "h.name as hotel_name", "h.address as hotel_address", "h.country_code", "h.city_code", "h.postal_code", "e.name as employee_name", "des.name as employee_designation", "e.contact_no as employee_phone", "p.total_allowance", "p.total_deduction", "p.service_charge", "p.total_overtime", "e.salary as base_salary", "p.net_salary", "p.month as salary_date", "slip.file_url as payslip")
                 .joinRaw(`JOIN ?? as h ON h.hotel_code = p.hotel_code`, [
                 `${this.RESERVATION_SCHEMA}.${this.TABLES.hotels}`,
             ])
@@ -132,9 +132,10 @@ class PayRollModel extends schema_1.default {
                 .leftJoin("deductions as d", "d.id", "ed.deduction_id")
                 .leftJoin("employee_allowances as ea", "ea.payroll_id", "p.id")
                 .leftJoin("allowances as a", "a.id", "ea.allowance_id")
+                .leftJoin("payslips as slip", "slip.payroll_id", "p.id")
                 .where("p.id", id)
                 .andWhere("p.hotel_code", hotel_code)
-                .groupBy("p.id", "h.hotel_code", "h.name", "h.address", "h.country_code", "h.city_code", "h.postal_code", "e.id", "e.name", "e.contact_no", "e.salary", "des.id", "des.name")
+                .groupBy("p.id", "h.hotel_code", "h.name", "h.address", "h.country_code", "h.city_code", "h.postal_code", "e.id", "e.name", "e.contact_no", "e.salary", "des.id", "des.name", "slip.file_url")
                 .select(this.db.raw(`
 				COALESCE(
 					JSON_AGG(

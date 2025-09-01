@@ -170,7 +170,8 @@ class PayRollModel extends Schema {
 				"p.total_overtime",
 				"e.salary as base_salary",
 				"p.net_salary",
-				"p.month as salary_date"
+				"p.month as salary_date",
+				"slip.file_url as payslip"
 			)
 			.joinRaw(`JOIN ?? as h ON h.hotel_code = p.hotel_code`, [
 				`${this.RESERVATION_SCHEMA}.${this.TABLES.hotels}`,
@@ -181,6 +182,7 @@ class PayRollModel extends Schema {
 			.leftJoin("deductions as d", "d.id", "ed.deduction_id")
 			.leftJoin("employee_allowances as ea", "ea.payroll_id", "p.id")
 			.leftJoin("allowances as a", "a.id", "ea.allowance_id")
+			.leftJoin("payslips as slip", "slip.payroll_id", "p.id")
 			.where("p.id", id)
 			.andWhere("p.hotel_code", hotel_code)
 			.groupBy(
@@ -196,7 +198,8 @@ class PayRollModel extends Schema {
 				"e.contact_no",
 				"e.salary",
 				"des.id",
-				"des.name"
+				"des.name",
+				"slip.file_url"
 			)
 			.select(
 				this.db.raw(`
