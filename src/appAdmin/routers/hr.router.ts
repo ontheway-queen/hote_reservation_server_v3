@@ -1,5 +1,5 @@
 import AbstractRouter from "../../abstarcts/abstract.router";
-import ConfigurationRouter from "./configuration.router";
+import HRConfigurationRouter from "./configuration.router";
 import EmployeeRouter from "./employee.router";
 import PayRollRouter from "./payRoll.router";
 import DepartmentSettingRouter from "./setting.department.router";
@@ -26,7 +26,7 @@ class HrRouter extends AbstractRouter {
 
 		this.router.use("/employee", new EmployeeRouter().router);
 
-		this.router.use("/configuration", new ConfigurationRouter().router);
+		this.router.use("/configuration", new HRConfigurationRouter().router);
 	}
 }
 export default HrRouter;

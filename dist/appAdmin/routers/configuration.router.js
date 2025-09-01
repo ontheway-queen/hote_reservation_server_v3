@@ -4,11 +4,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const abstract_router_1 = __importDefault(require("../../abstarcts/abstract.router"));
-const configuration_controller_1 = __importDefault(require("../controllers/configuration.controller"));
-class ConfigurationRouter extends abstract_router_1.default {
+const hr_configuration_controller_1 = __importDefault(require("../controllers/hr.configuration.controller"));
+class HRConfigurationRouter extends abstract_router_1.default {
     constructor() {
         super();
-        this.controller = new configuration_controller_1.default();
+        this.controller = new hr_configuration_controller_1.default();
         this.callRouter();
     }
     callRouter() {
@@ -44,5 +44,5 @@ class ConfigurationRouter extends abstract_router_1.default {
             .delete(this.controller.deleteDeduction);
     }
 }
-exports.default = ConfigurationRouter;
+exports.default = HRConfigurationRouter;
 //# sourceMappingURL=configuration.router.js.map

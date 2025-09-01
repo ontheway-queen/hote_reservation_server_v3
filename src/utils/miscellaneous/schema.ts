@@ -1,5 +1,6 @@
 class Schema {
 	public readonly PUBLIC_SCHEMA = "public";
+	public readonly CM_SCHEMA = "channel_manager";
 	public readonly RESERVATION_SCHEMA = "hotel_reservation";
 	public readonly HR_SCHEMA = "hr";
 	public readonly DBO_SCHEMA = "dbo";

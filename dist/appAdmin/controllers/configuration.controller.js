@@ -24,13 +24,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const abstract_controller_1 = __importDefault(require("../../abstarcts/abstract.controller"));
-const configuration_service_1 = __importDefault(require("../services/configuration.service"));
+const hrConfiguration_validator_1 = __importDefault(require("../utlis/validator/hrConfiguration.validator"));
+const hr_configuration_service_1 = __importDefault(require("../services/hr.configuration.service"));
 class ConfigurationController extends abstract_controller_1.default {
     constructor() {
         super();
-        this.service = new configuration_service_1.default();
-        // ======================= Shift ======================= //
-        this.createShift = this.asyncWrapper.wrap(null, (req, res) => __awaiter(this, void 0, void 0, function* () {
+        this.service = new hr_configuration_service_1.default();
+        this.validator = new hrConfiguration_validator_1.default();
+        this.createShift = this.asyncWrapper.wrap({ bodySchema: this.validator.createShift }, (req, res) => __awaiter(this, void 0, void 0, function* () {
             const _a = yield this.service.createShift(req), { code } = _a, data = __rest(_a, ["code"]);
             res.status(code).json(data);
         }));
@@ -42,7 +43,10 @@ class ConfigurationController extends abstract_controller_1.default {
             const _c = yield this.service.getSingleShift(req), { code } = _c, data = __rest(_c, ["code"]);
             res.status(code).json(data);
         }));
-        this.updateShift = this.asyncWrapper.wrap({ paramSchema: this.commonValidator.singleParamValidator("id") }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+        this.updateShift = this.asyncWrapper.wrap({
+            paramSchema: this.commonValidator.singleParamValidator("id"),
+            bodySchema: this.validator.updateShift,
+        }, (req, res) => __awaiter(this, void 0, void 0, function* () {
             const _d = yield this.service.updateShift(req), { code } = _d, data = __rest(_d, ["code"]);
             res.status(code).json(data);
         }));
@@ -51,7 +55,7 @@ class ConfigurationController extends abstract_controller_1.default {
             res.status(code).json(data);
         }));
         // ======================= Allowances ======================= //
-        this.createAllowances = this.asyncWrapper.wrap(null, (req, res) => __awaiter(this, void 0, void 0, function* () {
+        this.createAllowances = this.asyncWrapper.wrap({ bodySchema: this.validator.createAllowances }, (req, res) => __awaiter(this, void 0, void 0, function* () {
             const _f = yield this.service.createAllowances(req), { code } = _f, data = __rest(_f, ["code"]);
             res.status(code).json(data);
         }));
@@ -63,7 +67,10 @@ class ConfigurationController extends abstract_controller_1.default {
             const _h = yield this.service.getSingleAllowance(req), { code } = _h, data = __rest(_h, ["code"]);
             res.status(code).json(data);
         }));
-        this.updateAllowance = this.asyncWrapper.wrap({ paramSchema: this.commonValidator.singleParamValidator("id") }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+        this.updateAllowance = this.asyncWrapper.wrap({
+            paramSchema: this.commonValidator.singleParamValidator("id"),
+            bodySchema: this.validator.updateAllowances,
+        }, (req, res) => __awaiter(this, void 0, void 0, function* () {
             const _j = yield this.service.updateAllowance(req), { code } = _j, data = __rest(_j, ["code"]);
             res.status(code).json(data);
         }));
@@ -72,7 +79,7 @@ class ConfigurationController extends abstract_controller_1.default {
             res.status(code).json(data);
         }));
         // ======================= Deductions ======================= //
-        this.createDeductions = this.asyncWrapper.wrap(null, (req, res) => __awaiter(this, void 0, void 0, function* () {
+        this.createDeductions = this.asyncWrapper.wrap({ bodySchema: this.validator.createDeductions }, (req, res) => __awaiter(this, void 0, void 0, function* () {
             const _l = yield this.service.createDeductions(req), { code } = _l, data = __rest(_l, ["code"]);
             res.status(code).json(data);
         }));
@@ -84,7 +91,10 @@ class ConfigurationController extends abstract_controller_1.default {
             const _o = yield this.service.getSingleDeduction(req), { code } = _o, data = __rest(_o, ["code"]);
             res.status(code).json(data);
         }));
-        this.updateDeduction = this.asyncWrapper.wrap({ paramSchema: this.commonValidator.singleParamValidator("id") }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+        this.updateDeduction = this.asyncWrapper.wrap({
+            paramSchema: this.commonValidator.singleParamValidator("id"),
+            bodySchema: this.validator.updateDeduction,
+        }, (req, res) => __awaiter(this, void 0, void 0, function* () {
             const _p = yield this.service.updateDeduction(req), { code } = _p, data = __rest(_p, ["code"]);
             res.status(code).json(data);
         }));

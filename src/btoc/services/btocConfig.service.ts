@@ -207,6 +207,21 @@ export class BtocConfigService extends AbstractServices {
     };
   }
 
+  public async getAllFaq(req: Request) {
+    const { hotel_code } = req.web_token;
+
+    const data = await this.Model.b2cConfigurationModel().getAllFaqHeads({
+      hotel_code,
+    });
+
+    return {
+      success: true,
+      code: this.StatusCode.HTTP_OK,
+      message: this.ResMsg.HTTP_OK,
+      data,
+    };
+  }
+
   public async GetAccountsData(req: Request) {
     const { hotel_code } = req.web_token;
 

@@ -274,10 +274,10 @@ export class B2CSiteConfigController extends AbstractController {
     }
   );
 
-  public getSingleFaqHeadWithFaq = this.asyncWrapper.wrap(
+  public getFaqsByHeadId = this.asyncWrapper.wrap(
     null,
     async (req: Request, res: Response) => {
-      const { code, ...data } = await this.service.getSingleFaqHeadWithFaq(req);
+      const { code, ...data } = await this.service.getFaqsByHeadId(req);
       if (data.success) {
         res.status(code).json(data);
       } else {
@@ -290,11 +290,31 @@ export class B2CSiteConfigController extends AbstractController {
     { bodySchema: this.validator.createFaq },
     async (req: Request, res: Response) => {
       const { code, ...data } = await this.service.createFaq(req);
-      if (data.success) {
-        res.status(code).json(data);
-      } else {
-        this.error(data.message, code);
-      }
+
+      res.status(code).json(data);
+    }
+  );
+
+  public updateFaq = this.asyncWrapper.wrap(
+    {
+      bodySchema: this.validator.updateFaq,
+      paramSchema: this.commonValidator.singleParamValidator(),
+    },
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.updateFaq(req);
+
+      res.status(code).json(data);
+    }
+  );
+
+  public deleteFaq = this.asyncWrapper.wrap(
+    {
+      paramSchema: this.commonValidator.singleParamValidator(),
+    },
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.deleteFaq(req);
+
+      res.status(code).json(data);
     }
   );
 
@@ -302,11 +322,7 @@ export class B2CSiteConfigController extends AbstractController {
     null,
     async (req: Request, res: Response) => {
       const { code, ...data } = await this.service.getAllAmenityHeads(req);
-      if (data.success) {
-        res.status(code).json(data);
-      } else {
-        this.error(data.message, code);
-      }
+      res.status(code).json(data);
     }
   );
 
@@ -314,11 +330,7 @@ export class B2CSiteConfigController extends AbstractController {
     { paramSchema: this.commonValidator.singleParamValidator("id") },
     async (req: Request, res: Response) => {
       const { code, ...data } = await this.service.getAllAmenities(req);
-      if (data.success) {
-        res.status(code).json(data);
-      } else {
-        this.error(data.message, code);
-      }
+      res.status(code).json(data);
     }
   );
 

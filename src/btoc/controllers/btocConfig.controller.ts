@@ -59,6 +59,14 @@ export class BtocConfigController extends AbstractController {
     }
   );
 
+  public getAllFaq = this.asyncWrapper.wrap(
+    null,
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.getAllFaq(req);
+      res.status(code).json(data);
+    }
+  );
+
   public GetAccountsData = this.asyncWrapper.wrap(
     null,
     async (req: Request, res: Response) => {

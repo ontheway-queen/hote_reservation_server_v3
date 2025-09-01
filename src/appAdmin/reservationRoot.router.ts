@@ -4,6 +4,7 @@ import AuthChecker from "../common/middleware/authChecker/authChecker";
 import AccountRouter from "./routers/account.router";
 import AdminBtocHandlerRouter from "./routers/adminBtocHandler.router";
 import AdministrationRouter from "./routers/administration.router";
+import ChannelManagerRouter from "./routers/channelManager.router";
 import CommonRouter from "./routers/common.router";
 import ExpenseRouter from "./routers/expense.router";
 import FolioRouter from "./routers/folio.router";
@@ -49,6 +50,12 @@ export class ReservationRootRouter {
 			"/room",
 			this.authChecker.hotelAdminAuthChecker,
 			new RoomRouter().router
+		);
+
+		this.router.use(
+			"/channel-manager",
+			this.authChecker.hotelAdminAuthChecker,
+			new ChannelManagerRouter().router
 		);
 
 		this.router.use(

@@ -209,8 +209,8 @@ class B2CSiteConfigController extends abstract_controller_1.default {
                 this.error(data.message, code);
             }
         }));
-        this.getSingleFaqHeadWithFaq = this.asyncWrapper.wrap(null, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _0 = yield this.service.getSingleFaqHeadWithFaq(req), { code } = _0, data = __rest(_0, ["code"]);
+        this.getFaqsByHeadId = this.asyncWrapper.wrap(null, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _0 = yield this.service.getFaqsByHeadId(req), { code } = _0, data = __rest(_0, ["code"]);
             if (data.success) {
                 res.status(code).json(data);
             }
@@ -220,33 +220,31 @@ class B2CSiteConfigController extends abstract_controller_1.default {
         }));
         this.createFaq = this.asyncWrapper.wrap({ bodySchema: this.validator.createFaq }, (req, res) => __awaiter(this, void 0, void 0, function* () {
             const _1 = yield this.service.createFaq(req), { code } = _1, data = __rest(_1, ["code"]);
-            if (data.success) {
-                res.status(code).json(data);
-            }
-            else {
-                this.error(data.message, code);
-            }
+            res.status(code).json(data);
+        }));
+        this.updateFaq = this.asyncWrapper.wrap({
+            bodySchema: this.validator.updateFaq,
+            paramSchema: this.commonValidator.singleParamValidator(),
+        }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _2 = yield this.service.updateFaq(req), { code } = _2, data = __rest(_2, ["code"]);
+            res.status(code).json(data);
+        }));
+        this.deleteFaq = this.asyncWrapper.wrap({
+            paramSchema: this.commonValidator.singleParamValidator(),
+        }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _3 = yield this.service.deleteFaq(req), { code } = _3, data = __rest(_3, ["code"]);
+            res.status(code).json(data);
         }));
         this.getAllAmenityHeads = this.asyncWrapper.wrap(null, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _2 = yield this.service.getAllAmenityHeads(req), { code } = _2, data = __rest(_2, ["code"]);
-            if (data.success) {
-                res.status(code).json(data);
-            }
-            else {
-                this.error(data.message, code);
-            }
+            const _4 = yield this.service.getAllAmenityHeads(req), { code } = _4, data = __rest(_4, ["code"]);
+            res.status(code).json(data);
         }));
         this.getAllAmenities = this.asyncWrapper.wrap({ paramSchema: this.commonValidator.singleParamValidator("id") }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _3 = yield this.service.getAllAmenities(req), { code } = _3, data = __rest(_3, ["code"]);
-            if (data.success) {
-                res.status(code).json(data);
-            }
-            else {
-                this.error(data.message, code);
-            }
+            const _5 = yield this.service.getAllAmenities(req), { code } = _5, data = __rest(_5, ["code"]);
+            res.status(code).json(data);
         }));
         this.addHotelAmenities = this.asyncWrapper.wrap(null, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _4 = yield this.service.addHotelAmenities(req), { code } = _4, data = __rest(_4, ["code"]);
+            const _6 = yield this.service.addHotelAmenities(req), { code } = _6, data = __rest(_6, ["code"]);
             if (data.success) {
                 res.status(code).json(data);
             }
@@ -255,7 +253,7 @@ class B2CSiteConfigController extends abstract_controller_1.default {
             }
         }));
         this.getAllHotelAmenities = this.asyncWrapper.wrap(null, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _5 = yield this.service.getAllHotelAmenities(req), { code } = _5, data = __rest(_5, ["code"]);
+            const _7 = yield this.service.getAllHotelAmenities(req), { code } = _7, data = __rest(_7, ["code"]);
             if (data.success) {
                 res.status(code).json(data);
             }

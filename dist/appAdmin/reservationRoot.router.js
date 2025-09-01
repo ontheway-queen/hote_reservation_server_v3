@@ -10,6 +10,7 @@ const authChecker_1 = __importDefault(require("../common/middleware/authChecker/
 const account_router_1 = __importDefault(require("./routers/account.router"));
 const adminBtocHandler_router_1 = __importDefault(require("./routers/adminBtocHandler.router"));
 const administration_router_1 = __importDefault(require("./routers/administration.router"));
+const channelManager_router_1 = __importDefault(require("./routers/channelManager.router"));
 const common_router_1 = __importDefault(require("./routers/common.router"));
 const expense_router_1 = __importDefault(require("./routers/expense.router"));
 const folio_router_1 = __importDefault(require("./routers/folio.router"));
@@ -34,6 +35,7 @@ class ReservationRootRouter {
         this.router.use("/hr", this.authChecker.hotelAdminAuthChecker, new hr_router_1.default().router);
         this.router.use("/setting", this.authChecker.hotelAdminAuthChecker, new setting_router_1.default().router);
         this.router.use("/room", this.authChecker.hotelAdminAuthChecker, new room_router_1.default().router);
+        this.router.use("/channel-manager", this.authChecker.hotelAdminAuthChecker, new channelManager_router_1.default().router);
         this.router.use("/report", this.authChecker.hotelAdminAuthChecker, new reports_router_1.default().router);
         this.router.use("/administration", this.authChecker.hotelAdminAuthChecker, new administration_router_1.default().router);
         this.router.use("/money-receipt", this.authChecker.hotelAdminAuthChecker, new money_reciept_router_1.default().router);

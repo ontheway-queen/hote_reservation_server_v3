@@ -54,8 +54,12 @@ class BtocConfigController extends abstract_controller_1.default {
             const _f = yield this.service.getPopUpBanner(req), { code } = _f, data = __rest(_f, ["code"]);
             res.status(code).json(data);
         }));
+        this.getAllFaq = this.asyncWrapper.wrap(null, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _g = yield this.service.getAllFaq(req), { code } = _g, data = __rest(_g, ["code"]);
+            res.status(code).json(data);
+        }));
         this.GetAccountsData = this.asyncWrapper.wrap(null, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _g = yield this.service.GetAccountsData(req), { code } = _g, rest = __rest(_g, ["code"]);
+            const _h = yield this.service.GetAccountsData(req), { code } = _h, rest = __rest(_h, ["code"]);
             res.status(code).json(rest);
         }));
     }

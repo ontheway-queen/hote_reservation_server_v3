@@ -30,6 +30,8 @@ export class BtocConfigRouter extends AbstractRouter {
 
     this.router.route("/pop-up").get(this.controller.getPopUpBanner);
 
+    this.router.route("/faq").get(this.controller.getAllFaq);
+
     this.router.route("/accounts").get(this.controller.GetAccountsData);
   }
 }

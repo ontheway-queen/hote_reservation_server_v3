@@ -18,7 +18,6 @@ class ConfigurationService extends abstract_service_1.default {
     constructor() {
         super();
     }
-    // ======================= Shift ======================= //
     createShift(req) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
@@ -30,9 +29,6 @@ class ConfigurationService extends abstract_service_1.default {
                     name: body.name,
                     hotel_code,
                 });
-                if (data.length > 0) {
-                    throw new customEror_1.default("Shift with this name already exists", this.StatusCode.HTTP_CONFLICT);
-                }
                 yield hrConfigurationModel.createShift(body);
                 return {
                     success: true,
@@ -57,7 +53,6 @@ class ConfigurationService extends abstract_service_1.default {
                 return {
                     success: true,
                     code: this.StatusCode.HTTP_OK,
-                    message: "Shifts fetched successfully",
                     total,
                     data,
                 };
@@ -100,13 +95,6 @@ class ConfigurationService extends abstract_service_1.default {
                 if (!data) {
                     throw new customEror_1.default("Shift not found", this.StatusCode.HTTP_NOT_FOUND);
                 }
-                const { data: nameAlreadyExists } = yield hrConfigurationModel.getAllShifts({
-                    name: payload.name,
-                    hotel_code,
-                });
-                if (nameAlreadyExists.length > 0) {
-                    throw new customEror_1.default("Shift with this name already exists", this.StatusCode.HTTP_CONFLICT);
-                }
                 yield hrConfigurationModel.updateShift({ id, hotel_code, payload });
                 return {
                     success: true,
@@ -138,7 +126,6 @@ class ConfigurationService extends abstract_service_1.default {
             }));
         });
     }
-    // ======================= Allowances ======================= //
     createAllowances(req) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
@@ -218,13 +205,6 @@ class ConfigurationService extends abstract_service_1.default {
                 if (!data) {
                     throw new customEror_1.default("Allowance not found", this.StatusCode.HTTP_NOT_FOUND);
                 }
-                const { data: nameAlreadyExists } = yield hrConfigurationModel.getAllAllowances({
-                    name: payload.name,
-                    hotel_code,
-                });
-                if (nameAlreadyExists.length > 0) {
-                    throw new customEror_1.default("Allowance with this name already exists", this.StatusCode.HTTP_CONFLICT);
-                }
                 yield hrConfigurationModel.updateAllowance({
                     id,
                     hotel_code,
@@ -260,7 +240,6 @@ class ConfigurationService extends abstract_service_1.default {
             }));
         });
     }
-    // ======================= Deductions ======================= //
     createDeductions(req) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {

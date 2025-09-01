@@ -31,6 +31,11 @@ import {
   IUpdateAgencyB2CSocialLinkPayload,
   IUpdateSocialMediaPayload,
 } from "../../appAdmin/utlis/interfaces/configuration.interface";
+import {
+  IFaqHeadsWithFaq,
+  IgetFaqsByHeadId,
+  IgetSingleFaqHeads,
+} from "../../appAdmin/utlis/interfaces/faq.types";
 import { TDB } from "../../common/types/commontypes";
 import Schema from "../../utils/miscellaneous/schema";
 
@@ -534,9 +539,8 @@ export default class AgencyB2CConfigModel extends Schema {
     id?: number;
     status?: boolean | "true" | "false";
   }): Promise<IGetSocialMediaData[]> {
-    console.log({ query });
     return await this.db("social_media")
-      .withSchema(this.PUBLIC_SCHEMA)
+      .withSchema(this.BTOC_SCHEMA)
       .select("*")
       .where((qb) => {
         if (query.name) {
@@ -610,22 +614,59 @@ export default class AgencyB2CConfigModel extends Schema {
   // =========================== FAQ =========================== //
   public async getAllFaqHeads(where: {
     hotel_code: number;
-    id?: number;
     order?: number;
-  }) {
-    return await this.db("faq_heads")
-      .withSchema(this.RESERVATION_SCHEMA)
-      .select("id", "order_number", "title")
-      .where("hotel_code", where.hotel_code)
+  }): Promise<IFaqHeadsWithFaq[]> {
+    return await this.db("faq_heads as fh")
+      .withSchema(this.BTOC_SCHEMA)
+      .select(
+        "fh.id",
+        "fh.order_number",
+        "fh.title",
+
+        this.db.raw(`
+  (
+    SELECT JSON_AGG(
+      JSON_BUILD_OBJECT(
+        'faq_id', fq.id,
+        'question', fq.question,
+        'answer', fq.answer,
+        'order_number', fq.order_number,
+        'status', fq.status
+      ) ORDER BY fq.order_number ASC
+    ) AS faqs
+  )
+`)
+      )
+      .leftJoin("faqs as fq", "fh.id", "fq.faq_head_id")
+      .where("fh.hotel_code", where.hotel_code)
       .andWhere((qb) => {
-        if (where.id) {
-          qb.andWhere("id", where.id);
-        }
         if (where.order) {
-          qb.andWhere("order_number", where.order);
+          qb.andWhere("fh.order_number", where.order);
         }
       })
-      .andWhere("is_deleted", false);
+      .andWhere("fh.is_deleted", false)
+      .andWhere("fq.is_deleted", false)
+      .groupBy("fh.id", "fh.order_number", "fh.title")
+      .orderBy("fh.order_number", "asc");
+  }
+
+  public async getSingleFaqHeads(
+    id: number,
+    hotel_code: number
+  ): Promise<IgetSingleFaqHeads> {
+    return await this.db("faq_heads")
+      .withSchema(this.BTOC_SCHEMA)
+      .select(
+        "id",
+        "hotel_code",
+        "title",
+        "order_number",
+        "status",
+        "created_at"
+      )
+      .where({ id })
+      .andWhere({ hotel_code })
+      .first();
   }
 
   public async createFaqHead(payload: {
@@ -634,7 +675,7 @@ export default class AgencyB2CConfigModel extends Schema {
     order_number: number;
   }) {
     return await this.db("faq_heads")
-      .withSchema(this.RESERVATION_SCHEMA)
+      .withSchema(this.BTOC_SCHEMA)
       .insert(payload, "id");
   }
 
@@ -646,14 +687,14 @@ export default class AgencyB2CConfigModel extends Schema {
     where: { id: number }
   ) {
     return await this.db("faq_heads")
-      .withSchema(this.RESERVATION_SCHEMA)
+      .withSchema(this.BTOC_SCHEMA)
       .update(payload)
       .where("id", where.id);
   }
 
   public async deleteFaqHead(where: { id: number }) {
     return await this.db("faq_heads")
-      .withSchema(this.RESERVATION_SCHEMA)
+      .withSchema(this.BTOC_SCHEMA)
       .update("is_deleted", "true")
       .where("id", where.id);
   }
@@ -663,17 +704,52 @@ export default class AgencyB2CConfigModel extends Schema {
     question: string;
     answer: string;
     order_number: number;
+    hotel_code: number;
   }) {
     return await this.db("faqs")
-      .withSchema(this.RESERVATION_SCHEMA)
+      .withSchema(this.BTOC_SCHEMA)
       .insert(payload, "id");
   }
 
-  public async getFaqsByHeadId(head_id: number) {
+  public async updateFaq(
+    payload: Partial<{
+      question: string;
+      answer: string;
+      order_number: number;
+      is_deleted: boolean;
+    }>,
+    where: { id: number; hotel_code: number }
+  ) {
     return await this.db("faqs")
+      .withSchema(this.BTOC_SCHEMA)
+      .update(payload)
+      .where(where);
+  }
+
+  public async getFaqsByHeadId(
+    head_id: number,
+    hotel_code: number
+  ): Promise<IgetFaqsByHeadId[]> {
+    return await this.db("faqs")
+      .select(
+        "id",
+        "question",
+        "answer",
+        "order_number",
+        "status",
+        "created_at"
+      )
+      .withSchema(this.BTOC_SCHEMA)
+      .where("faq_head_id", head_id)
+      .andWhere("hotel_code", hotel_code);
+  }
+
+  public async getSingleFaq(faq_id: number, hotel_code: number) {
+    return await this.db("faqs")
+      .withSchema(this.BTOC_SCHEMA)
       .select("*")
-      .withSchema(this.RESERVATION_SCHEMA)
-      .where("faq_head_id", head_id);
+      .where({ id: faq_id })
+      .andWhere({ hotel_code });
   }
 
   // =========================== Hotel Amenities =========================== //
@@ -688,7 +764,17 @@ export default class AgencyB2CConfigModel extends Schema {
       .insert(payload);
   }
 
-  public async getAllHotelAmenities(hotel_code: number) {
+  public async getAllHotelAmenities(hotel_code: number): Promise<
+    {
+      id: number;
+      hotel_code: number;
+      head_id: number;
+      name: string;
+      description: string;
+      icon: string;
+      status: string;
+    }[]
+  > {
     return await this.db("hotel_amenities as ha")
       .withSchema(this.RESERVATION_SCHEMA)
       .select(
