@@ -14,7 +14,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const abstract_service_1 = __importDefault(require("../../abstarcts/abstract.service"));
 const customEror_1 = __importDefault(require("../../utils/lib/customEror"));
-class ConfigurationService extends abstract_service_1.default {
+class HRconfigurationService extends abstract_service_1.default {
     constructor() {
         super();
     }
@@ -319,13 +319,6 @@ class ConfigurationService extends abstract_service_1.default {
                 if (!data) {
                     throw new customEror_1.default("Deduction not found", this.StatusCode.HTTP_NOT_FOUND);
                 }
-                const { data: nameAlreadyExists } = yield hrConfigurationModel.getAllDeductions({
-                    name: payload.name,
-                    hotel_code,
-                });
-                if (nameAlreadyExists.length > 0) {
-                    throw new customEror_1.default("Deduction with this name already exists", this.StatusCode.HTTP_CONFLICT);
-                }
                 yield hrConfigurationModel.updateDeduction({
                     id,
                     hotel_code,
@@ -362,5 +355,5 @@ class ConfigurationService extends abstract_service_1.default {
         });
     }
 }
-exports.default = ConfigurationService;
-//# sourceMappingURL=configuration.service.js.map
+exports.default = HRconfigurationService;
+//# sourceMappingURL=hr.configuration.service.js.map

@@ -6,27 +6,30 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const joi_1 = __importDefault(require("joi"));
 class RoomValidator {
     constructor() {
-        // create room validator
         this.createRoomValidator = joi_1.default.object({
             room_name: joi_1.default.string().required(),
             floor_no: joi_1.default.number().required(),
             room_type_id: joi_1.default.number().required(),
         });
-        // get all hotel room validator
+        this.createMultipleRoomValidator = joi_1.default.object({
+            from_room: joi_1.default.number().required(),
+            to_room: joi_1.default.number().required(),
+            floor_no: joi_1.default.number().required(),
+            room_type_id: joi_1.default.number().required(),
+        });
         this.getAllHotelRoomQueryValidator = joi_1.default.object({
-            key: joi_1.default.string().allow("").optional(),
-            availability: joi_1.default.string().allow("").optional(),
-            refundable: joi_1.default.string().allow("").optional(),
-            room_type: joi_1.default.string().allow("").optional(),
+            search: joi_1.default.string().allow("").optional(),
+            room_type_id: joi_1.default.number().allow("").optional(),
             occupancy: joi_1.default.string().allow("").optional(),
-            child: joi_1.default.number().allow("").optional(),
-            adult: joi_1.default.number().allow("").optional(),
-            from_date: joi_1.default.string().allow("").optional(),
-            to_date: joi_1.default.string().allow("").optional(),
+            status: joi_1.default.string().allow("").optional(),
             limit: joi_1.default.string().allow("").optional(),
             skip: joi_1.default.string().allow("").optional(),
         });
-        // update hotel room validator
+        this.getAllHotelRoomByRoomStatusQueryValidator = joi_1.default.object({
+            room_type_id: joi_1.default.number().allow("").optional(),
+            current_date: joi_1.default.string().required(),
+            status: joi_1.default.string().allow("").optional(),
+        });
         this.updateRoomValidator = joi_1.default.object({
             room_name: joi_1.default.string().optional(),
             floor_no: joi_1.default.number().optional(),
@@ -36,6 +39,9 @@ class RoomValidator {
             status: joi_1.default.string()
                 .allow("in_service", "out_of_service", "clean", "dirty", "under_maintenance")
                 .required(),
+        });
+        this.getAllOccupiedRoomsQueryValidator = joi_1.default.object({
+            date: joi_1.default.string().required(),
         });
     }
 }

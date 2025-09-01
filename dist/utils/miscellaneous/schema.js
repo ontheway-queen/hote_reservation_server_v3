@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 class Schema {
     constructor() {
         this.PUBLIC_SCHEMA = "public";
+        this.CM_SCHEMA = "channel_manager";
         this.RESERVATION_SCHEMA = "hotel_reservation";
         this.HR_SCHEMA = "hr";
         this.DBO_SCHEMA = "dbo";

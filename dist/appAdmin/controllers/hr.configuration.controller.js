@@ -26,7 +26,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const abstract_controller_1 = __importDefault(require("../../abstarcts/abstract.controller"));
 const hrConfiguration_validator_1 = __importDefault(require("../utlis/validator/hrConfiguration.validator"));
 const hr_configuration_service_1 = __importDefault(require("../services/hr.configuration.service"));
-class ConfigurationController extends abstract_controller_1.default {
+class HRConfigurationController extends abstract_controller_1.default {
     constructor() {
         super();
         this.service = new hr_configuration_service_1.default();
@@ -104,5 +104,5 @@ class ConfigurationController extends abstract_controller_1.default {
         }));
     }
 }
-exports.default = ConfigurationController;
-//# sourceMappingURL=configuration.controller.js.map
+exports.default = HRConfigurationController;
+//# sourceMappingURL=hr.configuration.controller.js.map

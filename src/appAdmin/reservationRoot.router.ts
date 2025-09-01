@@ -16,6 +16,7 @@ import { ReservationRouter } from "./routers/reservation.router";
 import RoomGuestRouter from "./routers/room.guest.router";
 import RoomRouter from "./routers/room.router";
 import SettingRouter from "./routers/setting.router";
+import ChannelManagerRouter from "./routers/channelManager.router";
 
 export class ReservationRootRouter {
   public router = Router();
@@ -48,6 +49,12 @@ export class ReservationRootRouter {
       "/room",
       this.authChecker.hotelAdminAuthChecker,
       new RoomRouter().router
+    );
+
+    this.router.use(
+      "/channel-manager",
+      this.authChecker.hotelAdminAuthChecker,
+      new ChannelManagerRouter().router
     );
 
     this.router.use(

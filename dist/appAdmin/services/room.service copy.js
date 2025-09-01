@@ -50,22 +50,33 @@ class RoomService extends abstract_service_1.default {
                 // Handle room availability
                 const availability = yield roomModel.getRoomAvailabilitiesByRoomTypeId(hotel_code, room_type_id);
                 if (availability) {
-                    yield roomModel.updateInRoomAvailabilities(hotel_code, room_type_id, {
-                        available_rooms: availability.available_rooms + 1,
-                        total_rooms: availability.total_rooms + 1,
+                    const updates = availability.map((row) => {
+                        const updatedTotal = row.total_rooms + 1;
+                        const updatedAvailable = row.available_rooms + 1;
+                        return {
+                            id: row.id,
+                            total_rooms: updatedTotal,
+                            available_rooms: updatedAvailable,
+                        };
                     });
+                    yield roomModel.updateInRoomAvailabilities(updates);
                 }
                 else {
-                    const todayPlus365 = new Date();
-                    todayPlus365.setUTCDate(todayPlus365.getUTCDate() + 365);
-                    const dateStr = todayPlus365.toISOString().split("T")[0];
-                    yield roomModel.insertInRoomAvilabilities({
-                        hotel_code,
-                        room_type_id,
-                        date: dateStr,
-                        available_rooms: 1,
-                        total_rooms: 1,
-                    });
+                    const roomAvaibilityPayload = [];
+                    for (let i = 0; i < 365; i++) {
+                        const date = new Date();
+                        date.setUTCDate(date.getUTCDate() + i);
+                        const dateStr = date.toISOString().split("T")[0];
+                        console.log({ dateStr });
+                        roomAvaibilityPayload.push({
+                            hotel_code,
+                            room_type_id,
+                            date: dateStr,
+                            available_rooms: 1,
+                            total_rooms: 1,
+                        });
+                    }
+                    yield roomModel.insertInRoomAvilabilities(roomAvaibilityPayload);
                 }
                 return {
                     success: true,
@@ -75,16 +86,123 @@ class RoomService extends abstract_service_1.default {
             }));
         });
     }
+    createMultipleRooms(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { hotel_code, id: user_id } = req.hotel_admin;
+            const { room_type_id, from_room, to_room, floor_no } = req.body;
+            // Validate input
+            if (from_room > to_room) {
+                return {
+                    success: false,
+                    code: this.StatusCode.HTTP_BAD_REQUEST,
+                    message: "From room number cannot be greater than to room number.",
+                };
+            }
+            return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
+                const settingModel = this.Model.settingModel(trx);
+                const roomModel = this.Model.RoomModel(trx);
+                // Check if room type exists
+                const roomTypeExists = yield settingModel.getSingleRoomType(room_type_id, hotel_code);
+                if (!roomTypeExists.length) {
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_NOT_FOUND,
+                        message: "Room type not found.",
+                    };
+                }
+                const createdRooms = [];
+                for (let roomNo = Number(from_room); roomNo <= Number(to_room); roomNo++) {
+                    const room_name = roomNo.toString();
+                    // Check for existing room with the same name
+                    const { data: existingRooms } = yield roomModel.getAllRoom({
+                        hotel_code,
+                        exact_name: room_name,
+                    });
+                    if (existingRooms.length === 0) {
+                        yield roomModel.createRoom({
+                            room_name,
+                            floor_no,
+                            room_type_id,
+                            hotel_code,
+                            created_by: user_id,
+                        });
+                        createdRooms.push(room_name);
+                    }
+                }
+                const createdCount = createdRooms.length;
+                if (createdCount > 0) {
+                    const availability = yield roomModel.getRoomAvailabilitiesByRoomTypeId(hotel_code, room_type_id);
+                    if (availability && availability.length > 0) {
+                        const updatedPayload = availability.map((a) => {
+                            const total_rooms = a.total_rooms + createdCount;
+                            const available_rooms = a.available_rooms + createdCount;
+                            return {
+                                id: a.id,
+                                total_rooms,
+                                available_rooms,
+                            };
+                        });
+                        yield roomModel.updateInRoomAvailabilities(updatedPayload);
+                    }
+                    else {
+                        // Prepare room availability records for the next 365 days
+                        const today = new Date();
+                        const roomAvailabilityPayload = Array.from({ length: 365 }, (_, i) => {
+                            const date = new Date(today);
+                            date.setUTCDate(date.getUTCDate() + i);
+                            const dateStr = date.toISOString().split("T")[0];
+                            return {
+                                hotel_code,
+                                room_type_id,
+                                date: dateStr,
+                                available_rooms: createdCount,
+                                total_rooms: createdCount,
+                            };
+                        });
+                        yield roomModel.insertInRoomAvilabilities(roomAvailabilityPayload);
+                    }
+                }
+                return {
+                    success: true,
+                    code: this.StatusCode.HTTP_SUCCESSFUL,
+                    message: createdCount > 0
+                        ? `${createdCount} room(s) created successfully.`
+                        : "No new rooms were created due to duplication.",
+                };
+            }));
+        });
+    }
     getAllRoom(req) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { search, limit, skip, room_type_id } = req.query;
+            const { search, limit, skip, room_type_id, status } = req.query;
             const { hotel_code } = req.hotel_admin;
             const { data, total } = yield this.Model.RoomModel().getAllRoom({
                 search: search,
                 limit: limit,
+                status: status,
                 skip: skip,
                 hotel_code,
                 room_type_id: parseInt(room_type_id),
+            });
+            return {
+                success: true,
+                code: this.StatusCode.HTTP_OK,
+                total,
+                data,
+            };
+        });
+    }
+    getAllRoomByRoomStatus(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { search, limit, skip, room_type_id, status } = req.query;
+            const { hotel_code } = req.hotel_admin;
+            const { data, total } = yield this.Model.RoomModel().getAllRoomByRoomStatus({
+                limit: limit,
+                status: status,
+                skip: skip,
+                hotel_code,
+                room_type_id: parseInt(room_type_id),
+                current_date: req.query.current_date,
             });
             return {
                 success: true,
@@ -126,14 +244,12 @@ class RoomService extends abstract_service_1.default {
             };
         });
     }
-    // update hotel room
     updateroom(req) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
                 const { hotel_code } = req.hotel_admin;
                 const { room_id } = req.params;
                 const { room_name, room_type_id } = req.body;
-                const settingModel = this.Model.settingModel(trx);
                 const roomModel = this.Model.RoomModel(trx);
                 const existingRoom = yield roomModel.getSingleRoom(hotel_code, parseInt(room_id));
                 if (!existingRoom.length) {
@@ -156,48 +272,54 @@ class RoomService extends abstract_service_1.default {
                         };
                     }
                 }
-                const currentRoom = existingRoom[0];
-                if (room_type_id && currentRoom.room_type_id !== room_type_id) {
-                    const newRoomType = yield settingModel.getSingleRoomType(room_type_id, hotel_code);
-                    if (!newRoomType.length) {
+                const { room_type_id: exist_room_type_id } = existingRoom[0];
+                // Room type has changed
+                if (room_type_id && exist_room_type_id !== room_type_id) {
+                    const oldAvailabilities = yield roomModel.getRoomAvailabilitiesByRoomTypeId(hotel_code, exist_room_type_id);
+                    const newAvailabilities = yield roomModel.getRoomAvailabilitiesByRoomTypeId(hotel_code, room_type_id);
+                    if (newAvailabilities.length) {
+                        //  Update existing availabilities for new room_type_id
+                        const updates = newAvailabilities.map((row) => {
+                            const total_rooms = row.total_rooms + 1;
+                            const available_rooms = row.available_rooms + 1;
+                            return {
+                                id: row.id,
+                                total_rooms,
+                                available_rooms,
+                            };
+                        });
+                        yield roomModel.updateInRoomAvailabilities(updates);
+                    }
+                    else {
+                        //  Insert 365 new entries for new room_type_id
+                        const today = new Date();
+                        const inserts = Array.from({ length: 365 }).map((_, i) => {
+                            const date = new Date(today);
+                            date.setUTCDate(date.getUTCDate() + i);
+                            const dateStr = date.toISOString().split("T")[0];
+                            return {
+                                hotel_code,
+                                room_type_id,
+                                date: dateStr,
+                                total_rooms: 1,
+                                available_rooms: 1,
+                            };
+                        });
+                        yield roomModel.insertInRoomAvilabilities(inserts);
+                    }
+                    // Update old room_type_id availability: decrease count
+                    const updates = oldAvailabilities.map((row) => {
+                        const total_rooms = row.total_rooms - 1;
+                        const available_rooms = row.available_rooms - 1;
                         return {
-                            success: false,
-                            code: this.StatusCode.HTTP_NOT_FOUND,
-                            message: "Room type not found",
+                            id: row.id,
+                            total_rooms,
+                            available_rooms,
                         };
-                    }
-                    const newAvailability = yield roomModel.getRoomAvailabilitiesByRoomTypeId(hotel_code, room_type_id);
-                    if (newAvailability) {
-                        yield roomModel.updateInRoomAvailabilities(hotel_code, room_type_id, {
-                            total_rooms: newAvailability.total_rooms + 1,
-                            available_rooms: newAvailability.available_rooms + 1,
-                        });
-                    }
-                    else {
-                        const todayPlus365 = new Date();
-                        todayPlus365.setUTCDate(todayPlus365.getUTCDate() + 365);
-                        const dateStr = todayPlus365.toISOString().split("T")[0];
-                        yield roomModel.insertInRoomAvilabilities({
-                            hotel_code,
-                            room_type_id,
-                            date: dateStr,
-                            total_rooms: 1,
-                            available_rooms: 1,
-                        });
-                    }
-                    const prevAvailability = yield roomModel.getRoomAvailabilitiesByRoomTypeId(hotel_code, currentRoom.room_type_id);
-                    if (prevAvailability.total_rooms === 1) {
-                        yield roomModel.deleteInRoomAvailabilities({
-                            hotel_code,
-                            room_type_id: currentRoom.room_type_id,
-                        });
-                    }
-                    else {
-                        yield roomModel.updateInRoomAvailabilities(hotel_code, currentRoom.room_type_id, {
-                            total_rooms: prevAvailability.total_rooms - 1,
-                            available_rooms: prevAvailability.available_rooms - 1,
-                        });
-                    }
+                    });
+                    yield roomModel.updateInRoomAvailabilities(updates);
+                    // Apply room_type_id to update payload
+                    req.body["room_type_id"] = room_type_id;
                 }
                 yield roomModel.updateRoom(parseInt(room_id), hotel_code, req.body);
                 return {
@@ -208,7 +330,6 @@ class RoomService extends abstract_service_1.default {
             }));
         });
     }
-    // update room by status
     updateRoomStatus(req) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
@@ -234,42 +355,29 @@ class RoomService extends abstract_service_1.default {
                         message: `Room is already marked as ${status}.`,
                     };
                 }
-                const availability = yield roomModel.getRoomAvailabilitiesByRoomTypeId(hotel_code, currentRoom.room_type_id);
-                if (status === "out_of_service") {
-                    // Going out of service: reduce availability
-                    if (availability.total_rooms === 1) {
-                        yield roomModel.deleteInRoomAvailabilities({
-                            hotel_code,
-                            room_type_id: currentRoom.room_type_id,
-                        });
-                    }
-                    else {
-                        yield roomModel.updateInRoomAvailabilities(hotel_code, currentRoom.room_type_id, {
-                            total_rooms: availability.total_rooms - 1,
-                            available_rooms: availability.available_rooms - 1,
-                        });
-                    }
+                // Fetch all future room availability rows
+                const availabilities = yield roomModel.getRoomAvailabilitiesByRoomTypeId(hotel_code, currentRoom.room_type_id);
+                // Prepare updates based on status transition
+                let updates = [];
+                if (currentStatus !== "out_of_service" && status === "out_of_service") {
+                    // Reduce available and total
+                    updates = availabilities.map((a) => ({
+                        id: a.id,
+                        total_rooms: a.total_rooms - 1,
+                        available_rooms: a.available_rooms - 1,
+                    }));
                 }
-                else if (currentStatus == "out_of_service" && status === "in_service") {
-                    // Going back to in_service: increase availability
-                    if (availability) {
-                        yield roomModel.updateInRoomAvailabilities(hotel_code, currentRoom.room_type_id, {
-                            total_rooms: availability.total_rooms + 1,
-                            available_rooms: availability.available_rooms + 1,
-                        });
-                    }
-                    else {
-                        const todayPlus365 = new Date();
-                        todayPlus365.setUTCDate(todayPlus365.getUTCDate() + 365);
-                        const dateStr = todayPlus365.toISOString().split("T")[0];
-                        yield roomModel.insertInRoomAvilabilities({
-                            hotel_code,
-                            room_type_id: currentRoom.room_type_id,
-                            date: dateStr,
-                            total_rooms: 1,
-                            available_rooms: 1,
-                        });
-                    }
+                else if (currentStatus === "out_of_service" &&
+                    status === "in_service") {
+                    // Increase available and total
+                    updates = availabilities.map((a) => ({
+                        id: a.id,
+                        total_rooms: a.total_rooms + 1,
+                        available_rooms: a.available_rooms + 1,
+                    }));
+                }
+                if (updates.length > 0) {
+                    yield roomModel.updateInRoomAvailabilities(updates);
                 }
                 // Update the room status
                 yield roomModel.updateRoom(roomId, hotel_code, { status });
@@ -279,6 +387,64 @@ class RoomService extends abstract_service_1.default {
                     message: `Room status updated to ${status}.`,
                 };
             }));
+        });
+    }
+    deleteHotelRoom(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
+                const { room_id } = req.params;
+                const { hotel_code } = req.hotel_admin;
+                const roomModel = this.Model.RoomModel(trx);
+                const roomId = parseInt(room_id);
+                const existingRoom = yield roomModel.getSingleRoom(hotel_code, roomId);
+                if (!existingRoom.length) {
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_NOT_FOUND,
+                        message: this.ResMsg.HTTP_NOT_FOUND,
+                    };
+                }
+                const currentRoom = existingRoom[0];
+                // Fetch all availability records for the room's room_type_id (likely per date)
+                const availabilities = yield roomModel.getRoomAvailabilitiesByRoomTypeId(hotel_code, currentRoom.room_type_id);
+                if (availabilities.length > 0) {
+                    // Prepare updated availability records by decrementing total and available rooms by 1
+                    const updates = availabilities.map((a) => ({
+                        id: a.id,
+                        total_rooms: a.total_rooms - 1,
+                        available_rooms: a.available_rooms - 1,
+                    }));
+                    // Update all availability records in bulk
+                    yield roomModel.updateInRoomAvailabilities(updates);
+                }
+                // Soft-delete the room by setting is_deleted = true
+                yield roomModel.updateRoom(roomId, hotel_code, {
+                    is_deleted: true,
+                });
+                return {
+                    success: true,
+                    code: this.StatusCode.HTTP_OK,
+                    message: `Room has been deleted`,
+                };
+            }));
+        });
+    }
+    getAllRoomByRoomType(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { hotel_code } = req.hotel_admin;
+            const id = req.params.room_type_id;
+            const model = this.Model.RoomModel();
+            const data = yield model.getAllRoomByRoomType(hotel_code, Number(id));
+            return Object.assign({ success: true, code: this.StatusCode.HTTP_OK, message: this.ResMsg.HTTP_OK }, data);
+        });
+    }
+    // get all occupied rooms using date
+    getAllOccupiedRooms(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const date = req.query.date;
+            const model = this.Model.RoomModel();
+            const data = yield model.getAllOccupiedRooms(date, req.hotel_admin.hotel_code);
+            return Object.assign({ success: true, code: this.StatusCode.HTTP_OK, message: this.ResMsg.HTTP_OK }, data);
         });
     }
 }

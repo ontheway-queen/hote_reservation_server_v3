@@ -28,6 +28,7 @@ const ReportModel_1 = __importDefault(require("./reservationPanel/ReportModel/Re
 const reservation_model_1 = require("./reservationPanel/reservation.model");
 const Room_Model_1 = __importDefault(require("./reservationPanel/Room.Model"));
 const Setting_Model_1 = __importDefault(require("./reservationPanel/Setting.Model"));
+const channelManager_model_1 = __importDefault(require("./reservationPanel/channelManager.model"));
 class Models {
     constructor(db) {
         this.db = db;
@@ -70,6 +71,9 @@ class Models {
     }
     payRollModel(trx) {
         return new payRollModel_1.default(trx || this.db);
+    }
+    channelManagerModel(trx) {
+        return new channelManager_model_1.default(trx || this.db);
     }
     dashBoardModel(trx) {
         return new dashBoardModel_1.default(trx || this.db);

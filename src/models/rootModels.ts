@@ -24,125 +24,130 @@ import ReportModel from "./reservationPanel/ReportModel/ReportModel";
 import { ReservationModel } from "./reservationPanel/reservation.model";
 import RoomModel from "./reservationPanel/Room.Model";
 import SettingModel from "./reservationPanel/Setting.Model";
+import ChannelManagerModel from "./reservationPanel/channelManager.model";
 
 class Models {
-	private db: Knex;
+  private db: Knex;
 
-	constructor(db: Knex) {
-		this.db = db;
-	}
+  constructor(db: Knex) {
+    this.db = db;
+  }
 
-	public commonModel(trx?: Knex.Transaction) {
-		return new CommonModel(trx || this.db);
-	}
+  public commonModel(trx?: Knex.Transaction) {
+    return new CommonModel(trx || this.db);
+  }
 
-	public RoomModel(trx?: Knex.Transaction) {
-		return new RoomModel(trx || this.db);
-	}
+  public RoomModel(trx?: Knex.Transaction) {
+    return new RoomModel(trx || this.db);
+  }
 
-	public reservationModel(trx?: Knex.Transaction) {
-		return new ReservationModel(trx || this.db);
-	}
+  public reservationModel(trx?: Knex.Transaction) {
+    return new ReservationModel(trx || this.db);
+  }
 
-	public rAdministrationModel(trx?: Knex.Transaction) {
-		return new RAdministrationModel(trx || this.db);
-	}
+  public rAdministrationModel(trx?: Knex.Transaction) {
+    return new RAdministrationModel(trx || this.db);
+  }
 
-	public hotelInvoiceModel(trx?: Knex.Transaction) {
-		return new HotelInvoiceModel(trx || this.db);
-	}
+  public hotelInvoiceModel(trx?: Knex.Transaction) {
+    return new HotelInvoiceModel(trx || this.db);
+  }
 
-	public reportModel(trx?: Knex.Transaction) {
-		return new ReportModel(trx || this.db);
-	}
+  public reportModel(trx?: Knex.Transaction) {
+    return new ReportModel(trx || this.db);
+  }
 
-	public accountModel(trx?: Knex.Transaction) {
-		return new AccountModel(trx || this.db);
-	}
+  public accountModel(trx?: Knex.Transaction) {
+    return new AccountModel(trx || this.db);
+  }
 
-	public expenseModel(trx?: Knex.Transaction) {
-		return new ExpenseModel(trx || this.db);
-	}
+  public expenseModel(trx?: Knex.Transaction) {
+    return new ExpenseModel(trx || this.db);
+  }
 
-	public settingModel(trx?: Knex.Transaction) {
-		return new SettingModel(trx || this.db);
-	}
+  public settingModel(trx?: Knex.Transaction) {
+    return new SettingModel(trx || this.db);
+  }
 
-	public guestModel(trx?: Knex.Transaction) {
-		return new GuestModel(trx || this.db);
-	}
+  public guestModel(trx?: Knex.Transaction) {
+    return new GuestModel(trx || this.db);
+  }
 
-	public employeeModel(trx?: Knex.Transaction) {
-		return new EmployeeModel(trx || this.db);
-	}
+  public employeeModel(trx?: Knex.Transaction) {
+    return new EmployeeModel(trx || this.db);
+  }
 
-	public hrModel(trx?: Knex.Transaction) {
-		return new HrModel(trx || this.db);
-	}
+  public hrModel(trx?: Knex.Transaction) {
+    return new HrModel(trx || this.db);
+  }
 
-	public payRollModel(trx?: Knex.Transaction) {
-		return new PayRollModel(trx || this.db);
-	}
+  public payRollModel(trx?: Knex.Transaction) {
+    return new PayRollModel(trx || this.db);
+  }
 
-	public dashBoardModel(trx?: Knex.Transaction) {
-		return new DashBoardModel(trx || this.db);
-	}
+  public channelManagerModel(trx?: Knex.Transaction) {
+    return new ChannelManagerModel(trx || this.db);
+  }
 
-	//=============== Inventory model Start ================ //
+  public dashBoardModel(trx?: Knex.Transaction) {
+    return new DashBoardModel(trx || this.db);
+  }
 
-	// category, unit, brand, supplier
-	public CommonInventoryModel(trx?: Knex.Transaction) {
-		return new CommonInventoryModel(trx || this.db);
-	}
+  //=============== Inventory model Start ================ //
 
-	// product, damaged product
-	public productInventoryModel(trx?: Knex.Transaction) {
-		return new ProductInventoryModel(trx || this.db);
-	}
+  // category, unit, brand, supplier
+  public CommonInventoryModel(trx?: Knex.Transaction) {
+    return new CommonInventoryModel(trx || this.db);
+  }
 
-	// puchase
-	public purchaseInventoryModel(trx?: Knex.Transaction) {
-		return new PurchaseInventoryModel(trx || this.db);
-	}
+  // product, damaged product
+  public productInventoryModel(trx?: Knex.Transaction) {
+    return new ProductInventoryModel(trx || this.db);
+  }
 
-	// stock
-	public stockInventoryModel(trx?: Knex.Transaction) {
-		return new StockInventoryModel(trx || this.db);
-	}
+  // puchase
+  public purchaseInventoryModel(trx?: Knex.Transaction) {
+    return new PurchaseInventoryModel(trx || this.db);
+  }
 
-	// payment model
-	public paymentModel(trx?: Knex.Transaction) {
-		return new PaymentModel(trx || this.db);
-	}
+  // stock
+  public stockInventoryModel(trx?: Knex.Transaction) {
+    return new StockInventoryModel(trx || this.db);
+  }
 
-	//=============== m360ict panel model start ================ //
+  // payment model
+  public paymentModel(trx?: Knex.Transaction) {
+    return new PaymentModel(trx || this.db);
+  }
 
-	// hotel user model
-	public HotelModel(trx?: Knex.Transaction) {
-		return new HotelModel(trx || this.db);
-	}
+  //=============== m360ict panel model start ================ //
 
-	public mAdmiministrationModel(trx?: Knex.Transaction) {
-		return new MAdministrationModel(trx || this.db);
-	}
+  // hotel user model
+  public HotelModel(trx?: Knex.Transaction) {
+    return new HotelModel(trx || this.db);
+  }
 
-	// configuration model
-	public mConfigurationModel(trx?: Knex.Transaction) {
-		return new MConfigurationModel(trx || this.db);
-	}
+  public mAdmiministrationModel(trx?: Knex.Transaction) {
+    return new MAdministrationModel(trx || this.db);
+  }
 
-	public DboModel(trx?: Knex.Transaction) {
-		return new DboModel(trx || this.db);
-	}
+  // configuration model
+  public mConfigurationModel(trx?: Knex.Transaction) {
+    return new MConfigurationModel(trx || this.db);
+  }
 
-	//--------------------- Btoc Model ---------------------------//
-	public btocUserModel(trx?: Knex.Transaction) {
-		return new BtocUserModel(trx || this.db);
-	}
+  public DboModel(trx?: Knex.Transaction) {
+    return new DboModel(trx || this.db);
+  }
 
-	// ------------- Btoc Configuration Model ----------------- //
-	public b2cConfigurationModel(trx?: Knex.Transaction) {
-		return new B2cConfigurationModel(trx || this.db);
-	}
+  //--------------------- Btoc Model ---------------------------//
+  public btocUserModel(trx?: Knex.Transaction) {
+    return new BtocUserModel(trx || this.db);
+  }
+
+  // ------------- Btoc Configuration Model ----------------- //
+  public b2cConfigurationModel(trx?: Knex.Transaction) {
+    return new B2cConfigurationModel(trx || this.db);
+  }
 }
 export default Models;

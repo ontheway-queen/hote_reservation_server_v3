@@ -1,51 +1,51 @@
 import AbstractRouter from "../../abstarcts/abstract.router";
-import ConfigurationController from "../controllers/configuration.controller";
+import HRConfigurationController from "../controllers/hr.configuration.controller";
 
-class ConfigurationRouter extends AbstractRouter {
-	private controller = new ConfigurationController();
+class HRConfigurationRouter extends AbstractRouter {
+  private controller = new HRConfigurationController();
 
-	constructor() {
-		super();
+  constructor() {
+    super();
 
-		this.callRouter();
-	}
-	private callRouter() {
-		// Shifts
-		this.router
-			.route("/shifts")
-			.post(this.controller.createShift)
-			.get(this.controller.getAllShifts);
+    this.callRouter();
+  }
+  private callRouter() {
+    // Shifts
+    this.router
+      .route("/shifts")
+      .post(this.controller.createShift)
+      .get(this.controller.getAllShifts);
 
-		this.router
-			.route("/shifts/:id")
-			.get(this.controller.getSingleShift)
-			.patch(this.controller.updateShift)
-			.delete(this.controller.deleteShift);
+    this.router
+      .route("/shifts/:id")
+      .get(this.controller.getSingleShift)
+      .patch(this.controller.updateShift)
+      .delete(this.controller.deleteShift);
 
-		// Allowances
-		this.router
-			.route("/allowances")
-			.post(this.controller.createAllowances)
-			.get(this.controller.getAllAllowances);
+    // Allowances
+    this.router
+      .route("/allowances")
+      .post(this.controller.createAllowances)
+      .get(this.controller.getAllAllowances);
 
-		this.router
-			.route("/allowances/:id")
-			.get(this.controller.getSingleAllowance)
-			.patch(this.controller.updateAllowance)
-			.delete(this.controller.deleteAllowance);
+    this.router
+      .route("/allowances/:id")
+      .get(this.controller.getSingleAllowance)
+      .patch(this.controller.updateAllowance)
+      .delete(this.controller.deleteAllowance);
 
-		// Deductions
-		this.router
-			.route("/deductions")
-			.post(this.controller.createDeductions)
-			.get(this.controller.getAllDeductions);
+    // Deductions
+    this.router
+      .route("/deductions")
+      .post(this.controller.createDeductions)
+      .get(this.controller.getAllDeductions);
 
-		this.router
-			.route("/deductions/:id")
-			.get(this.controller.getSingleDeduction)
-			.patch(this.controller.updateDeduction)
-			.delete(this.controller.deleteDeduction);
-	}
+    this.router
+      .route("/deductions/:id")
+      .get(this.controller.getSingleDeduction)
+      .patch(this.controller.updateDeduction)
+      .delete(this.controller.deleteDeduction);
+  }
 }
 
-export default ConfigurationRouter;
+export default HRConfigurationRouter;

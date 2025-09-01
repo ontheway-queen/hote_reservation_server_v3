@@ -31,7 +31,6 @@ class RoomController extends abstract_controller_1.default {
         super();
         this.roomService = new room_service_1.default();
         this.roomvalidator = new Room_validator_1.default();
-        // Create room
         this.createroom = this.asyncWrapper.wrap({ bodySchema: this.roomvalidator.createRoomValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
             const _a = yield this.roomService.createRoom(req), { code } = _a, data = __rest(_a, ["code"]);
             if (data.success) {
@@ -41,26 +40,50 @@ class RoomController extends abstract_controller_1.default {
                 this.error(data.message, code);
             }
         }));
+        this.createMultipleRooms = this.asyncWrapper.wrap({ bodySchema: this.roomvalidator.createMultipleRoomValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _b = yield this.roomService.createMultipleRooms(req), { code } = _b, data = __rest(_b, ["code"]);
+            res.status(code).json(data);
+        }));
         this.getAllRoom = this.asyncWrapper.wrap({ querySchema: this.roomvalidator.getAllHotelRoomQueryValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _b = yield this.roomService.getAllRoom(req), { code } = _b, data = __rest(_b, ["code"]);
+            const _c = yield this.roomService.getAllRoom(req), { code } = _c, data = __rest(_c, ["code"]);
+            res.status(code).json(data);
+        }));
+        this.getAllRoomByRoomStatus = this.asyncWrapper.wrap({
+            querySchema: this.roomvalidator.getAllHotelRoomByRoomStatusQueryValidator,
+        }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _d = yield this.roomService.getAllRoomByRoomStatus(req), { code } = _d, data = __rest(_d, ["code"]);
             res.status(code).json(data);
         }));
         this.getAllRoomByRoomTypes = this.asyncWrapper.wrap({}, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _c = yield this.roomService.getAllRoomByRoomTypes(req), { code } = _c, data = __rest(_c, ["code"]);
+            const _e = yield this.roomService.getAllRoomByRoomTypes(req), { code } = _e, data = __rest(_e, ["code"]);
             res.status(code).json(data);
         }));
         this.getAllAvailableRooms = this.asyncWrapper.wrap({}, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _d = yield this.roomService.getAllAvailableRooms(req), { code } = _d, data = __rest(_d, ["code"]);
+            const _f = yield this.roomService.getAllAvailableRooms(req), { code } = _f, data = __rest(_f, ["code"]);
             res.status(code).json(data);
         }));
-        // update single hotel room
         this.updateHotelRoom = this.asyncWrapper.wrap({ bodySchema: this.roomvalidator.updateRoomValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _e = yield this.roomService.updateroom(req), { code } = _e, data = __rest(_e, ["code"]);
+            const _g = yield this.roomService.updateroom(req), { code } = _g, data = __rest(_g, ["code"]);
             res.status(code).json(data);
         }));
-        // update single hotel room status
+        this.deleteHotelRoom = this.asyncWrapper.wrap({ paramSchema: this.commonValidator.singleParamValidator("room_id") }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _h = yield this.roomService.deleteHotelRoom(req), { code } = _h, data = __rest(_h, ["code"]);
+            res.status(code).json(data);
+        }));
         this.updateHotelRoomStatus = this.asyncWrapper.wrap({ bodySchema: this.roomvalidator.updateRoomStatusValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _f = yield this.roomService.updateRoomStatus(req), { code } = _f, data = __rest(_f, ["code"]);
+            const _j = yield this.roomService.updateRoomStatus(req), { code } = _j, data = __rest(_j, ["code"]);
+            res.status(code).json(data);
+        }));
+        // get all rooms by room type
+        this.getAllRoomByRoomType = this.asyncWrapper.wrap({
+            paramSchema: this.commonValidator.singleParamValidator("room_type_id"),
+        }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _k = yield this.roomService.getAllRoomByRoomType(req), { code } = _k, data = __rest(_k, ["code"]);
+            res.status(code).json(data);
+        }));
+        // get all occupied rooms using date
+        this.getAllOccupiedRooms = this.asyncWrapper.wrap({ querySchema: this.roomvalidator.getAllOccupiedRoomsQueryValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _l = yield this.roomService.getAllOccupiedRooms(req), { code } = _l, data = __rest(_l, ["code"]);
             res.status(code).json(data);
         }));
     }

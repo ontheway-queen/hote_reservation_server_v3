@@ -22,6 +22,7 @@ const reservation_router_1 = require("./routers/reservation.router");
 const room_guest_router_1 = __importDefault(require("./routers/room.guest.router"));
 const room_router_1 = __importDefault(require("./routers/room.router"));
 const setting_router_1 = __importDefault(require("./routers/setting.router"));
+const channelManager_router_1 = __importDefault(require("./routers/channelManager.router"));
 class ReservationRootRouter {
     constructor() {
         this.router = (0, express_1.Router)();
@@ -33,6 +34,7 @@ class ReservationRootRouter {
         this.router.use("/hr", this.authChecker.hotelAdminAuthChecker, new hr_router_1.default().router);
         this.router.use("/setting", this.authChecker.hotelAdminAuthChecker, new setting_router_1.default().router);
         this.router.use("/room", this.authChecker.hotelAdminAuthChecker, new room_router_1.default().router);
+        this.router.use("/channel-manager", this.authChecker.hotelAdminAuthChecker, new channelManager_router_1.default().router);
         this.router.use("/report", this.authChecker.hotelAdminAuthChecker, new reports_router_1.default().router);
         this.router.use("/administration", this.authChecker.hotelAdminAuthChecker, new administration_router_1.default().router);
         this.router.use("/money-receipt", this.authChecker.hotelAdminAuthChecker, new money_reciept_router_1.default().router);
