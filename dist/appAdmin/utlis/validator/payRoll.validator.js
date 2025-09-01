@@ -10,21 +10,7 @@ class PayRollValidator {
             employee_id: joi_1.default.number().required(),
             ac_tr_ac_id: joi_1.default.number().required(),
             attendance_days: joi_1.default.number().optional(),
-            advance_salary: joi_1.default.number().optional(),
-            working_hours: joi_1.default.number().optional(),
-            provident_fund: joi_1.default.number().optional(),
-            mobile_bill: joi_1.default.number().optional(),
-            feed_allowance: joi_1.default.number().optional(),
-            perform_bonus: joi_1.default.number().optional(),
-            festival_bonus: joi_1.default.string().allow("").optional(),
-            travel_allowance: joi_1.default.string().allow("").optional(),
-            health_allowance: joi_1.default.string().allow("").optional(),
-            incentive: joi_1.default.string().allow("").optional(),
-            house_rent: joi_1.default.string().allow("").optional(),
             salary_date: joi_1.default.string().required(),
-            gross_salary: joi_1.default.number().required(),
-            total_salary: joi_1.default.number().required(),
-            docs: joi_1.default.string().allow("").optional(),
             note: joi_1.default.string().allow("").optional(),
             deductions: joi_1.default.string()
                 .custom((value, helpers) => {
@@ -45,25 +31,26 @@ class PayRollValidator {
                 }
             })
                 .optional(),
-            others: joi_1.default.string()
+            allowances: joi_1.default.string()
                 .custom((value, helpers) => {
                 try {
                     const parsedObject = JSON.parse(value);
                     const otherType = typeof parsedObject;
                     if (otherType !== "object") {
                         return helpers.message({
-                            custom: "invalid others, should be a JSON object",
+                            custom: "invalid allowances, should be a JSON object",
                         });
                     }
                     return value;
                 }
                 catch (err) {
                     return helpers.message({
-                        custom: "invalid others, should be a valid JSON Object",
+                        custom: "invalid allowances, should be a valid JSON Object",
                     });
                 }
             })
                 .optional(),
+            service_charge: joi_1.default.number().min(0).max(100).required(),
         });
         // get all Pay Roll query validator
         this.getAllPayRollValidator = joi_1.default.object({

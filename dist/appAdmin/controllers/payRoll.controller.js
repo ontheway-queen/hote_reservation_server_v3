@@ -24,8 +24,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const abstract_controller_1 = __importDefault(require("../../abstarcts/abstract.controller"));
-const payRoll_validator_1 = __importDefault(require("../utlis/validator/payRoll.validator"));
 const payroll_service_1 = __importDefault(require("../services/payroll.service"));
+const payRoll_validator_1 = __importDefault(require("../utlis/validator/payRoll.validator"));
 class PayRollController extends abstract_controller_1.default {
     constructor() {
         super();

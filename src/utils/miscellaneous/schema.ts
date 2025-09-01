@@ -13,6 +13,7 @@ class Schema {
 		months: "months",
 		accounts: "accounts",
 		room_types: "room_types",
+		hotels: "hotels",
 	};
 }
 export default Schema;

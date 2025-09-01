@@ -18,30 +18,56 @@ class PayRollModel extends schema_1.default {
         super();
         this.db = db;
     }
+    // Check payroll
+    hasPayrollForMonth({ employee_id, hotel_code, salary_date, }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const result = yield this.db("payroll as p")
+                .withSchema(this.HR_SCHEMA)
+                .count("p.id as total")
+                .where("p.employee_id", employee_id)
+                .andWhere("p.hotel_code", hotel_code)
+                .andWhereRaw("TO_CHAR(p.month, 'YYYY-MM') = TO_CHAR(?::date, 'YYYY-MM')", [salary_date]);
+            return Number(result[0].total) > 0;
+        });
+    }
     // Create PayRoll
     CreatePayRoll(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("payroll")
-                .withSchema(this.RESERVATION_SCHEMA)
+                .withSchema(this.HR_SCHEMA)
                 .insert(payload, "id");
         });
     }
-    // Create pay roll deductions
-    createPayRoll_deductions(insertObj) {
+    // Create employee deductions
+    createEmployeeDeductions(payload) {
         return __awaiter(this, void 0, void 0, function* () {
-            const res = yield this.db("payroll_deductions")
-                .withSchema(this.RESERVATION_SCHEMA)
-                .insert(insertObj);
-            return res;
+            return yield this.db("employee_deductions")
+                .withSchema(this.HR_SCHEMA)
+                .insert(payload);
         });
     }
-    // Create pay roll additions
-    createPayRoll_additions(insertObj) {
+    // Create employee allowance
+    createEmployeeAllowances(payload) {
         return __awaiter(this, void 0, void 0, function* () {
-            const res = yield this.db("payroll_additions")
-                .withSchema(this.RESERVATION_SCHEMA)
-                .insert(insertObj);
-            return res;
+            return yield this.db("employee_allowances")
+                .withSchema(this.HR_SCHEMA)
+                .insert(payload);
+        });
+    }
+    // create Service Charge Distribution
+    createServiceChargeDistribution(payload) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("service_charge_distribution")
+                .withSchema(this.HR_SCHEMA)
+                .insert(payload);
+        });
+    }
+    // Insert payslip
+    insertPaySlip(payload) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("payslips")
+                .withSchema(this.HR_SCHEMA)
+                .insert(payload);
         });
     }
     // Get All Pay Roll
@@ -56,13 +82,10 @@ class PayRollModel extends schema_1.default {
                 dtbs.offset(parseInt(skip));
             }
             const data = yield dtbs
-                .withSchema(this.RESERVATION_SCHEMA)
-                .select("p.id", "p.voucher_no", "e.name as employee_name", "de.name as designation", "a.ac_type as pay_method", "a.name as account_name", "e.salary as base_salary", "p.attendance_days", "p.working_hours", "p.gross_salary", "p.total_salary", "p.salary_date")
+                .withSchema(this.HR_SCHEMA)
+                .select("p.id", "e.name as employee_name", "de.name as designation", "p.total_allowance", "p.total_deduction", "p.service_charge", "p.total_overtime", "e.salary as base_salary", "p.net_salary", "p.month as salary_date")
                 .leftJoin("employee as e", "e.id", "p.employee_id")
                 .leftJoin("designation as de", "de.id", "e.designation_id")
-                .joinRaw(`JOIN ?? as a ON a.id = p.ac_tr_ac_id`, [
-                `${this.ACC_SCHEMA}.${this.TABLES.accounts}`,
-            ])
                 .where("p.hotel_code", hotel_code)
                 .andWhere(function () {
                 if (from_date && to_date) {
@@ -71,19 +94,15 @@ class PayRollModel extends schema_1.default {
                 if (key) {
                     this.andWhere("e.name", "like", `%${key}%`)
                         .orWhere("de.name", "like", `%${key}%`)
-                        .orWhere("p.voucher_no", "like", `%${key}%`)
                         .orWhere("a.name", "like", `%${key}%`);
                 }
             })
                 .orderBy("p.id", "desc");
             const total = yield this.db("payroll as p")
                 .count("p.id as total")
-                .withSchema(this.RESERVATION_SCHEMA)
+                .withSchema(this.HR_SCHEMA)
                 .leftJoin("employee as e", "e.id", "p.employee_id")
                 .leftJoin("designation as de", "de.id", "e.designation_id")
-                .joinRaw(`JOIN ?? as a ON a.id = p.ac_tr_ac_id`, [
-                `${this.ACC_SCHEMA}.${this.TABLES.accounts}`,
-            ])
                 .where("p.hotel_code", hotel_code)
                 .andWhere(function () {
                 if (from_date && to_date) {
@@ -92,51 +111,52 @@ class PayRollModel extends schema_1.default {
                 if (key) {
                     this.andWhere("e.name", "like", `%${key}%`)
                         .orWhere("de.name", "like", `%${key}%`)
-                        .orWhere("p.voucher_no", "like", `%${key}%`)
                         .orWhere("a.name", "like", `%${key}%`);
                 }
             });
             return { data, total: Number(total[0].total) };
         });
     }
-    // get all voucher last id
-    getAllIVoucherForLastId() {
-        return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("payroll")
-                .select("id")
-                .withSchema(this.RESERVATION_SCHEMA)
-                .orderBy("id", "desc")
-                .limit(1);
-        });
-    }
     // get single pay Roll
     getSinglePayRoll(id, hotel_code) {
         return __awaiter(this, void 0, void 0, function* () {
-            const payroll = yield this.db("payroll as p")
-                .withSchema(this.RESERVATION_SCHEMA)
-                .select("p.id", "p.voucher_no", "acc.ac_type", "acc.name as account_name", "acc.branch as branch_name", "h.name as hotel_name", "h.address as hotel_address", "h.country_code", "h.city_code", "h.postal_code", "e.name as employee_name", "des.name as employee_designation", "e.mobile_no as employee_phone", "p.attendance_days", "p.working_hours", "p.advance_salary", "p.gross_salary", "p.provident_fund", "p.mobile_bill", "p.feed_allowance", "p.perform_bonus", "p.festival_bonus", "p.travel_allowance", "p.health_allowance", "p.incentive", "p.salary_date", "p.house_rent", "p.total_salary")
-                .join("hotels as h", "h.hotel_code", "p.hotel_code")
-                .joinRaw(`JOIN ?? as acc ON acc.id = p.ac_tr_ac_id`, [
-                `${this.ACC_SCHEMA}.${this.TABLES.accounts}`,
+            return yield this.db("payroll as p")
+                .withSchema(this.HR_SCHEMA)
+                .select("p.id", "h.name as hotel_name", "h.address as hotel_address", "h.country_code", "h.city_code", "h.postal_code", "e.name as employee_name", "des.name as employee_designation", "e.contact_no as employee_phone", "p.total_allowance", "p.total_deduction", "p.service_charge", "p.total_overtime", "e.salary as base_salary", "p.net_salary", "p.month as salary_date")
+                .joinRaw(`JOIN ?? as h ON h.hotel_code = p.hotel_code`, [
+                `${this.RESERVATION_SCHEMA}.${this.TABLES.hotels}`,
             ])
                 .join("employee as e", "e.id", "p.employee_id")
                 .join("designation as des", "des.id", "e.designation_id")
+                .leftJoin("employee_deductions as ed", "ed.payroll_id", "p.id")
+                .leftJoin("deductions as d", "d.id", "ed.deduction_id")
+                .leftJoin("employee_allowances as ea", "ea.payroll_id", "p.id")
+                .leftJoin("allowances as a", "a.id", "ea.allowance_id")
                 .where("p.id", id)
                 .andWhere("p.hotel_code", hotel_code)
+                .groupBy("p.id", "h.hotel_code", "h.name", "h.address", "h.country_code", "h.city_code", "h.postal_code", "e.id", "e.name", "e.contact_no", "e.salary", "des.id", "des.name")
+                .select(this.db.raw(`
+				COALESCE(
+					JSON_AGG(
+						DISTINCT JSONB_BUILD_OBJECT(
+							'id', ed.id,
+							'deduction_name', d.name,
+							'amount', ed.amount
+						)
+					) FILTER (WHERE ed.id IS NOT NULL), '[]'
+				) AS deductions
+			`), this.db.raw(`
+				COALESCE(
+					JSON_AGG(
+						DISTINCT JSONB_BUILD_OBJECT(
+							'id', ea.id,
+							'allowance_name', a.name,
+							'amount', ea.amount
+						)
+					) FILTER (WHERE ea.id IS NOT NULL), '[]'
+				) AS allowances
+			`))
                 .first();
-            if (!payroll) {
-                return null;
-            }
-            const deductions = yield this.db("payroll_deductions")
-                .withSchema(this.RESERVATION_SCHEMA)
-                .select("id", "deduction_amount", "deduction_reason")
-                .where("payroll_id", id);
-            const additions = yield this.db("payroll_additions")
-                .withSchema(this.RESERVATION_SCHEMA)
-                .select("id", "other_amount", "other_details")
-                .where("payroll_id", id);
-            return Object.assign(Object.assign({}, payroll), { deductions,
-                additions });
         });
     }
 }

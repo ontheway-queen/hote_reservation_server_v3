@@ -3,167 +3,300 @@ import AbstractServices from "../../abstarcts/abstract.service";
 import CustomError from "../../utils/lib/customEror";
 
 class PayRollService extends AbstractServices {
-  constructor() {
-    super();
-  }
+	constructor() {
+		super();
+	}
 
-  //=================== Payroll Service ======================//
+	//=================== Payroll Service ======================//
 
-  public async createPayRoll(req: Request) {
-    return await this.db.transaction(async (trx) => {
-      const { hotel_code } = req.hotel_admin;
+	public async createPayRoll(req: Request) {
+		return await this.db.transaction(async (trx) => {
+			const { hotel_code } = req.hotel_admin;
+			const { deductions, allowances, service_charge, ...rest } =
+				req.body;
 
-      const { deductions, others, ...rest } = req.body;
+			const files = (req.files as Express.Multer.File[]) || [];
 
-      const files = (req.files as Express.Multer.File[]) || [];
+			const employeeModel = this.Model.employeeModel(trx);
+			const model = this.Model.payRollModel(trx);
+			const accountModel = this.Model.accountModel(trx);
 
-      if (files.length) {
-        rest["docs"] = files[0].filename;
-      }
+			const isEmployeeExists = await employeeModel.getSingleEmployee(
+				rest.employee_id,
+				hotel_code
+			);
 
-      // Check account
-      const accountModel = this.Model.accountModel(trx);
+			if (!isEmployeeExists) {
+				throw new CustomError(
+					"Employee with the related id not found!",
+					this.StatusCode.HTTP_NOT_FOUND
+				);
+			}
 
-      const checkAccount = await accountModel.getSingleAccount({
-        hotel_code,
-        id: rest.ac_tr_ac_id,
-      });
-      if (!checkAccount.length) {
-        return {
-          success: false,
-          code: this.StatusCode.HTTP_NOT_FOUND,
-          message: "Account not found",
-        };
-      }
+			const isPayrollExistsForMonth = await model.hasPayrollForMonth({
+				employee_id: isEmployeeExists.id,
+				hotel_code,
+				salary_date: rest.salary_date,
+			});
+			if (isPayrollExistsForMonth) {
+				return {
+					success: false,
+					code: this.StatusCode.HTTP_CONFLICT,
+					message: this.ResMsg.HTTP_CONFLICT,
+				};
+			}
 
-      const last_balance = checkAccount[0].last_balance;
+			// Check account
+			const checkAccount = await accountModel.getSingleAccount({
+				hotel_code,
+				id: rest.ac_tr_ac_id,
+			});
 
-      if (last_balance < rest.total_salary) {
-        return {
-          success: false,
-          code: this.StatusCode.HTTP_BAD_REQUEST,
-          message: "Insufficient balance in this account for pay",
-        };
-      }
+			if (!checkAccount.length) {
+				return {
+					success: false,
+					code: this.StatusCode.HTTP_NOT_FOUND,
+					message: "Account not found",
+				};
+			}
 
-      const model = this.Model.payRollModel(trx);
+			const last_balance = checkAccount[0].last_balance;
 
-      // Get last voucher ID
-      const year = new Date().getFullYear();
+			if (last_balance < rest.total_salary) {
+				return {
+					success: false,
+					code: this.StatusCode.HTTP_BAD_REQUEST,
+					message: "Insufficient balance in this account for pay",
+				};
+			}
 
-      const voucherData = await model.getAllIVoucherForLastId();
+			const deduction_parse = deductions ? JSON.parse(deductions) : [];
+			const allowances_parse = allowances ? JSON.parse(allowances) : [];
 
-      const voucherNo = voucherData.length ? voucherData[0].id + 1 : 1;
+			let totalDeductions = 0;
+			let totalAllowances = 0;
 
-      const res = await model.CreatePayRoll({
-        ...rest,
-        hotel_code,
-        voucher_no: `PR-${year}${voucherNo}`,
-        ac_tr_ac_id: rest.ac_tr_ac_id,
-        gross_salary: rest.gross_salary,
-        total_salary: rest.total_salary,
-      });
+			// 🔹 Handle Deductions
+			let deductionsPayload: any[] = [];
+			if (deduction_parse.length) {
+				deductionsPayload = await Promise.all(
+					deduction_parse.map(async (deduction: any) => {
+						const isDeductionExists = await this.Model.hrModel(
+							trx
+						).getSingleDeduction({
+							id: deduction.deduction_id,
+							hotel_code,
+						});
 
-      const payroll_id = res[0].id;
+						if (!isDeductionExists) {
+							throw new CustomError(
+								this.ResMsg.HTTP_NOT_FOUND,
+								this.StatusCode.HTTP_NOT_FOUND
+							);
+						}
 
-      // Insert payroll deductions
-      const deduction_parse = deductions ? JSON.parse(deductions) : [];
+						let amount: number;
 
-      if (deduction_parse.length) {
-        const deductionsPayload = deduction_parse.map((deduction: any) => {
-          return {
-            payroll_id,
-            deduction_amount: deduction.deduction_amount,
-            deduction_reason: deduction.deduction_reason,
-          };
-        });
-        await model.createPayRoll_deductions(deductionsPayload);
-      }
+						if (deduction.amount != null) {
+							amount = Number(deduction.amount);
+						} else {
+							if (isDeductionExists.type === "fixed") {
+								amount = Number(isDeductionExists.value);
+							} else if (
+								isDeductionExists.type === "percentage"
+							) {
+								amount =
+									(Number(isEmployeeExists.salary) *
+										Number(isDeductionExists.value)) /
+									100;
+							} else {
+								throw new CustomError(
+									`Unknown deduction type for id ${isDeductionExists.id}: ${isDeductionExists.type}`,
+									this.StatusCode.HTTP_BAD_REQUEST
+								);
+							}
+						}
 
-      // Insert payroll additions
-      const addition_parse = others ? JSON.parse(others) : [];
+						totalDeductions += amount;
 
-      if (addition_parse.length) {
-        const additionsPayload = addition_parse.map((addition: any) => {
-          return {
-            payroll_id,
-            hours: addition.hours,
-            other_amount: addition.other_amount,
-            other_details: addition.other_details,
-          };
-        });
-        console.log({ additionsPayload });
-        await model.createPayRoll_additions(additionsPayload);
-      }
-      // get last account ledger
-      // const lastAL = await accountModel.getLastAccountLedgerId(
-      // 	hotel_code
-      // );
+						return {
+							employee_id: isEmployeeExists.id,
+							deduction_id: deduction.deduction_id,
+							amount,
+						};
+					})
+				);
+			}
 
-      // const ledger_id = lastAL.length ? lastAL[0].ledger_id + 1 : 1;
+			// 🔹 Handle Allowances
+			let allowancesPayload: any[] = [];
+			if (allowances_parse.length) {
+				allowancesPayload = await Promise.all(
+					allowances_parse.map(async (allowance: any) => {
+						const isAllowanceExists = await this.Model.hrModel(
+							trx
+						).getSingleAllowance({
+							id: allowance.allowance_id,
+							hotel_code,
+						});
 
-      // Insert account ledger
-      // await accountModel.insertAccountLedger({
-      // 	ac_tr_ac_id: rest.ac_tr_ac_id,
-      // 	hotel_code,
-      // 	transaction_no: `TRX-${year - ledger_id}`,
-      // 	ledger_debit_amount: rest.total_salary,
-      // 	ledger_details: `Balance Debited by Employee PayRoll as Salary`,
-      // });
+						if (!isAllowanceExists) {
+							throw new CustomError(
+								this.ResMsg.HTTP_NOT_FOUND,
+								this.StatusCode.HTTP_NOT_FOUND
+							);
+						}
 
-      return {
-        success: true,
-        code: this.StatusCode.HTTP_SUCCESSFUL,
-        message: "Payroll created successfully.",
-      };
-    });
-  }
+						let amount: number;
 
-  // Get all Pay Roll
-  public async getAllPayRoll(req: Request) {
-    const { hotel_code } = req.hotel_admin;
-    const { limit, skip, key, from_date, to_date } = req.query;
+						if (allowance.amount != null) {
+							amount = Number(allowance.amount);
+						} else {
+							if (isAllowanceExists.type === "fixed") {
+								amount = Number(isAllowanceExists.value);
+							} else if (
+								isAllowanceExists.type === "percentage"
+							) {
+								amount =
+									(Number(isEmployeeExists.salary) *
+										Number(isAllowanceExists.value)) /
+									100;
+							} else {
+								throw new CustomError(
+									`Unknown allowance type for id ${isAllowanceExists.id}: ${isAllowanceExists.type}`,
+									this.StatusCode.HTTP_NOT_FOUND
+								);
+							}
+						}
 
-    const model = this.Model.payRollModel();
+						totalAllowances += amount;
 
-    const { data, total } = await model.getAllPayRoll({
-      limit: limit as string,
-      skip: skip as string,
-      key: key as string,
-      from_date: from_date as string,
-      to_date: to_date as string,
-      hotel_code,
-    });
-    return {
-      success: true,
-      code: this.StatusCode.HTTP_OK,
-      total,
-      data,
-    };
-  }
+						return {
+							employee_id: isEmployeeExists.id,
+							allowance_id: allowance.allowance_id,
+							amount,
+						};
+					})
+				);
+			}
 
-  // get Single payRoll
-  public async getSinglePayRoll(req: Request) {
-    const { id } = req.params;
-    const { hotel_code } = req.hotel_admin;
+			let serviceChargeValue = 0;
+			if (service_charge != null) {
+				serviceChargeValue =
+					(Number(isEmployeeExists.salary) * Number(service_charge)) /
+					100;
+			}
 
-    const data = await this.Model.payRollModel().getSinglePayRoll(
-      parseInt(id),
-      hotel_code
-    );
+			const grossSalary =
+				Number(isEmployeeExists.salary) + totalAllowances;
+			const netSalary =
+				grossSalary - totalDeductions - serviceChargeValue;
 
-    if (!data) {
-      throw new CustomError(
-        `The requested payroll with ID: ${id} not found.`,
-        this.StatusCode.HTTP_NOT_FOUND
-      );
-    }
+			const payload = {
+				employee_id: rest.employee_id,
+				month: rest.salary_date,
+				basic_salary: Number(isEmployeeExists.salary),
+				total_allowance: totalAllowances,
+				total_overtime: 0,
+				service_charge: serviceChargeValue,
+				total_deduction: totalDeductions,
+				net_salary: netSalary,
+				hotel_code,
+			};
 
-    return {
-      success: true,
-      code: this.StatusCode.HTTP_OK,
-      data: data,
-    };
-  }
+			const res = await model.CreatePayRoll(payload);
+			const payroll_id = res[0]?.id;
+
+			if (deductionsPayload.length) {
+				const deductionsWithPayrollId = deductionsPayload.map((d) => ({
+					...d,
+					payroll_id,
+				}));
+				await model.createEmployeeDeductions(deductionsWithPayrollId);
+			}
+
+			if (allowancesPayload.length) {
+				const allowancesWithPayrollId = allowancesPayload.map((a) => ({
+					...a,
+					payroll_id,
+				}));
+				await model.createEmployeeAllowances(allowancesWithPayrollId);
+			}
+
+			const service_charge_payload = {
+				month: rest.salary_date,
+				employee_id: rest.employee_id,
+				percentage: service_charge,
+				amount: serviceChargeValue,
+				hotel_code,
+				payroll_id,
+			};
+
+			await model.createServiceChargeDistribution(service_charge_payload);
+
+			if (files.length) {
+				const payslipPayload = {
+					payroll_id,
+					file_url: files[0].filename,
+				};
+
+				await model.insertPaySlip(payslipPayload);
+			}
+
+			return {
+				success: true,
+				code: this.StatusCode.HTTP_SUCCESSFUL,
+				message: "Payroll created successfully.",
+			};
+		});
+	}
+
+	// Get all Pay Roll
+	public async getAllPayRoll(req: Request) {
+		const { hotel_code } = req.hotel_admin;
+		const { limit, skip, key, from_date, to_date } = req.query;
+
+		const model = this.Model.payRollModel();
+
+		const { data, total } = await model.getAllPayRoll({
+			limit: limit as string,
+			skip: skip as string,
+			key: key as string,
+			from_date: from_date as string,
+			to_date: to_date as string,
+			hotel_code,
+		});
+		return {
+			success: true,
+			code: this.StatusCode.HTTP_OK,
+			total,
+			data,
+		};
+	}
+
+	// get Single payRoll
+	public async getSinglePayRoll(req: Request) {
+		const { id } = req.params;
+		const { hotel_code } = req.hotel_admin;
+
+		const data = await this.Model.payRollModel().getSinglePayRoll(
+			parseInt(id),
+			hotel_code
+		);
+
+		if (!data) {
+			return {
+				success: false,
+				code: this.StatusCode.HTTP_NOT_FOUND,
+				message: `The requested payroll with ID: ${id} not found.`,
+			};
+		}
+
+		return {
+			success: true,
+			code: this.StatusCode.HTTP_OK,
+			data: data,
+		};
+	}
 }
 export default PayRollService;
