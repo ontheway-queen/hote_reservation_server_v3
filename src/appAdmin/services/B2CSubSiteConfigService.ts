@@ -13,6 +13,7 @@ import {
 } from "../utlis/interfaces/configuration.interface";
 import CustomError from "../../utils/lib/customEror";
 import { heroBG } from "../../utils/miscellaneous/siteConfig/pagesContent";
+import { ICreateFaqBody } from "../utlis/interfaces/faq.types";
 
 export class B2CSubSiteConfigService extends AbstractServices {
   constructor() {
@@ -377,7 +378,7 @@ export class B2CSubSiteConfigService extends AbstractServices {
     const configModel = this.Model.b2cConfigurationModel();
     const { hotel_code } = req.hotel_admin;
 
-    const social_links = await configModel.getSocialLink({
+    const { data, total } = await configModel.getSocialLink({
       hotel_code,
     });
 
@@ -385,7 +386,8 @@ export class B2CSubSiteConfigService extends AbstractServices {
       success: true,
       code: this.StatusCode.HTTP_OK,
       message: this.ResMsg.HTTP_OK,
-      data: social_links,
+      total,
+      data,
     };
   }
 
@@ -722,6 +724,39 @@ export class B2CSubSiteConfigService extends AbstractServices {
   }
 
   // =========================== FAQ =========================== //
+
+  public async createFaqHead(req: Request) {
+    return this.db.transaction(async (trx) => {
+      const { hotel_code } = req.hotel_admin;
+      const configModel = this.Model.b2cConfigurationModel(trx);
+
+      const isHeadExists = await configModel.getAllFaqHeads({
+        hotel_code,
+        order: req.body.order_number,
+      });
+
+      if (isHeadExists.length) {
+        return {
+          success: false,
+          code: this.StatusCode.HTTP_BAD_REQUEST,
+          message: "FAQ Head with same order already exists",
+        };
+      }
+
+      await configModel.createFaqHead({
+        hotel_code,
+        title: req.body.title,
+        order_number: req.body.order_number,
+      });
+
+      return {
+        success: true,
+        code: this.StatusCode.HTTP_OK,
+        message: this.ResMsg.HTTP_OK,
+      };
+    });
+  }
+
   public async getAllFaqHeads(req: Request) {
     return this.db.transaction(async (trx) => {
       const { hotel_code } = req.hotel_admin;
@@ -738,70 +773,34 @@ export class B2CSubSiteConfigService extends AbstractServices {
     });
   }
 
-  public async createFaqHead(req: Request) {
-    return this.db.transaction(async (trx) => {
-      const { hotel_code } = req.hotel_admin;
-      const configModel = this.Model.b2cConfigurationModel(trx);
-
-      const isHeadExists = await configModel.getAllFaqHeads({
-        hotel_code,
-        order: req.body.order_number,
-      });
-
-      if (isHeadExists.length > 0) {
-        throw new CustomError(
-          "FAQ Head with same order already exists",
-          this.StatusCode.HTTP_BAD_REQUEST
-        );
-      }
-      console.log({ isHeadExists });
-      const head = await configModel.createFaqHead({
-        hotel_code,
-        title: req.body.title,
-        order_number: req.body.order_number,
-      });
-
-      return {
-        success: true,
-        code: this.StatusCode.HTTP_OK,
-        message: this.ResMsg.HTTP_OK,
-        data: head,
-      };
-    });
-  }
-
   public async updateFaqHead(req: Request) {
     return this.db.transaction(async (trx) => {
       const { id } = req.params;
       const { hotel_code } = req.hotel_admin;
-      const { order_number, title } = req.body;
+
       const configModel = this.Model.b2cConfigurationModel(trx);
 
-      const isHeadExists = await configModel.getAllFaqHeads({
-        hotel_code,
-        order: order_number,
-      });
+      if (req.body?.order_number) {
+        const isHeadExists = await configModel.getAllFaqHeads({
+          hotel_code,
+          order: req.body.order_number,
+        });
 
-      if (isHeadExists.length > 0) {
-        throw new CustomError(
-          "FAQ Head with same order already exists",
-          this.StatusCode.HTTP_BAD_REQUEST
-        );
+        if (isHeadExists.length) {
+          return {
+            success: false,
+            code: this.StatusCode.HTTP_BAD_REQUEST,
+            message: "FAQ Head with same order already exists",
+          };
+        }
       }
 
-      const head = await configModel.updateFaqHead(
-        {
-          title,
-          order_number,
-        },
-        { id: Number(id) }
-      );
+      await configModel.updateFaqHead(req.body, { id: Number(id) });
 
       return {
         success: true,
         code: this.StatusCode.HTTP_OK,
         message: this.ResMsg.HTTP_OK,
-        data: head,
       };
     });
   }
@@ -812,12 +811,12 @@ export class B2CSubSiteConfigService extends AbstractServices {
       const { hotel_code } = req.hotel_admin;
       const configModel = this.Model.b2cConfigurationModel(trx);
 
-      const isHeadExists = await configModel.getAllFaqHeads({
-        hotel_code,
-        id: Number(id),
-      });
+      const isHeadExists = await configModel.getSingleFaqHeads(
+        Number(id),
+        hotel_code
+      );
 
-      if (isHeadExists.length < 1) {
+      if (isHeadExists) {
         throw new CustomError(
           "FAQ Head with does not exists",
           this.StatusCode.HTTP_BAD_REQUEST
@@ -834,58 +833,120 @@ export class B2CSubSiteConfigService extends AbstractServices {
     });
   }
 
-  public async getSingleFaqHeadWithFaq(req: Request) {
-    return this.db.transaction(async (trx) => {
-      const { id } = req.params;
-      const { hotel_code } = req.hotel_admin;
-      const configModel = this.Model.b2cConfigurationModel(trx);
-
-      const head = await configModel.getAllFaqHeads({
-        hotel_code,
-        id: Number(id),
-      });
-
-      if (head.length < 1) {
-        throw new CustomError(
-          "FAQ head not found",
-          this.StatusCode.HTTP_NOT_FOUND
-        );
-      }
-
-      const data = await configModel.getFaqsByHeadId(Number(id));
-
-      return {
-        success: true,
-        code: this.StatusCode.HTTP_OK,
-        message: this.ResMsg.HTTP_OK,
-        data,
-      };
-    });
-  }
-
   public async createFaq(req: Request) {
     return this.db.transaction(async (trx) => {
       const { hotel_code } = req.hotel_admin;
       const configModel = this.Model.b2cConfigurationModel(trx);
 
-      const isHeadExists = await configModel.getAllFaqHeads({
-        hotel_code,
-        id: Number(req.body.faq_head_id),
-      });
+      const isHeadExists = await configModel.getSingleFaqHeads(
+        Number(req.body.faq_head_id),
+        hotel_code
+      );
 
-      if (isHeadExists.length < 1) {
-        throw new CustomError(
-          "FAQ Head with id does not exists",
-          this.StatusCode.HTTP_BAD_REQUEST
-        );
+      if (isHeadExists) {
+        return {
+          success: false,
+          code: this.StatusCode.HTTP_NOT_FOUND,
+          message: "FAQ Head with id does not exists",
+        };
       }
 
-      const faq = await configModel.createFaq(req.body);
+      const faq = await configModel.createFaq({ ...req.body, hotel_code });
       return {
         success: true,
         code: this.StatusCode.HTTP_OK,
         message: this.ResMsg.HTTP_OK,
-        data: faq,
+      };
+    });
+  }
+
+  public async getFaqsByHeadId(req: Request) {
+    return this.db.transaction(async (trx) => {
+      const { id } = req.params;
+      const { hotel_code } = req.hotel_admin;
+      const configModel = this.Model.b2cConfigurationModel(trx);
+
+      const head = await configModel.getSingleFaqHeads(Number(id), hotel_code);
+
+      if (!head) {
+        return {
+          success: false,
+          code: this.StatusCode.HTTP_NOT_FOUND,
+          message: "FAQ head not found",
+        };
+      }
+
+      const data = await configModel.getFaqsByHeadId(Number(id), hotel_code);
+
+      return {
+        success: true,
+        code: this.StatusCode.HTTP_OK,
+        data,
+      };
+    });
+  }
+
+  public async updateFaq(req: Request) {
+    return this.db.transaction(async (trx) => {
+      const { hotel_code } = req.hotel_admin;
+
+      const configModel = this.Model.b2cConfigurationModel(trx);
+
+      const isHeadExists = await configModel.getSingleFaq(
+        Number(req.params.id),
+        hotel_code
+      );
+
+      if (!isHeadExists.length) {
+        return {
+          success: false,
+          code: this.StatusCode.HTTP_NOT_FOUND,
+          message: "Invalid faq ID",
+        };
+      }
+
+      await configModel.updateFaq(req.body, {
+        hotel_code,
+        id: Number(req.params.id),
+      });
+      return {
+        success: true,
+        code: this.StatusCode.HTTP_OK,
+        message: "Successfully updated",
+      };
+    });
+  }
+
+  public async deleteFaq(req: Request) {
+    return this.db.transaction(async (trx) => {
+      const { hotel_code } = req.hotel_admin;
+
+      const configModel = this.Model.b2cConfigurationModel(trx);
+
+      const isHeadExists = await configModel.getSingleFaq(
+        Number(req.params.id),
+        hotel_code
+      );
+
+      if (!isHeadExists.length) {
+        return {
+          success: false,
+          code: this.StatusCode.HTTP_NOT_FOUND,
+          message: "Invalid faq ID",
+        };
+      }
+
+      await configModel.updateFaq(
+        { is_deleted: true },
+        {
+          hotel_code,
+          id: Number(req.params.id),
+        }
+      );
+      return {
+        success: true,
+        code: this.StatusCode.HTTP_OK,
+        message: "Successfully deleted",
       };
     });
   }

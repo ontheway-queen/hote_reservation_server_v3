@@ -70,10 +70,14 @@ class B2CSiteConfigRouter extends abstract_router_1.default {
             .post(this.controller.createFaqHead);
         this.router
             .route("/faq-head/:id")
-            .get(this.controller.getSingleFaqHeadWithFaq)
+            .get(this.controller.getFaqsByHeadId)
             .patch(this.controller.updateFaqHead)
             .delete(this.controller.deleteFaqHead);
         this.router.route("/faq").post(this.controller.createFaq);
+        this.router
+            .route("/faq/:id")
+            .patch(this.controller.updateFaq)
+            .delete(this.controller.deleteFaq);
         this.router.route("/amenity-heads").get(this.controller.getAllAmenityHeads);
         this.router
             .route("/amenity-heads/:id")

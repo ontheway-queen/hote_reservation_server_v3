@@ -143,10 +143,15 @@ class B2CSubSiteConfigValidator {
             order_number: joi_1.default.number().optional(),
         });
         this.createFaq = joi_1.default.object({
-            faq_head_id: joi_1.default.number(),
-            question: joi_1.default.string().trim(),
-            answer: joi_1.default.string().trim(),
-            order_number: joi_1.default.number(),
+            faq_head_id: joi_1.default.number().required(),
+            question: joi_1.default.string().trim().required(),
+            answer: joi_1.default.string().trim().required(),
+            order_number: joi_1.default.number().required(),
+        });
+        this.updateFaq = joi_1.default.object({
+            question: joi_1.default.string().trim().optional(),
+            answer: joi_1.default.string().trim().optional(),
+            order_number: joi_1.default.number().optional(),
         });
     }
 }

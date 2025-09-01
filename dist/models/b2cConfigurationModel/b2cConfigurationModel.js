@@ -424,9 +424,8 @@ class AgencyB2CConfigModel extends schema_1.default {
     }
     getSocialMedia(query) {
         return __awaiter(this, void 0, void 0, function* () {
-            console.log({ query });
             return yield this.db("social_media")
-                .withSchema(this.PUBLIC_SCHEMA)
+                .withSchema(this.BTOC_SCHEMA)
                 .select("*")
                 .where((qb) => {
                 if (query.name) {
@@ -491,32 +490,55 @@ class AgencyB2CConfigModel extends schema_1.default {
     // =========================== FAQ =========================== //
     getAllFaqHeads(where) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("faq_heads")
-                .withSchema(this.RESERVATION_SCHEMA)
-                .select("id", "order_number", "title")
-                .where("hotel_code", where.hotel_code)
+            return yield this.db("faq_heads as fh")
+                .withSchema(this.BTOC_SCHEMA)
+                .select("fh.id", "fh.order_number", "fh.title", this.db.raw(`
+  (
+    SELECT JSON_AGG(
+      JSON_BUILD_OBJECT(
+        'faq_id', fq.id,
+        'question', fq.question,
+        'answer', fq.answer,
+        'order_number', fq.order_number,
+        'status', fq.status
+      ) ORDER BY fq.order_number ASC
+    ) AS faqs
+  )
+`))
+                .leftJoin("faqs as fq", "fh.id", "fq.faq_head_id")
+                .where("fh.hotel_code", where.hotel_code)
                 .andWhere((qb) => {
-                if (where.id) {
-                    qb.andWhere("id", where.id);
-                }
                 if (where.order) {
-                    qb.andWhere("order_number", where.order);
+                    qb.andWhere("fh.order_number", where.order);
                 }
             })
-                .andWhere("is_deleted", false);
+                .andWhere("fh.is_deleted", false)
+                .andWhere("fq.is_deleted", false)
+                .groupBy("fh.id", "fh.order_number", "fh.title")
+                .orderBy("fh.order_number", "asc");
+        });
+    }
+    getSingleFaqHeads(id, hotel_code) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("faq_heads")
+                .withSchema(this.BTOC_SCHEMA)
+                .select("id", "hotel_code", "title", "order_number", "status", "created_at")
+                .where({ id })
+                .andWhere({ hotel_code })
+                .first();
         });
     }
     createFaqHead(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("faq_heads")
-                .withSchema(this.RESERVATION_SCHEMA)
+                .withSchema(this.BTOC_SCHEMA)
                 .insert(payload, "id");
         });
     }
     updateFaqHead(payload, where) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("faq_heads")
-                .withSchema(this.RESERVATION_SCHEMA)
+                .withSchema(this.BTOC_SCHEMA)
                 .update(payload)
                 .where("id", where.id);
         });
@@ -524,7 +546,7 @@ class AgencyB2CConfigModel extends schema_1.default {
     deleteFaqHead(where) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("faq_heads")
-                .withSchema(this.RESERVATION_SCHEMA)
+                .withSchema(this.BTOC_SCHEMA)
                 .update("is_deleted", "true")
                 .where("id", where.id);
         });
@@ -532,16 +554,34 @@ class AgencyB2CConfigModel extends schema_1.default {
     createFaq(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("faqs")
-                .withSchema(this.RESERVATION_SCHEMA)
+                .withSchema(this.BTOC_SCHEMA)
                 .insert(payload, "id");
         });
     }
-    getFaqsByHeadId(head_id) {
+    updateFaq(payload, where) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("faqs")
+                .withSchema(this.BTOC_SCHEMA)
+                .update(payload)
+                .where(where);
+        });
+    }
+    getFaqsByHeadId(head_id, hotel_code) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("faqs")
+                .select("id", "question", "answer", "order_number", "status", "created_at")
+                .withSchema(this.BTOC_SCHEMA)
+                .where("faq_head_id", head_id)
+                .andWhere("hotel_code", hotel_code);
+        });
+    }
+    getSingleFaq(faq_id, hotel_code) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("faqs")
+                .withSchema(this.BTOC_SCHEMA)
                 .select("*")
-                .withSchema(this.RESERVATION_SCHEMA)
-                .where("faq_head_id", head_id);
+                .where({ id: faq_id })
+                .andWhere({ hotel_code });
         });
     }
     // =========================== Hotel Amenities =========================== //

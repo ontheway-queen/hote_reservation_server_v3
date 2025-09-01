@@ -196,6 +196,20 @@ class BtocConfigService extends abstract_service_1.default {
             };
         });
     }
+    getAllFaq(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { hotel_code } = req.web_token;
+            const data = yield this.Model.b2cConfigurationModel().getAllFaqHeads({
+                hotel_code,
+            });
+            return {
+                success: true,
+                code: this.StatusCode.HTTP_OK,
+                message: this.ResMsg.HTTP_OK,
+                data,
+            };
+        });
+    }
     GetAccountsData(req) {
         return __awaiter(this, void 0, void 0, function* () {
             const { hotel_code } = req.web_token;

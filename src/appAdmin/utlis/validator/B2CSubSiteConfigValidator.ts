@@ -156,9 +156,15 @@ export class B2CSubSiteConfigValidator {
   });
 
   public createFaq = Joi.object({
-    faq_head_id: Joi.number(),
-    question: Joi.string().trim(),
-    answer: Joi.string().trim(),
-    order_number: Joi.number(),
+    faq_head_id: Joi.number().required(),
+    question: Joi.string().trim().required(),
+    answer: Joi.string().trim().required(),
+    order_number: Joi.number().required(),
+  });
+
+  public updateFaq = Joi.object({
+    question: Joi.string().trim().optional(),
+    answer: Joi.string().trim().optional(),
+    order_number: Joi.number().optional(),
   });
 }
