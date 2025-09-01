@@ -675,7 +675,7 @@ class B2CSubSiteConfigService extends abstract_service_1.default {
                 const { hotel_code } = req.hotel_admin;
                 const configModel = this.Model.b2cConfigurationModel(trx);
                 const isHeadExists = yield configModel.getSingleFaqHeads(Number(id), hotel_code);
-                if (isHeadExists) {
+                if (!isHeadExists) {
                     throw new customEror_1.default("FAQ Head with does not exists", this.StatusCode.HTTP_BAD_REQUEST);
                 }
                 yield configModel.deleteFaqHead({ id: Number(id) });
@@ -693,14 +693,14 @@ class B2CSubSiteConfigService extends abstract_service_1.default {
                 const { hotel_code } = req.hotel_admin;
                 const configModel = this.Model.b2cConfigurationModel(trx);
                 const isHeadExists = yield configModel.getSingleFaqHeads(Number(req.body.faq_head_id), hotel_code);
-                if (isHeadExists) {
+                if (!isHeadExists) {
                     return {
                         success: false,
                         code: this.StatusCode.HTTP_NOT_FOUND,
                         message: "FAQ Head with id does not exists",
                     };
                 }
-                const faq = yield configModel.createFaq(Object.assign(Object.assign({}, req.body), { hotel_code }));
+                yield configModel.createFaq(Object.assign(Object.assign({}, req.body), { hotel_code }));
                 return {
                     success: true,
                     code: this.StatusCode.HTTP_OK,

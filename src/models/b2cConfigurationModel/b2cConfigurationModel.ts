@@ -622,22 +622,25 @@ export default class AgencyB2CConfigModel extends Schema {
         "fh.id",
         "fh.order_number",
         "fh.title",
-
         this.db.raw(`
-  (
-    SELECT JSON_AGG(
-      JSON_BUILD_OBJECT(
-        'faq_id', fq.id,
-        'question', fq.question,
-        'answer', fq.answer,
-        'order_number', fq.order_number,
-        'status', fq.status
-      ) ORDER BY fq.order_number ASC
-    ) AS faqs
-  )
-`)
+        COALESCE(
+          (
+            SELECT JSON_AGG(
+              JSON_BUILD_OBJECT(
+                'faq_id', fq.id,
+                'question', fq.question,
+                'answer', fq.answer,
+                'order_number', fq.order_number,
+                'status', fq.status
+              ) ORDER BY fq.order_number ASC
+            )
+            FROM btoc.faqs fq
+            WHERE fq.faq_head_id = fh.id
+              AND fq.is_deleted = false
+          ), '[]'::json
+        ) AS faqs
+      `)
       )
-      .leftJoin("faqs as fq", "fh.id", "fq.faq_head_id")
       .where("fh.hotel_code", where.hotel_code)
       .andWhere((qb) => {
         if (where.order) {
@@ -645,7 +648,6 @@ export default class AgencyB2CConfigModel extends Schema {
         }
       })
       .andWhere("fh.is_deleted", false)
-      .andWhere("fq.is_deleted", false)
       .groupBy("fh.id", "fh.order_number", "fh.title")
       .orderBy("fh.order_number", "asc");
   }
@@ -666,6 +668,7 @@ export default class AgencyB2CConfigModel extends Schema {
       )
       .where({ id })
       .andWhere({ hotel_code })
+      .andWhere("is_deleted", false)
       .first();
   }
 
@@ -674,6 +677,7 @@ export default class AgencyB2CConfigModel extends Schema {
     title: string;
     order_number: number;
   }) {
+    console.log({ payload });
     return await this.db("faq_heads")
       .withSchema(this.BTOC_SCHEMA)
       .insert(payload, "id");

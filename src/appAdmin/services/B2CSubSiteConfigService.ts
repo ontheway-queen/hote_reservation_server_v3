@@ -816,7 +816,7 @@ export class B2CSubSiteConfigService extends AbstractServices {
         hotel_code
       );
 
-      if (isHeadExists) {
+      if (!isHeadExists) {
         throw new CustomError(
           "FAQ Head with does not exists",
           this.StatusCode.HTTP_BAD_REQUEST
@@ -843,7 +843,7 @@ export class B2CSubSiteConfigService extends AbstractServices {
         hotel_code
       );
 
-      if (isHeadExists) {
+      if (!isHeadExists) {
         return {
           success: false,
           code: this.StatusCode.HTTP_NOT_FOUND,
@@ -851,7 +851,7 @@ export class B2CSubSiteConfigService extends AbstractServices {
         };
       }
 
-      const faq = await configModel.createFaq({ ...req.body, hotel_code });
+      await configModel.createFaq({ ...req.body, hotel_code });
       return {
         success: true,
         code: this.StatusCode.HTTP_OK,

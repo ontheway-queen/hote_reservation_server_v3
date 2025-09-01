@@ -493,19 +493,23 @@ class AgencyB2CConfigModel extends schema_1.default {
             return yield this.db("faq_heads as fh")
                 .withSchema(this.BTOC_SCHEMA)
                 .select("fh.id", "fh.order_number", "fh.title", this.db.raw(`
-  (
-    SELECT JSON_AGG(
-      JSON_BUILD_OBJECT(
-        'faq_id', fq.id,
-        'question', fq.question,
-        'answer', fq.answer,
-        'order_number', fq.order_number,
-        'status', fq.status
-      ) ORDER BY fq.order_number ASC
-    ) AS faqs
-  )
-`))
-                .leftJoin("faqs as fq", "fh.id", "fq.faq_head_id")
+        COALESCE(
+          (
+            SELECT JSON_AGG(
+              JSON_BUILD_OBJECT(
+                'faq_id', fq.id,
+                'question', fq.question,
+                'answer', fq.answer,
+                'order_number', fq.order_number,
+                'status', fq.status
+              ) ORDER BY fq.order_number ASC
+            )
+            FROM btoc.faqs fq
+            WHERE fq.faq_head_id = fh.id
+              AND fq.is_deleted = false
+          ), '[]'::json
+        ) AS faqs
+      `))
                 .where("fh.hotel_code", where.hotel_code)
                 .andWhere((qb) => {
                 if (where.order) {
@@ -513,7 +517,6 @@ class AgencyB2CConfigModel extends schema_1.default {
                 }
             })
                 .andWhere("fh.is_deleted", false)
-                .andWhere("fq.is_deleted", false)
                 .groupBy("fh.id", "fh.order_number", "fh.title")
                 .orderBy("fh.order_number", "asc");
         });
@@ -525,11 +528,13 @@ class AgencyB2CConfigModel extends schema_1.default {
                 .select("id", "hotel_code", "title", "order_number", "status", "created_at")
                 .where({ id })
                 .andWhere({ hotel_code })
+                .andWhere("is_deleted", false)
                 .first();
         });
     }
     createFaqHead(payload) {
         return __awaiter(this, void 0, void 0, function* () {
+            console.log({ payload });
             return yield this.db("faq_heads")
                 .withSchema(this.BTOC_SCHEMA)
                 .insert(payload, "id");
