@@ -15,6 +15,11 @@ class ChannelManagerRouter extends AbstractRouter {
       .get(this.controller.getAllChannelManager);
 
     this.router.route("/:id").patch(this.controller.updateChannelManager);
+
+    this.router
+      .route("/channel-allocation")
+      .post(this.controller.channelAllocation)
+      .get(this.controller.getChannelRoomAllocations);
   }
 }
 export default ChannelManagerRouter;

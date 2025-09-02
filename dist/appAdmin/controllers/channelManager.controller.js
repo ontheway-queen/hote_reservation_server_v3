@@ -43,6 +43,14 @@ class ChannelManagerController extends abstract_controller_1.default {
             const _c = yield this.service.updateChannelManager(req), { code } = _c, data = __rest(_c, ["code"]);
             res.status(code).json(data);
         }));
+        this.channelAllocation = this.asyncWrapper.wrap({ bodySchema: this.validator.channelAllocation }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _d = yield this.service.channelAllocation(req), { code } = _d, data = __rest(_d, ["code"]);
+            res.status(code).json(data);
+        }));
+        this.getChannelRoomAllocations = this.asyncWrapper.wrap({}, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _e = yield this.service.getChannelRoomAllocations(req), { code } = _e, data = __rest(_e, ["code"]);
+            res.status(code).json(data);
+        }));
     }
 }
 exports.default = ChannelManagerController;

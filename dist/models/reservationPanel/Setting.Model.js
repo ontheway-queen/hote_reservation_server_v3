@@ -574,6 +574,23 @@ class SettingModel extends schema_1.default {
             return { data, total: total[0].total };
         });
     }
+    getAllRoomRateByratePlanIDs({ hotel_code, search, exact_name, ids, }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("rate_plans as rp")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .select("rp.id", "rp.name", "rp.status")
+                .where("rp.hotel_code", hotel_code)
+                .andWhere(function () {
+                if (search) {
+                    this.andWhere("rp.name", "ilike", `%${search}%`);
+                }
+                if (exact_name) {
+                    this.andWhere("LOWER(rp.name) = ?", [exact_name]);
+                }
+            })
+                .whereIn("rp.id", ids);
+        });
+    }
     getSingleRoomRate(hotel_code, id) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("rate_plans as rp")

@@ -111,7 +111,7 @@ export class ReservationModel extends Schema {
     exclude_booking_id?: number;
   }): Promise<IAvailableRoomType[]> {
     const { hotel_code, check_in, check_out, room_type_id } = payload;
-
+    console.log({ payload });
     return await this.db("room_types as rt")
       .withSchema(this.RESERVATION_SCHEMA)
       .select(
@@ -145,7 +145,6 @@ export class ReservationModel extends Schema {
           this.andWhere("rt.id", room_type_id);
         }
       })
-
       .groupBy("rt.id", "rt.name", "rt.description", "rt.hotel_code")
       .having(this.db.raw("MIN(ra.available_rooms) > 0"));
   }

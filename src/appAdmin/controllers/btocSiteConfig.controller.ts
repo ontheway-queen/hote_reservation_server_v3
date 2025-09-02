@@ -251,7 +251,7 @@ export class B2CSiteConfigController extends AbstractController {
   );
 
   public updateFaqHead = this.asyncWrapper.wrap(
-    { bodySchema: this.validator.createFaqHead },
+    { bodySchema: this.validator.updateFaqHead },
     async (req: Request, res: Response) => {
       const { code, ...data } = await this.service.updateFaqHead(req);
       if (data.success) {

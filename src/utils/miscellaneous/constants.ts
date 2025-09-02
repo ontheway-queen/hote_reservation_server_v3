@@ -132,3 +132,6 @@ export const CONTENT_TYPE_VIDEO = "VIDEO";
 
 // functions type
 export const FUNCTION_TYPE_HOTEL = "HOTEL";
+
+// room types availability days when creating a room
+export const ROOM_TYPE_AVAILABILITY_DAYS = 365;

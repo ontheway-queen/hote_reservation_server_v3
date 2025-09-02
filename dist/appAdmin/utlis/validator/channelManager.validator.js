@@ -14,6 +14,14 @@ class ChannelManagerValidator {
             name: joi_1.default.string().optional(),
             is_internal: joi_1.default.boolean().optional(),
         });
+        this.channelAllocation = joi_1.default.object({
+            room_type_id: joi_1.default.number().required(),
+            channel_id: joi_1.default.number().required(),
+            total_allocated_rooms: joi_1.default.number().required(),
+            from_date: joi_1.default.string().required(),
+            to_date: joi_1.default.string().required(),
+            rate_plans: joi_1.default.array().items(joi_1.default.number().required()).required(),
+        });
     }
 }
 exports.default = ChannelManagerValidator;
