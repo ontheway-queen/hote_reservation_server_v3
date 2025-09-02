@@ -13,6 +13,7 @@ class ExpenseValidator {
 
 	// create expense validator
 	createExpenseValidator = Joi.object({
+		name: Joi.string().required(),
 		ac_tr_ac_id: Joi.number().required(),
 		expense_date: Joi.date().required(),
 		remarks: Joi.string().allow("").optional(),

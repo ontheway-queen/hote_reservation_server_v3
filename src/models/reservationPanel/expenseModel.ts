@@ -1,6 +1,8 @@
 import {
 	ICreateExpenseHeadPayload,
 	ICreateExpensePayload,
+	IExpenseHeadQuery,
+	IExpenseWithItems,
 	IUpdateExpenseHeadPayload,
 } from "../../appAdmin/utlis/interfaces/expense.interface";
 import { TDB } from "../../common/types/commontypes";
@@ -27,7 +29,7 @@ class ExpenseModel extends Schema {
 		skip?: string;
 		name: string;
 		hotel_code: number;
-	}) {
+	}): Promise<{ data: IExpenseHeadQuery[]; total: number }> {
 		const { limit, skip, hotel_code, name } = payload;
 
 		const dtbs = this.db("expense_head as eh");
@@ -67,7 +69,7 @@ class ExpenseModel extends Schema {
 				}
 			});
 
-		return { total: total[0].total, data };
+		return { total: Number(total[0].total) || 0, data };
 	}
 
 	// Update Expense Head Model
@@ -128,13 +130,15 @@ class ExpenseModel extends Schema {
 		skip: string;
 		key: string;
 		hotel_code: number;
-	}) {
+	}): Promise<{ data: IExpenseWithItems[]; total: number }> {
 		const { limit, skip, hotel_code, from_date, to_date, key } = payload;
 
 		const endDate = new Date(to_date as string);
 		endDate.setDate(endDate.getDate() + 1);
 
-		const dtbs = this.db("expense_view as ev");
+		const dtbs = this.db("expense as ev").withSchema(
+			this.RESERVATION_SCHEMA
+		);
 
 		if (limit && skip) {
 			dtbs.limit(parseInt(limit as string));
@@ -142,21 +146,35 @@ class ExpenseModel extends Schema {
 		}
 
 		const data = await dtbs
-			.withSchema(this.RESERVATION_SCHEMA)
 			.select(
 				"ev.id",
 				"ev.voucher_no",
 				"ev.ac_tr_ac_id as account_id",
-				"ev.expense_date as expense_date",
+				this.db.raw(
+					`to_char(ev.expense_date, 'YYYY-MM-DD') as expense_date`
+				),
 				"ev.name as expense_name",
-				"a.name as account_name",
-				"a.ac_type",
+				"acc.name as account_name",
+				"acc.acc_type as account_type",
 				"ev.total as expense_amount",
 				"ev.created_at",
-				"ev.expense_items"
+				this.db.raw(`
+			COALESCE(
+				json_agg(
+					json_build_object(
+						'id', ei.id,
+						'item_name', ei.name,
+						'amount', ei.amount
+					)
+				) FILTER (WHERE ei.id IS NOT NULL), '[]'
+			) as expense_items
+		`)
 			)
+			.joinRaw(`JOIN ?? AS acc ON acc.id = ev.ac_tr_ac_id`, [
+				`${this.ACC_SCHEMA}.${this.TABLES.accounts}`,
+			])
+			.leftJoin("expense_items as ei", "ei.expense_id", "ev.id")
 			.where("ev.hotel_code", hotel_code)
-			.leftJoin("account as a", "ev.ac_tr_ac_id", "a.id")
 			.andWhere(function () {
 				if (from_date && to_date) {
 					this.andWhereBetween("ev.expense_date", [
@@ -168,17 +186,30 @@ class ExpenseModel extends Schema {
 					this.andWhere((builder) => {
 						builder
 							.orWhere("ev.name", "like", `%${key}%`)
-							.orWhere("a.name", "like", `%${key}%`);
+							.orWhere("acc.name", "like", `%${key}%`);
 					});
 				}
 			})
-			.groupBy("ev.id")
+			.groupBy(
+				"ev.id",
+				"ev.voucher_no",
+				"ev.ac_tr_ac_id",
+				"ev.expense_date",
+				"ev.name",
+				"acc.name",
+				"acc.acc_type",
+				"ev.total",
+				"ev.created_at"
+			)
 			.orderBy("ev.id", "desc");
 
-		const total = await this.db("expense_view as ev")
+		const total = await this.db("expense as ev")
 			.withSchema(this.RESERVATION_SCHEMA)
 			.countDistinct("ev.id as total")
-			.leftJoin("account as a", "ev.ac_tr_ac_id", "a.id")
+			.joinRaw(`JOIN ?? AS acc ON acc.id = ev.ac_tr_ac_id`, [
+				`${this.ACC_SCHEMA}.${this.TABLES.accounts}`,
+			])
+			.leftJoin("expense_items as ei", "ei.expense_id", "ev.id")
 			.where("ev.hotel_code", hotel_code)
 			.andWhere(function () {
 				if (from_date && to_date) {
@@ -197,12 +228,15 @@ class ExpenseModel extends Schema {
 			})
 			.first();
 
-		return { data, total: total ? total.total : 0 };
+		return { data, total: total ? Number(total.total) : 0 };
 	}
 
 	// get single Expense Model
-	public async getSingleExpense(id: number, hotel_code: number) {
-		const dtbs = this.db("expense_view as ev");
+	public async getSingleExpense(
+		id: number,
+		hotel_code: number
+	): Promise<IExpenseWithItems[]> {
+		const dtbs = this.db("expense as ev");
 		return await dtbs
 			.withSchema(this.RESERVATION_SCHEMA)
 			.select(
@@ -211,27 +245,55 @@ class ExpenseModel extends Schema {
 				"ev.voucher_no",
 				"h.name as hotel_name",
 				"h.address as hotel_address",
-				"h.email as hotel_email",
-				"h.phone as hotel_phone",
-				"h.website as hotel_website",
-				"h.logo as hotel_logo",
 				"ev.name as expense_name",
-				"a.name as account_name",
-				"a.account_number",
-				"a.ac_type",
-				"ev.expense_date",
-				"a.bank as bank_name",
-				"a.branch",
+				"acc.name as account_name",
+				"acc.acc_number as account_number",
+				"acc.acc_type as account_type",
+				this.db.raw(
+					`to_char(ev.expense_date, 'YYYY-MM-DD') as expense_date`
+				),
+				this.db.raw(
+					`to_char(ev.created_at, 'YYYY-MM-DD') as expense_created_at`
+				),
+				"acc.name as bank_name",
+				"acc.branch",
 				"ev.total as total_cost",
 				"ev.remarks as expense_details",
-				"ev.created_at as expense_created_at",
-				"ev.expense_items"
+				this.db.raw(`
+			COALESCE(
+				json_agg(
+					json_build_object(
+						'id', ei.id,
+						'item_name', ei.name,
+						'amount', ei.amount
+					)
+				) FILTER (WHERE ei.id IS NOT NULL), '[]'
+			) as expense_items
+		`)
 			)
 
-			.leftJoin("hotel as h", "ev.hotel_code", "h.id")
-			.leftJoin("account as a", "ev.ac_tr_ac_id", "a.id")
+			.leftJoin("hotels as h", "ev.hotel_code", "h.hotel_code")
+			.joinRaw(`JOIN ?? AS acc ON acc.id = ev.ac_tr_ac_id`, [
+				`${this.ACC_SCHEMA}.${this.TABLES.accounts}`,
+			])
+			.leftJoin("expense_items as ei", "ei.expense_id", "ev.id")
 			.where("ev.id", id)
-			.andWhere("ev.hotel_code", hotel_code);
+			.andWhere("ev.hotel_code", hotel_code)
+			.groupBy(
+				"ev.id",
+				"ev.voucher_no",
+				"ev.ac_tr_ac_id",
+				"ev.expense_date",
+				"ev.name",
+				"acc.name",
+				"acc.acc_type",
+				"ev.total",
+				"ev.created_at",
+				"h.name",
+				"h.address",
+				"acc.acc_number",
+				"acc.branch"
+			);
 	}
 }
 export default ExpenseModel;

@@ -1,10 +1,10 @@
 import { Request } from "express";
 import AbstractServices from "../../abstarcts/abstract.service";
+import ExpenseModel from "../../models/reservationPanel/expenseModel";
 import {
 	ICreateExpensebody,
 	IUpdateExpenseHeadPayload,
 } from "../utlis/interfaces/expense.interface";
-import ExpenseModel from "../../models/reservationPanel/expenseModel";
 
 export class ExpenseService extends AbstractServices {
 	constructor() {
@@ -163,6 +163,7 @@ export class ExpenseService extends AbstractServices {
 				expenseTotal += item.amount;
 			});
 
+			console.log(1);
 			// Insert expense record
 			const expenseRes = await model.createExpense({
 				...rest,
@@ -172,7 +173,8 @@ export class ExpenseService extends AbstractServices {
 				created_by,
 				total: expenseTotal,
 			});
-
+			console.log(2);
+			console.log({ expenseRes });
 			const expenseItemPayload = expense_item.map((item: any) => {
 				return {
 					expense_head_id: item.expense_head_id,
