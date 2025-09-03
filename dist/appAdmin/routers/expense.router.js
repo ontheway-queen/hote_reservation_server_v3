@@ -25,11 +25,10 @@ class ExpenseRouter extends abstract_router_1.default {
         // Create and get expense router
         this.router
             .route("/")
-            .post(this.expenseController.createExpense)
+            .post(this.uploader.cloudUploadRaw(this.fileFolders.EXPENSE_FILES), this.expenseController.createExpense)
             .get(this.expenseController.getAllExpense);
         // Single expense router
-        this.router.route("/:id")
-            .get(this.expenseController.getSingleExpense);
+        this.router.route("/:id").get(this.expenseController.getSingleExpense);
     }
 }
 exports.default = ExpenseRouter;

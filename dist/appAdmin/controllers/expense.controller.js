@@ -52,7 +52,9 @@ class ExpenseController extends abstract_controller_1.default {
             res.status(code).json(data);
         }));
         // Create expense
-        this.createExpense = this.asyncWrapper.wrap({ bodySchema: this.expensevalidator.createExpenseValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+        this.createExpense = this.asyncWrapper.wrap({ bodySchema: this.expensevalidator.createExpenseValidator }, 
+        // null,
+        (req, res) => __awaiter(this, void 0, void 0, function* () {
             const result = yield this.expenseService.createExpense(req);
             const { code } = result, data = __rest(result, ["code"]);
             res.status(code).json(data);

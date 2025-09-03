@@ -19,5 +19,6 @@ FileFolder.B2C_SITE_CONFIG = "b2c/site-config";
 FileFolder.B2C_SITE_CONFIG_HERO_BG = "b2c/hero-bg";
 FileFolder.B2C_SITE_CONFIG_OTHERS = "b2c/others";
 FileFolder.B2C_SITE_CONFIG_POP_UP = "b2c/pop-up";
+FileFolder.EXPENSE_FILES = "expense";
 exports.default = FileFolder;
 //# sourceMappingURL=fileFolders.js.map

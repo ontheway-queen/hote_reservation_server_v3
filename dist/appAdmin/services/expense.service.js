@@ -142,13 +142,40 @@ class ExpenseService extends abstract_service_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
                 const { hotel_code, id: created_by } = req.hotel_admin;
-                const _a = req.body, { expense_item, ac_tr_ac_id } = _a, rest = __rest(_a, ["expense_item", "ac_tr_ac_id"]);
+                const _a = req.body, { expense_items, total_amount } = _a, rest = __rest(_a, ["expense_items", "total_amount"]);
+                const files = req.files;
+                if (Array.isArray(files) && files.length) {
+                    files.forEach((file) => {
+                        const { fieldname, filename } = file;
+                        switch (fieldname) {
+                            case "file_1":
+                                rest.expense_voucher_url_1 = filename;
+                                break;
+                            case "file_2":
+                                rest.expense_voucher_url_2 = filename;
+                                break;
+                        }
+                    });
+                }
                 const accountModel = this.Model.accountModel(trx);
+                const employeeModel = this.Model.employeeModel(trx);
                 const model = this.Model.expenseModel(trx);
+                const { data } = yield model.getAllExpense({
+                    key: rest.expense_no,
+                    hotel_code,
+                });
+                if (data.length) {
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_CONFLICT,
+                        message: "Expense No already exists.",
+                    };
+                }
+                console.log(1);
                 // account check
                 const checkAccount = yield accountModel.getSingleAccount({
                     hotel_code,
-                    id: ac_tr_ac_id,
+                    id: rest.account_id,
                 });
                 if (!checkAccount.length) {
                     return {
@@ -157,25 +184,33 @@ class ExpenseService extends abstract_service_1.default {
                         message: "Account not found",
                     };
                 }
+                console.log(2);
+                const getSingleEmployee = yield employeeModel.getSingleEmployee(rest.expense_by, hotel_code);
+                console.log({ getSingleEmployee });
+                if (!getSingleEmployee) {
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_NOT_FOUND,
+                        message: "Employee not found",
+                    };
+                }
                 const year = new Date().getFullYear();
                 // get last voucher ID
                 const voucherData = yield model.getAllIVoucherForLastId();
                 const voucherNo = voucherData.length ? voucherData[0].id + 1 : 1;
-                let expenseTotal = 0;
-                expense_item.forEach((item) => {
-                    expenseTotal += item.amount;
-                });
+                const parsed_expense_items = JSON.parse(expense_items);
                 console.log(1);
                 // Insert expense record
-                const expenseRes = yield model.createExpense(Object.assign(Object.assign({}, rest), { voucher_no: `EXP-${year}${voucherNo}`, ac_tr_ac_id,
-                    hotel_code,
-                    created_by, total: expenseTotal }));
+                const payload = Object.assign(Object.assign({}, rest), { voucher_no: `EXP-${year}${voucherNo}`, hotel_code,
+                    created_by, expense_amount: total_amount, acc_voucher_id: 77 });
+                // console.log({ payload: rest.expense_date });
+                const expenseRes = yield model.createExpense(payload);
                 console.log(2);
                 console.log({ expenseRes });
-                const expenseItemPayload = expense_item.map((item) => {
+                const expenseItemPayload = parsed_expense_items.map((item) => {
                     return {
-                        expense_head_id: item.expense_head_id,
-                        name: item.name,
+                        expense_head_id: item.id,
+                        remarks: item.remarks,
                         amount: item.amount,
                         expense_id: expenseRes[0].id,
                     };

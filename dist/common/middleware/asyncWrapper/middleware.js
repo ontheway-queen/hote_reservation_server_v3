@@ -20,6 +20,7 @@ class Wrapper {
         return (req, res, next) => __awaiter(this, void 0, void 0, function* () {
             try {
                 const { params, query, body } = req;
+                console.log({ body });
                 if (schema) {
                     if (schema.bodySchema) {
                         const validateBody = yield schema.bodySchema.validateAsync(body);

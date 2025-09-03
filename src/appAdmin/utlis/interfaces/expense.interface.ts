@@ -20,23 +20,38 @@ export interface IExpenseHeadQuery {
 
 export interface ICreateExpensebody {
 	hotel_code: number;
-	name: string;
-	ac_tr_ac_id: number;
-	remarks: string;
-	expense_date?: Date;
-	voucher_no: string;
-	expense_item: any[];
+	expense_by: number;
+	expense_no: string;
+	expense_date: string;
+	expense_items: string;
+	pay_method: string;
+	account_id: number;
+	total_amount: number;
+	expense_note: string;
+	expense_voucher_url_1?: string;
+	expense_voucher_url_2?: string;
 }
 
 export interface ICreateExpensePayload {
 	hotel_code: number;
-	name: string;
-	ac_tr_ac_id: number;
-	remarks: string;
-	expense_date?: Date;
 	voucher_no: string;
+	expense_date?: string;
+	expense_by: number;
+	pay_method: string;
+	transaction_no?: string;
+	expense_cheque_id?: number;
+	bank_name?: string;
+	branch_name?: string;
+	cheque_no?: number;
+	cheque_date?: string;
+	deposit_date?: string;
+	account_id?: number;
+	expense_amount: number;
+	expense_note?: string;
+	acc_voucher_id?: number;
+	expense_voucher_url_1?: string;
+	expense_voucher_url_2?: string;
 	created_by: number;
-	total: number;
 }
 
 export interface IExpenseWithItems {

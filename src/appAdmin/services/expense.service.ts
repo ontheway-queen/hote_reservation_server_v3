@@ -129,18 +129,44 @@ export class ExpenseService extends AbstractServices {
 	public async createExpense(req: Request) {
 		return await this.db.transaction(async (trx) => {
 			const { hotel_code, id: created_by } = req.hotel_admin;
-
-			const { expense_item, ac_tr_ac_id, ...rest } =
+			const { expense_items, total_amount, ...rest } =
 				req.body as ICreateExpensebody;
 
+			const files = req.files;
+			if (Array.isArray(files) && files.length) {
+				files.forEach((file) => {
+					const { fieldname, filename } = file;
+					switch (fieldname) {
+						case "file_1":
+							rest.expense_voucher_url_1 = filename as string;
+							break;
+						case "file_2":
+							rest.expense_voucher_url_2 = filename;
+							break;
+					}
+				});
+			}
+
 			const accountModel = this.Model.accountModel(trx);
+			const employeeModel = this.Model.employeeModel(trx);
 			const model = this.Model.expenseModel(trx);
 
+			const { data } = await model.getAllExpense({
+				key: rest.expense_no,
+				hotel_code,
+			});
+			if (data.length) {
+				return {
+					success: false,
+					code: this.StatusCode.HTTP_CONFLICT,
+					message: "Expense No already exists.",
+				};
+			}
+			console.log(1);
 			// account check
-
 			const checkAccount = await accountModel.getSingleAccount({
 				hotel_code,
-				id: ac_tr_ac_id,
+				id: rest.account_id,
 			});
 
 			if (!checkAccount.length) {
@@ -148,6 +174,19 @@ export class ExpenseService extends AbstractServices {
 					success: false,
 					code: this.StatusCode.HTTP_NOT_FOUND,
 					message: "Account not found",
+				};
+			}
+			console.log(2);
+			const getSingleEmployee = await employeeModel.getSingleEmployee(
+				rest.expense_by,
+				hotel_code
+			);
+			console.log({ getSingleEmployee });
+			if (!getSingleEmployee) {
+				return {
+					success: false,
+					code: this.StatusCode.HTTP_NOT_FOUND,
+					message: "Employee not found",
 				};
 			}
 
@@ -158,31 +197,32 @@ export class ExpenseService extends AbstractServices {
 
 			const voucherNo = voucherData.length ? voucherData[0].id + 1 : 1;
 
-			let expenseTotal = 0;
-			expense_item.forEach((item: any) => {
-				expenseTotal += item.amount;
-			});
+			const parsed_expense_items = JSON.parse(expense_items);
 
 			console.log(1);
 			// Insert expense record
-			const expenseRes = await model.createExpense({
+			const payload = {
 				...rest,
 				voucher_no: `EXP-${year}${voucherNo}`,
-				ac_tr_ac_id,
 				hotel_code,
 				created_by,
-				total: expenseTotal,
-			});
+				expense_amount: total_amount,
+				acc_voucher_id: 77,
+			};
+			// console.log({ payload: rest.expense_date });
+			const expenseRes = await model.createExpense(payload);
 			console.log(2);
 			console.log({ expenseRes });
-			const expenseItemPayload = expense_item.map((item: any) => {
-				return {
-					expense_head_id: item.expense_head_id,
-					name: item.name,
-					amount: item.amount,
-					expense_id: expenseRes[0].id,
-				};
-			});
+			const expenseItemPayload = parsed_expense_items.map(
+				(item: { id: number; remarks: string; amount: number }) => {
+					return {
+						expense_head_id: item.id,
+						remarks: item.remarks,
+						amount: item.amount,
+						expense_id: expenseRes[0].id,
+					};
+				}
+			);
 
 			//   expense item
 			await model.createExpenseItem(expenseItemPayload);
