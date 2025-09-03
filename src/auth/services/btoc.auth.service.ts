@@ -156,13 +156,13 @@ class BtocUserAuthService extends AbstractServices {
 				await new ThirdPartyAuth().verifyGoogleAccessToken(
 					access_token
 				);
-			console.log({ verified_user });
+
 			const model = this.Model.btocUserModel(trx);
 
 			const check_user = await model.getSingleUser({
 				email: verified_user.email,
 			});
-			console.log({ check_user });
+
 			let userID = check_user?.id || 0;
 
 			if (!check_user) {
@@ -196,7 +196,16 @@ class BtocUserAuthService extends AbstractServices {
 				success: true,
 				code: this.StatusCode.HTTP_SUCCESSFUL,
 				message: this.ResMsg.HTTP_SUCCESSFUL,
-				data: { ...tokenPayload },
+				data: {
+					...tokenPayload,
+					phone: check_user.phone,
+					photo: check_user.photo,
+					gender: check_user.gender,
+					address: check_user.address,
+					date_of_birth: check_user.date_of_birth,
+					city: check_user.city,
+					country: check_user.country,
+				},
 				token,
 			};
 		});
