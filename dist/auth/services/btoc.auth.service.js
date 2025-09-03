@@ -150,12 +150,10 @@ class BtocUserAuthService extends abstract_service_1.default {
                 }
                 // Verify Google access token
                 const verified_user = yield new thirdPartyAuth_1.default().verifyGoogleAccessToken(access_token);
-                console.log({ verified_user });
                 const model = this.Model.btocUserModel(trx);
                 const check_user = yield model.getSingleUser({
                     email: verified_user.email,
                 });
-                console.log({ check_user });
                 let userID = (check_user === null || check_user === void 0 ? void 0 : check_user.id) || 0;
                 if (!check_user) {
                     const registration = yield model.createUser({
@@ -180,7 +178,7 @@ class BtocUserAuthService extends abstract_service_1.default {
                     success: true,
                     code: this.StatusCode.HTTP_SUCCESSFUL,
                     message: this.ResMsg.HTTP_SUCCESSFUL,
-                    data: Object.assign({}, tokenPayload),
+                    data: Object.assign(Object.assign({}, tokenPayload), { phone: (check_user === null || check_user === void 0 ? void 0 : check_user.phone) || null, photo: (check_user === null || check_user === void 0 ? void 0 : check_user.photo) || null, gender: (check_user === null || check_user === void 0 ? void 0 : check_user.gender) || null, address: (check_user === null || check_user === void 0 ? void 0 : check_user.address) || null, date_of_birth: (check_user === null || check_user === void 0 ? void 0 : check_user.date_of_birth) || null, city: (check_user === null || check_user === void 0 ? void 0 : check_user.city) || null, country: (check_user === null || check_user === void 0 ? void 0 : check_user.country) || null }),
                     token,
                 };
             }));
