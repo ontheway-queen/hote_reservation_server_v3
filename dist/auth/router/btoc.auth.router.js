@@ -19,6 +19,9 @@ class BtocUserAuthRouter extends abstract_router_1.default {
             .post(this.uploader.cloudUploadRaw(this.fileFolders.BTOC_USERS_FILES), this.btocUserAuthController.registration);
         this.router.route("/login").post(this.btocUserAuthController.login);
         this.router
+            .route("/google-login")
+            .post(this.btocUserAuthController.loginWithGoogle);
+        this.router
             .route("/profile")
             .get(this.authChecker.btocUserAuthChecker, this.btocUserAuthController.getProfile);
         this.router

@@ -26,6 +26,8 @@ const getConfig = () => {
         AWS_S3_BUCKET: process.env.AWS_S3_BUCKET,
         AWS_S3_ACCESS_KEY: process.env.AWS_S3_ACCESS_KEY,
         AWS_S3_SECRET_KEY: process.env.AWS_S3_SECRET_KEY,
+        GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
+        GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
     };
 };
 const getSanitzedConfig = (config) => {
