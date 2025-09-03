@@ -178,7 +178,7 @@ class BtocUserAuthService extends abstract_service_1.default {
                     success: true,
                     code: this.StatusCode.HTTP_SUCCESSFUL,
                     message: this.ResMsg.HTTP_SUCCESSFUL,
-                    data: Object.assign(Object.assign({}, tokenPayload), { phone: check_user.phone, photo: check_user.photo, gender: check_user.gender, address: check_user.address, date_of_birth: check_user.date_of_birth, city: check_user.city, country: check_user.country }),
+                    data: Object.assign(Object.assign({}, tokenPayload), { phone: (check_user === null || check_user === void 0 ? void 0 : check_user.phone) || null, photo: (check_user === null || check_user === void 0 ? void 0 : check_user.photo) || null, gender: (check_user === null || check_user === void 0 ? void 0 : check_user.gender) || null, address: (check_user === null || check_user === void 0 ? void 0 : check_user.address) || null, date_of_birth: (check_user === null || check_user === void 0 ? void 0 : check_user.date_of_birth) || null, city: (check_user === null || check_user === void 0 ? void 0 : check_user.city) || null, country: (check_user === null || check_user === void 0 ? void 0 : check_user.country) || null }),
                     token,
                 };
             }));
