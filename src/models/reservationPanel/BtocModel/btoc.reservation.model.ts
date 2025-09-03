@@ -162,29 +162,179 @@ export class BtocReservationModel extends Schema {
     return Object.values(result);
   }
 
+  // v1
+  // public async getAllRoomRatesBTOC(
+  //   payload: ISearchAvailableRoomsPayload
+  // ): Promise<IRoomRatesRes[]> {
+  //   const { hotel_code, checkin, checkout, rooms, nights } = payload;
+  //   const totalRequested = rooms.length;
+
+  //   const roomTypes: IAvailableRoomType[] = await this.db("room_types as rt")
+  //     .withSchema(this.RESERVATION_SCHEMA)
+  //     .select(
+  //       "rt.id as room_type_id",
+  //       "rt.name as room_type_name",
+  //       "rt.description",
+  //       "rt.max_adults",
+  //       "rt.max_children",
+  //       this.db.raw(`MIN(ra.available_rooms) AS available_count`),
+  //       "rp.id as rate_plan_id",
+  //       "rp.name as rate_plan_name",
+  //       "rpd.base_rate",
+  //       this.db.raw(`COALESCE(meals.meal_list, '[]')::json AS boarding_details`)
+  //     )
+  //     .leftJoin("room_availability as ra", "rt.id", "ra.room_type_id")
+  //     .leftJoin("rate_plan_details as rpd", "rt.id", "rpd.room_type_id")
+  //     .leftJoin("rate_plans as rp", "rpd.rate_plan_id", "rp.id")
+  //     .leftJoin(
+  //       this.db
+  //         .select("rpmp.rate_plan_id")
+  //         .from("hotel_reservation.rate_plan_meal_mappings as rpmp")
+  //         .leftJoin(
+  //           "hotel_reservation.meal_plans as mp",
+  //           "rpmp.meal_plan_id",
+  //           "mp.id"
+  //         )
+  //         .groupBy("rpmp.rate_plan_id")
+  //         .select(this.db.raw("json_agg(mp.name)::text as meal_list"))
+  //         .as("meals"),
+  //       "meals.rate_plan_id",
+  //       "rp.id"
+  //     )
+  //     .where("rt.hotel_code", hotel_code)
+  //     .andWhere("rt.is_deleted", false)
+  //     .andWhere("ra.date", ">=", checkin)
+  //     .andWhere("ra.date", "<", checkout)
+  //     .groupBy(
+  //       "rt.id",
+  //       "rt.name",
+  //       "rt.description",
+  //       "rt.max_adults",
+  //       "rt.max_children",
+  //       "rp.id",
+  //       "rp.name",
+  //       "rpd.base_rate",
+  //       "meals.meal_list"
+  //     )
+  //     .havingRaw("MIN(ra.available_rooms) >= ?", [totalRequested]);
+
+  //   const grouped: Record<number, IGroupedRoomType> = {};
+
+  //   for (const r of roomTypes) {
+  //     if (r.rate_plan_id) {
+  //       if (!grouped[r.room_type_id]) {
+  //         grouped[r.room_type_id] = {
+  //           room_type_id: r.room_type_id,
+  //           room_type_name: r.room_type_name,
+  //           description: r.description as string,
+  //           max_adults: r.max_adults,
+  //           max_children: r.max_children,
+  //           available_count: Number(r.available_count),
+  //           rate_plans: [],
+  //         };
+  //       }
+
+  //       grouped[r.room_type_id].rate_plans.push({
+  //         rate_plan_id: r.rate_plan_id,
+  //         rate_plan_name: r.rate_plan_name,
+  //         boarding_details: r.boarding_details,
+  //         base_rate: Number(r.base_rate),
+  //       });
+  //     }
+  //   }
+
+  //   const result: IRoomRatesRes[] = [];
+
+  //   for (const rt of Object.values(grouped)) {
+  //     let isValid = true;
+
+  //     for (const room of rooms) {
+  //       if (
+  //         room.adults > rt.max_adults ||
+  //         room.children_ages.length > rt.max_children
+  //       ) {
+  //         isValid = false;
+  //         break;
+  //       }
+  //     }
+
+  //     if (!isValid) continue;
+
+  //     const ratePlans = rt.rate_plans.map((rp) => {
+  //       const totalPrice =
+  //         Number(rp.base_rate) * Number(totalRequested) * nights;
+  //       console.log({ nights, totalPrice });
+
+  //       return {
+  //         rate_plan_id: rp.rate_plan_id,
+  //         rate_plan_name: rp.rate_plan_name,
+  //         boarding_details: rp.boarding_details,
+  //         base_rate: rp.base_rate,
+  //         total_price: totalPrice,
+  //         no_of_rooms: totalRequested,
+  //         rooms: rooms.map((room) => ({
+  //           no_of_adults: room.adults,
+  //           no_of_children: room.children_ages.length,
+  //           no_of_rooms: 1,
+  //           description: rt.description,
+  //           room_type: rt.room_type_name,
+  //         })),
+  //         cancellation_policy: {},
+  //       };
+  //     });
+
+  //     const minRate = Math.min(...ratePlans.map((rp) => rp.total_price));
+
+  //     result.push({
+  //       room_type_id: rt.room_type_id,
+  //       room_type_name: rt.room_type_name,
+  //       description: rt.description,
+  //       max_adults: rt.max_adults,
+  //       max_children: rt.max_children,
+  //       available_count: rt.available_count,
+  //       price: minRate,
+  //       room_rates: ratePlans,
+  //     });
+  //   }
+
+  //   return result;
+  // }
+
+  // v2
+
   public async getAllRoomRatesBTOC(
     payload: ISearchAvailableRoomsPayload
   ): Promise<IRoomRatesRes[]> {
     const { hotel_code, checkin, checkout, rooms, nights } = payload;
     const totalRequested = rooms.length;
 
-    const roomTypes: IAvailableRoomType[] = await this.db("room_types as rt")
-      .withSchema(this.RESERVATION_SCHEMA)
+    const roomTypes: IAvailableRoomType[] = await this.db(
+      "channel_allocations as ca"
+    )
+      .withSchema(this.CM_SCHEMA)
       .select(
         "rt.id as room_type_id",
         "rt.name as room_type_name",
         "rt.description",
         "rt.max_adults",
         "rt.max_children",
-        this.db.raw(`MIN(ra.available_rooms) AS available_count`),
+        this.db.raw(
+          `MIN(ca.allocated_rooms - ca.sold_rooms) AS available_count`
+        ),
         "rp.id as rate_plan_id",
         "rp.name as rate_plan_name",
         "rpd.base_rate",
         this.db.raw(`COALESCE(meals.meal_list, '[]')::json AS boarding_details`)
       )
-      .leftJoin("room_availability as ra", "rt.id", "ra.room_type_id")
-      .leftJoin("rate_plan_details as rpd", "rt.id", "rpd.room_type_id")
-      .leftJoin("rate_plans as rp", "rpd.rate_plan_id", "rp.id")
+      .joinRaw(
+        "LEFT JOIN hotel_reservation.room_types as rt ON rt.id= ca.room_type_id"
+      )
+      .joinRaw(
+        "LEFT JOIN hotel_reservation.rate_plan_details as rpd ON rt.id= rpd.room_type_id"
+      )
+      .joinRaw(
+        "LEFT JOIN hotel_reservation.rate_plans as rp ON rpd.rate_plan_id=rp.id"
+      )
       .leftJoin(
         this.db
           .select("rpmp.rate_plan_id")
@@ -200,10 +350,9 @@ export class BtocReservationModel extends Schema {
         "meals.rate_plan_id",
         "rp.id"
       )
-      .where("rt.hotel_code", hotel_code)
-      .andWhere("rt.is_deleted", false)
-      .andWhere("ra.date", ">=", checkin)
-      .andWhere("ra.date", "<", checkout)
+      .where("ca.hotel_code", hotel_code)
+      .andWhere("ca.date", ">=", checkin)
+      .andWhere("ca.date", "<", checkout)
       .groupBy(
         "rt.id",
         "rt.name",
@@ -215,8 +364,11 @@ export class BtocReservationModel extends Schema {
         "rpd.base_rate",
         "meals.meal_list"
       )
-      .havingRaw("MIN(ra.available_rooms) >= ?", [totalRequested]);
+      .havingRaw("MIN(ca.allocated_rooms - ca.sold_rooms) >= ?", [
+        totalRequested,
+      ]);
 
+    // ---- grouping & price calculation same as before ----
     const grouped: Record<number, IGroupedRoomType> = {};
 
     for (const r of roomTypes) {
@@ -262,7 +414,6 @@ export class BtocReservationModel extends Schema {
       const ratePlans = rt.rate_plans.map((rp) => {
         const totalPrice =
           Number(rp.base_rate) * Number(totalRequested) * nights;
-        console.log({ nights, totalPrice });
 
         return {
           rate_plan_id: rp.rate_plan_id,

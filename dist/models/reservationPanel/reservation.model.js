@@ -92,6 +92,7 @@ class ReservationModel extends schema_1.default {
     getAllAvailableRoomsTypeWithAvailableRoomCount(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             const { hotel_code, check_in, check_out, room_type_id } = payload;
+            console.log({ payload });
             return yield this.db("room_types as rt")
                 .withSchema(this.RESERVATION_SCHEMA)
                 .select("rt.id", "rt.name", "rt.description", "rt.hotel_code", this.db.raw(`MIN(ra.available_rooms) AS available_rooms`), this.db.raw(`

@@ -36,5 +36,25 @@ class ChannelManagerController extends AbstractController {
       res.status(code).json(data);
     }
   );
+
+  public channelAllocation = this.asyncWrapper.wrap(
+    { bodySchema: this.validator.channelAllocation },
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.channelAllocation(req);
+
+      res.status(code).json(data);
+    }
+  );
+
+  public getChannelRoomAllocations = this.asyncWrapper.wrap(
+    {},
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.getChannelRoomAllocations(
+        req
+      );
+
+      res.status(code).json(data);
+    }
+  );
 }
 export default ChannelManagerController;

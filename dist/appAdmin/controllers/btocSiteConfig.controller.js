@@ -191,7 +191,7 @@ class B2CSiteConfigController extends abstract_controller_1.default {
                 this.error(data.message, code);
             }
         }));
-        this.updateFaqHead = this.asyncWrapper.wrap({ bodySchema: this.validator.createFaqHead }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+        this.updateFaqHead = this.asyncWrapper.wrap({ bodySchema: this.validator.updateFaqHead }, (req, res) => __awaiter(this, void 0, void 0, function* () {
             const _y = yield this.service.updateFaqHead(req), { code } = _y, data = __rest(_y, ["code"]);
             if (data.success) {
                 res.status(code).json(data);
