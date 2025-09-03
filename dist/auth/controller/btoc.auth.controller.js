@@ -24,9 +24,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const abstract_controller_1 = __importDefault(require("../../abstarcts/abstract.controller"));
+const user_auth_validator_1 = require("../../btoc/utills/validators/user.auth.validator");
 const commonServices_1 = __importDefault(require("../../common/services/commonServices"));
 const btoc_auth_service_1 = __importDefault(require("../services/btoc.auth.service"));
-const user_auth_validator_1 = require("../../btoc/utills/validators/user.auth.validator");
 class BtocUserAuthController extends abstract_controller_1.default {
     constructor() {
         super();
@@ -43,14 +43,18 @@ class BtocUserAuthController extends abstract_controller_1.default {
             const _b = yield this.service.login(req), { code } = _b, data = __rest(_b, ["code"]);
             res.status(code).json(data);
         }));
+        this.loginWithGoogle = this.asyncWrapper.wrap({ bodySchema: this.validator.loginWithGoogleValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _c = yield this.service.loginWithGoogle(req), { code } = _c, data = __rest(_c, ["code"]);
+            res.status(code).json(data);
+        }));
         // get profile
         this.getProfile = this.asyncWrapper.wrap(null, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _c = yield this.service.getProfile(req), { code } = _c, data = __rest(_c, ["code"]);
+            const _d = yield this.service.getProfile(req), { code } = _d, data = __rest(_d, ["code"]);
             res.status(code).json(data);
         }));
         // forget password
         this.forgetPassword = this.asyncWrapper.wrap({ bodySchema: this.commonValidator.forgetPasswordValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _d = yield this.service.forgetPassword(req), { code } = _d, data = __rest(_d, ["code"]);
+            const _e = yield this.service.forgetPassword(req), { code } = _e, data = __rest(_e, ["code"]);
             res.status(code).json(data);
         }));
         // change password
@@ -61,23 +65,23 @@ class BtocUserAuthController extends abstract_controller_1.default {
             const passField = "password";
             const userIdField = "id";
             const schema = "btoc";
-            const _e = yield this.commonService.userPasswordVerify({
+            const _f = yield this.commonService.userPasswordVerify({
                 table,
                 oldPassword: old_password,
                 passField,
                 userId: id,
                 userIdField,
                 schema,
-            }), { code } = _e, data = __rest(_e, ["code"]);
+            }), { code } = _f, data = __rest(_f, ["code"]);
             if (data.success) {
-                const _f = yield this.commonService.changePassword({
+                const _g = yield this.commonService.changePassword({
                     password: new_password,
                     table,
                     passField,
                     userId: id,
                     userIdField,
                     schema,
-                }), { code } = _f, data = __rest(_f, ["code"]);
+                }), { code } = _g, data = __rest(_g, ["code"]);
                 res.status(code).json(data);
             }
             else {

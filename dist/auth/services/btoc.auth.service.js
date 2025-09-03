@@ -27,6 +27,7 @@ const abstract_service_1 = __importDefault(require("../../abstarcts/abstract.ser
 const config_1 = __importDefault(require("../../config/config"));
 const lib_1 = __importDefault(require("../../utils/lib/lib"));
 const constants_1 = require("../../utils/miscellaneous/constants");
+const thirdPartyAuth_1 = __importDefault(require("./thirdPartyAuth"));
 class BtocUserAuthService extends abstract_service_1.default {
     constructor() {
         super();
@@ -122,7 +123,7 @@ class BtocUserAuthService extends abstract_service_1.default {
                 phone: user.phone,
                 status: user.status,
                 date_of_birth: user.date_of_birth,
-                gender: user.status,
+                gender: user.gender,
                 type: "btoc_user",
             };
             const token = lib_1.default.createToken(tokenPayload, config_1.default.JWT_SECRET_H_USER, "24h");
@@ -133,6 +134,56 @@ class BtocUserAuthService extends abstract_service_1.default {
                 data: rest,
                 token,
             };
+        });
+    }
+    loginWithGoogle(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
+                const { hotel_code } = req.web_token;
+                const { access_token } = req.body;
+                if (!access_token) {
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_UNAUTHORIZED,
+                        message: "Access token required",
+                    };
+                }
+                // Verify Google access token
+                const verified_user = yield new thirdPartyAuth_1.default().verifyGoogleAccessToken(access_token);
+                console.log({ verified_user });
+                const model = this.Model.btocUserModel(trx);
+                const check_user = yield model.getSingleUser({
+                    email: verified_user.email,
+                });
+                console.log({ check_user });
+                let userID = (check_user === null || check_user === void 0 ? void 0 : check_user.id) || 0;
+                if (!check_user) {
+                    const registration = yield model.createUser({
+                        email: verified_user.email,
+                        first_name: verified_user.given_name,
+                        last_name: verified_user.family_name,
+                        hotel_code,
+                    });
+                    userID = registration[0].id;
+                }
+                const tokenPayload = {
+                    id: userID,
+                    first_name: verified_user.given_name,
+                    last_name: verified_user.family_name,
+                    hotel_code,
+                    email: verified_user.email,
+                    status: "active",
+                    type: "btoc_user",
+                };
+                const token = lib_1.default.createToken(tokenPayload, config_1.default.JWT_SECRET_H_USER, "48h");
+                return {
+                    success: true,
+                    code: this.StatusCode.HTTP_SUCCESSFUL,
+                    message: this.ResMsg.HTTP_SUCCESSFUL,
+                    data: Object.assign({}, tokenPayload),
+                    token,
+                };
+            }));
         });
     }
     getProfile(req) {

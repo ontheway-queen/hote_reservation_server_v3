@@ -23,6 +23,9 @@ class BtocUserAuthValidator {
             email: joi_1.default.string().email().max(255).required(),
             password: joi_1.default.string().min(6).max(20).required(),
         });
+        this.loginWithGoogleValidator = joi_1.default.object({
+            access_token: joi_1.default.string().required(),
+        });
     }
 }
 exports.BtocUserAuthValidator = BtocUserAuthValidator;
