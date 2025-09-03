@@ -3,6 +3,7 @@ import AuthChecker from "../common/middleware/authChecker/authChecker";
 import { BtocHotelRouter } from "./routers/btoc.hotel.router";
 import { BtocHotelController } from "./controllers/btoc.hotel.controller";
 import { BtocConfigRouter } from "./routers/btocConfig.router";
+import { BtocCommonRouter } from "./routers/btocCommon.router";
 
 export class BtocRootRouter {
   public router = Router();
@@ -25,6 +26,10 @@ export class BtocRootRouter {
       .route("/hotel/recheck")
       .post(this.authChecker.whiteLabelTokenVerfiy, this.controller.recheck);
 
+    this.router
+      .route("/gateways")
+      .get(this.authChecker.whiteLabelTokenVerfiy, this.controller.recheck);
+
     this.router.use(
       "/hotel",
       this.authChecker.whiteLabelTokenVerfiy,
@@ -36,6 +41,12 @@ export class BtocRootRouter {
       "/config",
       this.authChecker.whiteLabelTokenVerfiy,
       new BtocConfigRouter().router
+    );
+
+    this.router.use(
+      "/common",
+      this.authChecker.whiteLabelTokenVerfiy,
+      new BtocCommonRouter().router
     );
   }
 }

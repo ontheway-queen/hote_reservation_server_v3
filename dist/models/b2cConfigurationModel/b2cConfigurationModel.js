@@ -577,6 +577,7 @@ class AgencyB2CConfigModel extends schema_1.default {
                 .select("id", "question", "answer", "order_number", "status", "created_at")
                 .withSchema(this.BTOC_SCHEMA)
                 .where("faq_head_id", head_id)
+                .andWhere("is_deleted", false)
                 .andWhere("hotel_code", hotel_code);
         });
     }

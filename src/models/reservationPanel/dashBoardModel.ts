@@ -474,7 +474,8 @@ class DashBoardModel extends Schema {
           'booked_rooms', ra.booked_rooms,
           'hold_rooms', ra.hold_rooms,
           'available_rooms', ra.available_rooms,
-          'stop_sell', ra.stop_sell
+          'stop_sell', ra.stop_sell,
+          'channel_manager_rooms',ra.channel_manager_rooms
         )
         FROM hotel_reservation.room_availability as ra
         WHERE rt.id = ra.room_type_id 

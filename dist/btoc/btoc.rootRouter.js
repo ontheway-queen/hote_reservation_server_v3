@@ -9,6 +9,7 @@ const authChecker_1 = __importDefault(require("../common/middleware/authChecker/
 const btoc_hotel_router_1 = require("./routers/btoc.hotel.router");
 const btoc_hotel_controller_1 = require("./controllers/btoc.hotel.controller");
 const btocConfig_router_1 = require("./routers/btocConfig.router");
+const btocCommon_router_1 = require("./routers/btocCommon.router");
 class BtocRootRouter {
     constructor() {
         this.router = (0, express_1.Router)();
@@ -23,8 +24,12 @@ class BtocRootRouter {
         this.router
             .route("/hotel/recheck")
             .post(this.authChecker.whiteLabelTokenVerfiy, this.controller.recheck);
+        this.router
+            .route("/gateways")
+            .get(this.authChecker.whiteLabelTokenVerfiy, this.controller.recheck);
         this.router.use("/hotel", this.authChecker.whiteLabelTokenVerfiy, this.authChecker.btocUserAuthChecker, new btoc_hotel_router_1.BtocHotelRouter().router);
         this.router.use("/config", this.authChecker.whiteLabelTokenVerfiy, new btocConfig_router_1.BtocConfigRouter().router);
+        this.router.use("/common", this.authChecker.whiteLabelTokenVerfiy, new btocCommon_router_1.BtocCommonRouter().router);
     }
 }
 exports.BtocRootRouter = BtocRootRouter;

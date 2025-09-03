@@ -49,10 +49,11 @@ class PaymentModel extends schema_1.default {
                 .orderBy("pgs.is_default", "desc");
         });
     }
-    getPaymentGatewayForEcommerce(params) {
+    getAllPaymentGatewayForBTOC(params) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("payment_gateway_setting as pgs")
-                .select("pgs.id", "pgs.title", "pgs.details", "pgs.bank_charge", "pgs.bank_charge_type", "pgs.logo", "pgs.is_default")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .select("pgs.id", "pgs.title", "pgs.logo", "pgs.bank_charge", "pgs.bank_charge_type")
                 .where((qb) => {
                 qb.where("pgs.status", 1);
                 if (params.id) {
@@ -62,7 +63,7 @@ class PaymentModel extends schema_1.default {
                     qb.andWhere("pgs.type", params.type);
                 }
                 if (params.hotel_code) {
-                    qb.andWhere("pgs.company_id", params.hotel_code);
+                    qb.andWhere("pgs.hotel_code", params.hotel_code);
                 }
             })
                 .orderBy("pgs.is_default", "desc");

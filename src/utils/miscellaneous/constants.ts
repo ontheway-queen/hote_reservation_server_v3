@@ -15,6 +15,7 @@ export const origin: string[] = [
   "https://thehotel360.com",
   "https://admin.thehotel360.com",
   "https://www.admin.thehotel360.com",
+  "http://10.10.220.49:3000",
 ];
 
 export const allStrings = [

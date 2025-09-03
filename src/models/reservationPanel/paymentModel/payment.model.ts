@@ -59,19 +59,19 @@ class PaymentModel extends Schema {
       .orderBy("pgs.is_default", "desc");
   }
 
-  public async getPaymentGatewayForEcommerce<T>(
+  public async getAllPaymentGatewayForBTOC<T>(
     params: IGetPaymentGatewayQuery
   ): Promise<IGetPaymentGatewaySetting<T>[]> {
     return await this.db("payment_gateway_setting as pgs")
+      .withSchema(this.RESERVATION_SCHEMA)
       .select(
         "pgs.id",
         "pgs.title",
-        "pgs.details",
-        "pgs.bank_charge",
-        "pgs.bank_charge_type",
         "pgs.logo",
-        "pgs.is_default"
+        "pgs.bank_charge",
+        "pgs.bank_charge_type"
       )
+
       .where((qb) => {
         qb.where("pgs.status", 1);
         if (params.id) {
@@ -81,7 +81,7 @@ class PaymentModel extends Schema {
           qb.andWhere("pgs.type", params.type);
         }
         if (params.hotel_code) {
-          qb.andWhere("pgs.company_id", params.hotel_code);
+          qb.andWhere("pgs.hotel_code", params.hotel_code);
         }
       })
       .orderBy("pgs.is_default", "desc");

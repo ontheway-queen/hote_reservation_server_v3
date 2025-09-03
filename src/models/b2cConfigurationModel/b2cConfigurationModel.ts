@@ -745,6 +745,7 @@ export default class AgencyB2CConfigModel extends Schema {
       )
       .withSchema(this.BTOC_SCHEMA)
       .where("faq_head_id", head_id)
+      .andWhere("is_deleted", false)
       .andWhere("hotel_code", hotel_code);
   }
 
