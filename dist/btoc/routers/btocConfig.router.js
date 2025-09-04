@@ -5,8 +5,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.BtocConfigRouter = void 0;
 const express_1 = require("express");
-const authChecker_1 = __importDefault(require("../../common/middleware/authChecker/authChecker"));
 const abstract_router_1 = __importDefault(require("../../abstarcts/abstract.router"));
+const authChecker_1 = __importDefault(require("../../common/middleware/authChecker/authChecker"));
 const btocConfig_controller_1 = require("../controllers/btocConfig.controller");
 class BtocConfigRouter extends abstract_router_1.default {
     constructor() {
@@ -19,7 +19,9 @@ class BtocConfigRouter extends abstract_router_1.default {
     callRouter() {
         this.router.route("/home").get(this.controller.GetHomePageData);
         this.router.route("/about-us").get(this.controller.GetAboutUsPageData);
-        this.router.route("/contact-us").get(this.controller.GetContactUsPageData);
+        this.router
+            .route("/contact-us")
+            .get(this.controller.GetContactUsPageData);
         this.router
             .route("/privacy-policy")
             .get(this.controller.GetPrivacyPolicyPageData);
@@ -29,6 +31,9 @@ class BtocConfigRouter extends abstract_router_1.default {
         this.router.route("/pop-up").get(this.controller.getPopUpBanner);
         this.router.route("/faq").get(this.controller.getAllFaq);
         this.router.route("/accounts").get(this.controller.GetAccountsData);
+        this.router
+            .route("/hotel-images")
+            .get(this.controller.getAllHotelImages);
     }
 }
 exports.BtocConfigRouter = BtocConfigRouter;

@@ -795,4 +795,34 @@ export default class AgencyB2CConfigModel extends Schema {
       .where("hotel_code", hotel_code)
       .andWhere("is_deleted", false);
   }
+
+  public async getAllHotelImages({
+    hotel_code,
+  }: {
+    hotel_code: number;
+  }): Promise<
+    {
+      id: number;
+      hotel_code: number;
+      image_url: string;
+      image_caption: string;
+      main_image: string;
+      image_type: string;
+      is_deleted: boolean;
+    }[]
+  > {
+    return await this.db("hotel_image as hi")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .select(
+        "hi.id",
+        "hi.hotel_code",
+        "hi.image_url",
+        "hi.image_caption",
+        "hi.main_image",
+        "hi.image_type",
+        "hi.is_deleted"
+      )
+      .where("hotel_code", hotel_code)
+      .andWhere("is_deleted", false);
+  }
 }

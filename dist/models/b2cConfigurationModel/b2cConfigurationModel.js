@@ -608,6 +608,15 @@ class AgencyB2CConfigModel extends schema_1.default {
                 .andWhere("is_deleted", false);
         });
     }
+    getAllHotelImages({ hotel_code, }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("hotel_image as hi")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .select("hi.id", "hi.hotel_code", "hi.image_url", "hi.image_caption", "hi.main_image", "hi.image_type", "hi.is_deleted")
+                .where("hotel_code", hotel_code)
+                .andWhere("is_deleted", false);
+        });
+    }
 }
 exports.default = AgencyB2CConfigModel;
 //# sourceMappingURL=b2cConfigurationModel.js.map
