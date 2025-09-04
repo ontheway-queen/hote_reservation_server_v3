@@ -1,13 +1,15 @@
 import { Router } from "express";
 import AuthChecker from "../../common/middleware/authChecker/authChecker";
 import { BtocHotelController } from "../controllers/btoc.hotel.controller";
+import AbstractRouter from "../../abstarcts/abstract.router";
 
-export class BtocHotelRouter {
+export class BtocHotelRouter extends AbstractRouter {
   public router = Router();
   public authChecker = new AuthChecker();
   private controller = new BtocHotelController();
 
   constructor() {
+    super();
     this.callRouter();
   }
 

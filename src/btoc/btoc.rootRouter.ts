@@ -4,6 +4,7 @@ import { BtocHotelRouter } from "./routers/btoc.hotel.router";
 import { BtocHotelController } from "./controllers/btoc.hotel.controller";
 import { BtocConfigRouter } from "./routers/btocConfig.router";
 import { BtocCommonRouter } from "./routers/btocCommon.router";
+import { BtocPaymentRouter } from "./routers/btoc.payment.router";
 
 export class BtocRootRouter {
   public router = Router();
@@ -35,6 +36,13 @@ export class BtocRootRouter {
       this.authChecker.whiteLabelTokenVerfiy,
       this.authChecker.btocUserAuthChecker,
       new BtocHotelRouter().router
+    );
+
+    this.router.use(
+      "/payment",
+      this.authChecker.whiteLabelTokenVerfiy,
+      this.authChecker.btocUserAuthChecker,
+      new BtocPaymentRouter().router
     );
 
     this.router.use(

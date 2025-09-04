@@ -1,6 +1,10 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ROOM_TYPE_AVAILABILITY_DAYS = exports.FUNCTION_TYPE_HOTEL = exports.CONTENT_TYPE_VIDEO = exports.CONTENT_TYPE_PHOTO = exports.ACC_HEAD_CONFIG = exports.ERROR_LEVEL_CRITICAL = exports.ERROR_LEVEL_ERROR = exports.ERROR_LEVEL_WARNING = exports.ERROR_LEVEL_INFO = exports.ERROR_LEVEL_DEBUG = exports.OTP_FOR_CREDENTIALS = exports.OTP_FOR = exports.OTP_EMAIL_SUBJECT = exports.OTP_TYPE_FORGET_RES_ADMIN = exports.OTP_TYPE_FORGET_BTOC_USER = exports.OTP_TYPE_FORGET_HOTEL_ADMIN = exports.OTP_TYPE_FORGET_M_ADMIN = exports.DIVIDEND_GROUP = exports.EXPENSE_GROUP = exports.INCOME_GROUP = exports.CAPITAL_GROUP = exports.LIABILITY_GROUP = exports.ASSET_GROUP = exports.allStrings = exports.origin = void 0;
+exports.BTOC_PAYMENT_CANCELLED_URL = exports.BTOC_PAYMENT_SUCCESS_RETURN_URL = exports.PAYMENT_CANCELLED_URL = exports.PAYMENT_SUCCESS_RETURN_URL = exports.PAYMENT_VERIFY_URL = exports.PAYMENT_PAY_URL = exports.GET_TOKEN_URL = exports.BTOC_CLIENT_DOMAIN = exports.CLIENT_DOMAIN = exports.RETURN_DOMAIN = exports.SURJO_BASE_URL = exports.ROOM_TYPE_AVAILABILITY_DAYS = exports.FUNCTION_TYPE_HOTEL = exports.CONTENT_TYPE_VIDEO = exports.CONTENT_TYPE_PHOTO = exports.ACC_HEAD_CONFIG = exports.ERROR_LEVEL_CRITICAL = exports.ERROR_LEVEL_ERROR = exports.ERROR_LEVEL_WARNING = exports.ERROR_LEVEL_INFO = exports.ERROR_LEVEL_DEBUG = exports.OTP_FOR_CREDENTIALS = exports.OTP_FOR = exports.OTP_EMAIL_SUBJECT = exports.OTP_TYPE_FORGET_RES_ADMIN = exports.OTP_TYPE_FORGET_BTOC_USER = exports.OTP_TYPE_FORGET_HOTEL_ADMIN = exports.OTP_TYPE_FORGET_M_ADMIN = exports.DIVIDEND_GROUP = exports.EXPENSE_GROUP = exports.INCOME_GROUP = exports.CAPITAL_GROUP = exports.LIABILITY_GROUP = exports.ASSET_GROUP = exports.allStrings = exports.origin = void 0;
+const config_1 = __importDefault(require("../../config/config"));
 exports.origin = [
     "http://localhost:3000",
     "http://10.10.220.47:3030",
@@ -123,4 +127,18 @@ exports.CONTENT_TYPE_VIDEO = "VIDEO";
 exports.FUNCTION_TYPE_HOTEL = "HOTEL";
 // room types availability days when creating a room
 exports.ROOM_TYPE_AVAILABILITY_DAYS = 365;
+// ------------------------------- surjo payment ----------------------------//
+exports.SURJO_BASE_URL = config_1.default.SURJO_BASE_URL;
+exports.RETURN_DOMAIN = config_1.default.RETURN_DOMAIN;
+exports.CLIENT_DOMAIN = config_1.default.CLIENT_DOMAIN;
+exports.BTOC_CLIENT_DOMAIN = config_1.default.BTOC_CLIENT_DOMAIN;
+exports.GET_TOKEN_URL = `${exports.SURJO_BASE_URL}/get_token`;
+exports.PAYMENT_PAY_URL = `${exports.SURJO_BASE_URL}/secret-pay`;
+exports.PAYMENT_VERIFY_URL = `${exports.SURJO_BASE_URL}/verification`;
+//btob
+exports.PAYMENT_SUCCESS_RETURN_URL = `${exports.RETURN_DOMAIN}/common/payment/by-gateway/success`;
+exports.PAYMENT_CANCELLED_URL = `${exports.RETURN_DOMAIN}/common/payment/by-gateway/canceled`;
+//btoc
+exports.BTOC_PAYMENT_SUCCESS_RETURN_URL = `${exports.RETURN_DOMAIN}/payment/btoc/srj/success`;
+exports.BTOC_PAYMENT_CANCELLED_URL = `${exports.RETURN_DOMAIN}/payment/btoc/srj/cancelled`;
 //# sourceMappingURL=constants.js.map

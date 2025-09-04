@@ -83,7 +83,7 @@ export class SubBtocHotelService extends AbstractServices {
   }): Promise<{ id: number; booking_ref: string }> {
     const reservation_model = this.BtocModels.btocReservationModel(this.trx);
     const last = await reservation_model.getLastBooking();
-    const lastId = last?.[0]?.id ?? 1;
+    const lastId = last?.id ?? 1;
 
     const ref = Lib.generateBookingReferenceWithId(`WB`, lastId);
 

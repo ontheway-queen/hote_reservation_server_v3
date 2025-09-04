@@ -7,8 +7,10 @@ exports.BtocHotelRouter = void 0;
 const express_1 = require("express");
 const authChecker_1 = __importDefault(require("../../common/middleware/authChecker/authChecker"));
 const btoc_hotel_controller_1 = require("../controllers/btoc.hotel.controller");
-class BtocHotelRouter {
+const abstract_router_1 = __importDefault(require("../../abstarcts/abstract.router"));
+class BtocHotelRouter extends abstract_router_1.default {
     constructor() {
+        super();
         this.router = (0, express_1.Router)();
         this.authChecker = new authChecker_1.default();
         this.controller = new btoc_hotel_controller_1.BtocHotelController();

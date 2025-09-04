@@ -468,6 +468,8 @@ export class BtocReservationModel extends Schema {
       rooms,
       nights,
     } = payload;
+
+    console.log({ payload });
     const totalRequested = rooms.length;
 
     const result = await this.db("room_types as rt")
@@ -741,11 +743,12 @@ export class BtocReservationModel extends Schema {
       .andWhere("created_by", user_id);
   }
 
-  public async getLastBooking() {
+  public async getLastBooking(): Promise<{ id: number }> {
     return await this.db("bookings")
       .withSchema(this.RESERVATION_SCHEMA)
       .select("id")
       .limit(1)
-      .orderBy("id", "desc");
+      .orderBy("id", "desc")
+      .first();
   }
 }

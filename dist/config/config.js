@@ -28,6 +28,13 @@ const getConfig = () => {
         AWS_S3_SECRET_KEY: process.env.AWS_S3_SECRET_KEY,
         GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
         GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
+        SJ_PREFIX: process.env.SJ_PREFIX,
+        SJ_USERNAME: process.env.SJ_USERNAME,
+        SJ_PASSWORD: process.env.SJ_PASSWORD,
+        SURJO_BASE_URL: process.env.SURJO_BASE_URL,
+        RETURN_DOMAIN: process.env.RETURN_DOMAIN,
+        CLIENT_DOMAIN: process.env.CLIENT_DOMAIN,
+        BTOC_CLIENT_DOMAIN: process.env.BTOC_CLIENT_DOMAIN,
     };
 };
 const getSanitzedConfig = (config) => {

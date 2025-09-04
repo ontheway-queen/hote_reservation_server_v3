@@ -59,11 +59,11 @@ class SubBtocHotelService extends abstract_service_1.default {
         });
     }
     createMainBooking({ payload, hotel_code, guest_id, sub_total, total_amount, total_nights, }) {
-        var _a, _b;
+        var _a;
         return __awaiter(this, void 0, void 0, function* () {
             const reservation_model = this.BtocModels.btocReservationModel(this.trx);
             const last = yield reservation_model.getLastBooking();
-            const lastId = (_b = (_a = last === null || last === void 0 ? void 0 : last[0]) === null || _a === void 0 ? void 0 : _a.id) !== null && _b !== void 0 ? _b : 1;
+            const lastId = (_a = last === null || last === void 0 ? void 0 : last.id) !== null && _a !== void 0 ? _a : 1;
             const ref = lib_1.default.generateBookingReferenceWithId(`WB`, lastId);
             const [booking] = yield reservation_model.insertBooking({
                 booking_date: new Date().toLocaleDateString(),

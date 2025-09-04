@@ -64,17 +64,6 @@ class ExpenseService extends abstract_service_1.default {
                 const accountModel = this.Model.accountModel(trx);
                 const employeeModel = this.Model.employeeModel(trx);
                 const model = this.Model.expenseModel(trx);
-                const { data } = yield model.getAllExpense({
-                    key: rest.expense_no,
-                    hotel_code,
-                });
-                if (data.length) {
-                    return {
-                        success: false,
-                        code: this.StatusCode.HTTP_CONFLICT,
-                        message: "Expense No already exists.",
-                    };
-                }
                 // account check
                 const checkAccount = yield accountModel.getSingleAccount({
                     hotel_code,

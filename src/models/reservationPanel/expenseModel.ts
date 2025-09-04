@@ -1,9 +1,6 @@
 import {
-  ICreateExpenseHeadPayload,
   ICreateExpensePayload,
-  IExpenseHeadQuery,
   IExpenseWithItems,
-  IUpdateExpenseHeadPayload,
 } from "../../appAdmin/utlis/interfaces/expense.interface";
 import { TDB } from "../../common/types/commontypes";
 import { EXPENSE_GROUP } from "../../utils/miscellaneous/constants";
@@ -207,8 +204,8 @@ class ExpenseModel extends Schema {
         COALESCE(
           json_agg(
             json_build_object(
-              'id', ei.id,
-              'head_name', eh.name,
+              'id', ah.id,
+              'head_name', ah.name,
               'remarks', ei.remarks,
               'amount', ei.amount
             )
@@ -223,7 +220,10 @@ class ExpenseModel extends Schema {
         `${this.ACC_SCHEMA}.${this.TABLES.accounts_heads}`,
       ])
       .leftJoin("expense_items as ei", "ei.expense_id", "ev.id")
-      .leftJoin("expense_head as eh", "ei.expense_head_id", "eh.id")
+      // .leftJoin("acc as eh", "ei.expense_head_id", "eh.id")
+      .joinRaw(
+        `LEFT JOIN ${this.ACC_SCHEMA}.acc_heads as ah ON ei.expense_head_id = ah.id`
+      )
       .joinRaw(
         `LEFT JOIN ${this.RESERVATION_SCHEMA}.hotels as h ON ev.hotel_code = h.hotel_code`
       )

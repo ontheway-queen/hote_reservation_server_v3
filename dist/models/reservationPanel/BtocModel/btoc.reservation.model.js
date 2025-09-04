@@ -336,6 +336,7 @@ class BtocReservationModel extends schema_1.default {
     recheck(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             const { hotel_code, checkin, checkout, room_type_id, rate_plan_id, rooms, nights, } = payload;
+            console.log({ payload });
             const totalRequested = rooms.length;
             const result = yield this.db("room_types as rt")
                 .withSchema(this.RESERVATION_SCHEMA)
@@ -518,7 +519,8 @@ class BtocReservationModel extends schema_1.default {
                 .withSchema(this.RESERVATION_SCHEMA)
                 .select("id")
                 .limit(1)
-                .orderBy("id", "desc");
+                .orderBy("id", "desc")
+                .first();
         });
     }
 }

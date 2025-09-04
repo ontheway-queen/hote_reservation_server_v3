@@ -25,6 +25,7 @@ import { ReservationModel } from "./reservationPanel/reservation.model";
 import RoomModel from "./reservationPanel/Room.Model";
 import SettingModel from "./reservationPanel/Setting.Model";
 import ChannelManagerModel from "./reservationPanel/channelManager.model";
+import BtocInvoiceModel from "./btocInvModel/btoc.invoiceModel";
 
 class Models {
   private db: Knex;
@@ -148,6 +149,10 @@ class Models {
   // ------------- Btoc Configuration Model ----------------- //
   public b2cConfigurationModel(trx?: Knex.Transaction) {
     return new B2cConfigurationModel(trx || this.db);
+  }
+
+  public btocInvoiceModel(trx?: Knex.Transaction) {
+    return new BtocInvoiceModel(trx || this.db);
   }
 }
 export default Models;

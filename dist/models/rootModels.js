@@ -29,6 +29,7 @@ const reservation_model_1 = require("./reservationPanel/reservation.model");
 const Room_Model_1 = __importDefault(require("./reservationPanel/Room.Model"));
 const Setting_Model_1 = __importDefault(require("./reservationPanel/Setting.Model"));
 const channelManager_model_1 = __importDefault(require("./reservationPanel/channelManager.model"));
+const btoc_invoiceModel_1 = __importDefault(require("./btocInvModel/btoc.invoiceModel"));
 class Models {
     constructor(db) {
         this.db = db;
@@ -121,6 +122,9 @@ class Models {
     // ------------- Btoc Configuration Model ----------------- //
     b2cConfigurationModel(trx) {
         return new b2cConfigurationModel_1.default(trx || this.db);
+    }
+    btocInvoiceModel(trx) {
+        return new btoc_invoiceModel_1.default(trx || this.db);
     }
 }
 exports.default = Models;

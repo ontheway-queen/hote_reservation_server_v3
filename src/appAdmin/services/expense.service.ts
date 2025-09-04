@@ -48,19 +48,6 @@ export class ExpenseService extends AbstractServices {
       const employeeModel = this.Model.employeeModel(trx);
       const model = this.Model.expenseModel(trx);
 
-      const { data } = await model.getAllExpense({
-        key: rest.expense_no,
-        hotel_code,
-      });
-
-      if (data.length) {
-        return {
-          success: false,
-          code: this.StatusCode.HTTP_CONFLICT,
-          message: "Expense No already exists.",
-        };
-      }
-
       // account check
       const checkAccount = await accountModel.getSingleAccount({
         hotel_code,

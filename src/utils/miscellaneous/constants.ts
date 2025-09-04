@@ -1,3 +1,5 @@
+import config from "../../config/config";
+
 export const origin: string[] = [
   "http://localhost:3000",
   "http://10.10.220.47:3030",
@@ -136,3 +138,25 @@ export const FUNCTION_TYPE_HOTEL = "HOTEL";
 
 // room types availability days when creating a room
 export const ROOM_TYPE_AVAILABILITY_DAYS = 365;
+
+// ------------------------------- surjo payment ----------------------------//
+
+export const SURJO_BASE_URL = config.SURJO_BASE_URL;
+
+export const RETURN_DOMAIN = config.RETURN_DOMAIN;
+
+export const CLIENT_DOMAIN = config.CLIENT_DOMAIN;
+
+export const BTOC_CLIENT_DOMAIN = config.BTOC_CLIENT_DOMAIN;
+
+export const GET_TOKEN_URL = `${SURJO_BASE_URL}/get_token`;
+export const PAYMENT_PAY_URL = `${SURJO_BASE_URL}/secret-pay`;
+export const PAYMENT_VERIFY_URL = `${SURJO_BASE_URL}/verification`;
+
+//btob
+export const PAYMENT_SUCCESS_RETURN_URL = `${RETURN_DOMAIN}/common/payment/by-gateway/success`;
+export const PAYMENT_CANCELLED_URL = `${RETURN_DOMAIN}/common/payment/by-gateway/canceled`;
+
+//btoc
+export const BTOC_PAYMENT_SUCCESS_RETURN_URL = `${RETURN_DOMAIN}/payment/btoc/srj/success`;
+export const BTOC_PAYMENT_CANCELLED_URL = `${RETURN_DOMAIN}/payment/btoc/srj/cancelled`;
