@@ -19,9 +19,6 @@ class ExpenseValidator {
             expense_by: joi_1.default.number().required().messages({
                 "any.required": "Expense By is required",
             }),
-            expense_no: joi_1.default.string().required().messages({
-                "any.required": "Expense No is required",
-            }),
             expense_date: joi_1.default.string().required().messages({
                 "any.required": "Expense Date is required",
             }),
@@ -71,21 +68,37 @@ class ExpenseValidator {
                 }),
                 otherwise: joi_1.default.optional(),
             }),
-            total_amount: joi_1.default.number().required(),
             expense_items: joi_1.default.string().custom((value, helpers) => {
                 try {
-                    const parsedObject = JSON.parse(value);
-                    const deductionType = typeof parsedObject;
-                    if (deductionType !== "object") {
+                    const parsed = JSON.parse(value);
+                    if (!Array.isArray(parsed)) {
                         return helpers.message({
-                            custom: "Invalid Expense Items: should be a JSON object",
+                            custom: "Invalid Expense Items: should be an array of objects",
                         });
                     }
-                    return value;
+                    // validate each item inside array
+                    for (const item of parsed) {
+                        if (typeof item.id !== "number") {
+                            return helpers.message({
+                                custom: "Each expense item must have a numeric id",
+                            });
+                        }
+                        if (typeof item.remarks !== "string") {
+                            return helpers.message({
+                                custom: "Each expense item must have a string remarks",
+                            });
+                        }
+                        if (typeof item.amount !== "number") {
+                            return helpers.message({
+                                custom: "Each expense item must have a numeric amount",
+                            });
+                        }
+                    }
+                    return parsed; // ✅ will pass parsed array to `req.body`
                 }
                 catch (err) {
                     return helpers.message({
-                        custom: "Invalid Expense Items: should be a valid JSON Object",
+                        custom: "Invalid Expense Items: should be a valid JSON array",
                     });
                 }
             }),

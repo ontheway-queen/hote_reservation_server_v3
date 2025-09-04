@@ -12,22 +12,11 @@ class ExpenseRouter extends abstract_router_1.default {
         this.callRouter();
     }
     callRouter() {
-        // create and get expense head router
-        this.router
-            .route("/head")
-            .post(this.expenseController.createExpenseHead)
-            .get(this.expenseController.getAllExpenseHead);
-        // edit and remove expense head router
-        this.router
-            .route("/head/:id")
-            .patch(this.expenseController.updateExpenseHead)
-            .delete(this.expenseController.deleteExpenseHead);
-        // Create and get expense router
+        this.router.route("/head").get(this.expenseController.getAllExpenseHead);
         this.router
             .route("/")
             .post(this.uploader.cloudUploadRaw(this.fileFolders.EXPENSE_FILES), this.expenseController.createExpense)
             .get(this.expenseController.getAllExpense);
-        // Single expense router
         this.router.route("/:id").get(this.expenseController.getSingleExpense);
     }
 }

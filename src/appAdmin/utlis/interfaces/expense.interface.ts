@@ -1,80 +1,83 @@
 export interface ICreateExpenseHeadPayload {
-	res_id?: number;
-	hotel_code: number;
-	name: string;
-	created_by: number;
+  res_id?: number;
+  hotel_code: number;
+  name: string;
+  created_by: number;
 }
 
 export interface IUpdateExpenseHeadPayload {
-	hotel_code: number;
-	name: string;
+  hotel_code: number;
+  name: string;
 }
 
 export interface IExpenseHeadQuery {
-	id: number;
-	name: string;
-	created_by_id: number;
-	created_by_name: string;
-	is_deleted: boolean;
+  id: number;
+  name: string;
+  created_by_id: number;
+  created_by_name: string;
+  is_deleted: boolean;
 }
 
 export interface ICreateExpensebody {
-	hotel_code: number;
-	expense_by: number;
-	expense_no: string;
-	expense_date: string;
-	expense_items: string;
-	pay_method: string;
-	account_id: number;
-	total_amount: number;
-	expense_note: string;
-	expense_voucher_url_1?: string;
-	expense_voucher_url_2?: string;
+  hotel_code: number;
+  expense_by: number;
+  expense_no: string;
+  expense_date: string;
+  expense_items: {
+    id: number;
+    remarks: string;
+    amount: number;
+  }[];
+  pay_method: string;
+  account_id: number;
+  expense_note: string;
+  expense_voucher_url_1?: string;
+  expense_voucher_url_2?: string;
 }
 
 export interface ICreateExpensePayload {
-	hotel_code: number;
-	voucher_no: string;
-	expense_date?: string;
-	expense_by: number;
-	pay_method: string;
-	transaction_no?: string;
-	expense_cheque_id?: number;
-	bank_name?: string;
-	branch_name?: string;
-	cheque_no?: number;
-	cheque_date?: string;
-	deposit_date?: string;
-	account_id?: number;
-	expense_amount: number;
-	expense_note?: string;
-	acc_voucher_id?: number;
-	expense_voucher_url_1?: string;
-	expense_voucher_url_2?: string;
-	created_by: number;
+  hotel_code: number;
+  voucher_no?: string;
+  expense_date?: string;
+  expense_by: number;
+  pay_method: string;
+  transaction_no?: string;
+  expense_cheque_id?: number;
+  bank_name?: string;
+  branch_name?: string;
+  cheque_no?: number;
+  cheque_date?: string;
+  deposit_date?: string;
+  account_id?: number;
+  expense_amount: number;
+  expense_note?: string;
+  acc_voucher_id?: number;
+  expense_voucher_url_1?: string;
+  expense_voucher_url_2?: string;
+  created_by: number;
 }
 
 export interface IExpenseWithItems {
-	id: number;
-	voucher_no: string;
-	account_id: number;
-	expense_date: string;
-	expense_name: string;
-	account_name: string;
-	account_type: string;
-	expense_amount: string;
-	created_at: string;
-	hotel_code?: number;
-	account_number?: string;
-	hotel_name?: string;
-	bank_name?: string;
-	branch?: string;
-	hotel_address?: string;
-	expense_items: ExpenseItem[];
+  id: number;
+  voucher_no: string;
+  account_id: number;
+  expense_date: string;
+  expense_name: string;
+  account_name: string;
+  account_type: string;
+  expense_amount: string;
+  created_at: string;
+  hotel_code?: number;
+  account_number?: string;
+  hotel_name?: string;
+  bank_name?: string;
+  branch?: string;
+  hotel_address?: string;
+  expense_items: ExpenseItem[];
 }
 
 export interface ExpenseItem {
-	id: number;
-	item_name: string;
-	amount: number;
+  id: number;
+  item_name: string;
+  amount: number;
 }

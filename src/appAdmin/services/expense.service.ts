@@ -2,284 +2,179 @@ import { Request } from "express";
 import AbstractServices from "../../abstarcts/abstract.service";
 import ExpenseModel from "../../models/reservationPanel/expenseModel";
 import {
-	ICreateExpensebody,
-	IUpdateExpenseHeadPayload,
+  ICreateExpensebody,
+  IUpdateExpenseHeadPayload,
 } from "../utlis/interfaces/expense.interface";
 
 export class ExpenseService extends AbstractServices {
-	constructor() {
-		super();
-	}
+  constructor() {
+    super();
+  }
 
-	// create Expense Head Service
-	public async createExpenseHead(req: Request) {
-		return await this.db.transaction(async (trx) => {
-			const { hotel_code, id } = req.hotel_admin;
-			const { name } = req.body;
+  public async getAllExpenseHead(req: Request) {
+    const data = await this.Model.expenseModel().getExpenseHeads({
+      search: req.query.search as string,
+      hotel_code: req.hotel_admin.hotel_code,
+    });
 
-			// expense head check
-			const expenseModel = this.Model.expenseModel();
-			const { data: checkHead } = await expenseModel.getAllExpenseHead({
-				name,
-				hotel_code,
-			});
+    return {
+      success: true,
+      code: this.StatusCode.HTTP_OK,
+      data,
+    };
+  }
 
-			if (checkHead.length) {
-				return {
-					success: false,
-					code: this.StatusCode.HTTP_CONFLICT,
-					message:
-						"Same Expense Head already exists, give another unique Expense Head",
-				};
-			}
+  public async createExpense(req: Request) {
+    return await this.db.transaction(async (trx) => {
+      const { hotel_code, id: created_by } = req.hotel_admin;
+      const { expense_items, ...rest } = req.body as ICreateExpensebody;
 
-			// model
-			const model = new ExpenseModel(trx);
+      const files = req.files;
+      if (Array.isArray(files) && files.length) {
+        files.forEach((file) => {
+          const { fieldname, filename } = file;
+          switch (fieldname) {
+            case "file_1":
+              rest.expense_voucher_url_1 = filename as string;
+              break;
+            case "file_2":
+              rest.expense_voucher_url_2 = filename;
+              break;
+          }
+        });
+      }
 
-			const res = await model.createExpenseHead({
-				hotel_code,
-				name,
-				created_by: id,
-			});
+      const accountModel = this.Model.accountModel(trx);
+      const employeeModel = this.Model.employeeModel(trx);
+      const model = this.Model.expenseModel(trx);
 
-			return {
-				success: true,
-				code: this.StatusCode.HTTP_SUCCESSFUL,
-				message: "Expense Head created successfully.",
-			};
-		});
-	}
+      const { data } = await model.getAllExpense({
+        key: rest.expense_no,
+        hotel_code,
+      });
 
-	// Get all Expense Head list
-	public async getAllExpenseHead(req: Request) {
-		const { hotel_code } = req.hotel_admin;
-		const { limit, skip, name } = req.query;
+      if (data.length) {
+        return {
+          success: false,
+          code: this.StatusCode.HTTP_CONFLICT,
+          message: "Expense No already exists.",
+        };
+      }
 
-		const model = this.Model.expenseModel();
+      // account check
+      const checkAccount = await accountModel.getSingleAccount({
+        hotel_code,
+        id: rest.account_id,
+      });
 
-		const { data, total } = await model.getAllExpenseHead({
-			limit: limit as string,
-			skip: skip as string,
-			name: name as string,
-			hotel_code,
-		});
-		return {
-			success: true,
-			code: this.StatusCode.HTTP_OK,
-			total,
-			data,
-		};
-	}
+      if (!checkAccount.length) {
+        return {
+          success: false,
+          code: this.StatusCode.HTTP_NOT_FOUND,
+          message: "Account not found",
+        };
+      }
 
-	// Update Expense Head Service
-	public async updateExpenseHead(req: Request) {
-		return await this.db.transaction(async (trx) => {
-			const { hotel_code } = req.hotel_admin;
-			const { id } = req.params;
+      const getSingleEmployee = await employeeModel.getSingleEmployee(
+        rest.expense_by,
+        hotel_code
+      );
 
-			const updatePayload = req.body as IUpdateExpenseHeadPayload;
+      if (!getSingleEmployee) {
+        return {
+          success: false,
+          code: this.StatusCode.HTTP_NOT_FOUND,
+          message: "Employee not found",
+        };
+      }
 
-			const model = this.Model.expenseModel(trx);
-			const res = await model.updateExpenseHead(parseInt(id), {
-				hotel_code,
-				name: updatePayload.name,
-			});
+      const year = new Date().getFullYear();
 
-			if (res === 1) {
-				return {
-					success: true,
-					code: this.StatusCode.HTTP_OK,
-					message: "Expense Head updated successfully",
-				};
-			} else {
-				return {
-					success: false,
-					code: this.StatusCode.HTTP_NOT_FOUND,
-					message: "Expense Head didn't find",
-				};
-			}
-		});
-	}
+      const expenseId = await model.getExpenseLastId();
 
-	// Delete Expense Head Service
-	public async deleteExpenseHead(req: Request) {
-		return await this.db.transaction(async (trx) => {
-			const { id } = req.params;
+      const expenseNo = expenseId.length ? expenseId[0].id + 1 : 1;
 
-			const model = this.Model.expenseModel(trx);
-			const res = await model.deleteExpenseHead(parseInt(id));
+      const total_amount = expense_items.reduce(
+        (acc, cu) => acc + cu.amount,
+        0
+      );
 
-			if (res === 1) {
-				return {
-					success: true,
-					code: this.StatusCode.HTTP_OK,
-					message: "Expense Head deleted successfully",
-				};
-			} else {
-				return {
-					success: false,
-					code: this.StatusCode.HTTP_NOT_FOUND,
-					message: "Expense Head didn't find",
-				};
-			}
-		});
-	}
+      // Insert expense record
+      const payload = {
+        ...rest,
+        expense_no: `EXP-${year}${expenseNo}`,
+        hotel_code,
+        created_by,
+        expense_amount: total_amount,
+        acc_voucher_id: 77,
+      };
 
-	// Create Expense Service
-	public async createExpense(req: Request) {
-		return await this.db.transaction(async (trx) => {
-			const { hotel_code, id: created_by } = req.hotel_admin;
-			const { expense_items, total_amount, ...rest } =
-				req.body as ICreateExpensebody;
+      const expenseRes = await model.createExpense(payload);
 
-			const files = req.files;
-			if (Array.isArray(files) && files.length) {
-				files.forEach((file) => {
-					const { fieldname, filename } = file;
-					switch (fieldname) {
-						case "file_1":
-							rest.expense_voucher_url_1 = filename as string;
-							break;
-						case "file_2":
-							rest.expense_voucher_url_2 = filename;
-							break;
-					}
-				});
-			}
+      const expenseItemPayload = expense_items.map(
+        (item: { id: number; remarks: string; amount: number }) => {
+          return {
+            expense_head_id: item.id,
+            remarks: item.remarks,
+            amount: item.amount,
+            expense_id: expenseRes[0].id,
+          };
+        }
+      );
 
-			const accountModel = this.Model.accountModel(trx);
-			const employeeModel = this.Model.employeeModel(trx);
-			const model = this.Model.expenseModel(trx);
+      await model.createExpenseItem(expenseItemPayload);
 
-			const { data } = await model.getAllExpense({
-				key: rest.expense_no,
-				hotel_code,
-			});
-			if (data.length) {
-				return {
-					success: false,
-					code: this.StatusCode.HTTP_CONFLICT,
-					message: "Expense No already exists.",
-				};
-			}
-			console.log(1);
-			// account check
-			const checkAccount = await accountModel.getSingleAccount({
-				hotel_code,
-				id: rest.account_id,
-			});
+      return {
+        success: true,
+        code: this.StatusCode.HTTP_SUCCESSFUL,
+        message: "Expense created successfully.",
+      };
+    });
+  }
 
-			if (!checkAccount.length) {
-				return {
-					success: false,
-					code: this.StatusCode.HTTP_NOT_FOUND,
-					message: "Account not found",
-				};
-			}
-			console.log(2);
-			const getSingleEmployee = await employeeModel.getSingleEmployee(
-				rest.expense_by,
-				hotel_code
-			);
-			console.log({ getSingleEmployee });
-			if (!getSingleEmployee) {
-				return {
-					success: false,
-					code: this.StatusCode.HTTP_NOT_FOUND,
-					message: "Employee not found",
-				};
-			}
+  public async getAllExpense(req: Request) {
+    const { hotel_code } = req.hotel_admin;
+    const { from_date, to_date, limit, skip, key } = req.query;
 
-			const year = new Date().getFullYear();
+    const model = this.Model.expenseModel();
 
-			// get last voucher ID
-			const voucherData = await model.getAllIVoucherForLastId();
+    const { data, total } = await model.getAllExpense({
+      from_date: from_date as string,
+      to_date: to_date as string,
+      limit: limit as string,
+      skip: skip as string,
+      key: key as string,
+      hotel_code,
+    });
+    return {
+      success: true,
+      code: this.StatusCode.HTTP_OK,
+      total,
+      data,
+    };
+  }
 
-			const voucherNo = voucherData.length ? voucherData[0].id + 1 : 1;
+  public async getSingleExpense(req: Request) {
+    const { id } = req.params;
+    const { hotel_code } = req.hotel_admin;
 
-			const parsed_expense_items = JSON.parse(expense_items);
+    const data = await this.Model.expenseModel().getSingleExpense(
+      parseInt(id),
+      hotel_code
+    );
 
-			console.log(1);
-			// Insert expense record
-			const payload = {
-				...rest,
-				voucher_no: `EXP-${year}${voucherNo}`,
-				hotel_code,
-				created_by,
-				expense_amount: total_amount,
-				acc_voucher_id: 77,
-			};
-			// console.log({ payload: rest.expense_date });
-			const expenseRes = await model.createExpense(payload);
-			console.log(2);
-			console.log({ expenseRes });
-			const expenseItemPayload = parsed_expense_items.map(
-				(item: { id: number; remarks: string; amount: number }) => {
-					return {
-						expense_head_id: item.id,
-						remarks: item.remarks,
-						amount: item.amount,
-						expense_id: expenseRes[0].id,
-					};
-				}
-			);
-
-			//   expense item
-			await model.createExpenseItem(expenseItemPayload);
-
-			return {
-				success: true,
-				code: this.StatusCode.HTTP_SUCCESSFUL,
-				message: "Expense created successfully.",
-			};
-		});
-	}
-
-	// get all Expense service
-	public async getAllExpense(req: Request) {
-		const { hotel_code } = req.hotel_admin;
-		const { from_date, to_date, limit, skip, key } = req.query;
-
-		const model = this.Model.expenseModel();
-
-		const { data, total } = await model.getAllExpense({
-			from_date: from_date as string,
-			to_date: to_date as string,
-			limit: limit as string,
-			skip: skip as string,
-			key: key as string,
-			hotel_code,
-		});
-		return {
-			success: true,
-			code: this.StatusCode.HTTP_OK,
-			total,
-			data,
-		};
-	}
-
-	// get single expense service
-	public async getSingleExpense(req: Request) {
-		const { id } = req.params;
-		const { hotel_code } = req.hotel_admin;
-
-		const data = await this.Model.expenseModel().getSingleExpense(
-			parseInt(id),
-			hotel_code
-		);
-
-		if (!data.length) {
-			return {
-				success: false,
-				code: this.StatusCode.HTTP_NOT_FOUND,
-				message: this.ResMsg.HTTP_NOT_FOUND,
-			};
-		}
-		return {
-			success: true,
-			code: this.StatusCode.HTTP_OK,
-			data: data[0],
-		};
-	}
+    if (!data.length) {
+      return {
+        success: false,
+        code: this.StatusCode.HTTP_NOT_FOUND,
+        message: this.ResMsg.HTTP_NOT_FOUND,
+      };
+    }
+    return {
+      success: true,
+      code: this.StatusCode.HTTP_OK,
+      data: data[0],
+    };
+  }
 }
 export default ExpenseService;

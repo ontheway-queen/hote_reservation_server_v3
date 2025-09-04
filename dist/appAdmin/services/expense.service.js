@@ -25,124 +25,28 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ExpenseService = void 0;
 const abstract_service_1 = __importDefault(require("../../abstarcts/abstract.service"));
-const expenseModel_1 = __importDefault(require("../../models/reservationPanel/expenseModel"));
 class ExpenseService extends abstract_service_1.default {
     constructor() {
         super();
     }
-    // create Expense Head Service
-    createExpenseHead(req) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
-                const { hotel_code, id } = req.hotel_admin;
-                const { name } = req.body;
-                // expense head check
-                const expenseModel = this.Model.expenseModel();
-                const { data: checkHead } = yield expenseModel.getAllExpenseHead({
-                    name,
-                    hotel_code,
-                });
-                if (checkHead.length) {
-                    return {
-                        success: false,
-                        code: this.StatusCode.HTTP_CONFLICT,
-                        message: "Same Expense Head already exists, give another unique Expense Head",
-                    };
-                }
-                // model
-                const model = new expenseModel_1.default(trx);
-                const res = yield model.createExpenseHead({
-                    hotel_code,
-                    name,
-                    created_by: id,
-                });
-                return {
-                    success: true,
-                    code: this.StatusCode.HTTP_SUCCESSFUL,
-                    message: "Expense Head created successfully.",
-                };
-            }));
-        });
-    }
-    // Get all Expense Head list
     getAllExpenseHead(req) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { hotel_code } = req.hotel_admin;
-            const { limit, skip, name } = req.query;
-            const model = this.Model.expenseModel();
-            const { data, total } = yield model.getAllExpenseHead({
-                limit: limit,
-                skip: skip,
-                name: name,
-                hotel_code,
+            const data = yield this.Model.expenseModel().getExpenseHeads({
+                search: req.query.search,
+                hotel_code: req.hotel_admin.hotel_code,
             });
             return {
                 success: true,
                 code: this.StatusCode.HTTP_OK,
-                total,
                 data,
             };
         });
     }
-    // Update Expense Head Service
-    updateExpenseHead(req) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
-                const { hotel_code } = req.hotel_admin;
-                const { id } = req.params;
-                const updatePayload = req.body;
-                const model = this.Model.expenseModel(trx);
-                const res = yield model.updateExpenseHead(parseInt(id), {
-                    hotel_code,
-                    name: updatePayload.name,
-                });
-                if (res === 1) {
-                    return {
-                        success: true,
-                        code: this.StatusCode.HTTP_OK,
-                        message: "Expense Head updated successfully",
-                    };
-                }
-                else {
-                    return {
-                        success: false,
-                        code: this.StatusCode.HTTP_NOT_FOUND,
-                        message: "Expense Head didn't find",
-                    };
-                }
-            }));
-        });
-    }
-    // Delete Expense Head Service
-    deleteExpenseHead(req) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
-                const { id } = req.params;
-                const model = this.Model.expenseModel(trx);
-                const res = yield model.deleteExpenseHead(parseInt(id));
-                if (res === 1) {
-                    return {
-                        success: true,
-                        code: this.StatusCode.HTTP_OK,
-                        message: "Expense Head deleted successfully",
-                    };
-                }
-                else {
-                    return {
-                        success: false,
-                        code: this.StatusCode.HTTP_NOT_FOUND,
-                        message: "Expense Head didn't find",
-                    };
-                }
-            }));
-        });
-    }
-    // Create Expense Service
     createExpense(req) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
                 const { hotel_code, id: created_by } = req.hotel_admin;
-                const _a = req.body, { expense_items, total_amount } = _a, rest = __rest(_a, ["expense_items", "total_amount"]);
+                const _a = req.body, { expense_items } = _a, rest = __rest(_a, ["expense_items"]);
                 const files = req.files;
                 if (Array.isArray(files) && files.length) {
                     files.forEach((file) => {
@@ -171,7 +75,6 @@ class ExpenseService extends abstract_service_1.default {
                         message: "Expense No already exists.",
                     };
                 }
-                console.log(1);
                 // account check
                 const checkAccount = yield accountModel.getSingleAccount({
                     hotel_code,
@@ -184,9 +87,7 @@ class ExpenseService extends abstract_service_1.default {
                         message: "Account not found",
                     };
                 }
-                console.log(2);
                 const getSingleEmployee = yield employeeModel.getSingleEmployee(rest.expense_by, hotel_code);
-                console.log({ getSingleEmployee });
                 if (!getSingleEmployee) {
                     return {
                         success: false,
@@ -195,19 +96,14 @@ class ExpenseService extends abstract_service_1.default {
                     };
                 }
                 const year = new Date().getFullYear();
-                // get last voucher ID
-                const voucherData = yield model.getAllIVoucherForLastId();
-                const voucherNo = voucherData.length ? voucherData[0].id + 1 : 1;
-                const parsed_expense_items = JSON.parse(expense_items);
-                console.log(1);
+                const expenseId = yield model.getExpenseLastId();
+                const expenseNo = expenseId.length ? expenseId[0].id + 1 : 1;
+                const total_amount = expense_items.reduce((acc, cu) => acc + cu.amount, 0);
                 // Insert expense record
-                const payload = Object.assign(Object.assign({}, rest), { voucher_no: `EXP-${year}${voucherNo}`, hotel_code,
+                const payload = Object.assign(Object.assign({}, rest), { expense_no: `EXP-${year}${expenseNo}`, hotel_code,
                     created_by, expense_amount: total_amount, acc_voucher_id: 77 });
-                // console.log({ payload: rest.expense_date });
                 const expenseRes = yield model.createExpense(payload);
-                console.log(2);
-                console.log({ expenseRes });
-                const expenseItemPayload = parsed_expense_items.map((item) => {
+                const expenseItemPayload = expense_items.map((item) => {
                     return {
                         expense_head_id: item.id,
                         remarks: item.remarks,
@@ -215,7 +111,6 @@ class ExpenseService extends abstract_service_1.default {
                         expense_id: expenseRes[0].id,
                     };
                 });
-                //   expense item
                 yield model.createExpenseItem(expenseItemPayload);
                 return {
                     success: true,
@@ -225,7 +120,6 @@ class ExpenseService extends abstract_service_1.default {
             }));
         });
     }
-    // get all Expense service
     getAllExpense(req) {
         return __awaiter(this, void 0, void 0, function* () {
             const { hotel_code } = req.hotel_admin;
@@ -247,7 +141,6 @@ class ExpenseService extends abstract_service_1.default {
             };
         });
     }
-    // get single expense service
     getSingleExpense(req) {
         return __awaiter(this, void 0, void 0, function* () {
             const { id } = req.params;
