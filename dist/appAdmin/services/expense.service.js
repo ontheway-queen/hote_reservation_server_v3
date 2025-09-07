@@ -113,8 +113,7 @@ class ExpenseService extends abstract_service_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             const { hotel_code } = req.hotel_admin;
             const { from_date, to_date, limit, skip, key } = req.query;
-            const model = this.Model.expenseModel();
-            const { data, total } = yield model.getAllExpense({
+            const { data, total } = yield this.Model.expenseModel().getAllExpense({
                 from_date: from_date,
                 to_date: to_date,
                 limit: limit,

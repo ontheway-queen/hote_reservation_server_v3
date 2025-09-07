@@ -123,9 +123,7 @@ export class ExpenseService extends AbstractServices {
     const { hotel_code } = req.hotel_admin;
     const { from_date, to_date, limit, skip, key } = req.query;
 
-    const model = this.Model.expenseModel();
-
-    const { data, total } = await model.getAllExpense({
+    const { data, total } = await this.Model.expenseModel().getAllExpense({
       from_date: from_date as string,
       to_date: to_date as string,
       limit: limit as string,
@@ -133,6 +131,7 @@ export class ExpenseService extends AbstractServices {
       key: key as string,
       hotel_code,
     });
+
     return {
       success: true,
       code: this.StatusCode.HTTP_OK,

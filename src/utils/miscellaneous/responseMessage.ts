@@ -42,6 +42,10 @@ class ResMsg {
 
   static readonly UNABLE_FOR_STATUS =
     "Unable to complete your request for application status reason";
+
+  // payment
+  static PAYMENT_CANCELLED = "Payment has been Canceled";
+  static PAYMENT_SUCCESS = "Payment Successful";
 }
 
 export default ResMsg;

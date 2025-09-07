@@ -1,13 +1,18 @@
-import { title } from "process";
-import { BtocReservationModel } from "../../models/reservationPanel/BtocModel/btoc.reservation.model";
 import { Knex } from "knex";
 import AbstractServices from "../../abstarcts/abstract.service";
 import { HelperFunction } from "../../appAdmin/utlis/library/helperFunction";
 import Lib from "../../utils/lib/lib";
 import {
   IBookedRoomTypeRequest,
+  IFolioBookingBody,
   IHolder,
 } from "../utills/interfaces/btoc.hotel.interface";
+import { IinsertFolioEntriesPayload } from "../../appAdmin/utlis/interfaces/invoice.interface";
+import {
+  IBookingDetails,
+  IGBookingRequestBody,
+} from "../../appAdmin/utlis/interfaces/reservation.interface";
+import { Request } from "express";
 
 export class SubBtocHotelService extends AbstractServices {
   constructor(private trx: Knex.Transaction) {
@@ -58,6 +63,7 @@ export class SubBtocHotelService extends AbstractServices {
 
     return insertedGuest.id;
   }
+
   async createMainBooking({
     payload,
     hotel_code,
@@ -177,5 +183,186 @@ export class SubBtocHotelService extends AbstractServices {
         }
       }
     }
+  }
+
+  public async createBtocRoomBookingFolioWithEntries({
+    body,
+    booking_id,
+    guest_id,
+    req,
+    booking_ref,
+    hotel_code,
+  }: {
+    req: Request;
+    body: IFolioBookingBody;
+    booking_id: number;
+    guest_id: number;
+    hotel_code: number;
+    booking_ref: string;
+  }) {
+    const hotelInvModel = this.Model.hotelInvoiceModel(this.trx);
+    const accountModel = this.Model.accountModel(this.trx);
+    const reservationModel = this.Model.reservationModel(this.trx);
+    const today = new Date().toISOString().split("T")[0];
+
+    type ChildCtx = {
+      folioId: number;
+      folioNumber: string;
+      roomId: number;
+      entries: IinsertFolioEntriesPayload[];
+      totalDebit: number;
+    };
+
+    const child: ChildCtx[] = [];
+
+    const push = (c: ChildCtx, e: IinsertFolioEntriesPayload) => {
+      c.entries.push(e);
+      c.totalDebit += e.debit ?? 0;
+    };
+
+    const folioNo = `F-${booking_ref}`;
+
+    const [folio] = await hotelInvModel.insertInFolio({
+      booking_id,
+      folio_number: folioNo,
+      guest_id,
+      hotel_code,
+      name: `Individual Folio`,
+      status: "open",
+      type: "Primary",
+    });
+
+    for (const { rooms } of body.booked_room_types) {
+      for (const room of rooms) {
+        const ctx: ChildCtx = {
+          folioId: folio.id,
+          folioNumber: folioNo,
+          roomId: room.room_id,
+          entries: [],
+          totalDebit: 0,
+        };
+
+        /* date‑wise charges */
+        const rates: Record<string, number> = {};
+        for (
+          let d = new Date(room.check_in);
+          d < new Date(room.check_out);
+          d.setDate(d.getDate() + 1)
+        ) {
+          rates[d.toISOString().split("T")[0]] = room.rate.changed_rate;
+        }
+
+        for (const date of Object.keys(rates).sort()) {
+          const rate = rates[date];
+
+          // Room tariff
+          push(ctx, {
+            folio_id: ctx.folioId,
+            date,
+            posting_type: "ROOM_CHARGE",
+            debit: rate,
+            credit: 0,
+            description: "Room Tariff",
+            rack_rate: room.rate.base_rate,
+            room_id: room.room_id,
+          });
+
+          // VAT
+          if (body.vat_percentage > 0) {
+            push(ctx, {
+              folio_id: ctx.folioId,
+              date,
+              posting_type: "VAT",
+              debit: +((rate * body.vat_percentage) / 100).toFixed(2),
+              credit: 0,
+              description: "VAT",
+              rack_rate: 0,
+              room_id: room.room_id,
+            });
+          }
+
+          // Service charge
+          if (body.service_charge_percentage > 0) {
+            push(ctx, {
+              folio_id: ctx.folioId,
+              date,
+              posting_type: "SERVICE_CHARGE",
+              debit: +((rate * body.service_charge_percentage) / 100).toFixed(
+                2
+              ),
+              credit: 0,
+              description: "Service Charge",
+              rack_rate: 0,
+              room_id: room.room_id,
+            });
+          }
+        }
+
+        child.push(ctx);
+      }
+    }
+
+    /*  update booking total (only debits) */
+    const totalDebit = child.reduce((s, c) => s + c.totalDebit, 0);
+
+    /*  persist entries */
+    const allEntries = [...child.flatMap((c) => c.entries)];
+
+    // payment
+    if (body.is_payment_given && body.payment && body.payment.amount > 0) {
+      allEntries.push({
+        folio_id: child[0].folioId,
+        date: today,
+        posting_type: "Payment",
+        credit: body.payment.amount,
+        debit: 0,
+        description: "Payment for room booking",
+      });
+    }
+
+    // insert in folio entries
+    await hotelInvModel.insertInFolioEntries(allEntries);
+
+    // update room booking
+    await reservationModel.updateRoomBooking(
+      { total_amount: totalDebit },
+      hotel_code,
+      booking_id
+    );
+
+    return {
+      childFolios: child.map((c) => ({
+        id: c.folioId,
+        folio_number: c.folioNumber,
+        room_id: c.roomId,
+      })),
+      entries: allEntries,
+    };
+  }
+
+  public mapSingleBookingToFolioBody(
+    singleBooking: IBookingDetails
+  ): IFolioBookingBody {
+    return {
+      vat_percentage: singleBooking.vat_percentage,
+      service_charge_percentage: singleBooking.service_charge_percentage,
+      is_payment_given: singleBooking.payment_status === "paid",
+      payment: {
+        amount: singleBooking.total_amount,
+      },
+      booked_room_types: [
+        {
+          rooms: singleBooking.booking_rooms.map((r) => ({
+            check_in: r.check_in,
+            check_out: r.check_out,
+            room_id: r.room_id,
+            rate: {
+              base_rate: r.base_rate,
+              changed_rate: r.changed_rate,
+            },
+          })),
+        },
+      ],
+    };
   }
 }

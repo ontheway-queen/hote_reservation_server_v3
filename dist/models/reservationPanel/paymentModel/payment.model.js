@@ -49,6 +49,20 @@ class PaymentModel extends schema_1.default {
                 .orderBy("pgs.is_default", "desc");
         });
     }
+    getSinglePaymentGatewayByType(params) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("payment_gateway_setting as pgs")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .select("pgs.id", "pgs.title", "pgs.details", "pgs.status", "pgs.type", "pgs.bank_charge", "pgs.bank_charge_type", "pgs.logo", "pgs.is_default", "pgs.hotel_code", "pgs.created_by", "pgs.updated_at", this.db.raw(`COALESCE(ua.name, 'System') AS created_by_name`))
+                .leftJoin("user_admin as ua", "pgs.created_by", "ua.id")
+                .where((qb) => {
+                qb.where("pgs.hotel_code", params.hotel_code);
+                qb.andWhere("pgs.type", params.type);
+                qb.andWhere("pgs.status", true);
+            })
+                .first();
+        });
+    }
     getAllPaymentGatewayForBTOC(params) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("payment_gateway_setting as pgs")

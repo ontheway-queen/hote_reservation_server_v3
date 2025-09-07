@@ -142,6 +142,21 @@ class Lib {
             yield insetFunc(chartOfAcc_1.defaultChartOfAcc);
         });
     }
+    //get adjusted amount from the payment gateways
+    static calculateAdjustedAmount(totalAmount, percentage, operation) {
+        const factor = percentage / 100;
+        const result = operation === "add"
+            ? totalAmount * (1 + factor)
+            : totalAmount * (1 - factor);
+        return parseFloat(result.toFixed(2));
+    }
+    static buildURL(base, params) {
+        return `${base}?${new URLSearchParams(Object.entries(params).reduce((acc, [k, v]) => {
+            if (v !== undefined && v !== null)
+                acc[k] = String(v);
+            return acc;
+        }, {})).toString()}`;
+    }
 }
 exports.default = Lib;
 //# sourceMappingURL=lib.js.map

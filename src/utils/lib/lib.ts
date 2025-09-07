@@ -162,5 +162,28 @@ class Lib {
 
     await insetFunc(defaultChartOfAcc);
   }
+
+  //get adjusted amount from the payment gateways
+  public static calculateAdjustedAmount(
+    totalAmount: number,
+    percentage: number,
+    operation: "add" | "subtract"
+  ) {
+    const factor = percentage / 100;
+    const result =
+      operation === "add"
+        ? totalAmount * (1 + factor)
+        : totalAmount * (1 - factor);
+    return parseFloat(result.toFixed(2));
+  }
+
+  public static buildURL(base: string, params: Record<string, unknown>) {
+    return `${base}?${new URLSearchParams(
+      Object.entries(params).reduce<Record<string, string>>((acc, [k, v]) => {
+        if (v !== undefined && v !== null) acc[k] = String(v);
+        return acc;
+      }, {})
+    ).toString()}`;
+  }
 }
 export default Lib;

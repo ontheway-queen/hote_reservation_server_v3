@@ -279,3 +279,23 @@ export interface IGetSingleBooking {
     }[];
   }[];
 }
+
+export interface IFolioBookingBody {
+  vat_percentage: number;
+  service_charge_percentage: number;
+  is_payment_given: boolean;
+  payment?: {
+    amount: number;
+  };
+  booked_room_types: {
+    rooms: {
+      check_in: string;
+      check_out: string;
+      room_id: number;
+      rate: {
+        base_rate: number;
+        changed_rate: number;
+      };
+    }[];
+  }[];
+}

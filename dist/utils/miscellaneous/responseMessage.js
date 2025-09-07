@@ -30,5 +30,8 @@ ResMsg.USER_WITH_EXIST_WITH_EMAIL = "User already exist with this email";
 // Login
 ResMsg.LOGIN_SUCCESSFUL = "You are now logged in";
 ResMsg.UNABLE_FOR_STATUS = "Unable to complete your request for application status reason";
+// payment
+ResMsg.PAYMENT_CANCELLED = "Payment has been Canceled";
+ResMsg.PAYMENT_SUCCESS = "Payment Successful";
 exports.default = ResMsg;
 //# sourceMappingURL=responseMessage.js.map

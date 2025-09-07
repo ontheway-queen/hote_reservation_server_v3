@@ -25,9 +25,6 @@ interface ENV {
   GOOGLE_CLIENT_SECRET: string | undefined;
   GOOGLE_CLIENT_ID: string | undefined;
 
-  SJ_PREFIX: string | undefined;
-  SJ_USERNAME: string | undefined;
-  SJ_PASSWORD: string | undefined;
   SURJO_BASE_URL: string | undefined;
   RETURN_DOMAIN: string | undefined;
   CLIENT_DOMAIN: string | undefined;
@@ -54,9 +51,7 @@ interface Config {
   AWS_S3_SECRET_KEY: string;
   GOOGLE_CLIENT_SECRET: string;
   GOOGLE_CLIENT_ID: string;
-  SJ_PREFIX: string;
-  SJ_USERNAME: string;
-  SJ_PASSWORD: string;
+
   SURJO_BASE_URL: string;
   RETURN_DOMAIN: string;
   CLIENT_DOMAIN: string;
@@ -85,9 +80,6 @@ const getConfig = (): ENV => {
     GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
     GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
 
-    SJ_PREFIX: process.env.SJ_PREFIX,
-    SJ_USERNAME: process.env.SJ_USERNAME,
-    SJ_PASSWORD: process.env.SJ_PASSWORD,
     SURJO_BASE_URL: process.env.SURJO_BASE_URL,
     RETURN_DOMAIN: process.env.RETURN_DOMAIN,
     CLIENT_DOMAIN: process.env.CLIENT_DOMAIN,

@@ -22,6 +22,7 @@ export class BtocHotelService extends AbstractServices {
       req.body as hotelSearchAvailabilityReqPayload;
 
     const nights = HelperFunction.calculateNights(checkin, checkout);
+
     const getAllAvailableRooms =
       await this.BtocModels.btocReservationModel().getAllRoomRatesBTOC({
         hotel_code,
@@ -198,6 +199,7 @@ export class BtocHotelService extends AbstractServices {
       data,
     };
   }
+
   public async getSingleBooking(req: Request) {
     const { hotel_code } = req.web_token;
     const { ref_id } = req.params;

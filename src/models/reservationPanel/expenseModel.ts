@@ -127,7 +127,7 @@ class ExpenseModel extends Schema {
         `${this.HR_SCHEMA}.${this.TABLES.employee}`,
       ])
       .leftJoin("expense_items as ei", "ei.expense_id", "ev.id")
-      .leftJoin("expense_head as eh", "ei.expense_head_id", "eh.id")
+      .leftJoin("acc_heads as eh", "ei.expense_head_id", "eh.id")
       .where("ev.hotel_code", hotel_code)
       .modify((builder) => {
         if (from_date && endDate) {
@@ -154,7 +154,7 @@ class ExpenseModel extends Schema {
         `${this.ACC_SCHEMA}.${this.TABLES.accounts_heads}`,
       ])
       .leftJoin("expense_items as ei", "ei.expense_id", "ev.id")
-      .leftJoin("expense_head as eh", "ei.expense_head_id", "eh.id") // <--- add this
+      .leftJoin("acc_heads as eh", "ei.expense_head_id", "eh.id")
       .where("ev.hotel_code", hotel_code)
       .modify((builder) => {
         if (from_date && endDate) {
@@ -220,7 +220,6 @@ class ExpenseModel extends Schema {
         `${this.ACC_SCHEMA}.${this.TABLES.accounts_heads}`,
       ])
       .leftJoin("expense_items as ei", "ei.expense_id", "ev.id")
-      // .leftJoin("acc as eh", "ei.expense_head_id", "eh.id")
       .joinRaw(
         `LEFT JOIN ${this.ACC_SCHEMA}.acc_heads as ah ON ei.expense_head_id = ah.id`
       )

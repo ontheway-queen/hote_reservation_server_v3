@@ -59,6 +59,36 @@ class PaymentModel extends Schema {
       .orderBy("pgs.is_default", "desc");
   }
 
+  public async getSinglePaymentGatewayByType<T>(params: {
+    hotel_code: number;
+    type: "SURJO_PAY";
+  }): Promise<IGetPaymentGatewaySetting<T>> {
+    return await this.db("payment_gateway_setting as pgs")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .select(
+        "pgs.id",
+        "pgs.title",
+        "pgs.details",
+        "pgs.status",
+        "pgs.type",
+        "pgs.bank_charge",
+        "pgs.bank_charge_type",
+        "pgs.logo",
+        "pgs.is_default",
+        "pgs.hotel_code",
+        "pgs.created_by",
+        "pgs.updated_at",
+        this.db.raw(`COALESCE(ua.name, 'System') AS created_by_name`)
+      )
+      .leftJoin("user_admin as ua", "pgs.created_by", "ua.id")
+      .where((qb) => {
+        qb.where("pgs.hotel_code", params.hotel_code);
+        qb.andWhere("pgs.type", params.type);
+        qb.andWhere("pgs.status", true);
+      })
+      .first();
+  }
+
   public async getAllPaymentGatewayForBTOC<T>(
     params: IGetPaymentGatewayQuery
   ): Promise<IGetPaymentGatewaySetting<T>[]> {

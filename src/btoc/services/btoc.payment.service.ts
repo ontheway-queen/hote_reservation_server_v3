@@ -12,58 +12,9 @@ import {
 } from "../utills/interfaces/btoc.hotel.interface";
 import { HelperFunction } from "../../appAdmin/utlis/library/helperFunction";
 import { SubBtocHotelService } from "./btoc.subHotel.service";
+import { BtocSubPaymentService } from "./btoc.subpayment.service";
 
 export class BtocPaymentServices extends AbstractServices {
-  // private subPaymentServices = new BtocSubPaymentService();
-  //create payment
-  // public async createPayment(req: Request) {
-  //   const { id: user_id, first_name, email, phone_number } = req.user;
-  //   const { booking_id } = req.body;
-  //   if (!booking_id) {
-  //     return {
-  //       success: false,
-  //       code: this.StatusCode.HTTP_UNPROCESSABLE_ENTITY,
-  //       message: this.ResMsg.HTTP_UNPROCESSABLE_ENTITY,
-  //     };
-  //   }
-  //   const booking_model = this.Model.flightBookingModel();
-  //   const booking_data = await booking_model.getSingleFlightBooking({
-  //     id: Number(booking_id),
-  //     status: "pending",
-  //   });
-  //   if (!booking_data.length) {
-  //     return {
-  //       success: false,
-  //       code: this.StatusCode.HTTP_NOT_FOUND,
-  //       message: this.ResMsg.HTTP_NOT_FOUND,
-  //     };
-  //   }
-  //   //payment session
-  //   const paymentModel = this.Model.paymentModel();
-  //   const paymentTry = await paymentModel.createPaymentTry({
-  //     user_id,
-  //     pnr_id: booking_data[0].pnr_code,
-  //     booking_id: Number(booking_id),
-  //     status: "INITIATE",
-  //     description: "Payment initiate completed.",
-  //     amount: booking_data[0].payable_amount,
-  //     currency: "BDT",
-  //   });
-
-  //   return await this.subPaymentServices.sslPayment({
-  //     total_amount: booking_data[0].payable_amount,
-  //     currency: "BDT",
-  //     tran_id: `${paymentTry[0].id}-${booking_id}-${user_id}`,
-  //     cus_name: first_name,
-  //     cus_email: email,
-  //     cus_add1: "Dhaka",
-  //     cus_city: "Dhaka",
-  //     cus_country: "Bangladesh",
-  //     cus_phone: phone_number,
-  //     product_name: "ticket issue",
-  //   });
-  // }
-
   public async createSurjopayPaymentOrder(req: Request) {
     return this.db.transaction(async (trx) => {
       const {
@@ -78,8 +29,6 @@ export class BtocPaymentServices extends AbstractServices {
 
       const { hotel_code } = req.web_token;
       const { id: user_id, email } = req.btoc_user;
-
-      const btocReservationModel = this.BtocModels.btocReservationModel(trx);
 
       // _____________________________ recheck and nights_________________
 
@@ -166,60 +115,30 @@ export class BtocPaymentServices extends AbstractServices {
         (req.query as unknown as { payment_for?: string; is_app?: boolean }) ||
         {};
 
-      // Common builders
-      const buildUrls = () => ({
-        return_url: `${BTOC_PAYMENT_SUCCESS_RETURN_URL}?payment_for=${payment_for}&booking_`,
-        cancel_url: `${BTOC_PAYMENT_CANCELLED_URL}?payment_for=${payment_for}`,
-      });
+      const create_payment =
+        await new BtocSubPaymentService().createSurjopayPaymentOrderForHotel({
+          amount: recheck.price.toString(),
+          customer_email: email,
+          customer_first_name: holder.first_name,
+          customer_last_name: holder.last_name,
+          customer_phone_number: holder.phone,
+          ip: req.ip as string,
+          user_id,
+          is_app: String(is_app),
+          hb_sl_id: booking.id,
+          hotel_code,
+        });
 
-      const buildPaymentResponse = (
-        checkout_url: string,
-        sp_order_id?: string
-      ) => ({
-        success: true,
-        code: this.StatusCode.HTTP_OK,
-        message: this.ResMsg.HTTP_OK,
-        data: {
-          checkout_url,
-          ...buildUrls(),
-          order_id: sp_order_id,
-        },
-      });
-
-      const inv_model = this.Model.btocInvoiceModel(trx);
-
-      const { id: last_id } = await btocReservationModel.getLastBooking();
-      const booking_id = Lib.generateBookingReferenceWithId(
-        "WB",
-        last_id ? Number(last_id) + 1 : 1
-      );
-
-      console.log({ last_id, booking_id });
-
-      // stash temp booking
-      const [tempBooking] = await btocReservationModel.insertBooking({
-        book_from: "web",
-        booking_date: new Date().toUTCString(),
-        booking_reference: booking_id,
-        booking_type: "B",
-        check_in: checkin,
-        check_out: checkout,
-        created_by: req.btoc_user.id,
-        guest_id: 2,
-        hotel_code,
-        is_individual_booking: false,
-        payment_status: "unpaid",
-        status: "",
-        total_nights: 2,
-        comments: special_requests,
-        sub_total: 0,
-        total_amount: 0,
-        voucher_no: "ds",
-      });
+      console.log({ create_payment });
 
       return {
         success: true,
         code: this.StatusCode.HTTP_OK,
+        message: this.ResMsg.HTTP_OK,
+        data: {
+          checkout_url: create_payment.checkout_url,
+          order_id: create_payment?.sp_order_id,
+        },
       };
     });
   }

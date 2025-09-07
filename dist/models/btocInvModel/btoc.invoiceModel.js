@@ -18,7 +18,6 @@ class BtocInvoiceModel extends schema_1.default {
         super();
         this.db = db;
     }
-    // insert invoice model
     insertInvoice(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("invoice")
@@ -33,7 +32,6 @@ class BtocInvoiceModel extends schema_1.default {
                 .insert(payload);
         });
     }
-    //update invoice
     updateInvoice(payload, id) {
         return __awaiter(this, void 0, void 0, function* () {
             yield this.db("invoice")

@@ -14,66 +14,16 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.BtocPaymentServices = void 0;
 const abstract_service_1 = __importDefault(require("../../abstarcts/abstract.service"));
-const constants_1 = require("../../utils/miscellaneous/constants");
-const lib_1 = __importDefault(require("../../utils/lib/lib"));
 const helperFunction_1 = require("../../appAdmin/utlis/library/helperFunction");
 const btoc_subHotel_service_1 = require("./btoc.subHotel.service");
+const btoc_subpayment_service_1 = require("./btoc.subpayment.service");
 class BtocPaymentServices extends abstract_service_1.default {
-    // private subPaymentServices = new BtocSubPaymentService();
-    //create payment
-    // public async createPayment(req: Request) {
-    //   const { id: user_id, first_name, email, phone_number } = req.user;
-    //   const { booking_id } = req.body;
-    //   if (!booking_id) {
-    //     return {
-    //       success: false,
-    //       code: this.StatusCode.HTTP_UNPROCESSABLE_ENTITY,
-    //       message: this.ResMsg.HTTP_UNPROCESSABLE_ENTITY,
-    //     };
-    //   }
-    //   const booking_model = this.Model.flightBookingModel();
-    //   const booking_data = await booking_model.getSingleFlightBooking({
-    //     id: Number(booking_id),
-    //     status: "pending",
-    //   });
-    //   if (!booking_data.length) {
-    //     return {
-    //       success: false,
-    //       code: this.StatusCode.HTTP_NOT_FOUND,
-    //       message: this.ResMsg.HTTP_NOT_FOUND,
-    //     };
-    //   }
-    //   //payment session
-    //   const paymentModel = this.Model.paymentModel();
-    //   const paymentTry = await paymentModel.createPaymentTry({
-    //     user_id,
-    //     pnr_id: booking_data[0].pnr_code,
-    //     booking_id: Number(booking_id),
-    //     status: "INITIATE",
-    //     description: "Payment initiate completed.",
-    //     amount: booking_data[0].payable_amount,
-    //     currency: "BDT",
-    //   });
-    //   return await this.subPaymentServices.sslPayment({
-    //     total_amount: booking_data[0].payable_amount,
-    //     currency: "BDT",
-    //     tran_id: `${paymentTry[0].id}-${booking_id}-${user_id}`,
-    //     cus_name: first_name,
-    //     cus_email: email,
-    //     cus_add1: "Dhaka",
-    //     cus_city: "Dhaka",
-    //     cus_country: "Bangladesh",
-    //     cus_phone: phone_number,
-    //     product_name: "ticket issue",
-    //   });
-    // }
     createSurjopayPaymentOrder(req) {
         return __awaiter(this, void 0, void 0, function* () {
             return this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
                 const { checkin, checkout, holder, rate_plan_id, room_type_id, rooms, special_requests, } = req.body;
                 const { hotel_code } = req.web_token;
                 const { id: user_id, email } = req.btoc_user;
-                const btocReservationModel = this.BtocModels.btocReservationModel(trx);
                 // _____________________________ recheck and nights_________________
                 const nights = helperFunction_1.HelperFunction.calculateNights(checkin, checkout);
                 const recheck = yield this.BtocModels.btocReservationModel().recheck({
@@ -147,44 +97,27 @@ class BtocPaymentServices extends abstract_service_1.default {
                 });
                 const { payment_for, is_app } = req.query ||
                     {};
-                // Common builders
-                const buildUrls = () => ({
-                    return_url: `${constants_1.BTOC_PAYMENT_SUCCESS_RETURN_URL}?payment_for=${payment_for}&booking_`,
-                    cancel_url: `${constants_1.BTOC_PAYMENT_CANCELLED_URL}?payment_for=${payment_for}`,
-                });
-                const buildPaymentResponse = (checkout_url, sp_order_id) => ({
-                    success: true,
-                    code: this.StatusCode.HTTP_OK,
-                    message: this.ResMsg.HTTP_OK,
-                    data: Object.assign(Object.assign({ checkout_url }, buildUrls()), { order_id: sp_order_id }),
-                });
-                const inv_model = this.Model.btocInvoiceModel(trx);
-                const { id: last_id } = yield btocReservationModel.getLastBooking();
-                const booking_id = lib_1.default.generateBookingReferenceWithId("WB", last_id ? Number(last_id) + 1 : 1);
-                console.log({ last_id, booking_id });
-                // stash temp booking
-                const [tempBooking] = yield btocReservationModel.insertBooking({
-                    book_from: "web",
-                    booking_date: new Date().toUTCString(),
-                    booking_reference: booking_id,
-                    booking_type: "B",
-                    check_in: checkin,
-                    check_out: checkout,
-                    created_by: req.btoc_user.id,
-                    guest_id: 2,
+                const create_payment = yield new btoc_subpayment_service_1.BtocSubPaymentService().createSurjopayPaymentOrderForHotel({
+                    amount: recheck.price.toString(),
+                    customer_email: email,
+                    customer_first_name: holder.first_name,
+                    customer_last_name: holder.last_name,
+                    customer_phone_number: holder.phone,
+                    ip: req.ip,
+                    user_id,
+                    is_app: String(is_app),
+                    hb_sl_id: booking.id,
                     hotel_code,
-                    is_individual_booking: false,
-                    payment_status: "unpaid",
-                    status: "",
-                    total_nights: 2,
-                    comments: special_requests,
-                    sub_total: 0,
-                    total_amount: 0,
-                    voucher_no: "ds",
                 });
+                console.log({ create_payment });
                 return {
                     success: true,
                     code: this.StatusCode.HTTP_OK,
+                    message: this.ResMsg.HTTP_OK,
+                    data: {
+                        checkout_url: create_payment.checkout_url,
+                        order_id: create_payment === null || create_payment === void 0 ? void 0 : create_payment.sp_order_id,
+                    },
                 };
             }));
         });

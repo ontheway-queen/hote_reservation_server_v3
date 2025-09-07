@@ -9,7 +9,7 @@ export default class BtocInvoiceModel extends Schema {
     super();
     this.db = db;
   }
-  // insert invoice model
+
   public async insertInvoice(
     payload: ICreateBtocInvoicePayload
   ): Promise<{ id: number }[]> {
@@ -26,7 +26,6 @@ export default class BtocInvoiceModel extends Schema {
       .insert(payload);
   }
 
-  //update invoice
   public async updateInvoice(
     payload: { due?: number; status?: boolean; refund_amount?: number },
     id: number

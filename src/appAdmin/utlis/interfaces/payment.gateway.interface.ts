@@ -15,7 +15,7 @@ export enum PAYMENT_CHARGE_TYPE {
 
 export interface IPaymentGatewaySettingPayload {
   title: string;
-  type: PAYMENT_TYPE;
+  type: (typeof PAYMENT_TYPE)[keyof typeof PAYMENT_TYPE];
   details: string;
   bank_charge: number;
   bank_charge_type: PAYMENT_CHARGE_TYPE;
@@ -41,7 +41,7 @@ export interface IPaymentGatewaySettingRequestBody {
 }
 
 export interface IGetPaymentGatewayQuery {
-  type?: PAYMENT_TYPE;
+  type?: (typeof PAYMENT_TYPE)[keyof typeof PAYMENT_TYPE];
   status?: 0 | 1;
   is_default?: 0 | 1;
   id?: number;
@@ -94,4 +94,42 @@ export interface INGeniusPaymentResponse {
     currencyCode: string;
     value: number;
   };
+}
+
+export interface IShurjoVerifyPayment {
+  id: number;
+  order_id: string;
+  currency: string;
+  amount: number;
+  payable_amount: number;
+  discount_amount: number;
+  disc_percent: number;
+  received_amount: number;
+  usd_amt: number;
+  usd_rate: number;
+
+  method: string;
+  customer_order_id: string;
+  bank_status: string;
+  invoice_no: string;
+  bank_trx_id: string;
+  sp_message: string; // response message
+  sp_code: "1000" | "1001" | "1002";
+  // 1000: Success
+  // 1001: Declined by bank
+  // 1002: Canceled by customer
+  transaction_status: string;
+
+  date_time: string;
+
+  name: string;
+
+  email: string;
+  address: string;
+  city: string;
+
+  value1?: string;
+  value2?: string;
+  value3?: string;
+  value4?: string;
 }
