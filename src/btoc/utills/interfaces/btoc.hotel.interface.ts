@@ -284,7 +284,7 @@ export interface IFolioBookingBody {
   vat_percentage: number;
   service_charge_percentage: number;
   is_payment_given: boolean;
-  payment?: {
+  payment: {
     amount: number;
   };
   booked_room_types: {

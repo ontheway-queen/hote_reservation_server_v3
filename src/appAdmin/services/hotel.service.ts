@@ -131,7 +131,7 @@ class HotelService extends AbstractServices {
       if (hotelImages.length > 0) {
         await model.insertHotelImages(hotelImages);
       }
-
+      console.log({ remove_hotel_images });
       // === Remove selected hotel images ===
       if (
         Array.isArray(remove_hotel_images) &&

@@ -94,7 +94,7 @@ class HotelValidator {
                             });
                         }
                     }
-                    return value;
+                    return parsedArray;
                 }
                 catch (err) {
                     return helpers.message({

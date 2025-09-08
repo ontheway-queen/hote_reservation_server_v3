@@ -255,7 +255,7 @@ class HotelModel extends Schema {
 
   // delete hotel images
   public async deleteHotelImage(payload: number[], hotel_code: number) {
-    return await this.db("hotel_images")
+    return await this.db("hotel_image")
       .withSchema(this.RESERVATION_SCHEMA)
       .delete()
       .whereIn("id", payload)
