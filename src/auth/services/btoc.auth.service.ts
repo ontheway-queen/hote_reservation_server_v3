@@ -241,6 +241,7 @@ class BtocUserAuthService extends AbstractServices {
 	// forget
 	public async forgetPassword(req: Request) {
 		const { token, email, password } = req.body;
+		console.log({ token, email, password });
 		const tokenVerify: any = Lib.verifyToken(
 			token,
 			config.JWT_SECRET_H_USER
@@ -275,6 +276,41 @@ class BtocUserAuthService extends AbstractServices {
 				message: this.ResMsg.HTTP_BAD_REQUEST,
 			};
 		}
+	}
+
+	public async updateProfile(req: Request) {
+		const { id } = req.btoc_user;
+
+		const model = this.Model.btocUserModel();
+
+		const checkBtocUser = await model.getSingleUser({
+			id,
+		});
+
+		if (!checkBtocUser) {
+			return {
+				success: true,
+				code: this.StatusCode.HTTP_NOT_FOUND,
+				message: this.ResMsg.HTTP_NOT_FOUND,
+			};
+		}
+
+		const files = (req.files as Express.Multer.File[]) || [];
+		console.log({ files });
+		if (files.length) {
+			req.body[files[0].fieldname] = files[0].filename;
+		}
+
+		const { email } = checkBtocUser;
+
+		console.log({ dataFromService: req.body });
+		await model.updateProfile({ payload: req.body, email });
+
+		return {
+			success: true,
+			code: this.StatusCode.HTTP_OK,
+			message: this.ResMsg.HTTP_OK,
+		};
 	}
 }
 

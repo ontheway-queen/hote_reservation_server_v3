@@ -88,6 +88,10 @@ class BtocUserAuthController extends abstract_controller_1.default {
                 res.status(code).json(data);
             }
         }));
+        this.updateProfile = this.asyncWrapper.wrap({ bodySchema: this.validator.updateUserProfileValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _h = yield this.service.updateProfile(req), { code } = _h, data = __rest(_h, ["code"]);
+            res.status(code).json(data);
+        }));
     }
 }
 exports.default = BtocUserAuthController;

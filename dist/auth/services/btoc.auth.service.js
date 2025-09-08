@@ -210,6 +210,7 @@ class BtocUserAuthService extends abstract_service_1.default {
     forgetPassword(req) {
         return __awaiter(this, void 0, void 0, function* () {
             const { token, email, password } = req.body;
+            console.log({ token, email, password });
             const tokenVerify = lib_1.default.verifyToken(token, config_1.default.JWT_SECRET_H_USER);
             if (!tokenVerify) {
                 return {
@@ -239,6 +240,35 @@ class BtocUserAuthService extends abstract_service_1.default {
                     message: this.ResMsg.HTTP_BAD_REQUEST,
                 };
             }
+        });
+    }
+    updateProfile(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { id } = req.btoc_user;
+            const model = this.Model.btocUserModel();
+            const checkBtocUser = yield model.getSingleUser({
+                id,
+            });
+            if (!checkBtocUser) {
+                return {
+                    success: true,
+                    code: this.StatusCode.HTTP_NOT_FOUND,
+                    message: this.ResMsg.HTTP_NOT_FOUND,
+                };
+            }
+            const files = req.files || [];
+            console.log({ files });
+            if (files.length) {
+                req.body[files[0].fieldname] = files[0].filename;
+            }
+            const { email } = checkBtocUser;
+            console.log({ dataFromService: req.body });
+            yield model.updateProfile({ payload: req.body, email });
+            return {
+                success: true,
+                code: this.StatusCode.HTTP_OK,
+                message: this.ResMsg.HTTP_OK,
+            };
         });
     }
 }

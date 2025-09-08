@@ -26,6 +26,16 @@ class BtocUserAuthValidator {
         this.loginWithGoogleValidator = joi_1.default.object({
             access_token: joi_1.default.string().required(),
         });
+        this.updateUserProfileValidator = joi_1.default.object({
+            first_name: joi_1.default.string().max(100).optional(),
+            last_name: joi_1.default.string().max(100).optional(),
+            phone: joi_1.default.string().max(20).allow("").optional(),
+            date_of_birth: joi_1.default.date().allow("").optional(),
+            gender: joi_1.default.string().valid("male", "female", "other").optional(),
+            address: joi_1.default.string().max(1000).optional(),
+            city_id: joi_1.default.number().integer().optional(),
+            country_id: joi_1.default.number().integer().optional(),
+        });
     }
 }
 exports.BtocUserAuthValidator = BtocUserAuthValidator;

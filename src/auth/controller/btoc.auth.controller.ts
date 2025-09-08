@@ -93,6 +93,14 @@ class BtocUserAuthController extends AbstractController {
 			}
 		}
 	);
+
+	public updateProfile = this.asyncWrapper.wrap(
+		{ bodySchema: this.validator.updateUserProfileValidator },
+		async (req: Request, res: Response) => {
+			const { code, ...data } = await this.service.updateProfile(req);
+			res.status(code).json(data);
+		}
+	);
 }
 
 export default BtocUserAuthController;

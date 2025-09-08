@@ -23,7 +23,8 @@ class BtocUserAuthRouter extends abstract_router_1.default {
             .post(this.btocUserAuthController.loginWithGoogle);
         this.router
             .route("/profile")
-            .get(this.authChecker.btocUserAuthChecker, this.btocUserAuthController.getProfile);
+            .get(this.authChecker.btocUserAuthChecker, this.btocUserAuthController.getProfile)
+            .patch(this.authChecker.btocUserAuthChecker, this.uploader.cloudUploadRaw(this.fileFolders.BTOC_USERS_FILES), this.btocUserAuthController.updateProfile);
         this.router
             .route("/forget-password")
             .patch(this.btocUserAuthController.forgetPassword);
