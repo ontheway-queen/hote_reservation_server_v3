@@ -1,16 +1,12 @@
 import { Request } from "express";
 import AbstractServices from "../../abstarcts/abstract.service";
-import {
-  BTOC_PAYMENT_CANCELLED_URL,
-  BTOC_PAYMENT_SUCCESS_RETURN_URL,
-} from "../../utils/miscellaneous/constants";
-import Lib from "../../utils/lib/lib";
+
+import { HelperFunction } from "../../appAdmin/utlis/library/helperFunction";
 import {
   IBookedRoomTypeRequest,
   IBookingRequestBody,
   IBRoomGuest,
 } from "../utills/interfaces/btoc.hotel.interface";
-import { HelperFunction } from "../../appAdmin/utlis/library/helperFunction";
 import { SubBtocHotelService } from "./btoc.subHotel.service";
 import { BtocSubPaymentService } from "./btoc.subpayment.service";
 
@@ -30,7 +26,7 @@ export class BtocPaymentServices extends AbstractServices {
       const { hotel_code } = req.web_token;
       const { id: user_id, email } = req.btoc_user;
 
-      // _____________________________ recheck and nights_________________
+      // _____________________________ recheck and nights _______________________ //
 
       const nights = HelperFunction.calculateNights(checkin, checkout);
 
@@ -126,6 +122,7 @@ export class BtocPaymentServices extends AbstractServices {
           user_id,
           is_app: String(is_app),
           hb_sl_id: booking.id,
+          booking_ref: booking.booking_ref,
           hotel_code,
         });
 

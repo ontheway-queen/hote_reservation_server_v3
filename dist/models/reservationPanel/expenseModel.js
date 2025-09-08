@@ -58,6 +58,16 @@ class ExpenseModel extends schema_1.default {
                 .limit(1);
         });
     }
+    getLastExpenseNo() {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("expense")
+                .select("expense_no")
+                .withSchema(this.ACC_SCHEMA)
+                .orderBy("id", "desc")
+                .limit(1)
+                .first();
+        });
+    }
     getAllExpense(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             const { limit, skip, hotel_code, from_date, to_date, key } = payload;
@@ -70,14 +80,14 @@ class ExpenseModel extends schema_1.default {
                 dtbs.offset(parseInt(skip));
             }
             const data = yield dtbs
-                .select("ev.id", "ev.hotel_code", "ev.voucher_no", "ev.expense_date", "ev.expense_by as expense_by_id", "emp.name as expense_by_name", "ev.pay_method", "ev.transaction_no", "ev.expense_cheque_id", "ev.bank_name", "ev.branch_name", "ev.cheque_no", "ev.cheque_date", "ev.deposit_date", this.db.raw(`to_char(ev.expense_date, 'YYYY-MM-DD') as expense_date_formatted`), 
+                .select("ev.id", "ev.hotel_code", "ev.expense_no", "ev.expense_date", "ev.expense_by as expense_by_id", "emp.name as expense_by_name", "ev.pay_method", "ev.transaction_no", "ev.expense_cheque_id", "ev.bank_name", "ev.branch_name", "ev.cheque_no", "ev.cheque_date", "ev.deposit_date", this.db.raw(`to_char(ev.expense_date, 'YYYY-MM-DD') as expense_date_formatted`), 
             // "ev.name as expense_name",
             "acc_head.name as account_name", "acc.acc_type as account_type", "ev.expense_amount", "ev.created_at", this.db.raw(`
         COALESCE(
           json_agg(
             json_build_object(
               'id', ei.id,
-              'head_name', eh.name,
+              'head_name', ah.name,
               'remarks', ei.remarks,
               'amount', ei.amount
             )
@@ -94,7 +104,7 @@ class ExpenseModel extends schema_1.default {
                 `${this.HR_SCHEMA}.${this.TABLES.employee}`,
             ])
                 .leftJoin("expense_items as ei", "ei.expense_id", "ev.id")
-                .leftJoin("acc_heads as eh", "ei.expense_head_id", "eh.id")
+                .leftJoin("acc_heads as ah", "ei.expense_head_id", "ah.id")
                 .where("ev.hotel_code", hotel_code)
                 .modify((builder) => {
                 if (from_date && endDate) {
@@ -142,7 +152,7 @@ class ExpenseModel extends schema_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             const dtbs = this.db("expense as ev").withSchema(this.ACC_SCHEMA);
             const data = yield dtbs
-                .select("ev.id", "ev.hotel_code", "ev.voucher_no", "h.name as hotel_name", "h.address as hotel_address", "acc_head.name as account_name", "acc.acc_type as account_type", "ev.pay_method", this.db.raw(`to_char(ev.expense_date, 'YYYY-MM-DD') as expense_date`), this.db.raw(`to_char(ev.created_at, 'YYYY-MM-DD') as expense_created_at`), "ev.transaction_no", "ev.cheque_no", "ev.cheque_date", "ev.bank_name", "ev.branch_name", "ev.expense_amount", "ev.expense_note", this.db.raw(`
+                .select("ev.id", "ev.hotel_code", "ev.expense_no", "h.name as hotel_name", "h.address as hotel_address", "acc_head.name as account_name", "acc.acc_type as account_type", "ev.pay_method", this.db.raw(`to_char(ev.expense_date, 'YYYY-MM-DD') as expense_date`), this.db.raw(`to_char(ev.created_at, 'YYYY-MM-DD') as expense_created_at`), "ev.transaction_no", "ev.cheque_no", "ev.cheque_date", "ev.bank_name", "ev.branch_name", "ev.expense_amount", "ev.expense_note", this.db.raw(`
         COALESCE(
           json_agg(
             json_build_object(

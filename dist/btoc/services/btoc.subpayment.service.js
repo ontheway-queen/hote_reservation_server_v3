@@ -19,7 +19,7 @@ const surjoPaymentService_1 = require("./surjoPaymentService");
 const constants_1 = require("../../utils/miscellaneous/constants");
 class BtocSubPaymentService extends abstract_service_1.default {
     //surjopay sub payment for hotel
-    createSurjopayPaymentOrderForHotel({ amount, customer_email, customer_first_name, customer_last_name, customer_phone_number, ip, user_id, is_app, payment_for, hb_sl_id, hotel_code, }) {
+    createSurjopayPaymentOrderForHotel({ amount, customer_email, customer_first_name, customer_last_name, customer_phone_number, ip, user_id, is_app, payment_for, hb_sl_id, booking_ref, hotel_code, }) {
         return __awaiter(this, void 0, void 0, function* () {
             const getToken = yield new surjoPaymentService_1.SurjoPaymentService().getSJToken(hotel_code);
             console.log({ getToken });
@@ -33,8 +33,8 @@ class BtocSubPaymentService extends abstract_service_1.default {
             const create_payment = yield new surjoPaymentService_1.SurjoPaymentService().createPayment({
                 prefix: getToken.gateway.details.prefix,
                 token: getToken.token,
-                return_url: constants_1.BTOC_PAYMENT_SUCCESS_RETURN_URL + `?queries=${hotel_code}`,
-                cancel_url: constants_1.BTOC_PAYMENT_CANCELLED_URL + `?queries=${hotel_code}`,
+                return_url: constants_1.SERVER_SRJ_PAYMENT_SUCCESS_RETURN_URL + `?queries=${hotel_code}`,
+                cancel_url: constants_1.SERVER_SRJ_PAYMENT_CANCELLED_URL + `?queries=${hotel_code}`,
                 store_id: getToken.store_id.toString(),
                 amount,
                 client_ip: ip,
@@ -51,6 +51,7 @@ class BtocSubPaymentService extends abstract_service_1.default {
                     user_id: user_id.toString(),
                     hb_sl_id,
                     hotel_code,
+                    booking_ref,
                 }),
             });
             return create_payment;

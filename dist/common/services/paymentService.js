@@ -68,11 +68,11 @@ class PaymentService extends abstract_service_1.default {
                         success: false,
                         code: this.StatusCode.HTTP_OK,
                         message: this.ResMsg.PAYMENT_CANCELLED,
-                        redirect_url: lib_1.default.buildURL(`${constants_1.BTOC_CLIENT_DOMAIN}/payment/failed`, {
+                        redirect_url: lib_1.default.buildURL(`${constants_1.BTOC_CLIENT_DOMAIN}/payment-failed`, {
                             order_id: (_b = req.query.order_id) !== null && _b !== void 0 ? _b : "",
                             payment_for: (_c = payload === null || payload === void 0 ? void 0 : payload.payment_for) !== null && _c !== void 0 ? _c : "",
                             invoice_id: (_d = payload === null || payload === void 0 ? void 0 : payload.invoice_id) !== null && _d !== void 0 ? _d : "",
-                            booking_id: (_e = payload === null || payload === void 0 ? void 0 : payload.booking_id) !== null && _e !== void 0 ? _e : "",
+                            booking_ref: (_e = payload === null || payload === void 0 ? void 0 : payload.booking_ref) !== null && _e !== void 0 ? _e : "",
                             sp_code: (_f = sp_verify.sp_code) !== null && _f !== void 0 ? _f : "",
                             gross_amount: (_g = sp_verify.amount) !== null && _g !== void 0 ? _g : "",
                             payable_amount: (_h = sp_verify.payable_amount) !== null && _h !== void 0 ? _h : "",
@@ -91,7 +91,6 @@ class PaymentService extends abstract_service_1.default {
                 }
                 const sub = new btoc_subHotel_service_1.SubBtocHotelService(trx);
                 const hotelInvModel = this.Model.btocInvoiceModel(trx);
-                const { booking_rooms, address, booking_date, booking_reference, booking_type, check_in, check_out, comments, country_name, drop, drop_time, drop_to, first_name, guest_email, guest_id, is_individual_booking, last_name, pickup, } = singleBooking;
                 const body = sub.mapSingleBookingToFolioBody(singleBooking);
                 yield sub.createBtocRoomBookingFolioWithEntries({
                     body,
@@ -115,7 +114,7 @@ class PaymentService extends abstract_service_1.default {
                     success: true,
                     code: this.StatusCode.HTTP_OK,
                     message: this.ResMsg.PAYMENT_SUCCESS,
-                    redirect_url: lib_1.default.buildURL(`${constants_1.BTOC_CLIENT_DOMAIN}/payment/success`, {
+                    redirect_url: lib_1.default.buildURL(`${constants_1.BTOC_CLIENT_DOMAIN}/payment-success`, {
                         sp_invoice_no: (_o = sp_verify.invoice_no) !== null && _o !== void 0 ? _o : "",
                         gross_amount: (_p = sp_verify.amount) !== null && _p !== void 0 ? _p : "",
                         net_paid_amount: (_q = sp_verify.payable_amount) !== null && _q !== void 0 ? _q : "",
@@ -126,7 +125,7 @@ class PaymentService extends abstract_service_1.default {
                         order_id: (_t = sp_verify.order_id) !== null && _t !== void 0 ? _t : "",
                         order_id_query: (_u = req.query.order_id) !== null && _u !== void 0 ? _u : "",
                         user_id: (_v = payload === null || payload === void 0 ? void 0 : payload.user_id) !== null && _v !== void 0 ? _v : "",
-                        booking_id: (_w = payload === null || payload === void 0 ? void 0 : payload.booking_id) !== null && _w !== void 0 ? _w : "",
+                        booking_ref: (_w = payload === null || payload === void 0 ? void 0 : payload.booking_ref) !== null && _w !== void 0 ? _w : "",
                         hb_sl_id: (_x = payload === null || payload === void 0 ? void 0 : payload.hb_sl_id) !== null && _x !== void 0 ? _x : "",
                         // invoice_id: invoice?.id,
                         // trx_id: transactionRes?.[0]?.id ?? "",

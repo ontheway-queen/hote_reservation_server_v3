@@ -41,6 +41,7 @@ class ExpenseModel extends Schema {
 
   public async createExpenseItem(
     payload: {
+      ex_voucher_id: number;
       remarks: string;
       amount: number;
       expense_id: number;
@@ -58,6 +59,15 @@ class ExpenseModel extends Schema {
       .withSchema(this.ACC_SCHEMA)
       .orderBy("id", "desc")
       .limit(1);
+  }
+
+  public async getLastExpenseNo(): Promise<{ expense_no: string }> {
+    return await this.db("expense")
+      .select("expense_no")
+      .withSchema(this.ACC_SCHEMA)
+      .orderBy("id", "desc")
+      .limit(1)
+      .first();
   }
 
   public async getAllExpense(payload: {
@@ -84,7 +94,7 @@ class ExpenseModel extends Schema {
       .select(
         "ev.id",
         "ev.hotel_code",
-        "ev.voucher_no",
+        "ev.expense_no",
         "ev.expense_date",
         "ev.expense_by as expense_by_id",
         "emp.name as expense_by_name",
@@ -109,7 +119,7 @@ class ExpenseModel extends Schema {
           json_agg(
             json_build_object(
               'id', ei.id,
-              'head_name', eh.name,
+              'head_name', ah.name,
               'remarks', ei.remarks,
               'amount', ei.amount
             )
@@ -127,7 +137,7 @@ class ExpenseModel extends Schema {
         `${this.HR_SCHEMA}.${this.TABLES.employee}`,
       ])
       .leftJoin("expense_items as ei", "ei.expense_id", "ev.id")
-      .leftJoin("acc_heads as eh", "ei.expense_head_id", "eh.id")
+      .leftJoin("acc_heads as ah", "ei.expense_head_id", "ah.id")
       .where("ev.hotel_code", hotel_code)
       .modify((builder) => {
         if (from_date && endDate) {
@@ -183,7 +193,7 @@ class ExpenseModel extends Schema {
       .select(
         "ev.id",
         "ev.hotel_code",
-        "ev.voucher_no",
+        "ev.expense_no",
         "h.name as hotel_name",
         "h.address as hotel_address",
         "acc_head.name as account_name",

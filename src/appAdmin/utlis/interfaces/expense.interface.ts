@@ -21,6 +21,7 @@ export interface IExpenseHeadQuery {
 export interface ICreateExpensebody {
   hotel_code: number;
   expense_by: number;
+  expense_head_id: number;
   expense_no: string;
   expense_date: string;
   expense_items: {
@@ -59,7 +60,7 @@ export interface ICreateExpensePayload {
 
 export interface IExpenseWithItems {
   id: number;
-  voucher_no: string;
+  expense_no: string;
   account_id: number;
   expense_date: string;
   expense_name: string;

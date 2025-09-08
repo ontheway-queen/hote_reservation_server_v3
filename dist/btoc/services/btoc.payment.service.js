@@ -24,7 +24,7 @@ class BtocPaymentServices extends abstract_service_1.default {
                 const { checkin, checkout, holder, rate_plan_id, room_type_id, rooms, special_requests, } = req.body;
                 const { hotel_code } = req.web_token;
                 const { id: user_id, email } = req.btoc_user;
-                // _____________________________ recheck and nights_________________
+                // _____________________________ recheck and nights _______________________ //
                 const nights = helperFunction_1.HelperFunction.calculateNights(checkin, checkout);
                 const recheck = yield this.BtocModels.btocReservationModel().recheck({
                     hotel_code,
@@ -107,6 +107,7 @@ class BtocPaymentServices extends abstract_service_1.default {
                     user_id,
                     is_app: String(is_app),
                     hb_sl_id: booking.id,
+                    booking_ref: booking.booking_ref,
                     hotel_code,
                 });
                 console.log({ create_payment });

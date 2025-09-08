@@ -100,13 +100,6 @@ export class ExpenseService extends AbstractServices {
         throw new Error("HOTEL_EXPENSE_HEAD_ID not configured for this hotel");
       }
 
-      const sales_head = heads.find(
-        (h) => h.config === "HOTEL_REVENUE_HEAD_ID"
-      );
-      if (!sales_head) {
-        throw new Error("HOTEL_REVENUE_HEAD_ID not configured for this hotel");
-      }
-
       if (!acc) throw new Error("Invalid Account");
 
       let voucher_type: "CCV" | "BCV" | "DV" = "DV";
@@ -156,10 +149,11 @@ export class ExpenseService extends AbstractServices {
       const expenseItemPayload = expense_items.map(
         (item: { id: number; remarks: string; amount: number }) => {
           return {
-            expense_head_id: vourcherRes[0].id,
+            expense_head_id: item.id,
             remarks: item.remarks,
             amount: item.amount,
             expense_id: expenseRes[0].id,
+            ex_voucher_id: vourcherRes[0].id,
           };
         }
       );

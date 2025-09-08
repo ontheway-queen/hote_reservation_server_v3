@@ -3,8 +3,8 @@ import AbstractServices from "../../abstarcts/abstract.service";
 import { SurjoPaymentService } from "./surjoPaymentService";
 import config from "../../config/config";
 import {
-  BTOC_PAYMENT_CANCELLED_URL,
-  BTOC_PAYMENT_SUCCESS_RETURN_URL,
+  SERVER_SRJ_PAYMENT_CANCELLED_URL,
+  SERVER_SRJ_PAYMENT_SUCCESS_RETURN_URL,
 } from "../../utils/miscellaneous/constants";
 export class BtocSubPaymentService extends AbstractServices {
   //surjopay sub payment for hotel
@@ -19,6 +19,7 @@ export class BtocSubPaymentService extends AbstractServices {
     is_app,
     payment_for,
     hb_sl_id,
+    booking_ref,
     hotel_code,
   }: {
     amount: string;
@@ -27,6 +28,7 @@ export class BtocSubPaymentService extends AbstractServices {
     customer_last_name: string;
     customer_email: string;
     customer_phone_number: string;
+    booking_ref: string;
     user_id: number;
     is_app: string;
     payment_for?: string;
@@ -48,8 +50,9 @@ export class BtocSubPaymentService extends AbstractServices {
     const create_payment = await new SurjoPaymentService().createPayment({
       prefix: getToken.gateway.details.prefix,
       token: getToken.token,
-      return_url: BTOC_PAYMENT_SUCCESS_RETURN_URL + `?queries=${hotel_code}`,
-      cancel_url: BTOC_PAYMENT_CANCELLED_URL + `?queries=${hotel_code}`,
+      return_url:
+        SERVER_SRJ_PAYMENT_SUCCESS_RETURN_URL + `?queries=${hotel_code}`,
+      cancel_url: SERVER_SRJ_PAYMENT_CANCELLED_URL + `?queries=${hotel_code}`,
       store_id: getToken.store_id.toString(),
       amount,
       client_ip: ip as string,
@@ -66,6 +69,7 @@ export class BtocSubPaymentService extends AbstractServices {
         user_id: user_id.toString(),
         hb_sl_id,
         hotel_code,
+        booking_ref,
       }),
     });
 

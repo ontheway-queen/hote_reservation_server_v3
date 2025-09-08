@@ -98,10 +98,6 @@ class ExpenseService extends abstract_service_1.default {
                 if (!expense_head) {
                     throw new Error("HOTEL_EXPENSE_HEAD_ID not configured for this hotel");
                 }
-                const sales_head = heads.find((h) => h.config === "HOTEL_REVENUE_HEAD_ID");
-                if (!sales_head) {
-                    throw new Error("HOTEL_REVENUE_HEAD_ID not configured for this hotel");
-                }
                 if (!acc)
                     throw new Error("Invalid Account");
                 let voucher_type = "DV";
@@ -137,10 +133,11 @@ class ExpenseService extends abstract_service_1.default {
                 const expenseRes = yield model.createExpense(payload);
                 const expenseItemPayload = expense_items.map((item) => {
                     return {
-                        expense_head_id: vourcherRes[0].id,
+                        expense_head_id: item.id,
                         remarks: item.remarks,
                         amount: item.amount,
                         expense_id: expenseRes[0].id,
+                        ex_voucher_id: vourcherRes[0].id,
                     };
                 });
                 yield model.createExpenseItem(expenseItemPayload);

@@ -69,7 +69,7 @@ class PaymentService extends AbstractServices {
         is_app?: string | number | boolean;
         payment_for?: string;
         user_id: number;
-        booking_id?: string | number;
+        booking_ref?: string;
         hb_sl_id: number;
         invoice_id?: number;
         hotel_code: number;
@@ -82,11 +82,11 @@ class PaymentService extends AbstractServices {
           success: false,
           code: this.StatusCode.HTTP_OK,
           message: this.ResMsg.PAYMENT_CANCELLED,
-          redirect_url: Lib.buildURL(`${BTOC_CLIENT_DOMAIN}/payment/failed`, {
+          redirect_url: Lib.buildURL(`${BTOC_CLIENT_DOMAIN}/payment-failed`, {
             order_id: req.query.order_id ?? "",
             payment_for: payload?.payment_for ?? "",
             invoice_id: payload?.invoice_id ?? "",
-            booking_id: payload?.booking_id ?? "",
+            booking_ref: payload?.booking_ref ?? "",
             sp_code: sp_verify.sp_code ?? "",
             gross_amount: sp_verify.amount ?? "",
             payable_amount: sp_verify.payable_amount ?? "",
@@ -112,27 +112,6 @@ class PaymentService extends AbstractServices {
 
       const sub = new SubBtocHotelService(trx);
       const hotelInvModel = this.Model.btocInvoiceModel(trx);
-
-      const {
-        booking_rooms,
-        address,
-        booking_date,
-        booking_reference,
-        booking_type,
-        check_in,
-        check_out,
-        comments,
-        country_name,
-        drop,
-        drop_time,
-        drop_to,
-        first_name,
-        guest_email,
-        guest_id,
-        is_individual_booking,
-        last_name,
-        pickup,
-      } = singleBooking;
 
       const body = sub.mapSingleBookingToFolioBody(singleBooking);
 
@@ -162,7 +141,7 @@ class PaymentService extends AbstractServices {
         success: true,
         code: this.StatusCode.HTTP_OK,
         message: this.ResMsg.PAYMENT_SUCCESS,
-        redirect_url: Lib.buildURL(`${BTOC_CLIENT_DOMAIN}/payment/success`, {
+        redirect_url: Lib.buildURL(`${BTOC_CLIENT_DOMAIN}/payment-success`, {
           sp_invoice_no: sp_verify.invoice_no ?? "",
           gross_amount: sp_verify.amount ?? "",
           net_paid_amount: sp_verify.payable_amount ?? "",
@@ -173,7 +152,7 @@ class PaymentService extends AbstractServices {
           order_id: sp_verify.order_id ?? "",
           order_id_query: req.query.order_id ?? "",
           user_id: payload?.user_id ?? "",
-          booking_id: payload?.booking_id ?? "",
+          booking_ref: payload?.booking_ref ?? "",
           hb_sl_id: payload?.hb_sl_id ?? "",
           // invoice_id: invoice?.id,
           // trx_id: transactionRes?.[0]?.id ?? "",

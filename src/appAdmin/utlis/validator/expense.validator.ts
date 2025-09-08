@@ -93,7 +93,7 @@ class ExpenseValidator {
               custom: "Each expense item must have a numeric id",
             });
           }
-          if (typeof item.remarks !== "string") {
+          if (item.remarks && typeof item.remarks !== "string") {
             return helpers.message({
               custom: "Each expense item must have a string remarks",
             });

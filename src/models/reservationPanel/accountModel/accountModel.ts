@@ -231,7 +231,7 @@ class AccountModel extends Schema {
 
   public async insertAccVoucher(
     payload: IInsertVoucherPayload | IInsertVoucherPayload[]
-  ) {
+  ): Promise<{ id: number }[]> {
     return await this.db("acc_vouchers")
       .withSchema(this.ACC_SCHEMA)
       .insert(payload, "id");

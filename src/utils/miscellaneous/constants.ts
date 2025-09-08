@@ -158,5 +158,5 @@ export const PAYMENT_SUCCESS_RETURN_URL = `${RETURN_DOMAIN}/common/payment/by-ga
 export const PAYMENT_CANCELLED_URL = `${RETURN_DOMAIN}/common/payment/by-gateway/canceled`;
 
 //btoc
-export const BTOC_PAYMENT_SUCCESS_RETURN_URL = `${RETURN_DOMAIN}/payment/btoc/srj/success`;
-export const BTOC_PAYMENT_CANCELLED_URL = `${RETURN_DOMAIN}/payment/btoc/srj/cancelled`;
+export const SERVER_SRJ_PAYMENT_SUCCESS_RETURN_URL = `${RETURN_DOMAIN}/payment/btoc/srj/success`;
+export const SERVER_SRJ_PAYMENT_CANCELLED_URL = `${RETURN_DOMAIN}/payment/btoc/srj/cancelled`;

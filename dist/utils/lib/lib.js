@@ -160,17 +160,17 @@ class Lib {
     }
     static generateExpenseNo(trx) {
         return __awaiter(this, void 0, void 0, function* () {
-            const prefix = "DV";
+            const prefix = "EXP";
             const date = new Date();
             const yyyy = date.getFullYear();
             const mm = String(date.getMonth() + 1).padStart(2, "0");
             const dd = String(date.getDate()).padStart(2, "0");
             const datePart = `${yyyy}${mm}${dd}`;
             let nextSeq = 1;
-            const expenseId = yield new expenseModel_1.default(trx).getExpenseLastId();
-            const lastExpenseNo = expenseId.length ? expenseId[0].id + 1 : 1;
+            const lastRow = yield new expenseModel_1.default(trx).getLastExpenseNo();
+            const lastExpenseNo = lastRow === null || lastRow === void 0 ? void 0 : lastRow.expense_no;
             if (lastExpenseNo && lastExpenseNo.startsWith(`${prefix}-${datePart}`)) {
-                // Extract sequence from last expense no
+                // Extract last sequence number
                 const lastSeq = parseInt(lastExpenseNo.split("-").pop() || "0", 10);
                 nextSeq = lastSeq + 1;
             }
