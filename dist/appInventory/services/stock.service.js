@@ -39,14 +39,14 @@ class StockInvService extends abstract_service_1.default {
                             message: "Account not found",
                         };
                     }
-                    const last_balance = checkAccount[0].last_balance;
-                    if (last_balance < req.body.paid_amount) {
-                        return {
-                            success: false,
-                            code: this.StatusCode.HTTP_BAD_REQUEST,
-                            message: "Insufficient balance in this account for payment",
-                        };
-                    }
+                    // const last_balance = checkAccount[0].last_balance;
+                    // if (last_balance < req.body.paid_amount) {
+                    //   return {
+                    //     success: false,
+                    //     code: this.StatusCode.HTTP_BAD_REQUEST,
+                    //     message: "Insufficient balance in this account for payment",
+                    //   };
+                    // }
                     // get last account ledger
                     const lastAL = yield Model.getLastAccountLedgerId(hotel_code);
                     const ledger_id = lastAL.length ? lastAL[0].ledger_id + 1 : 1;

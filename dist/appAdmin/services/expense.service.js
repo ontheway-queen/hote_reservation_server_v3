@@ -25,6 +25,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ExpenseService = void 0;
 const abstract_service_1 = __importDefault(require("../../abstarcts/abstract.service"));
+const helperFunction_1 = require("../utlis/library/helperFunction");
+const lib_1 = __importDefault(require("../../utils/lib/lib"));
 class ExpenseService extends abstract_service_1.default {
     constructor() {
         super();
@@ -65,11 +67,11 @@ class ExpenseService extends abstract_service_1.default {
                 const employeeModel = this.Model.employeeModel(trx);
                 const model = this.Model.expenseModel(trx);
                 // account check
-                const checkAccount = yield accountModel.getSingleAccount({
+                const [acc] = yield accountModel.getSingleAccount({
                     hotel_code,
                     id: rest.account_id,
                 });
-                if (!checkAccount.length) {
+                if (!acc) {
                     return {
                         success: false,
                         code: this.StatusCode.HTTP_NOT_FOUND,
@@ -84,17 +86,58 @@ class ExpenseService extends abstract_service_1.default {
                         message: "Employee not found",
                     };
                 }
-                const year = new Date().getFullYear();
-                const expenseId = yield model.getExpenseLastId();
-                const expenseNo = expenseId.length ? expenseId[0].id + 1 : 1;
                 const total_amount = expense_items.reduce((acc, cu) => acc + cu.amount, 0);
+                // ___________________________________  Accounting _________________________________//
+                // accounting
+                const helper = new helperFunction_1.HelperFunction();
+                const hotelModel = this.Model.HotelModel(trx);
+                const heads = yield hotelModel.getHotelAccConfig(hotel_code, [
+                    "HOTEL_EXPENSE_HEAD_ID",
+                ]);
+                const expense_head = heads.find((h) => h.config === "HOTEL_EXPENSE_HEAD_ID");
+                if (!expense_head) {
+                    throw new Error("HOTEL_EXPENSE_HEAD_ID not configured for this hotel");
+                }
+                const sales_head = heads.find((h) => h.config === "HOTEL_REVENUE_HEAD_ID");
+                if (!sales_head) {
+                    throw new Error("HOTEL_REVENUE_HEAD_ID not configured for this hotel");
+                }
+                if (!acc)
+                    throw new Error("Invalid Account");
+                let voucher_type = "DV";
+                const voucher_no = yield helper.generateVoucherNo(voucher_type, trx);
+                // generate expense no
+                const expenseNo = yield lib_1.default.generateExpenseNo(trx);
+                const vourcherRes = yield accountModel.insertAccVoucher([
+                    {
+                        acc_head_id: expense_head.head_id,
+                        created_by,
+                        debit: total_amount,
+                        credit: 0,
+                        description: `Expense for ${expenseNo}`,
+                        voucher_date: req.body.expense_date,
+                        voucher_no,
+                        hotel_code,
+                    },
+                    {
+                        acc_head_id: acc.acc_head_id,
+                        created_by,
+                        debit: 0,
+                        credit: total_amount,
+                        description: `Expense for ${expenseNo}`,
+                        voucher_date: new Date().toUTCString(),
+                        voucher_no,
+                        hotel_code,
+                    },
+                ]);
+                //_______________________________________ END _________________________________//
                 // Insert expense record
-                const payload = Object.assign(Object.assign({}, rest), { expense_no: `EXP-${year}${expenseNo}`, hotel_code,
-                    created_by, expense_amount: total_amount, acc_voucher_id: 77 });
+                const payload = Object.assign(Object.assign({}, rest), { expense_no: expenseNo, hotel_code,
+                    created_by, expense_amount: total_amount, acc_voucher_id: vourcherRes[1].id });
                 const expenseRes = yield model.createExpense(payload);
                 const expenseItemPayload = expense_items.map((item) => {
                     return {
-                        expense_head_id: item.id,
+                        expense_head_id: vourcherRes[0].id,
                         remarks: item.remarks,
                         amount: item.amount,
                         expense_id: expenseRes[0].id,

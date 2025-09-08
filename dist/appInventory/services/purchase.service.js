@@ -54,7 +54,7 @@ class PurchaseInvService extends abstract_service_1.default {
                         message: "Product id is invalid",
                     };
                 }
-                const last_balance = checkAccount[0].last_balance;
+                // const last_balance = checkAccount[0].last_balance;
                 const sub_total = purchase_items.reduce((acc, curr) => acc + curr.quantity * curr.price, 0);
                 const grand_total = parseFloat(Number.parseFloat((sub_total + vat + shipping_cost - discount_amount).toString()).toFixed(2));
                 const due = grand_total - paid_amount;
@@ -65,9 +65,9 @@ class PurchaseInvService extends abstract_service_1.default {
                 if (discount_amount > grand_total) {
                     throw new Error("Discount amount cannot be greater than grand total");
                 }
-                if (last_balance < paid_amount) {
-                    throw new Error("Insufficient balance in this account for payment");
-                }
+                // if (last_balance < paid_amount) {
+                //   throw new Error("Insufficient balance in this account for payment");
+                // }
                 const year = new Date().getFullYear();
                 // get last voucher ID
                 const purchaseData = yield pInvModel.getAllPurchaseForLastId();

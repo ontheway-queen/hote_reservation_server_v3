@@ -320,9 +320,7 @@ class AccountModel extends schema_1.default {
                     this.where("is_active", status);
                 }
                 if (ac_type) {
-                    this.andWhereRaw("LOWER(acc_type) = ?", [
-                        ac_type.toLowerCase(),
-                    ]);
+                    this.andWhereRaw("LOWER(acc_type) = ?", [ac_type.toLowerCase()]);
                 }
                 if (acc_ids) {
                     this.whereIn("id", acc_ids);
@@ -344,9 +342,7 @@ class AccountModel extends schema_1.default {
                     this.where("is_active", status);
                 }
                 if (ac_type) {
-                    this.andWhereRaw("LOWER(acc_type) = ?", [
-                        ac_type.toLowerCase(),
-                    ]);
+                    this.andWhereRaw("LOWER(acc_type) = ?", [ac_type.toLowerCase()]);
                 }
                 if (acc_ids) {
                     this.whereIn("id", acc_ids);

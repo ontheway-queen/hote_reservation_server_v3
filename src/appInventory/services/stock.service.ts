@@ -37,15 +37,15 @@ class StockInvService extends AbstractServices {
           };
         }
 
-        const last_balance = checkAccount[0].last_balance;
+        // const last_balance = checkAccount[0].last_balance;
 
-        if (last_balance < req.body.paid_amount) {
-          return {
-            success: false,
-            code: this.StatusCode.HTTP_BAD_REQUEST,
-            message: "Insufficient balance in this account for payment",
-          };
-        }
+        // if (last_balance < req.body.paid_amount) {
+        //   return {
+        //     success: false,
+        //     code: this.StatusCode.HTTP_BAD_REQUEST,
+        //     message: "Insufficient balance in this account for payment",
+        //   };
+        // }
 
         // get last account ledger
         const lastAL = await Model.getLastAccountLedgerId(hotel_code);

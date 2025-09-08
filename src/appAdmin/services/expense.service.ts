@@ -5,6 +5,8 @@ import {
   ICreateExpensebody,
   IUpdateExpenseHeadPayload,
 } from "../utlis/interfaces/expense.interface";
+import { HelperFunction } from "../utlis/library/helperFunction";
+import Lib from "../../utils/lib/lib";
 
 export class ExpenseService extends AbstractServices {
   constructor() {
@@ -49,12 +51,12 @@ export class ExpenseService extends AbstractServices {
       const model = this.Model.expenseModel(trx);
 
       // account check
-      const checkAccount = await accountModel.getSingleAccount({
+      const [acc] = await accountModel.getSingleAccount({
         hotel_code,
         id: rest.account_id,
       });
 
-      if (!checkAccount.length) {
+      if (!acc) {
         return {
           success: false,
           code: this.StatusCode.HTTP_NOT_FOUND,
@@ -75,25 +77,78 @@ export class ExpenseService extends AbstractServices {
         };
       }
 
-      const year = new Date().getFullYear();
-
-      const expenseId = await model.getExpenseLastId();
-
-      const expenseNo = expenseId.length ? expenseId[0].id + 1 : 1;
-
       const total_amount = expense_items.reduce(
         (acc, cu) => acc + cu.amount,
         0
       );
 
+      // ___________________________________  Accounting _________________________________//
+
+      // accounting
+      const helper = new HelperFunction();
+      const hotelModel = this.Model.HotelModel(trx);
+
+      const heads = await hotelModel.getHotelAccConfig(hotel_code, [
+        "HOTEL_EXPENSE_HEAD_ID",
+      ]);
+
+      const expense_head = heads.find(
+        (h) => h.config === "HOTEL_EXPENSE_HEAD_ID"
+      );
+
+      if (!expense_head) {
+        throw new Error("HOTEL_EXPENSE_HEAD_ID not configured for this hotel");
+      }
+
+      const sales_head = heads.find(
+        (h) => h.config === "HOTEL_REVENUE_HEAD_ID"
+      );
+      if (!sales_head) {
+        throw new Error("HOTEL_REVENUE_HEAD_ID not configured for this hotel");
+      }
+
+      if (!acc) throw new Error("Invalid Account");
+
+      let voucher_type: "CCV" | "BCV" | "DV" = "DV";
+
+      const voucher_no = await helper.generateVoucherNo(voucher_type, trx);
+
+      // generate expense no
+      const expenseNo = await Lib.generateExpenseNo(trx);
+
+      const vourcherRes = await accountModel.insertAccVoucher([
+        {
+          acc_head_id: expense_head.head_id,
+          created_by,
+          debit: total_amount,
+          credit: 0,
+          description: `Expense for ${expenseNo}`,
+          voucher_date: req.body.expense_date,
+          voucher_no,
+          hotel_code,
+        },
+        {
+          acc_head_id: acc.acc_head_id,
+          created_by,
+          debit: 0,
+          credit: total_amount,
+          description: `Expense for ${expenseNo}`,
+          voucher_date: new Date().toUTCString(),
+          voucher_no,
+          hotel_code,
+        },
+      ]);
+
+      //_______________________________________ END _________________________________//
+
       // Insert expense record
       const payload = {
         ...rest,
-        expense_no: `EXP-${year}${expenseNo}`,
+        expense_no: expenseNo,
         hotel_code,
         created_by,
         expense_amount: total_amount,
-        acc_voucher_id: 77,
+        acc_voucher_id: vourcherRes[1].id,
       };
 
       const expenseRes = await model.createExpense(payload);
@@ -101,7 +156,7 @@ export class ExpenseService extends AbstractServices {
       const expenseItemPayload = expense_items.map(
         (item: { id: number; remarks: string; amount: number }) => {
           return {
-            expense_head_id: item.id,
+            expense_head_id: vourcherRes[0].id,
             remarks: item.remarks,
             amount: item.amount,
             expense_id: expenseRes[0].id,

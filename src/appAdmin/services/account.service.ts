@@ -337,16 +337,16 @@ export class AccountService extends AbstractServices {
       };
     }
 
-    const { last_balance: from_acc_last_balance } = checkFromAcc[0];
-    const { last_balance: to_acc_last_balance } = checkToAcc[0];
+    // const { last_balance: from_acc_last_balance } = checkFromAcc[0];
+    // const { last_balance: to_acc_last_balance } = checkToAcc[0];
 
-    if (pay_amount > from_acc_last_balance) {
-      return {
-        success: false,
-        code: this.StatusCode.HTTP_BAD_REQUEST,
-        message: "Pay amount is more than accounts balance",
-      };
-    }
+    // if (pay_amount > from_acc_last_balance) {
+    //   return {
+    //     success: false,
+    //     code: this.StatusCode.HTTP_BAD_REQUEST,
+    //     message: "Pay amount is more than accounts balance",
+    //   };
+    // }
 
     //=========== from account step ==========//
 

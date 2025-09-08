@@ -20,6 +20,7 @@ const nodemailer_1 = __importDefault(require("nodemailer"));
 const chartOfAcc_1 = require("../miscellaneous/chartOfAcc");
 const accountModel_1 = __importDefault(require("../../models/reservationPanel/accountModel/accountModel"));
 const hotel_model_1 = __importDefault(require("../../models/reservationPanel/hotel.model"));
+const expenseModel_1 = __importDefault(require("../../models/reservationPanel/expenseModel"));
 class Lib {
     // make hashed password
     static hashPass(password) {
@@ -156,6 +157,26 @@ class Lib {
                 acc[k] = String(v);
             return acc;
         }, {})).toString()}`;
+    }
+    static generateExpenseNo(trx) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const prefix = "DV";
+            const date = new Date();
+            const yyyy = date.getFullYear();
+            const mm = String(date.getMonth() + 1).padStart(2, "0");
+            const dd = String(date.getDate()).padStart(2, "0");
+            const datePart = `${yyyy}${mm}${dd}`;
+            let nextSeq = 1;
+            const expenseId = yield new expenseModel_1.default(trx).getExpenseLastId();
+            const lastExpenseNo = expenseId.length ? expenseId[0].id + 1 : 1;
+            if (lastExpenseNo && lastExpenseNo.startsWith(`${prefix}-${datePart}`)) {
+                // Extract sequence from last expense no
+                const lastSeq = parseInt(lastExpenseNo.split("-").pop() || "0", 10);
+                nextSeq = lastSeq + 1;
+            }
+            const seqPart = String(nextSeq).padStart(4, "0");
+            return `${prefix}-${datePart}-${seqPart}`;
+        });
     }
 }
 exports.default = Lib;

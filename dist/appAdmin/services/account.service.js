@@ -302,15 +302,15 @@ class AccountService extends abstract_service_1.default {
                     message: "To account not found",
                 };
             }
-            const { last_balance: from_acc_last_balance } = checkFromAcc[0];
-            const { last_balance: to_acc_last_balance } = checkToAcc[0];
-            if (pay_amount > from_acc_last_balance) {
-                return {
-                    success: false,
-                    code: this.StatusCode.HTTP_BAD_REQUEST,
-                    message: "Pay amount is more than accounts balance",
-                };
-            }
+            // const { last_balance: from_acc_last_balance } = checkFromAcc[0];
+            // const { last_balance: to_acc_last_balance } = checkToAcc[0];
+            // if (pay_amount > from_acc_last_balance) {
+            //   return {
+            //     success: false,
+            //     code: this.StatusCode.HTTP_BAD_REQUEST,
+            //     message: "Pay amount is more than accounts balance",
+            //   };
+            // }
             //=========== from account step ==========//
             // get last account ledger
             const lastAL = yield model.getLastAccountLedgerId(hotel_code);

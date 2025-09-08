@@ -68,14 +68,14 @@ class PayRollService extends abstract_service_1.default {
                         message: "Account not found",
                     };
                 }
-                const last_balance = checkAccount[0].last_balance;
-                if (last_balance < rest.total_salary) {
-                    return {
-                        success: false,
-                        code: this.StatusCode.HTTP_BAD_REQUEST,
-                        message: "Insufficient balance in this account for pay",
-                    };
-                }
+                // const last_balance = checkAccount[0].last_balance;
+                // if (last_balance < rest.total_salary) {
+                // 	return {
+                // 		success: false,
+                // 		code: this.StatusCode.HTTP_BAD_REQUEST,
+                // 		message: "Insufficient balance in this account for pay",
+                // 	};
+                // }
                 const deduction_parse = deductions ? JSON.parse(deductions) : [];
                 const allowances_parse = allowances ? JSON.parse(allowances) : [];
                 let totalDeductions = 0;
@@ -157,8 +157,7 @@ class PayRollService extends abstract_service_1.default {
                 let serviceChargeValue = 0;
                 if (service_charge != null) {
                     serviceChargeValue =
-                        (Number(isEmployeeExists.salary) * Number(service_charge)) /
-                            100;
+                        (Number(isEmployeeExists.salary) * Number(service_charge)) / 100;
                 }
                 const grossSalary = Number(isEmployeeExists.salary) + totalAllowances;
                 const netSalary = grossSalary - totalDeductions - serviceChargeValue;

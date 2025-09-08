@@ -12,6 +12,7 @@ import {
 import AccountModel from "../../models/reservationPanel/accountModel/accountModel";
 import HotelModel from "../../models/reservationPanel/hotel.model";
 import { IAccHeadDb } from "../../appAdmin/utlis/interfaces/doubleEntry.interface";
+import ExpenseModel from "../../models/reservationPanel/expenseModel";
 
 class Lib {
   // make hashed password
@@ -184,6 +185,32 @@ class Lib {
         return acc;
       }, {})
     ).toString()}`;
+  }
+
+  public static async generateExpenseNo(trx: TDB): Promise<string> {
+    const prefix = "DV";
+    const date = new Date();
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, "0");
+    const dd = String(date.getDate()).padStart(2, "0");
+
+    const datePart = `${yyyy}${mm}${dd}`;
+
+    let nextSeq = 1;
+
+    const expenseId = await new ExpenseModel(trx).getExpenseLastId();
+
+    const lastExpenseNo = expenseId.length ? expenseId[0].id + 1 : 1;
+
+    if (lastExpenseNo && lastExpenseNo.startsWith(`${prefix}-${datePart}`)) {
+      // Extract sequence from last expense no
+      const lastSeq = parseInt(lastExpenseNo.split("-").pop() || "0", 10);
+      nextSeq = lastSeq + 1;
+    }
+
+    const seqPart = String(nextSeq).padStart(4, "0");
+
+    return `${prefix}-${datePart}-${seqPart}`;
   }
 }
 export default Lib;
