@@ -30,6 +30,11 @@ class BtocUserAuthRouter extends AbstractRouter {
 			.get(
 				this.authChecker.btocUserAuthChecker,
 				this.btocUserAuthController.getProfile
+			)
+			.patch(
+				this.authChecker.btocUserAuthChecker,
+				this.uploader.cloudUploadRaw(this.fileFolders.BTOC_USERS_FILES),
+				this.btocUserAuthController.updateProfile
 			);
 
 		this.router

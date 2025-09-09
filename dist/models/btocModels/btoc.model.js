@@ -45,7 +45,7 @@ class BtocUserModel extends schema_1.default {
             const { id, email, hotel_code } = query;
             return yield this.db("users as u")
                 .withSchema(this.BTOC_SCHEMA)
-                .select("u.id", "u.hotel_code", "u.first_name", "u.last_name", "u.email", "u.phone", "u.photo", "u.password", "u.status", "u.gender", "u.address", "u.date_of_birth", "city.city_name as city", "country.country_name as country", "u.is_deleted")
+                .select("u.id", "u.hotel_code", "u.first_name", "u.last_name", "u.email", "u.phone", "u.photo", "u.password", "u.status", "u.gender", "u.address", this.db.raw(`to_char(u.date_of_birth, 'YYYY-MM-DD') as date_of_birth`), "city.city_name as city", "country.country_name as country", "u.is_deleted")
                 .joinRaw("LEFT JOIN public.city ON city.city_code = u.city_id")
                 .joinRaw("LEFT JOIN public.country ON country.id = u.country_id")
                 .modify((qb) => {

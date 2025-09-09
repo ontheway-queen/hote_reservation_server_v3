@@ -13,9 +13,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const abstract_service_1 = __importDefault(require("../../abstarcts/abstract.service"));
-const lib_1 = __importDefault(require("../../utils/lib/lib"));
-const sendEmailOtp_1 = require("../../templates/sendEmailOtp");
 const config_1 = __importDefault(require("../../config/config"));
+const sendEmailOtp_1 = require("../../templates/sendEmailOtp");
+const lib_1 = __importDefault(require("../../utils/lib/lib"));
 const constants_1 = require("../../utils/miscellaneous/constants");
 class CommonService extends abstract_service_1.default {
     constructor() {
@@ -36,6 +36,19 @@ class CommonService extends abstract_service_1.default {
                         //     message: this.ResMsg.NOT_FOUND_USER_WITH_EMAIL,
                         //   };
                         // }
+                        break;
+                    case constants_1.OTP_TYPE_FORGET_BTOC_USER:
+                        const btocUserModel = this.Model.btocUserModel(trx);
+                        const checkBtocUser = yield btocUserModel.checkUser({
+                            email,
+                        });
+                        if (!checkBtocUser) {
+                            return {
+                                success: false,
+                                code: this.StatusCode.HTTP_NOT_FOUND,
+                                message: this.ResMsg.NOT_FOUND_USER_WITH_EMAIL,
+                            };
+                        }
                         break;
                     case constants_1.OTP_TYPE_FORGET_HOTEL_ADMIN:
                         const hotelUserModel = this.Model.rAdministrationModel(trx);
@@ -97,6 +110,7 @@ class CommonService extends abstract_service_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             return this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
                 const { email, otp, type } = req.body;
+                console.log({ email, otp, type });
                 const commonModel = this.Model.commonModel(trx);
                 const checkOtp = yield commonModel.getOTP({
                     email,
@@ -136,6 +150,9 @@ class CommonService extends abstract_service_1.default {
                             break;
                         case constants_1.OTP_TYPE_FORGET_RES_ADMIN:
                             secret = config_1.default.JWT_SECRET_H_RESTURANT;
+                            break;
+                        case constants_1.OTP_TYPE_FORGET_BTOC_USER:
+                            secret = config_1.default.JWT_SECRET_H_USER;
                             break;
                         default:
                             break;

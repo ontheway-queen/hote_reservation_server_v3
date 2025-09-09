@@ -22,4 +22,15 @@ export class BtocUserAuthValidator {
 	public loginWithGoogleValidator = Joi.object({
 		access_token: Joi.string().required(),
 	});
+
+	public updateUserProfileValidator = Joi.object({
+		first_name: Joi.string().max(100).optional(),
+		last_name: Joi.string().max(100).optional(),
+		phone: Joi.string().max(20).allow("").optional(),
+		date_of_birth: Joi.date().allow("").optional(),
+		gender: Joi.string().valid("male", "female", "other").optional(),
+		address: Joi.string().max(1000).optional(),
+		city_id: Joi.number().integer().optional(),
+		country_id: Joi.number().integer().optional(),
+	});
 }

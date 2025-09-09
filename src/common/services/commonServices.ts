@@ -1,350 +1,371 @@
 import { Request } from "express";
 import AbstractServices from "../../abstarcts/abstract.service";
-import Lib from "../../utils/lib/lib";
-import { sendEmailOtpTemplate } from "../../templates/sendEmailOtp";
 import config from "../../config/config";
-import { IChangePassProps, IVerifyPassProps } from "../types/commontypes";
-import { IGetOTPPayload } from "../interfaces/commonInterface";
+import { sendEmailOtpTemplate } from "../../templates/sendEmailOtp";
+import Lib from "../../utils/lib/lib";
 import {
-  OTP_EMAIL_SUBJECT,
-  OTP_FOR,
-  OTP_TYPE_FORGET_HOTEL_ADMIN,
-  OTP_TYPE_FORGET_M_ADMIN,
-  OTP_TYPE_FORGET_RES_ADMIN,
+	OTP_EMAIL_SUBJECT,
+	OTP_FOR,
+	OTP_TYPE_FORGET_BTOC_USER,
+	OTP_TYPE_FORGET_HOTEL_ADMIN,
+	OTP_TYPE_FORGET_M_ADMIN,
+	OTP_TYPE_FORGET_RES_ADMIN,
 } from "../../utils/miscellaneous/constants";
+import { IGetOTPPayload } from "../interfaces/commonInterface";
+import { IChangePassProps, IVerifyPassProps } from "../types/commontypes";
 
 class CommonService extends AbstractServices {
-  constructor() {
-    super();
-  }
+	constructor() {
+		super();
+	}
 
-  public async sendOtpToEmailService(req: Request) {
-    return await this.db.transaction(async (trx) => {
-      const { email, type } = req.body as IGetOTPPayload;
+	public async sendOtpToEmailService(req: Request) {
+		return await this.db.transaction(async (trx) => {
+			const { email, type } = req.body as IGetOTPPayload;
 
-      switch (type) {
-        case OTP_TYPE_FORGET_M_ADMIN:
-          // const adminModel = this.Model.mUserAdminModel(trx);
-          // const checkAdmin = await adminModel.getSingleAdmin({ email });
+			switch (type) {
+				case OTP_TYPE_FORGET_M_ADMIN:
+					// const adminModel = this.Model.mUserAdminModel(trx);
+					// const checkAdmin = await adminModel.getSingleAdmin({ email });
 
-          // if (!checkAdmin.length) {
-          //   return {
-          //     success: false,
-          //     code: this.StatusCode.HTTP_NOT_FOUND,
-          //     message: this.ResMsg.NOT_FOUND_USER_WITH_EMAIL,
-          //   };
-          // }
-          break;
+					// if (!checkAdmin.length) {
+					//   return {
+					//     success: false,
+					//     code: this.StatusCode.HTTP_NOT_FOUND,
+					//     message: this.ResMsg.NOT_FOUND_USER_WITH_EMAIL,
+					//   };
+					// }
+					break;
 
-        case OTP_TYPE_FORGET_HOTEL_ADMIN:
-          const hotelUserModel = this.Model.rAdministrationModel(trx);
-          const checkHotelAdmin = await hotelUserModel.getSingleAdmin({
-            email,
-          });
+				case OTP_TYPE_FORGET_BTOC_USER:
+					const btocUserModel = this.Model.btocUserModel(trx);
+					const checkBtocUser = await btocUserModel.checkUser({
+						email,
+					});
+					if (!checkBtocUser) {
+						return {
+							success: false,
+							code: this.StatusCode.HTTP_NOT_FOUND,
+							message: this.ResMsg.NOT_FOUND_USER_WITH_EMAIL,
+						};
+					}
+					break;
 
-          if (!checkHotelAdmin) {
-            return {
-              success: false,
-              code: this.StatusCode.HTTP_NOT_FOUND,
-              message: this.ResMsg.NOT_FOUND_USER_WITH_EMAIL,
-            };
-          }
-          break;
+				case OTP_TYPE_FORGET_HOTEL_ADMIN:
+					const hotelUserModel = this.Model.rAdministrationModel(trx);
+					const checkHotelAdmin = await hotelUserModel.getSingleAdmin(
+						{
+							email,
+						}
+					);
 
-        default:
-          break;
-      }
+					if (!checkHotelAdmin) {
+						return {
+							success: false,
+							code: this.StatusCode.HTTP_NOT_FOUND,
+							message: this.ResMsg.NOT_FOUND_USER_WITH_EMAIL,
+						};
+					}
+					break;
 
-      const commonModel = this.Model.commonModel(trx);
+				default:
+					break;
+			}
 
-      const checkOtp = await commonModel.getOTP({
-        email: email,
-        type: type,
-      });
+			const commonModel = this.Model.commonModel(trx);
 
-      if (checkOtp.length) {
-        return {
-          success: false,
-          code: this.StatusCode.HTTP_GONE,
-          message: this.ResMsg.THREE_TIMES_EXPIRED,
-        };
-      }
+			const checkOtp = await commonModel.getOTP({
+				email: email,
+				type: type,
+			});
 
-      const otp = Lib.otpGenNumber(6);
-      const hashed_otp = await Lib.hashPass(otp);
+			if (checkOtp.length) {
+				return {
+					success: false,
+					code: this.StatusCode.HTTP_GONE,
+					message: this.ResMsg.THREE_TIMES_EXPIRED,
+				};
+			}
 
-      const send = await Lib.sendEmail(
-        email,
-        OTP_EMAIL_SUBJECT,
-        sendEmailOtpTemplate(otp, OTP_FOR)
-      );
+			const otp = Lib.otpGenNumber(6);
+			const hashed_otp = await Lib.hashPass(otp);
 
-      if (send) {
-        await commonModel.insertOTP({
-          hashed_otp: hashed_otp,
-          email: email,
-          type: type,
-        });
+			const send = await Lib.sendEmail(
+				email,
+				OTP_EMAIL_SUBJECT,
+				sendEmailOtpTemplate(otp, OTP_FOR)
+			);
 
-        return {
-          success: true,
-          code: this.StatusCode.HTTP_OK,
-          message: this.ResMsg.OTP_SENT,
-          data: {
-            email,
-          },
-        };
-      } else {
-        return {
-          success: false,
-          code: this.StatusCode.HTTP_INTERNAL_SERVER_ERROR,
-          message: this.ResMsg.HTTP_INTERNAL_SERVER_ERROR,
-        };
-      }
-    });
-  }
+			if (send) {
+				await commonModel.insertOTP({
+					hashed_otp: hashed_otp,
+					email: email,
+					type: type,
+				});
 
-  public async matchEmailOtpService(req: Request) {
-    return this.db.transaction(async (trx) => {
-      const { email, otp, type } = req.body;
+				return {
+					success: true,
+					code: this.StatusCode.HTTP_OK,
+					message: this.ResMsg.OTP_SENT,
+					data: {
+						email,
+					},
+				};
+			} else {
+				return {
+					success: false,
+					code: this.StatusCode.HTTP_INTERNAL_SERVER_ERROR,
+					message: this.ResMsg.HTTP_INTERNAL_SERVER_ERROR,
+				};
+			}
+		});
+	}
 
-      const commonModel = this.Model.commonModel(trx);
-      const checkOtp = await commonModel.getOTP({
-        email,
-        type,
-      });
-      console.log({ checkOtp });
-      if (!checkOtp.length) {
-        return {
-          success: false,
-          code: this.StatusCode.HTTP_FORBIDDEN,
-          message: this.ResMsg.OTP_EXPIRED,
-        };
-      }
+	public async matchEmailOtpService(req: Request) {
+		return this.db.transaction(async (trx) => {
+			const { email, otp, type } = req.body;
+			console.log({ email, otp, type });
+			const commonModel = this.Model.commonModel(trx);
+			const checkOtp = await commonModel.getOTP({
+				email,
+				type,
+			});
+			console.log({ checkOtp });
+			if (!checkOtp.length) {
+				return {
+					success: false,
+					code: this.StatusCode.HTTP_FORBIDDEN,
+					message: this.ResMsg.OTP_EXPIRED,
+				};
+			}
 
-      const { id: email_otp_id, otp: hashed_otp, tried } = checkOtp[0];
+			const { id: email_otp_id, otp: hashed_otp, tried } = checkOtp[0];
 
-      if (tried > 3) {
-        return {
-          success: false,
-          code: this.StatusCode.HTTP_GONE,
-          message: this.ResMsg.TOO_MUCH_ATTEMPT,
-        };
-      }
+			if (tried > 3) {
+				return {
+					success: false,
+					code: this.StatusCode.HTTP_GONE,
+					message: this.ResMsg.TOO_MUCH_ATTEMPT,
+				};
+			}
 
-      const otpValidation = await Lib.compare(otp, hashed_otp);
+			const otpValidation = await Lib.compare(otp, hashed_otp);
 
-      console.log({ otpValidation });
+			console.log({ otpValidation });
 
-      if (otpValidation) {
-        await commonModel.updateOTP(
-          {
-            tried: tried + 1,
-            matched: 1,
-          },
-          { id: email_otp_id }
-        );
-        console.log({ type });
-        let secret = config.JWT_SECRET_HOTEL_ADMIN;
-        switch (type) {
-          case OTP_TYPE_FORGET_M_ADMIN:
-            secret = config.JWT_SECRET_M_ADMIN;
-            break;
-          case OTP_TYPE_FORGET_HOTEL_ADMIN:
-            secret = config.JWT_SECRET_HOTEL_ADMIN;
-            break;
+			if (otpValidation) {
+				await commonModel.updateOTP(
+					{
+						tried: tried + 1,
+						matched: 1,
+					},
+					{ id: email_otp_id }
+				);
+				console.log({ type });
+				let secret = config.JWT_SECRET_HOTEL_ADMIN;
+				switch (type) {
+					case OTP_TYPE_FORGET_M_ADMIN:
+						secret = config.JWT_SECRET_M_ADMIN;
+						break;
+					case OTP_TYPE_FORGET_HOTEL_ADMIN:
+						secret = config.JWT_SECRET_HOTEL_ADMIN;
+						break;
 
-          case OTP_TYPE_FORGET_RES_ADMIN:
-            secret = config.JWT_SECRET_H_RESTURANT;
-            break;
+					case OTP_TYPE_FORGET_RES_ADMIN:
+						secret = config.JWT_SECRET_H_RESTURANT;
+						break;
 
-          default:
-            break;
-        }
+					case OTP_TYPE_FORGET_BTOC_USER:
+						secret = config.JWT_SECRET_H_USER;
+						break;
 
-        const token = Lib.createToken(
-          {
-            email: email,
-            type: type,
-          },
-          secret,
-          "5m"
-        );
+					default:
+						break;
+				}
 
-        return {
-          success: true,
-          code: this.StatusCode.HTTP_ACCEPTED,
-          message: this.ResMsg.OTP_MATCHED,
-          token,
-        };
-      } else {
-        await commonModel.updateOTP(
-          {
-            tried: tried + 1,
-          },
-          { id: email_otp_id }
-        );
+				const token = Lib.createToken(
+					{
+						email: email,
+						type: type,
+					},
+					secret,
+					"5m"
+				);
 
-        return {
-          success: false,
-          code: this.StatusCode.HTTP_UNAUTHORIZED,
-          message: this.ResMsg.OTP_INVALID,
-        };
-      }
-    });
-  }
+				return {
+					success: true,
+					code: this.StatusCode.HTTP_ACCEPTED,
+					message: this.ResMsg.OTP_MATCHED,
+					token,
+				};
+			} else {
+				await commonModel.updateOTP(
+					{
+						tried: tried + 1,
+					},
+					{ id: email_otp_id }
+				);
 
-  public async changePassword({
-    password,
-    table,
-    userIdField,
-    userId,
-    passField,
-    schema,
-  }: IChangePassProps) {
-    const hashedPass = await Lib.hashPass(password);
-    const commonModel = this.Model.commonModel();
+				return {
+					success: false,
+					code: this.StatusCode.HTTP_UNAUTHORIZED,
+					message: this.ResMsg.OTP_INVALID,
+				};
+			}
+		});
+	}
 
-    const updatePass = await commonModel.updatePassword({
-      table,
-      userIdField,
-      userId,
-      passField,
-      schema,
-      hashedPass,
-    });
+	public async changePassword({
+		password,
+		table,
+		userIdField,
+		userId,
+		passField,
+		schema,
+	}: IChangePassProps) {
+		const hashedPass = await Lib.hashPass(password);
+		const commonModel = this.Model.commonModel();
 
-    if (updatePass) {
-      return {
-        success: true,
-        code: this.StatusCode.HTTP_OK,
-        message: "Password changed successfully!",
-      };
-    } else {
-      return {
-        success: true,
-        code: this.StatusCode.HTTP_INTERNAL_SERVER_ERROR,
-        message: "Cannot change password!",
-      };
-    }
-  }
+		const updatePass = await commonModel.updatePassword({
+			table,
+			userIdField,
+			userId,
+			passField,
+			schema,
+			hashedPass,
+		});
 
-  public async userPasswordVerify({
-    table,
-    passField,
-    oldPassword,
-    userIdField,
-    userId,
-    schema,
-  }: IVerifyPassProps) {
-    const commonModel = this.Model.commonModel();
-    const user = await commonModel.getUserPassword({
-      table,
-      schema,
-      passField,
-      userIdField,
-      userId,
-    });
+		if (updatePass) {
+			return {
+				success: true,
+				code: this.StatusCode.HTTP_OK,
+				message: "Password changed successfully!",
+			};
+		} else {
+			return {
+				success: true,
+				code: this.StatusCode.HTTP_INTERNAL_SERVER_ERROR,
+				message: "Cannot change password!",
+			};
+		}
+	}
 
-    if (!user.length) {
-      return {
-        success: false,
-        code: this.StatusCode.HTTP_NOT_FOUND,
-        message: "No user found with this id",
-      };
-    }
-    const checkOldPass = await Lib.compare(oldPassword, user[0][passField]);
-    if (!checkOldPass) {
-      return {
-        success: false,
-        code: this.StatusCode.HTTP_UNAUTHORIZED,
-        message: "Old password is not correct!",
-      };
-    } else {
-      return {
-        success: true,
-        code: this.StatusCode.HTTP_OK,
-        message: "Password is verified!",
-      };
-    }
-  }
+	public async userPasswordVerify({
+		table,
+		passField,
+		oldPassword,
+		userIdField,
+		userId,
+		schema,
+	}: IVerifyPassProps) {
+		const commonModel = this.Model.commonModel();
+		const user = await commonModel.getUserPassword({
+			table,
+			schema,
+			passField,
+			userIdField,
+			userId,
+		});
 
-  public async getAllCountry(req: Request) {
-    const data = await this.Model.commonModel().getAllCountry();
+		if (!user.length) {
+			return {
+				success: false,
+				code: this.StatusCode.HTTP_NOT_FOUND,
+				message: "No user found with this id",
+			};
+		}
+		const checkOldPass = await Lib.compare(oldPassword, user[0][passField]);
+		if (!checkOldPass) {
+			return {
+				success: false,
+				code: this.StatusCode.HTTP_UNAUTHORIZED,
+				message: "Old password is not correct!",
+			};
+		} else {
+			return {
+				success: true,
+				code: this.StatusCode.HTTP_OK,
+				message: "Password is verified!",
+			};
+		}
+	}
 
-    return {
-      success: true,
-      code: this.StatusCode.HTTP_OK,
-      data,
-    };
-  }
+	public async getAllCountry(req: Request) {
+		const data = await this.Model.commonModel().getAllCountry();
 
-  // create audit trail
-  // public async createAuditTrailService(
-  //   admin_id: number,
-  //   details: string,
-  //   code: number
-  // ) {
-  //   let status = true;
-  //   if (code > 299) {
-  //     status = false;
-  //   }
+		return {
+			success: true,
+			code: this.StatusCode.HTTP_OK,
+			data,
+		};
+	}
 
-  //   const commonModel = this.Model.commonModel();
+	// create audit trail
+	// public async createAuditTrailService(
+	//   admin_id: number,
+	//   details: string,
+	//   code: number
+	// ) {
+	//   let status = true;
+	//   if (code > 299) {
+	//     status = false;
+	//   }
 
-  //   const res = await commonModel.insetAuditTrail({
-  //     adminId: admin_id,
-  //     details,
-  //     status,
-  //   });
+	//   const commonModel = this.Model.commonModel();
 
-  //   if (res.length) {
-  //     return true;
-  //   } else {
-  //     return false;
-  //   }
-  // }
+	//   const res = await commonModel.insetAuditTrail({
+	//     adminId: admin_id,
+	//     details,
+	//     status,
+	//   });
 
-  // get all blood group
-  public async getAllBloodGroup() {
-    const data = await this.Model.commonModel().getAllBloodGroup();
-    return {
-      success: true,
-      code: this.StatusCode.HTTP_OK,
-      data,
-    };
-  }
+	//   if (res.length) {
+	//     return true;
+	//   } else {
+	//     return false;
+	//   }
+	// }
 
-  // get all months
-  public async getMonthList() {
-    const data = await this.Model.commonModel().getMonthList();
+	// get all blood group
+	public async getAllBloodGroup() {
+		const data = await this.Model.commonModel().getAllBloodGroup();
+		return {
+			success: true,
+			code: this.StatusCode.HTTP_OK,
+			data,
+		};
+	}
 
-    return {
-      success: true,
-      code: this.StatusCode.HTTP_OK,
-      data,
-    };
-  }
+	// get all months
+	public async getMonthList() {
+		const data = await this.Model.commonModel().getMonthList();
 
-  public async getSocialMedia(req: Request) {
-    return this.db.transaction(async (trx) => {
-      const configModel = this.Model.b2cConfigurationModel(trx);
+		return {
+			success: true,
+			code: this.StatusCode.HTTP_OK,
+			data,
+		};
+	}
 
-      const { filter } = req.query as { filter: string };
+	public async getSocialMedia(req: Request) {
+		return this.db.transaction(async (trx) => {
+			const configModel = this.Model.b2cConfigurationModel(trx);
 
-      const banks = await configModel.getSocialMedia({
-        name: filter,
-        status: true,
-      });
+			const { filter } = req.query as { filter: string };
 
-      return {
-        success: true,
-        code: this.StatusCode.HTTP_OK,
-        message: this.ResMsg.HTTP_OK,
-        data: banks,
-      };
-    });
-  }
+			const banks = await configModel.getSocialMedia({
+				name: filter,
+				status: true,
+			});
+
+			return {
+				success: true,
+				code: this.StatusCode.HTTP_OK,
+				message: this.ResMsg.HTTP_OK,
+				data: banks,
+			};
+		});
+	}
 }
 
 export default CommonService;

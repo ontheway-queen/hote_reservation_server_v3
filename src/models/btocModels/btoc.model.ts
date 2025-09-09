@@ -1,93 +1,95 @@
 import {
-  IBtocUser,
-  IBtocUserProfile,
-  IBtocUserRegistration,
+	IBtocUser,
+	IBtocUserProfile,
+	IBtocUserRegistration,
 } from "../../btoc/utills/interfaces/user.interface";
 import { TDB } from "../../common/types/commontypes";
 import Schema from "../../utils/miscellaneous/schema";
 
 export class BtocUserModel extends Schema {
-  private db: TDB;
-  constructor(db: TDB) {
-    super();
-    this.db = db;
-  }
+	private db: TDB;
+	constructor(db: TDB) {
+		super();
+		this.db = db;
+	}
 
-  // Check user
-  public async checkUser(query: { email: string }): Promise<IBtocUser> {
-    const { email } = query;
-    return await this.db("users")
-      .withSchema(this.BTOC_SCHEMA)
-      .select("*")
-      .where("email", email)
-      .andWhere("is_deleted", false)
-      .first();
-  }
+	// Check user
+	public async checkUser(query: { email: string }): Promise<IBtocUser> {
+		const { email } = query;
+		return await this.db("users")
+			.withSchema(this.BTOC_SCHEMA)
+			.select("*")
+			.where("email", email)
+			.andWhere("is_deleted", false)
+			.first();
+	}
 
-  // create user
-  public async createUser(payload: IBtocUserRegistration) {
-    return await this.db("users")
-      .withSchema(this.BTOC_SCHEMA)
-      .insert(payload)
-      .returning(["id", "email"]);
-  }
+	// create user
+	public async createUser(payload: IBtocUserRegistration) {
+		return await this.db("users")
+			.withSchema(this.BTOC_SCHEMA)
+			.insert(payload)
+			.returning(["id", "email"]);
+	}
 
-  public async getSingleUser(query: {
-    id?: number;
-    email?: string;
-    hotel_code?: number;
-  }): Promise<IBtocUserProfile> {
-    const { id, email, hotel_code } = query;
-    return await this.db("users as u")
-      .withSchema(this.BTOC_SCHEMA)
-      .select(
-        "u.id",
-        "u.hotel_code",
-        "u.first_name",
-        "u.last_name",
-        "u.email",
-        "u.phone",
-        "u.photo",
-        "u.password",
-        "u.status",
-        "u.gender",
-        "u.address",
-        "u.date_of_birth",
-        "city.city_name as city",
-        "country.country_name as country",
-        "u.is_deleted"
-      )
+	public async getSingleUser(query: {
+		id?: number;
+		email?: string;
+		hotel_code?: number;
+	}): Promise<IBtocUserProfile> {
+		const { id, email, hotel_code } = query;
+		return await this.db("users as u")
+			.withSchema(this.BTOC_SCHEMA)
+			.select(
+				"u.id",
+				"u.hotel_code",
+				"u.first_name",
+				"u.last_name",
+				"u.email",
+				"u.phone",
+				"u.photo",
+				"u.password",
+				"u.status",
+				"u.gender",
+				"u.address",
+				this.db.raw(
+					`to_char(u.date_of_birth, 'YYYY-MM-DD') as date_of_birth`
+				),
+				"city.city_name as city",
+				"country.country_name as country",
+				"u.is_deleted"
+			)
 
-      .joinRaw("LEFT JOIN public.city ON city.city_code = u.city_id")
-      .joinRaw("LEFT JOIN public.country ON country.id = u.country_id")
-      .modify((qb) => {
-        if (id) qb.where("u.id", id);
-        if (email) qb.where("u.email", email);
+			.joinRaw("LEFT JOIN public.city ON city.city_code = u.city_id")
+			.joinRaw("LEFT JOIN public.country ON country.id = u.country_id")
+			.modify((qb) => {
+				if (id) qb.where("u.id", id);
+				if (email) qb.where("u.email", email);
 
-        if (hotel_code) {
-          qb.andWhere("u.hotel_code", hotel_code);
-        }
-      })
-      .andWhere("u.is_deleted", false)
-      .first();
-  }
+				if (hotel_code) {
+					qb.andWhere("u.hotel_code", hotel_code);
+				}
+			})
+			.andWhere("u.is_deleted", false)
+			.first();
+	}
 
-  public async updateProfile({
-    payload,
-    id,
-    email,
-  }: {
-    payload: any;
-    id?: number;
-    email?: string;
-  }) {
-    return await this.db("users")
-      .withSchema(this.BTOC_SCHEMA)
-      .modify((qb) => {
-        if (id) qb.where("id", id);
-        if (email) qb.where("email", email);
-      })
-      .update(payload)
-      .returning("id");
-  }
+	public async updateProfile({
+		payload,
+		id,
+		email,
+	}: {
+		payload: any;
+		id?: number;
+		email?: string;
+	}) {
+		return await this.db("users")
+			.withSchema(this.BTOC_SCHEMA)
+			.modify((qb) => {
+				if (id) qb.where("id", id);
+				if (email) qb.where("email", email);
+			})
+			.update(payload)
+			.returning("id");
+	}
 }

@@ -1,29 +1,33 @@
 export interface OTPType {
-  type: "forget_m_admin" | "forget_h_admin" | "forget_res_admin";
+	type:
+		| "forget_m_admin"
+		| "forget_h_admin"
+		| "forget_res_admin"
+		| "forget_btoc_user";
 }
 export interface IInsertOTPPayload extends OTPType {
-  hashed_otp: string;
-  email: string;
+	hashed_otp: string;
+	email: string;
 }
 
 export interface IGetOTPPayload extends OTPType {
-  email: string;
+	email: string;
 }
 
 export interface IInsertAuditTrailPayload {
-  adminId: number;
-  details: string;
-  status: boolean;
+	adminId: number;
+	details: string;
+	status: boolean;
 }
 
 export interface IcommonInsertRes {
-  command: string;
-  rowCount: number;
-  oid: number;
-  rows: any[];
+	command: string;
+	rowCount: number;
+	oid: number;
+	rows: any[];
 }
 
 export interface ILimitSkip {
-  limit: string;
-  skip: string;
+	limit: string;
+	skip: string;
 }
