@@ -34,17 +34,11 @@ class PaymentService extends abstract_service_1.default {
             };
             return this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
                 var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x;
-                console.log(req.query, "query");
-                console.log(req.body, "req body");
                 const query = (_a = req.query) === null || _a === void 0 ? void 0 : _a.queries;
                 const split_queries = query.split("?");
-                console.log({ split_queries });
                 const hotel_code = split_queries[0];
-                console.log(hotel_code);
                 const split_order_id = split_queries[1].split("=");
-                console.log({ split_order_id });
                 const order_id = split_order_id[1];
-                console.log(order_id);
                 if (!hotel_code) {
                     throw new customEror_1.default("Did not pass hotel code into payment success", 400);
                 }

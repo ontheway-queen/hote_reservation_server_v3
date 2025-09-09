@@ -23,20 +23,14 @@ class PaymentService extends AbstractServices {
     };
 
     return this.db.transaction(async (trx) => {
-      console.log(req.query, "query");
-      console.log(req.body, "req body");
-
       const query = req.query?.queries as string;
       const split_queries = query.split("?");
 
-      console.log({ split_queries });
       const hotel_code = split_queries[0];
-      console.log(hotel_code);
-      const split_order_id = split_queries[1].split("=");
-      console.log({ split_order_id });
-      const order_id = split_order_id[1];
 
-      console.log(order_id);
+      const split_order_id = split_queries[1].split("=");
+
+      const order_id = split_order_id[1];
 
       if (!hotel_code) {
         throw new CustomError(

@@ -232,6 +232,8 @@ export class SubBtocHotelService extends AbstractServices {
       type: "Primary",
     });
 
+    console.log({ folio });
+
     for (const { rooms } of body.booked_room_types) {
       for (const room of rooms) {
         const ctx: ChildCtx = {
@@ -333,13 +335,13 @@ export class SubBtocHotelService extends AbstractServices {
 
     await hotelInvModel.insertFolioMoneyReceipt({
       amount: body.payment.amount,
-      money_receipt_id: mRes[0].id,
-      folio_id: folio.id,
+      money_receipt_id: mRes[0]?.id,
+      folio_id: folio?.id,
       booking_ref,
     });
 
     return {
-      folio_id: folio.id,
+      folio_id: folio?.id,
       childFolios: child.map((c) => ({
         id: c.folioId,
         folio_number: c.folioNumber,

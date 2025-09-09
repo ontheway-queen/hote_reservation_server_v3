@@ -137,6 +137,7 @@ class SubBtocHotelService extends abstract_service_1.default {
         });
     }
     createBtocRoomBookingFolioWithEntries({ body, booking_id, guest_id, req, booking_ref, hotel_code, }) {
+        var _a;
         return __awaiter(this, void 0, void 0, function* () {
             const hotelInvModel = this.Model.hotelInvoiceModel(this.trx);
             const accountModel = this.Model.accountModel(this.trx);
@@ -158,6 +159,7 @@ class SubBtocHotelService extends abstract_service_1.default {
                 status: "open",
                 type: "Primary",
             });
+            console.log({ folio });
             for (const { rooms } of body.booked_room_types) {
                 for (const room of rooms) {
                     const ctx = {
@@ -240,12 +242,12 @@ class SubBtocHotelService extends abstract_service_1.default {
             });
             yield hotelInvModel.insertFolioMoneyReceipt({
                 amount: body.payment.amount,
-                money_receipt_id: mRes[0].id,
-                folio_id: folio.id,
+                money_receipt_id: (_a = mRes[0]) === null || _a === void 0 ? void 0 : _a.id,
+                folio_id: folio === null || folio === void 0 ? void 0 : folio.id,
                 booking_ref,
             });
             return {
-                folio_id: folio.id,
+                folio_id: folio === null || folio === void 0 ? void 0 : folio.id,
                 childFolios: child.map((c) => ({
                     id: c.folioId,
                     folio_number: c.folioNumber,
