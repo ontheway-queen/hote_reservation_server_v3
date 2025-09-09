@@ -215,26 +215,37 @@ class SubBtocHotelService extends abstract_service_1.default {
                     child.push(ctx);
                 }
             }
-            /*  update booking total (only debits) */
-            const totalDebit = child.reduce((s, c) => s + c.totalDebit, 0);
             /*  persist entries */
             const allEntries = [...child.flatMap((c) => c.entries)];
-            // payment
-            if (body.is_payment_given && body.payment && body.payment.amount > 0) {
-                allEntries.push({
-                    folio_id: child[0].folioId,
-                    date: today,
-                    posting_type: "Payment",
-                    credit: body.payment.amount,
-                    debit: 0,
-                    description: "Payment for room booking",
-                });
-            }
+            allEntries.push({
+                folio_id: child[0].folioId,
+                date: today,
+                posting_type: "Payment",
+                credit: body.payment.amount,
+                debit: 0,
+                description: "Payment for room booking",
+            });
             // insert in folio entries
             yield hotelInvModel.insertInFolioEntries(allEntries);
-            // update room booking
-            yield reservationModel.updateRoomBooking({ total_amount: totalDebit }, hotel_code, booking_id);
+            const helper = new helperFunction_1.HelperFunction();
+            const money_receipt_no = yield helper.generateMoneyReceiptNo(this.trx);
+            const mRes = yield hotelInvModel.insertMoneyReceipt({
+                hotel_code,
+                receipt_date: today,
+                amount_paid: body.payment.amount,
+                payment_method: "SURJO_PAY",
+                receipt_no: money_receipt_no,
+                received_by: req.hotel_admin.id,
+                notes: "Advance Payment",
+            });
+            yield hotelInvModel.insertFolioMoneyReceipt({
+                amount: body.payment.amount,
+                money_receipt_id: mRes[0].id,
+                folio_id: folio.id,
+                booking_ref,
+            });
             return {
+                folio_id: folio.id,
                 childFolios: child.map((c) => ({
                     id: c.folioId,
                     folio_number: c.folioNumber,

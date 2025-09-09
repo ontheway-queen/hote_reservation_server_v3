@@ -163,7 +163,7 @@ class HotelModel extends schema_1.default {
     // delete hotel images
     deleteHotelImage(payload, hotel_code) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("hotel_images")
+            return yield this.db("hotel_image")
                 .withSchema(this.RESERVATION_SCHEMA)
                 .delete()
                 .whereIn("id", payload)

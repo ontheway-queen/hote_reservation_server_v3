@@ -110,10 +110,10 @@ class HotelInvoiceModel extends Schema {
     receipt_date: string;
     amount_paid: number;
     received_by: number;
-    acc_id: number;
+    acc_id?: number;
     payment_method: string;
     notes?: string;
-    voucher_no: string;
+    voucher_no?: string;
   }) {
     return await this.db("money_receipts")
       .withSchema(this.RESERVATION_SCHEMA)

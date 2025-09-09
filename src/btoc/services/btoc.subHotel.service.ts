@@ -302,35 +302,44 @@ export class SubBtocHotelService extends AbstractServices {
       }
     }
 
-    /*  update booking total (only debits) */
-    const totalDebit = child.reduce((s, c) => s + c.totalDebit, 0);
-
     /*  persist entries */
     const allEntries = [...child.flatMap((c) => c.entries)];
 
-    // payment
-    if (body.is_payment_given && body.payment && body.payment.amount > 0) {
-      allEntries.push({
-        folio_id: child[0].folioId,
-        date: today,
-        posting_type: "Payment",
-        credit: body.payment.amount,
-        debit: 0,
-        description: "Payment for room booking",
-      });
-    }
+    allEntries.push({
+      folio_id: child[0].folioId,
+      date: today,
+      posting_type: "Payment",
+      credit: body.payment.amount,
+      debit: 0,
+      description: "Payment for room booking",
+    });
 
     // insert in folio entries
     await hotelInvModel.insertInFolioEntries(allEntries);
 
-    // update room booking
-    await reservationModel.updateRoomBooking(
-      { total_amount: totalDebit },
+    const helper = new HelperFunction();
+
+    const money_receipt_no = await helper.generateMoneyReceiptNo(this.trx);
+
+    const mRes = await hotelInvModel.insertMoneyReceipt({
       hotel_code,
-      booking_id
-    );
+      receipt_date: today,
+      amount_paid: body.payment.amount,
+      payment_method: "SURJO_PAY",
+      receipt_no: money_receipt_no,
+      received_by: req.hotel_admin.id,
+      notes: "Advance Payment",
+    });
+
+    await hotelInvModel.insertFolioMoneyReceipt({
+      amount: body.payment.amount,
+      money_receipt_id: mRes[0].id,
+      folio_id: folio.id,
+      booking_ref,
+    });
 
     return {
+      folio_id: folio.id,
       childFolios: child.map((c) => ({
         id: c.folioId,
         folio_number: c.folioNumber,

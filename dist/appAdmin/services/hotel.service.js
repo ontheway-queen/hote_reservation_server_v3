@@ -113,6 +113,7 @@ class HotelService extends abstract_service_1.default {
                 if (hotelImages.length > 0) {
                     yield model.insertHotelImages(hotelImages);
                 }
+                console.log({ remove_hotel_images });
                 // === Remove selected hotel images ===
                 if (Array.isArray(remove_hotel_images) &&
                     remove_hotel_images.length > 0) {
