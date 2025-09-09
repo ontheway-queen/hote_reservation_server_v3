@@ -126,8 +126,6 @@ export class BtocPaymentServices extends AbstractServices {
           hotel_code,
         });
 
-      console.log({ create_payment });
-
       return {
         success: true,
         code: this.StatusCode.HTTP_OK,

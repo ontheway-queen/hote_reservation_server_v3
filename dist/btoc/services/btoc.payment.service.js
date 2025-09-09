@@ -110,7 +110,6 @@ class BtocPaymentServices extends abstract_service_1.default {
                     booking_ref: booking.booking_ref,
                     hotel_code,
                 });
-                console.log({ create_payment });
                 return {
                     success: true,
                     code: this.StatusCode.HTTP_OK,
