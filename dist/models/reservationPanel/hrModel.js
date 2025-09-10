@@ -116,9 +116,7 @@ class HrModel extends schema_1.default {
                 .andWhere("pm.is_deleted", false)
                 .andWhere(function () {
                 if (name) {
-                    this.andWhereRaw("months.name::text ILIKE ?", [
-                        `%${name}%`,
-                    ]);
+                    this.andWhereRaw("months.name::text ILIKE ?", [`%${name}%`]);
                 }
                 if (month_id) {
                     this.andWhere("months.id", month_id);
@@ -136,9 +134,7 @@ class HrModel extends schema_1.default {
                 .andWhere("pm.is_deleted", false)
                 .andWhere(function () {
                 if (name) {
-                    this.andWhereRaw("months.name::text ILIKE ?", [
-                        `%${name}%`,
-                    ]);
+                    this.andWhereRaw("months.name::text ILIKE ?", [`%${name}%`]);
                 }
                 if (month_id) {
                     this.andWhere("months.id", month_id);
@@ -400,6 +396,13 @@ class HrModel extends schema_1.default {
                 total: Number(total[0].total),
                 data,
             };
+        });
+    }
+    insertIntoEmpbankInfo(payload) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("emp_bank_info")
+                .withSchema(this.HR_SCHEMA)
+                .insert(payload);
         });
     }
     // --------------------------- Shift --------------------------- //

@@ -158,7 +158,10 @@ class EmployeeModel extends Schema {
         "e.address",
         "e.status",
         "e.created_at",
-        "e.is_deleted"
+        "e.is_deleted",
+        this.db.raw(
+          "JSON_BUILD_OBJECT('bank_info_id',ebi.id,'bank_name',ebi.bank_name,'beneficiary_name',ebi.beneficiary_name, 'acc_no',ebi.acc_no,'branch_name',ebi.branch_name,'routing_no',ebi.routing_no,'swift_code',ebi.swift_code) as emp_bank_info"
+        )
       )
       .joinRaw("LEFT JOIN ??.hotels as h ON e.hotel_code = h.hotel_code", [
         this.RESERVATION_SCHEMA,
@@ -172,6 +175,7 @@ class EmployeeModel extends Schema {
       .joinRaw(`LEFT JOIN ?? as bg ON bg.id = e.blood_group`, [
         `${this.DBO_SCHEMA}.${this.TABLES.blood_group}`,
       ])
+      .leftJoin("emp_bank_info as ebi", "e.id", "ebi.emp_id")
       .where("e.id", id)
       .andWhere("e.is_deleted", false)
       .andWhere("e.hotel_code", hotel_code)
@@ -186,7 +190,8 @@ class EmployeeModel extends Schema {
         "bg.name",
         "des.id",
         "ua.id",
-        "ua.name"
+        "ua.name",
+        "ebi.id"
       )
       .first();
   }
