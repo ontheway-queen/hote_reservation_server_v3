@@ -8,8 +8,17 @@ class PayRollValidator {
     constructor() {
         this.CreatePayrollValidator = joi_1.default.object({
             employee_id: joi_1.default.number().required(),
-            ac_tr_ac_id: joi_1.default.number().required(),
-            attendance_days: joi_1.default.number().optional(),
+            account_id: joi_1.default.number().required(),
+            basic_salary: joi_1.default.number().required(),
+            salary_basis: joi_1.default.string().required().valid("calendar", "working"),
+            leave_days: joi_1.default.number().optional(),
+            unpaid_leave_days: joi_1.default.number().optional(),
+            unpaid_leave_deduction: joi_1.default.number().optional(),
+            total_days: joi_1.default.number().required(),
+            payable_days: joi_1.default.number().required(),
+            daily_rate: joi_1.default.number().required(),
+            gross_salary: joi_1.default.number().required(),
+            net_salary: joi_1.default.number().required(),
             salary_date: joi_1.default.string().required(),
             note: joi_1.default.string().allow("").optional(),
             deductions: joi_1.default.string()
@@ -50,7 +59,6 @@ class PayRollValidator {
                 }
             })
                 .optional(),
-            service_charge: joi_1.default.number().min(0).max(100).required(),
         });
         // get all Pay Roll query validator
         this.getAllPayRollValidator = joi_1.default.object({

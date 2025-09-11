@@ -1,19 +1,27 @@
 export interface ICreatePayrollBody {
 	hotel_code: number;
 	employee_id: number;
-	month: string;
+	account_id: number;
 	basic_salary: number;
-	total_allowance: number;
-	total_overtime: number;
-	service_charge: number;
-	total_deduction: number;
+	salary_basis: "calendar" | "working" | string;
+	total_days: number;
+	payable_days: number;
+	leave_days?: number;
+	unpaid_leave_days?: number;
+	unpaid_leave_deduction?: number;
+	daily_rate: number;
+	gross_salary: number;
 	net_salary: number;
+	docs?: string;
+	note?: string;
+	salary_date: string;
+	created_by: number;
 }
 
 export interface ICreatedeductionBody {
 	payroll_id: number;
 	amount: number;
-	deduction_id: number;
+	deduction_name: string;
 	employee_id: number;
 }
 

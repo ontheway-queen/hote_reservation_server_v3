@@ -2,9 +2,7 @@ import {
 	ICreateAdditionBody,
 	ICreatedeductionBody,
 	ICreatePayrollBody,
-	IInsertPaySlip,
 	IPayrollList,
-	IServiceChargeDistribution,
 	ISinglePayroll,
 } from "../../appAdmin/utlis/interfaces/payRoll.interface";
 import { TDB } from "../../common/types/commontypes";
@@ -34,7 +32,7 @@ class PayRollModel extends Schema {
 			.where("p.employee_id", employee_id)
 			.andWhere("p.hotel_code", hotel_code)
 			.andWhereRaw(
-				"TO_CHAR(p.month, 'YYYY-MM') = TO_CHAR(?::date, 'YYYY-MM')",
+				"TO_CHAR(p.salary_date, 'YYYY-MM') = TO_CHAR(?::date, 'YYYY-MM')",
 				[salary_date]
 			);
 
@@ -43,6 +41,7 @@ class PayRollModel extends Schema {
 
 	// Create PayRoll
 	public async CreatePayRoll(payload: ICreatePayrollBody) {
+		console.log({ a: payload.account_id });
 		return await this.db("payroll")
 			.withSchema(this.HR_SCHEMA)
 			.insert(payload, "id");
@@ -58,22 +57,6 @@ class PayRollModel extends Schema {
 	// Create employee allowance
 	public async createEmployeeAllowances(payload: ICreateAdditionBody[]) {
 		return await this.db("employee_allowances")
-			.withSchema(this.HR_SCHEMA)
-			.insert(payload);
-	}
-
-	// create Service Charge Distribution
-	public async createServiceChargeDistribution(
-		payload: IServiceChargeDistribution
-	) {
-		return await this.db("service_charge_distribution")
-			.withSchema(this.HR_SCHEMA)
-			.insert(payload);
-	}
-
-	// Insert payslip
-	public async insertPaySlip(payload: IInsertPaySlip) {
-		return await this.db("payslips")
 			.withSchema(this.HR_SCHEMA)
 			.insert(payload);
 	}
@@ -105,12 +88,16 @@ class PayRollModel extends Schema {
 				"e.name as employee_name",
 				"de.name as designation",
 				"p.total_allowance",
-				"p.total_deduction",
-				"p.service_charge",
-				"p.total_overtime",
-				"e.salary as base_salary",
+				this.db.raw(
+					`(SELECT SUM(p2.total_deduction + p2.unpaid_leave_deduction)
+     FROM ${this.HR_SCHEMA}.payroll p2
+     WHERE p2.employee_id = p.employee_id
+       AND p2.hotel_code = p.hotel_code) as total_deduction`
+				),
+				"p.basic_salary",
+				"p.gross_salary",
 				"p.net_salary",
-				"p.month as salary_date"
+				"p.salary_date"
 			)
 			.leftJoin("employee as e", "e.id", "p.employee_id")
 			.leftJoin("designation as de", "de.id", "e.designation_id")
@@ -166,12 +153,21 @@ class PayRollModel extends Schema {
 				"e.contact_no as employee_phone",
 				"p.total_allowance",
 				"p.total_deduction",
-				"p.service_charge",
-				"p.total_overtime",
-				"e.salary as base_salary",
+				"p.unpaid_leave_days",
+				"p.leave_days",
+				"p.salary_basis",
+				"p.unpaid_leave_deduction",
+				"p.payable_days",
+				"p.daily_rate",
+				"p.basic_salary",
+				"p.gross_salary",
 				"p.net_salary",
-				"p.month as salary_date",
-				"slip.file_url as payslip"
+				"p.salary_date",
+				"p.note",
+				"p.total_days",
+				"p.docs",
+				"p.created_by",
+				"ua.name as created_by_name"
 			)
 			.joinRaw(`JOIN ?? as h ON h.hotel_code = p.hotel_code`, [
 				`${this.RESERVATION_SCHEMA}.${this.TABLES.hotels}`,
@@ -179,10 +175,11 @@ class PayRollModel extends Schema {
 			.join("employee as e", "e.id", "p.employee_id")
 			.join("designation as des", "des.id", "e.designation_id")
 			.leftJoin("employee_deductions as ed", "ed.payroll_id", "p.id")
-			.leftJoin("deductions as d", "d.id", "ed.deduction_id")
 			.leftJoin("employee_allowances as ea", "ea.payroll_id", "p.id")
 			.leftJoin("allowances as a", "a.id", "ea.allowance_id")
-			.leftJoin("payslips as slip", "slip.payroll_id", "p.id")
+			.joinRaw(`JOIN ?? as ua ON ua.id = p.created_by`, [
+				`${this.RESERVATION_SCHEMA}.${this.TABLES.user_admin}`,
+			])
 			.where("p.id", id)
 			.andWhere("p.hotel_code", hotel_code)
 			.groupBy(
@@ -199,20 +196,20 @@ class PayRollModel extends Schema {
 				"e.salary",
 				"des.id",
 				"des.name",
-				"slip.file_url"
+				"ua.name"
 			)
 			.select(
 				this.db.raw(`
-				COALESCE(
-					JSON_AGG(
-						DISTINCT JSONB_BUILD_OBJECT(
-							'id', ed.id,
-							'deduction_name', d.name,
-							'amount', ed.amount
-						)
-					) FILTER (WHERE ed.id IS NOT NULL), '[]'
-				) AS deductions
-			`),
+                COALESCE(
+                    JSON_AGG(
+                        DISTINCT JSONB_BUILD_OBJECT(
+                            'id', ed.id,
+                            'amount', ed.amount,
+                            'deduction_name', ed.deduction_name
+                        )
+                    ) FILTER (WHERE ed.id IS NOT NULL), '[]'
+                ) AS deductions
+            `),
 				this.db.raw(`
 				COALESCE(
 					JSON_AGG(

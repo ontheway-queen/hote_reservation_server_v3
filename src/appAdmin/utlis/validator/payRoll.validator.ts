@@ -3,10 +3,22 @@ import Joi from "joi";
 class PayRollValidator {
 	public CreatePayrollValidator = Joi.object({
 		employee_id: Joi.number().required(),
-		ac_tr_ac_id: Joi.number().required(),
-		attendance_days: Joi.number().optional(),
+		account_id: Joi.number().required(),
+		basic_salary: Joi.number().required(),
+		salary_basis: Joi.string().required().valid("calendar", "working"),
+		leave_days: Joi.number().optional(),
+		unpaid_leave_days: Joi.number().optional(),
+		unpaid_leave_deduction: Joi.number().optional(),
+
+		total_days: Joi.number().required(),
+		payable_days: Joi.number().required(),
+		daily_rate: Joi.number().required(),
+		gross_salary: Joi.number().required(),
+		net_salary: Joi.number().required(),
 		salary_date: Joi.string().required(),
+
 		note: Joi.string().allow("").optional(),
+
 		deductions: Joi.string()
 			.custom((value, helpers) => {
 				try {
@@ -43,7 +55,6 @@ class PayRollValidator {
 				}
 			})
 			.optional(),
-		service_charge: Joi.number().min(0).max(100).required(),
 	});
 
 	// get all Pay Roll query validator

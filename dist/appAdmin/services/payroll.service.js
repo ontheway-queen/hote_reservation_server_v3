@@ -33,10 +33,16 @@ class PayRollService extends abstract_service_1.default {
     createPayRoll(req) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
-                var _a;
-                const { hotel_code } = req.hotel_admin;
-                const _b = req.body, { deductions, allowances, service_charge } = _b, rest = __rest(_b, ["deductions", "allowances", "service_charge"]);
+                var _a, _b;
+                const { hotel_code, id } = req.hotel_admin;
+                const _c = req.body, { deductions, allowances, account_id } = _c, rest = __rest(_c, ["deductions", "allowances", "account_id"]);
+                console.log({ account_id });
                 const files = req.files || [];
+                if (files.length) {
+                    for (const { fieldname, filename } of files) {
+                        rest[fieldname] = filename;
+                    }
+                }
                 const employeeModel = this.Model.employeeModel(trx);
                 const model = this.Model.payRollModel(trx);
                 const accountModel = this.Model.accountModel(trx);
@@ -59,7 +65,7 @@ class PayRollService extends abstract_service_1.default {
                 // Check account
                 const checkAccount = yield accountModel.getSingleAccount({
                     hotel_code,
-                    id: rest.ac_tr_ac_id,
+                    id: account_id,
                 });
                 if (!checkAccount.length) {
                     return {
@@ -76,6 +82,29 @@ class PayRollService extends abstract_service_1.default {
                 // 		message: "Insufficient balance in this account for pay",
                 // 	};
                 // }
+                let totalDays = rest.total_days;
+                rest.daily_rate = Number(rest.basic_salary) / totalDays;
+                rest.payable_days = totalDays - (rest.unpaid_leave_days || 0);
+                rest.unpaid_leave_deduction =
+                    rest.daily_rate * (rest.unpaid_leave_days || 0);
+                rest.daily_rate = Number(rest.basic_salary) / rest.total_days;
+                rest.payable_days =
+                    rest.total_days -
+                        ((rest.leave_days || 0) + (rest.unpaid_leave_days || 0));
+                rest.unpaid_leave_deduction =
+                    rest.daily_rate * (rest.unpaid_leave_days || 0);
+                const totalDaysCheck = (rest.payable_days || 0) +
+                    (rest.leave_days || 0) +
+                    (rest.unpaid_leave_days || 0);
+                if (totalDaysCheck !== rest.total_days) {
+                    throw new customEror_1.default(`Total days mismatch!`, this.StatusCode.HTTP_BAD_REQUEST);
+                }
+                // 4. Validate unpaid_leave_deduction
+                const expectedUnpaidDeduction = rest.daily_rate * (rest.unpaid_leave_days || 0);
+                if (Number((_a = rest.unpaid_leave_deduction) === null || _a === void 0 ? void 0 : _a.toFixed(2)) !==
+                    Number(expectedUnpaidDeduction.toFixed(2))) {
+                    throw new customEror_1.default(`Unpaid leave deduction mismatch!`, this.StatusCode.HTTP_BAD_REQUEST);
+                }
                 const deduction_parse = deductions ? JSON.parse(deductions) : [];
                 const allowances_parse = allowances ? JSON.parse(allowances) : [];
                 let totalDeductions = 0;
@@ -84,39 +113,28 @@ class PayRollService extends abstract_service_1.default {
                 let deductionsPayload = [];
                 if (deduction_parse.length) {
                     deductionsPayload = yield Promise.all(deduction_parse.map((deduction) => __awaiter(this, void 0, void 0, function* () {
-                        const isDeductionExists = yield this.Model.hrModel(trx).getSingleDeduction({
-                            id: deduction.deduction_id,
-                            hotel_code,
-                        });
-                        if (!isDeductionExists) {
-                            throw new customEror_1.default(this.ResMsg.HTTP_NOT_FOUND, this.StatusCode.HTTP_NOT_FOUND);
-                        }
-                        let amount;
-                        if (deduction.amount != null) {
-                            amount = Number(deduction.amount);
-                        }
-                        else {
-                            if (isDeductionExists.type === "fixed") {
-                                amount = Number(isDeductionExists.value);
-                            }
-                            else if (isDeductionExists.type === "percentage") {
-                                amount =
-                                    (Number(isEmployeeExists.salary) *
-                                        Number(isDeductionExists.value)) /
-                                        100;
-                            }
-                            else {
-                                throw new customEror_1.default(`Unknown deduction type for id ${isDeductionExists.id}: ${isDeductionExists.type}`, this.StatusCode.HTTP_BAD_REQUEST);
-                            }
-                        }
-                        totalDeductions += amount;
+                        // const isDeductionExists = await this.Model.hrModel(
+                        // 	trx
+                        // ).getSingleDeduction({
+                        // 	id: deduction.deduction_id,
+                        // 	hotel_code,
+                        // });
+                        // if (!isDeductionExists) {
+                        // 	throw new CustomError(
+                        // 		this.ResMsg.HTTP_NOT_FOUND,
+                        // 		this.StatusCode.HTTP_NOT_FOUND
+                        // 	);
+                        // }
+                        const amount = Number(deduction.amount);
+                        totalDeductions = totalDeductions + amount;
                         return {
                             employee_id: isEmployeeExists.id,
-                            deduction_id: deduction.deduction_id,
+                            deduction_name: deduction.deduction_name,
                             amount,
                         };
                     })));
                 }
+                console.log({ totalDeductions });
                 // 🔹 Handle Allowances
                 let allowancesPayload = [];
                 if (allowances_parse.length) {
@@ -128,25 +146,8 @@ class PayRollService extends abstract_service_1.default {
                         if (!isAllowanceExists) {
                             throw new customEror_1.default(this.ResMsg.HTTP_NOT_FOUND, this.StatusCode.HTTP_NOT_FOUND);
                         }
-                        let amount;
-                        if (allowance.amount != null) {
-                            amount = Number(allowance.amount);
-                        }
-                        else {
-                            if (isAllowanceExists.type === "fixed") {
-                                amount = Number(isAllowanceExists.value);
-                            }
-                            else if (isAllowanceExists.type === "percentage") {
-                                amount =
-                                    (Number(isEmployeeExists.salary) *
-                                        Number(isAllowanceExists.value)) /
-                                        100;
-                            }
-                            else {
-                                throw new customEror_1.default(`Unknown allowance type for id ${isAllowanceExists.id}: ${isAllowanceExists.type}`, this.StatusCode.HTTP_NOT_FOUND);
-                            }
-                        }
-                        totalAllowances += amount;
+                        const amount = Number(allowance.amount);
+                        totalAllowances = totalAllowances + amount;
                         return {
                             employee_id: isEmployeeExists.id,
                             allowance_id: allowance.allowance_id,
@@ -154,49 +155,50 @@ class PayRollService extends abstract_service_1.default {
                         };
                     })));
                 }
-                let serviceChargeValue = 0;
-                if (service_charge != null) {
-                    serviceChargeValue =
-                        (Number(isEmployeeExists.salary) * Number(service_charge)) / 100;
-                }
-                const grossSalary = Number(isEmployeeExists.salary) + totalAllowances;
-                const netSalary = grossSalary - totalDeductions - serviceChargeValue;
+                const grossSalary = Number(rest.payable_days * rest.daily_rate) + totalAllowances;
+                console.log({ grossSalary });
+                const netSalary = grossSalary - totalDeductions;
                 const payload = {
                     employee_id: rest.employee_id,
-                    month: rest.salary_date,
-                    basic_salary: Number(isEmployeeExists.salary),
+                    account_id,
+                    basic_salary: rest.basic_salary,
                     total_allowance: totalAllowances,
-                    total_overtime: 0,
-                    service_charge: serviceChargeValue,
                     total_deduction: totalDeductions,
                     net_salary: netSalary,
+                    gross_salary: grossSalary,
+                    unpaid_leave_deduction: expectedUnpaidDeduction || 0,
+                    docs: rest.docs || null,
+                    leave_days: rest.leave_days || 0,
+                    unpaid_leave_days: rest.unpaid_leave_days || 0,
+                    note: rest.note || null,
+                    salary_basis: rest.salary_basis,
+                    total_days: rest.total_days,
+                    payable_days: rest.payable_days,
+                    daily_rate: rest.daily_rate,
+                    salary_date: rest.salary_date,
+                    created_by: id,
                     hotel_code,
                 };
+                console.log({ payload });
                 const res = yield model.CreatePayRoll(payload);
-                const payroll_id = (_a = res[0]) === null || _a === void 0 ? void 0 : _a.id;
+                const payroll_id = (_b = res[0]) === null || _b === void 0 ? void 0 : _b.id;
                 if (deductionsPayload.length) {
                     const deductionsWithPayrollId = deductionsPayload.map((d) => (Object.assign(Object.assign({}, d), { payroll_id })));
                     yield model.createEmployeeDeductions(deductionsWithPayrollId);
                 }
+                if (expectedUnpaidDeduction) {
+                    yield model.createEmployeeDeductions([
+                        {
+                            employee_id: rest.employee_id,
+                            amount: expectedUnpaidDeduction,
+                            deduction_name: "Unpaid Leave Deduction",
+                            payroll_id,
+                        },
+                    ]);
+                }
                 if (allowancesPayload.length) {
                     const allowancesWithPayrollId = allowancesPayload.map((a) => (Object.assign(Object.assign({}, a), { payroll_id })));
                     yield model.createEmployeeAllowances(allowancesWithPayrollId);
-                }
-                const service_charge_payload = {
-                    month: rest.salary_date,
-                    employee_id: rest.employee_id,
-                    percentage: service_charge,
-                    amount: serviceChargeValue,
-                    hotel_code,
-                    payroll_id,
-                };
-                yield model.createServiceChargeDistribution(service_charge_payload);
-                if (files.length) {
-                    const payslipPayload = {
-                        payroll_id,
-                        file_url: files[0].filename,
-                    };
-                    yield model.insertPaySlip(payslipPayload);
                 }
                 return {
                     success: true,

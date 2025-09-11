@@ -20,6 +20,7 @@ class Schema {
             room_types: "room_types",
             hotels: "hotels",
             employee: "employee",
+            user_admin: "user_admin",
         };
     }
 }
