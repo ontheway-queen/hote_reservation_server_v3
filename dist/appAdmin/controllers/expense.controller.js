@@ -48,6 +48,17 @@ class ExpenseController extends abstract_controller_1.default {
             const _c = yield this.expenseService.getSingleExpense(req), { code } = _c, data = __rest(_c, ["code"]);
             res.status(code).json(data);
         }));
+        this.updateExpenseController = this.asyncWrapper.wrap({
+            paramSchema: this.commonValidator.singleParamValidator(),
+            bodySchema: this.expensevalidator.updateExpenseValidator,
+        }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _d = yield this.expenseService.updateExpenseService(req), { code } = _d, data = __rest(_d, ["code"]);
+            res.status(code).json(data);
+        }));
+        this.deleteExpenseController = this.asyncWrapper.wrap({ paramSchema: this.commonValidator.singleParamValidator() }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _e = yield this.expenseService.deleteExpenseService(req), { code } = _e, data = __rest(_e, ["code"]);
+            res.status(code).json(data);
+        }));
     }
 }
 exports.default = ExpenseController;

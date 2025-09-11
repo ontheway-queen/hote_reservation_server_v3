@@ -25,8 +25,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ExpenseService = void 0;
 const abstract_service_1 = __importDefault(require("../../abstarcts/abstract.service"));
-const helperFunction_1 = require("../utlis/library/helperFunction");
 const lib_1 = __importDefault(require("../../utils/lib/lib"));
+const helperFunction_1 = require("../utlis/library/helperFunction");
 class ExpenseService extends abstract_service_1.default {
     constructor() {
         super();
@@ -186,6 +186,121 @@ class ExpenseService extends abstract_service_1.default {
                 code: this.StatusCode.HTTP_OK,
                 data: data[0],
             };
+        });
+    }
+    updateExpenseService(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
+                const { id } = req.params;
+                const { id: user_id, hotel_code } = req.hotel_admin;
+                const _a = req.body, { expense_items } = _a, rest = __rest(_a, ["expense_items"]);
+                const expenseModel = this.Model.expenseModel(trx);
+                const employeeModel = this.Model.employeeModel(trx);
+                const [expense] = yield expenseModel.getSingleExpense(parseInt(id), hotel_code);
+                if (!expense) {
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_NOT_FOUND,
+                        message: this.ResMsg.HTTP_NOT_FOUND,
+                    };
+                }
+                const expenseId = expense.id;
+                if (Array.isArray(expense_items) && expense_items.length) {
+                    const existingItems = yield expenseModel.getExpenseItemByExpenseId(expenseId);
+                    const existingMap = new Map(existingItems.map((it) => [it.id, it]));
+                    yield Promise.all(expense_items.map((item) => __awaiter(this, void 0, void 0, function* () {
+                        if (item.id && existingMap.has(item.id)) {
+                            yield expenseModel.updateExpenseItems({
+                                id: item.id,
+                                payload: Object.assign({}, item),
+                            });
+                        }
+                        else {
+                            yield expenseModel.createExpenseItem(Object.assign({ expense_id: expenseId, expense_head_id: existingItems[0].expense_head_id }, item));
+                        }
+                    })));
+                }
+                const files = req.files;
+                if (Array.isArray(files) && files.length) {
+                    for (const file of files) {
+                        const { fieldname, filename } = file;
+                        if (fieldname === "file_1")
+                            rest.expense_voucher_url_1 = filename;
+                        if (fieldname === "file_2")
+                            rest.expense_voucher_url_2 = filename;
+                    }
+                }
+                if (rest && Object.keys(rest).length) {
+                    if (rest.expense_by) {
+                        const employee = yield employeeModel.getSingleEmployee(rest.expense_by, hotel_code);
+                        if (!employee) {
+                            return {
+                                success: false,
+                                code: this.StatusCode.HTTP_NOT_FOUND,
+                                message: this.ResMsg.HTTP_NOT_FOUND,
+                            };
+                        }
+                    }
+                    if (rest.account_id) {
+                        const accountModel = this.Model.accountModel(trx);
+                        const [acc] = yield accountModel.getSingleAccount({
+                            hotel_code,
+                            id: rest.account_id,
+                        });
+                        if (!acc) {
+                            return {
+                                success: false,
+                                code: this.StatusCode.HTTP_NOT_FOUND,
+                                message: "Account not found",
+                            };
+                        }
+                    }
+                    yield expenseModel.updateExpense({
+                        id: Number(id),
+                        hotel_code,
+                        payload: Object.assign(Object.assign({}, rest), { updated_by: user_id, updated_at: new Date().toUTCString() }),
+                    });
+                }
+                return {
+                    success: true,
+                    code: this.StatusCode.HTTP_OK,
+                    message: this.ResMsg.HTTP_OK,
+                };
+            }));
+        });
+    }
+    deleteExpenseService(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
+                const { id } = req.params;
+                const { id: user_id, hotel_code } = req.hotel_admin;
+                const expenseModel = this.Model.expenseModel();
+                const isExpenseExists = yield expenseModel.getSingleExpense(parseInt(id), hotel_code);
+                if (!isExpenseExists.length) {
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_NOT_FOUND,
+                        message: this.ResMsg.HTTP_NOT_FOUND,
+                    };
+                }
+                const expenseItems = yield expenseModel.getExpenseItemByExpenseId(isExpenseExists[0].id);
+                if (expenseItems.length) {
+                    yield expenseModel.deleteExpenseItem(isExpenseExists[0].id);
+                }
+                const data = yield expenseModel.deleteExpense({
+                    id: Number(id),
+                    payload: {
+                        hotel_code,
+                        deleted_by: user_id,
+                        is_deleted: true,
+                    },
+                });
+                return {
+                    success: true,
+                    code: this.StatusCode.HTTP_OK,
+                    message: this.ResMsg.HTTP_OK,
+                };
+            }));
         });
     }
 }

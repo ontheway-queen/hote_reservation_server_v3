@@ -8,6 +8,17 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __rest = (this && this.__rest) || function (s, e) {
+    var t = {};
+    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
+        t[p] = s[p];
+    if (s != null && typeof Object.getOwnPropertySymbols === "function")
+        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
+            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
+                t[p[i]] = s[p[i]];
+        }
+    return t;
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -26,7 +37,9 @@ class ExpenseModel extends schema_1.default {
                 .withSchema(this.ACC_SCHEMA)
                 .where("group_code", constants_1.EXPENSE_GROUP)
                 .andWhere((builder) => {
-                builder.whereNull("hotel_code").orWhere("hotel_code", hotel_code);
+                builder
+                    .whereNull("hotel_code")
+                    .orWhere("hotel_code", hotel_code);
             })
                 .modify((e) => {
                 if (search)
@@ -103,12 +116,18 @@ class ExpenseModel extends schema_1.default {
                 .joinRaw(`JOIN ?? AS emp ON emp.id = ev.expense_by`, [
                 `${this.HR_SCHEMA}.${this.TABLES.employee}`,
             ])
-                .leftJoin("expense_items as ei", "ei.expense_id", "ev.id")
+                .leftJoin("expense_items as ei", function () {
+                this.on("ei.expense_id", "=", "ev.id").andOnVal("ei.is_deleted", "=", false);
+            })
                 .leftJoin("acc_heads as ah", "ei.expense_head_id", "ah.id")
                 .where("ev.hotel_code", hotel_code)
+                .andWhere("ev.is_deleted", false)
                 .modify((builder) => {
                 if (from_date && endDate) {
-                    builder.andWhereBetween("ev.expense_date", [from_date, endDate]);
+                    builder.andWhereBetween("ev.expense_date", [
+                        from_date,
+                        endDate,
+                    ]);
                 }
                 if (key) {
                     builder.andWhere((q) => {
@@ -132,9 +151,13 @@ class ExpenseModel extends schema_1.default {
                 .leftJoin("expense_items as ei", "ei.expense_id", "ev.id")
                 .leftJoin("acc_heads as eh", "ei.expense_head_id", "eh.id")
                 .where("ev.hotel_code", hotel_code)
+                .andWhere("ev.is_deleted", false)
                 .modify((builder) => {
                 if (from_date && endDate) {
-                    builder.andWhereBetween("ev.expense_date", [from_date, endDate]);
+                    builder.andWhereBetween("ev.expense_date", [
+                        from_date,
+                        endDate,
+                    ]);
                 }
                 if (key) {
                     builder.andWhere((q) => {
@@ -170,13 +193,60 @@ class ExpenseModel extends schema_1.default {
                 .joinRaw(`JOIN ?? AS acc_head ON acc_head.id = acc.acc_head_id`, [
                 `${this.ACC_SCHEMA}.${this.TABLES.accounts_heads}`,
             ])
-                .leftJoin("expense_items as ei", "ei.expense_id", "ev.id")
+                .leftJoin("expense_items as ei", function () {
+                this.on("ei.expense_id", "=", "ev.id").andOnVal("ei.is_deleted", "=", false);
+            })
                 .joinRaw(`LEFT JOIN ${this.ACC_SCHEMA}.acc_heads as ah ON ei.expense_head_id = ah.id`)
                 .joinRaw(`LEFT JOIN ${this.RESERVATION_SCHEMA}.hotels as h ON ev.hotel_code = h.hotel_code`)
                 .where("ev.id", id)
                 .andWhere("ev.hotel_code", hotel_code)
+                .andWhere("ev.is_deleted", false)
                 .groupBy("ev.id", "ev.voucher_no", "ev.account_id", "ev.expense_date", "acc.name", "acc.acc_type", "ev.created_at", "h.name", "h.address", "ev.pay_method", "ev.transaction_no", "ev.cheque_no", "ev.cheque_date", "ev.bank_name", "ev.branch_name", "acc_head.name");
             return data;
+        });
+    }
+    getExpenseItemByExpenseId(expense_id) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("expense_items")
+                .withSchema(this.ACC_SCHEMA)
+                .select("*")
+                .where("expense_id", expense_id)
+                .andWhere("is_deleted", false);
+        });
+    }
+    updateExpense({ id, hotel_code, payload, }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("expense")
+                .withSchema(this.ACC_SCHEMA)
+                .where("id", id)
+                .andWhere("hotel_code", hotel_code)
+                .update(payload);
+        });
+    }
+    updateExpenseItems({ id, payload, }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { id: _ignore } = payload, rest = __rest(payload, ["id"]);
+            return yield this.db("expense_items")
+                .withSchema(this.ACC_SCHEMA)
+                .where("id", id)
+                .update(rest);
+        });
+    }
+    deleteExpense({ id, payload, }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("expense")
+                .withSchema(this.ACC_SCHEMA)
+                .where("id", id)
+                .andWhere("hotel_code", payload.hotel_code)
+                .update(payload);
+        });
+    }
+    deleteExpenseItem(expense_id) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("expense_items")
+                .withSchema(this.ACC_SCHEMA)
+                .where("expense_id", expense_id)
+                .update({ is_deleted: true });
         });
     }
 }
