@@ -31,6 +31,7 @@ class PayRollModel extends Schema {
 			.count("p.id as total")
 			.where("p.employee_id", employee_id)
 			.andWhere("p.hotel_code", hotel_code)
+			.andWhere("p.is_deleted", false)
 			.andWhereRaw(
 				"TO_CHAR(p.salary_date, 'YYYY-MM') = TO_CHAR(?::date, 'YYYY-MM')",
 				[salary_date]
@@ -102,6 +103,7 @@ class PayRollModel extends Schema {
 			.leftJoin("employee as e", "e.id", "p.employee_id")
 			.leftJoin("designation as de", "de.id", "e.designation_id")
 			.where("p.hotel_code", hotel_code)
+			.andWhere("p.is_deleted", false)
 			.andWhere(function () {
 				if (from_date && to_date) {
 					this.andWhereBetween("p.salary_date", [from_date, to_date]);
@@ -120,6 +122,7 @@ class PayRollModel extends Schema {
 			.leftJoin("employee as e", "e.id", "p.employee_id")
 			.leftJoin("designation as de", "de.id", "e.designation_id")
 			.where("p.hotel_code", hotel_code)
+			.andWhere("p.is_deleted", false)
 			.andWhere(function () {
 				if (from_date && to_date) {
 					this.andWhereBetween("p.salary_date", [from_date, to_date]);
@@ -148,6 +151,7 @@ class PayRollModel extends Schema {
 				"h.country_code",
 				"h.city_code",
 				"h.postal_code",
+				"e.id as employee_id",
 				"e.name as employee_name",
 				"des.name as employee_designation",
 				"e.contact_no as employee_phone",
@@ -167,7 +171,8 @@ class PayRollModel extends Schema {
 				"p.total_days",
 				"p.docs",
 				"p.created_by",
-				"ua.name as created_by_name"
+				"ua.name as created_by_name",
+				"p.is_deleted"
 			)
 			.joinRaw(`JOIN ?? as h ON h.hotel_code = p.hotel_code`, [
 				`${this.RESERVATION_SCHEMA}.${this.TABLES.hotels}`,
@@ -176,12 +181,12 @@ class PayRollModel extends Schema {
 			.join("designation as des", "des.id", "e.designation_id")
 			.leftJoin("employee_deductions as ed", "ed.payroll_id", "p.id")
 			.leftJoin("employee_allowances as ea", "ea.payroll_id", "p.id")
-			.leftJoin("allowances as a", "a.id", "ea.allowance_id")
 			.joinRaw(`JOIN ?? as ua ON ua.id = p.created_by`, [
 				`${this.RESERVATION_SCHEMA}.${this.TABLES.user_admin}`,
 			])
 			.where("p.id", id)
 			.andWhere("p.hotel_code", hotel_code)
+			.andWhere("p.is_deleted", false)
 			.groupBy(
 				"p.id",
 				"h.hotel_code",
@@ -204,25 +209,109 @@ class PayRollModel extends Schema {
                     JSON_AGG(
                         DISTINCT JSONB_BUILD_OBJECT(
                             'id', ed.id,
-                            'amount', ed.amount,
-                            'deduction_name', ed.deduction_name
+                            'deduction_name', ed.deduction_name,
+                            'deduction_amount', ed.deduction_amount,
+                            'is_deleted', ed.is_deleted
                         )
-                    ) FILTER (WHERE ed.id IS NOT NULL), '[]'
+                    ) FILTER (WHERE ed.id IS NOT NULL AND ed.is_deleted = false), '[]'
                 ) AS deductions
             `),
 				this.db.raw(`
-				COALESCE(
-					JSON_AGG(
-						DISTINCT JSONB_BUILD_OBJECT(
-							'id', ea.id,
-							'allowance_name', a.name,
-							'amount', ea.amount
-						)
-					) FILTER (WHERE ea.id IS NOT NULL), '[]'
-				) AS allowances
-			`)
+                COALESCE(
+                    JSON_AGG(
+                        DISTINCT JSONB_BUILD_OBJECT(
+                            'id', ea.id,
+                            'allowance_name', ea.allowance_name,
+                            'allowance_amount', ea.allowance_amount,
+                            'is_deleted', ea.is_deleted
+                        )
+                    ) FILTER (WHERE ea.id IS NOT NULL AND ea.is_deleted = false), '[]'
+                ) AS allowances
+            `)
 			)
 			.first();
+	}
+
+	public async updatePayRoll({
+		id,
+		payload,
+	}: {
+		id: number;
+		payload: Partial<ICreatePayrollBody>;
+	}) {
+		return await this.db("payroll")
+			.withSchema(this.HR_SCHEMA)
+			.where({ id })
+			.update(payload);
+	}
+
+	public async updateEmployeeAllowances({
+		id,
+		payload,
+	}: {
+		id: number;
+		payload: any;
+	}) {
+		return await this.db("employee_allowances")
+			.withSchema(this.HR_SCHEMA)
+			.where({ id })
+			.update(payload);
+	}
+
+	public async updateEmployeeDeductions({
+		id,
+		payload,
+	}: {
+		id: number;
+		payload: any;
+	}) {
+		console.log({ id, payload });
+		return await this.db("employee_deductions")
+			.withSchema(this.HR_SCHEMA)
+			.where({ id })
+			.update(payload);
+	}
+
+	public async getEmployeeDeductionsByPayrollId(payroll_id: number) {
+		return await this.db("employee_deductions")
+			.withSchema(this.HR_SCHEMA)
+			.select("*")
+			.where({ payroll_id });
+	}
+
+	public async getEmployeeAllowancesByPayrollId(payroll_id: number) {
+		return await this.db("employee_allowances")
+			.withSchema(this.HR_SCHEMA)
+			.select("*")
+			.where({ payroll_id });
+	}
+
+	public async deleteEmployeeDeductionsNotIn({
+		payroll_id,
+		ids,
+	}: {
+		payroll_id: number;
+		ids: number[];
+	}) {
+		return await this.db("employee_deductions")
+			.withSchema(this.HR_SCHEMA)
+			.where({ payroll_id })
+			.whereNotIn("id", ids)
+			.update({ is_deleted: true });
+	}
+
+	public async deleteEmployeeAllowancesNotIn({
+		payroll_id,
+		ids,
+	}: {
+		payroll_id: number;
+		ids: number[];
+	}) {
+		return await this.db("employee_allowances")
+			.withSchema(this.HR_SCHEMA)
+			.where({ payroll_id })
+			.whereNotIn("id", ids)
+			.update({ is_deleted: true });
 	}
 }
 export default PayRollModel;

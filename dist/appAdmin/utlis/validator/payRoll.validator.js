@@ -72,6 +72,96 @@ class PayRollValidator {
         this.PayrollidValidator = joi_1.default.object({
             id: joi_1.default.number().required(),
         });
+        this.updatePayrollValidator = joi_1.default.object({
+            employee_id: joi_1.default.number().optional(),
+            account_id: joi_1.default.number().optional(),
+            basic_salary: joi_1.default.number().optional(),
+            salary_basis: joi_1.default.string().optional().valid("calendar", "working"),
+            leave_days: joi_1.default.number().optional(),
+            unpaid_leave_days: joi_1.default.number().optional(),
+            unpaid_leave_deduction: joi_1.default.number().optional(),
+            total_days: joi_1.default.number().optional(),
+            payable_days: joi_1.default.number().optional(),
+            daily_rate: joi_1.default.number().optional(),
+            gross_salary: joi_1.default.number().optional(),
+            net_salary: joi_1.default.number().optional(),
+            salary_date: joi_1.default.string().optional(),
+            note: joi_1.default.string().allow("").optional(),
+            add_deductions: joi_1.default.string()
+                .custom((value, helpers) => {
+                try {
+                    const parsedObject = JSON.parse(value);
+                    const deductionType = typeof parsedObject;
+                    if (deductionType !== "object") {
+                        return helpers.message({
+                            custom: "invalid deductions, should be a JSON object",
+                        });
+                    }
+                    return value;
+                }
+                catch (err) {
+                    return helpers.message({
+                        custom: "invalid deductions, should be a valid JSON Object",
+                    });
+                }
+            })
+                .optional(),
+            delete_deductions: joi_1.default.string()
+                .allow("")
+                .custom((value, helpers) => {
+                try {
+                    const parsedObject = JSON.parse(value);
+                    const deductionType = typeof parsedObject;
+                    if (deductionType !== "object") {
+                        return helpers.message({
+                            custom: "invalid delete deductions, should be a JSON object",
+                        });
+                    }
+                    return value;
+                }
+                catch (err) {
+                    return helpers.message({
+                        custom: "invalid delete deductions, should be a valid JSON Object",
+                    });
+                }
+            }),
+            add_allowances: joi_1.default.string()
+                .custom((value, helpers) => {
+                try {
+                    const parsedObject = JSON.parse(value);
+                    const otherType = typeof parsedObject;
+                    if (otherType !== "object") {
+                        return helpers.message({
+                            custom: "invalid allowances, should be a JSON object",
+                        });
+                    }
+                    return value;
+                }
+                catch (err) {
+                    return helpers.message({
+                        custom: "invalid allowances, should be a valid JSON Object",
+                    });
+                }
+            })
+                .optional(),
+            delete_allowances: joi_1.default.string().custom((value, helpers) => {
+                try {
+                    const parsedObject = JSON.parse(value);
+                    const otherType = typeof parsedObject;
+                    if (otherType !== "object") {
+                        return helpers.message({
+                            custom: "invalid allowances, should be a JSON object",
+                        });
+                    }
+                    return value;
+                }
+                catch (err) {
+                    return helpers.message({
+                        custom: "invalid allowances, should be a valid JSON Object",
+                    });
+                }
+            }),
+        });
     }
 }
 exports.default = PayRollValidator;

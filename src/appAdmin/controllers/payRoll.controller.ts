@@ -41,5 +41,26 @@ class PayRollController extends AbstractController {
 			res.status(code).json(data);
 		}
 	);
+
+	public updatePayRollController = this.asyncWrapper.wrap(
+		{
+			paramSchema: this.commonValidator.singleParamValidator(),
+			bodySchema: this.payRollValidator.updatePayrollValidator,
+		},
+		async (req: Request, res: Response) => {
+			const { code, ...data } = await this.service.updatePayRoll(req);
+
+			res.status(code).json(data);
+		}
+	);
+
+	public deletePayRollController = this.asyncWrapper.wrap(
+		{ paramSchema: this.commonValidator.singleParamValidator() },
+		async (req: Request, res: Response) => {
+			const { code, ...data } = await this.service.deletePayRoll(req);
+
+			res.status(code).json(data);
+		}
+	);
 }
 export default PayRollController;

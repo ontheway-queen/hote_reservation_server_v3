@@ -26,6 +26,7 @@ class PayRollModel extends schema_1.default {
                 .count("p.id as total")
                 .where("p.employee_id", employee_id)
                 .andWhere("p.hotel_code", hotel_code)
+                .andWhere("p.is_deleted", false)
                 .andWhereRaw("TO_CHAR(p.salary_date, 'YYYY-MM') = TO_CHAR(?::date, 'YYYY-MM')", [salary_date]);
             return Number(result[0].total) > 0;
         });
@@ -75,6 +76,7 @@ class PayRollModel extends schema_1.default {
                 .leftJoin("employee as e", "e.id", "p.employee_id")
                 .leftJoin("designation as de", "de.id", "e.designation_id")
                 .where("p.hotel_code", hotel_code)
+                .andWhere("p.is_deleted", false)
                 .andWhere(function () {
                 if (from_date && to_date) {
                     this.andWhereBetween("p.salary_date", [from_date, to_date]);
@@ -92,6 +94,7 @@ class PayRollModel extends schema_1.default {
                 .leftJoin("employee as e", "e.id", "p.employee_id")
                 .leftJoin("designation as de", "de.id", "e.designation_id")
                 .where("p.hotel_code", hotel_code)
+                .andWhere("p.is_deleted", false)
                 .andWhere(function () {
                 if (from_date && to_date) {
                     this.andWhereBetween("p.salary_date", [from_date, to_date]);
@@ -110,7 +113,7 @@ class PayRollModel extends schema_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("payroll as p")
                 .withSchema(this.HR_SCHEMA)
-                .select("p.id", "h.name as hotel_name", "h.address as hotel_address", "h.country_code", "h.city_code", "h.postal_code", "e.name as employee_name", "des.name as employee_designation", "e.contact_no as employee_phone", "p.total_allowance", "p.total_deduction", "p.unpaid_leave_days", "p.leave_days", "p.salary_basis", "p.unpaid_leave_deduction", "p.payable_days", "p.daily_rate", "p.basic_salary", "p.gross_salary", "p.net_salary", "p.salary_date", "p.note", "p.total_days", "p.docs", "p.created_by", "ua.name as created_by_name")
+                .select("p.id", "h.name as hotel_name", "h.address as hotel_address", "h.country_code", "h.city_code", "h.postal_code", "e.id as employee_id", "e.name as employee_name", "des.name as employee_designation", "e.contact_no as employee_phone", "p.total_allowance", "p.total_deduction", "p.unpaid_leave_days", "p.leave_days", "p.salary_basis", "p.unpaid_leave_deduction", "p.payable_days", "p.daily_rate", "p.basic_salary", "p.gross_salary", "p.net_salary", "p.salary_date", "p.note", "p.total_days", "p.docs", "p.created_by", "ua.name as created_by_name", "p.is_deleted")
                 .joinRaw(`JOIN ?? as h ON h.hotel_code = p.hotel_code`, [
                 `${this.RESERVATION_SCHEMA}.${this.TABLES.hotels}`,
             ])
@@ -118,35 +121,96 @@ class PayRollModel extends schema_1.default {
                 .join("designation as des", "des.id", "e.designation_id")
                 .leftJoin("employee_deductions as ed", "ed.payroll_id", "p.id")
                 .leftJoin("employee_allowances as ea", "ea.payroll_id", "p.id")
-                .leftJoin("allowances as a", "a.id", "ea.allowance_id")
                 .joinRaw(`JOIN ?? as ua ON ua.id = p.created_by`, [
                 `${this.RESERVATION_SCHEMA}.${this.TABLES.user_admin}`,
             ])
                 .where("p.id", id)
                 .andWhere("p.hotel_code", hotel_code)
+                .andWhere("p.is_deleted", false)
                 .groupBy("p.id", "h.hotel_code", "h.name", "h.address", "h.country_code", "h.city_code", "h.postal_code", "e.id", "e.name", "e.contact_no", "e.salary", "des.id", "des.name", "ua.name")
                 .select(this.db.raw(`
                 COALESCE(
                     JSON_AGG(
                         DISTINCT JSONB_BUILD_OBJECT(
                             'id', ed.id,
-                            'amount', ed.amount,
-                            'deduction_name', ed.deduction_name
+                            'deduction_name', ed.deduction_name,
+                            'deduction_amount', ed.deduction_amount,
+                            'is_deleted', ed.is_deleted
                         )
-                    ) FILTER (WHERE ed.id IS NOT NULL), '[]'
+                    ) FILTER (WHERE ed.id IS NOT NULL AND ed.is_deleted = false), '[]'
                 ) AS deductions
             `), this.db.raw(`
-				COALESCE(
-					JSON_AGG(
-						DISTINCT JSONB_BUILD_OBJECT(
-							'id', ea.id,
-							'allowance_name', a.name,
-							'amount', ea.amount
-						)
-					) FILTER (WHERE ea.id IS NOT NULL), '[]'
-				) AS allowances
-			`))
+                COALESCE(
+                    JSON_AGG(
+                        DISTINCT JSONB_BUILD_OBJECT(
+                            'id', ea.id,
+                            'allowance_name', ea.allowance_name,
+                            'allowance_amount', ea.allowance_amount,
+                            'is_deleted', ea.is_deleted
+                        )
+                    ) FILTER (WHERE ea.id IS NOT NULL AND ea.is_deleted = false), '[]'
+                ) AS allowances
+            `))
                 .first();
+        });
+    }
+    updatePayRoll({ id, payload, }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("payroll")
+                .withSchema(this.HR_SCHEMA)
+                .where({ id })
+                .update(payload);
+        });
+    }
+    updateEmployeeAllowances({ id, payload, }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("employee_allowances")
+                .withSchema(this.HR_SCHEMA)
+                .where({ id })
+                .update(payload);
+        });
+    }
+    updateEmployeeDeductions({ id, payload, }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            console.log({ id, payload });
+            return yield this.db("employee_deductions")
+                .withSchema(this.HR_SCHEMA)
+                .where({ id })
+                .update(payload);
+        });
+    }
+    getEmployeeDeductionsByPayrollId(payroll_id) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("employee_deductions")
+                .withSchema(this.HR_SCHEMA)
+                .select("*")
+                .where({ payroll_id });
+        });
+    }
+    getEmployeeAllowancesByPayrollId(payroll_id) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("employee_allowances")
+                .withSchema(this.HR_SCHEMA)
+                .select("*")
+                .where({ payroll_id });
+        });
+    }
+    deleteEmployeeDeductionsNotIn({ payroll_id, ids, }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("employee_deductions")
+                .withSchema(this.HR_SCHEMA)
+                .where({ payroll_id })
+                .whereNotIn("id", ids)
+                .update({ is_deleted: true });
+        });
+    }
+    deleteEmployeeAllowancesNotIn({ payroll_id, ids, }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("employee_allowances")
+                .withSchema(this.HR_SCHEMA)
+                .where({ payroll_id })
+                .whereNotIn("id", ids)
+                .update({ is_deleted: true });
         });
     }
 }
