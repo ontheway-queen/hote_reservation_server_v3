@@ -47,62 +47,82 @@ class CommonInvController extends abstract_controller_1.default {
             const _c = yield this.service.updateCategory(req), { code } = _c, data = __rest(_c, ["code"]);
             res.status(code).json(data);
         }));
+        // Update Category
+        this.deleteCategory = this.asyncWrapper.wrap({ paramSchema: this.commonValidator.singleParamStringValidator() }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _d = yield this.service.deleteCategory(req), { code } = _d, data = __rest(_d, ["code"]);
+            res.status(code).json(data);
+        }));
         //=================== Unit ======================//
         // Create Unit
         this.createUnit = this.asyncWrapper.wrap({ bodySchema: this.validator.createCommonModuleValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _d = yield this.service.createUnit(req), { code } = _d, data = __rest(_d, ["code"]);
+            const _e = yield this.service.createUnit(req), { code } = _e, data = __rest(_e, ["code"]);
             res.status(code).json(data);
         }));
         // Get All Unit
         this.getAllUnit = this.asyncWrapper.wrap({ querySchema: this.validator.getAllCommonModuleQueryValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _e = yield this.service.getAllUnit(req), { code } = _e, data = __rest(_e, ["code"]);
+            const _f = yield this.service.getAllUnit(req), { code } = _f, data = __rest(_f, ["code"]);
             res.status(code).json(data);
         }));
         // Update Unit
         this.updateUnit = this.asyncWrapper.wrap({ bodySchema: this.validator.UpdateCommonModuleValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _f = yield this.service.updateUnit(req), { code } = _f, data = __rest(_f, ["code"]);
+            const _g = yield this.service.updateUnit(req), { code } = _g, data = __rest(_g, ["code"]);
+            res.status(code).json(data);
+        }));
+        // Delete Unit
+        this.deleteUnit = this.asyncWrapper.wrap({ paramSchema: this.commonValidator.singleParamStringValidator() }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _h = yield this.service.deleteUnit(req), { code } = _h, data = __rest(_h, ["code"]);
             res.status(code).json(data);
         }));
         //=================== Brand ======================//
         // Create Brand
         this.createBrand = this.asyncWrapper.wrap({ bodySchema: this.validator.createCommonModuleValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _g = yield this.service.createBrand(req), { code } = _g, data = __rest(_g, ["code"]);
+            const _j = yield this.service.createBrand(req), { code } = _j, data = __rest(_j, ["code"]);
             res.status(code).json(data);
         }));
         // Get All Brand
         this.getAllBrand = this.asyncWrapper.wrap({ querySchema: this.validator.getAllCommonModuleQueryValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _h = yield this.service.getAllBrand(req), { code } = _h, data = __rest(_h, ["code"]);
+            const _k = yield this.service.getAllBrand(req), { code } = _k, data = __rest(_k, ["code"]);
             res.status(code).json(data);
         }));
         // Update Brand
         this.updateBrand = this.asyncWrapper.wrap({ bodySchema: this.validator.UpdateCommonModuleValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _j = yield this.service.updateBrand(req), { code } = _j, data = __rest(_j, ["code"]);
+            const _l = yield this.service.updateBrand(req), { code } = _l, data = __rest(_l, ["code"]);
+            res.status(code).json(data);
+        }));
+        // Delete Brand
+        this.deleteBrand = this.asyncWrapper.wrap({ paramSchema: this.commonValidator.singleParamStringValidator() }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _m = yield this.service.deleteBrand(req), { code } = _m, data = __rest(_m, ["code"]);
             res.status(code).json(data);
         }));
         //=================== Supplier Controller ======================//
         // create Supplier
         this.createSupplier = this.asyncWrapper.wrap({ bodySchema: this.validator.createSupplierValidatorValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _k = yield this.service.createSupplier(req), { code } = _k, data = __rest(_k, ["code"]);
+            const _o = yield this.service.createSupplier(req), { code } = _o, data = __rest(_o, ["code"]);
             res.status(code).json(data);
         }));
         // get All Supplier
         this.getAllSupplier = this.asyncWrapper.wrap({ querySchema: this.validator.getAllSupplierQueryValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _l = yield this.service.getAllSupplier(req), { code } = _l, data = __rest(_l, ["code"]);
+            const _p = yield this.service.getAllSupplier(req), { code } = _p, data = __rest(_p, ["code"]);
             res.status(code).json(data);
         }));
         // get All Supplier payment
         this.getAllSupplierPayment = this.asyncWrapper.wrap(null, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _m = yield this.service.getAllSupplierPayment(req), { code } = _m, data = __rest(_m, ["code"]);
+            const _q = yield this.service.getAllSupplierPayment(req), { code } = _q, data = __rest(_q, ["code"]);
             res.status(code).json(data);
         }));
         // update Supplier
         this.updateSupplier = this.asyncWrapper.wrap({ bodySchema: this.validator.UpdateSupplierValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _o = yield this.service.updateSupplier(req), { code } = _o, data = __rest(_o, ["code"]);
+            const _r = yield this.service.updateSupplier(req), { code } = _r, data = __rest(_r, ["code"]);
+            res.status(code).json(data);
+        }));
+        // delete Supplier
+        this.deleteSupplier = this.asyncWrapper.wrap({ paramSchema: this.commonValidator.singleParamStringValidator() }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _s = yield this.service.deleteSupplier(req), { code } = _s, data = __rest(_s, ["code"]);
             res.status(code).json(data);
         }));
         // Supplier payment report
         this.getSupplierLedgerReport = this.asyncWrapper.wrap(null, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _p = yield this.service.getSupplierLedgerReport(req), { code } = _p, data = __rest(_p, ["code"]);
+            const _t = yield this.service.getSupplierLedgerReport(req), { code } = _t, data = __rest(_t, ["code"]);
             res.status(code).json(data);
         }));
     }

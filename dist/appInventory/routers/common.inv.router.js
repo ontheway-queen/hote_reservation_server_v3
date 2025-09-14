@@ -19,7 +19,10 @@ class CommonInvRouter extends abstract_router_1.default {
             .post(this.controller.createCategory)
             .get(this.controller.getAllCategory);
         // edit Category
-        this.router.route("/category/:id").patch(this.controller.updateCategory);
+        this.router
+            .route("/category/:id")
+            .patch(this.controller.updateCategory)
+            .delete(this.controller.deleteCategory);
         //=================== Unit ======================//
         // Unit
         this.router
@@ -27,7 +30,10 @@ class CommonInvRouter extends abstract_router_1.default {
             .post(this.controller.createUnit)
             .get(this.controller.getAllUnit);
         // edit Category
-        this.router.route("/unit/:id").patch(this.controller.updateUnit);
+        this.router
+            .route("/unit/:id")
+            .patch(this.controller.updateUnit)
+            .delete(this.controller.deleteUnit);
         //=================== Brand ======================//
         // Brand
         this.router
@@ -35,7 +41,10 @@ class CommonInvRouter extends abstract_router_1.default {
             .post(this.controller.createBrand)
             .get(this.controller.getAllBrand);
         // edit Brand
-        this.router.route("/brand/:id").patch(this.controller.updateBrand);
+        this.router
+            .route("/brand/:id")
+            .patch(this.controller.updateBrand)
+            .delete(this.controller.deleteBrand);
         //=================== Supplier Router ======================//
         // Supplier
         this.router
@@ -51,7 +60,10 @@ class CommonInvRouter extends abstract_router_1.default {
             .route("/supplier-ledger-report/by-sup-id/:id")
             .get(this.controller.getSupplierLedgerReport);
         // edit Supplier
-        this.router.route("/supplier/:id").patch(this.controller.updateSupplier);
+        this.router
+            .route("/supplier/:id")
+            .patch(this.controller.updateSupplier)
+            .delete(this.controller.deleteSupplier);
     }
 }
 exports.default = CommonInvRouter;

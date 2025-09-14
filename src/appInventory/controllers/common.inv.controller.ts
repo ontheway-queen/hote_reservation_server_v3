@@ -4,158 +4,201 @@ import CommonInvService from "../services/common.inv.service";
 import CommonInvValidator from "../utils/validation/common.inv.validator";
 
 class CommonInvController extends AbstractController {
-  private service = new CommonInvService();
-  private validator = new CommonInvValidator();
-  constructor() {
-    super();
-  }
+	private service = new CommonInvService();
+	private validator = new CommonInvValidator();
+	constructor() {
+		super();
+	}
 
-  //=================== Category ======================//
+	//=================== Category ======================//
 
-  // Create Category
-  public createCategory = this.asyncWrapper.wrap(
-    { bodySchema: this.validator.createCommonModuleValidator },
-    async (req: Request, res: Response) => {
-      const { code, ...data } = await this.service.createCategory(req);
+	// Create Category
+	public createCategory = this.asyncWrapper.wrap(
+		{ bodySchema: this.validator.createCommonModuleValidator },
+		async (req: Request, res: Response) => {
+			const { code, ...data } = await this.service.createCategory(req);
 
-      res.status(code).json(data);
-    }
-  );
+			res.status(code).json(data);
+		}
+	);
 
-  // Get All Category
-  public getAllCategory = this.asyncWrapper.wrap(
-    { querySchema: this.validator.getAllCommonModuleQueryValidator },
-    async (req: Request, res: Response) => {
-      const { code, ...data } = await this.service.getAllCategory(req);
+	// Get All Category
+	public getAllCategory = this.asyncWrapper.wrap(
+		{ querySchema: this.validator.getAllCommonModuleQueryValidator },
+		async (req: Request, res: Response) => {
+			const { code, ...data } = await this.service.getAllCategory(req);
 
-      res.status(code).json(data);
-    }
-  );
+			res.status(code).json(data);
+		}
+	);
 
-  // Update Category
-  public updateCategory = this.asyncWrapper.wrap(
-    { bodySchema: this.validator.UpdateCommonModuleValidator },
-    async (req: Request, res: Response) => {
-      const { code, ...data } = await this.service.updateCategory(req);
+	// Update Category
+	public updateCategory = this.asyncWrapper.wrap(
+		{ bodySchema: this.validator.UpdateCommonModuleValidator },
+		async (req: Request, res: Response) => {
+			const { code, ...data } = await this.service.updateCategory(req);
 
-      res.status(code).json(data);
-    }
-  );
+			res.status(code).json(data);
+		}
+	);
 
-  //=================== Unit ======================//
+	// Update Category
+	public deleteCategory = this.asyncWrapper.wrap(
+		{ paramSchema: this.commonValidator.singleParamStringValidator() },
+		async (req: Request, res: Response) => {
+			const { code, ...data } = await this.service.deleteCategory(req);
 
-  // Create Unit
-  public createUnit = this.asyncWrapper.wrap(
-    { bodySchema: this.validator.createCommonModuleValidator },
-    async (req: Request, res: Response) => {
-      const { code, ...data } = await this.service.createUnit(req);
+			res.status(code).json(data);
+		}
+	);
 
-      res.status(code).json(data);
-    }
-  );
+	//=================== Unit ======================//
 
-  // Get All Unit
-  public getAllUnit = this.asyncWrapper.wrap(
-    { querySchema: this.validator.getAllCommonModuleQueryValidator },
-    async (req: Request, res: Response) => {
-      const { code, ...data } = await this.service.getAllUnit(req);
+	// Create Unit
+	public createUnit = this.asyncWrapper.wrap(
+		{ bodySchema: this.validator.createCommonModuleValidator },
+		async (req: Request, res: Response) => {
+			const { code, ...data } = await this.service.createUnit(req);
 
-      res.status(code).json(data);
-    }
-  );
+			res.status(code).json(data);
+		}
+	);
 
-  // Update Unit
-  public updateUnit = this.asyncWrapper.wrap(
-    { bodySchema: this.validator.UpdateCommonModuleValidator },
-    async (req: Request, res: Response) => {
-      const { code, ...data } = await this.service.updateUnit(req);
+	// Get All Unit
+	public getAllUnit = this.asyncWrapper.wrap(
+		{ querySchema: this.validator.getAllCommonModuleQueryValidator },
+		async (req: Request, res: Response) => {
+			const { code, ...data } = await this.service.getAllUnit(req);
 
-      res.status(code).json(data);
-    }
-  );
+			res.status(code).json(data);
+		}
+	);
 
-  //=================== Brand ======================//
+	// Update Unit
+	public updateUnit = this.asyncWrapper.wrap(
+		{ bodySchema: this.validator.UpdateCommonModuleValidator },
+		async (req: Request, res: Response) => {
+			const { code, ...data } = await this.service.updateUnit(req);
 
-  // Create Brand
-  public createBrand = this.asyncWrapper.wrap(
-    { bodySchema: this.validator.createCommonModuleValidator },
-    async (req: Request, res: Response) => {
-      const { code, ...data } = await this.service.createBrand(req);
+			res.status(code).json(data);
+		}
+	);
 
-      res.status(code).json(data);
-    }
-  );
+	// Delete Unit
+	public deleteUnit = this.asyncWrapper.wrap(
+		{ paramSchema: this.commonValidator.singleParamStringValidator() },
+		async (req: Request, res: Response) => {
+			const { code, ...data } = await this.service.deleteUnit(req);
 
-  // Get All Brand
-  public getAllBrand = this.asyncWrapper.wrap(
-    { querySchema: this.validator.getAllCommonModuleQueryValidator },
-    async (req: Request, res: Response) => {
-      const { code, ...data } = await this.service.getAllBrand(req);
+			res.status(code).json(data);
+		}
+	);
 
-      res.status(code).json(data);
-    }
-  );
+	//=================== Brand ======================//
 
-  // Update Brand
-  public updateBrand = this.asyncWrapper.wrap(
-    { bodySchema: this.validator.UpdateCommonModuleValidator },
-    async (req: Request, res: Response) => {
-      const { code, ...data } = await this.service.updateBrand(req);
+	// Create Brand
+	public createBrand = this.asyncWrapper.wrap(
+		{ bodySchema: this.validator.createCommonModuleValidator },
+		async (req: Request, res: Response) => {
+			const { code, ...data } = await this.service.createBrand(req);
 
-      res.status(code).json(data);
-    }
-  );
+			res.status(code).json(data);
+		}
+	);
 
-  //=================== Supplier Controller ======================//
+	// Get All Brand
+	public getAllBrand = this.asyncWrapper.wrap(
+		{ querySchema: this.validator.getAllCommonModuleQueryValidator },
+		async (req: Request, res: Response) => {
+			const { code, ...data } = await this.service.getAllBrand(req);
 
-  // create Supplier
-  public createSupplier = this.asyncWrapper.wrap(
-    { bodySchema: this.validator.createSupplierValidatorValidator },
-    async (req: Request, res: Response) => {
-      const { code, ...data } = await this.service.createSupplier(req);
+			res.status(code).json(data);
+		}
+	);
 
-      res.status(code).json(data);
-    }
-  );
+	// Update Brand
+	public updateBrand = this.asyncWrapper.wrap(
+		{ bodySchema: this.validator.UpdateCommonModuleValidator },
+		async (req: Request, res: Response) => {
+			const { code, ...data } = await this.service.updateBrand(req);
 
-  // get All Supplier
-  public getAllSupplier = this.asyncWrapper.wrap(
-    { querySchema: this.validator.getAllSupplierQueryValidator },
-    async (req: Request, res: Response) => {
-      const { code, ...data } = await this.service.getAllSupplier(req);
+			res.status(code).json(data);
+		}
+	);
 
-      res.status(code).json(data);
-    }
-  );
+	// Delete Brand
+	public deleteBrand = this.asyncWrapper.wrap(
+		{ paramSchema: this.commonValidator.singleParamStringValidator() },
+		async (req: Request, res: Response) => {
+			const { code, ...data } = await this.service.deleteBrand(req);
 
-  // get All Supplier payment
-  public getAllSupplierPayment = this.asyncWrapper.wrap(
-    null,
-    async (req: Request, res: Response) => {
-      const { code, ...data } = await this.service.getAllSupplierPayment(req);
+			res.status(code).json(data);
+		}
+	);
 
-      res.status(code).json(data);
-    }
-  );
+	//=================== Supplier Controller ======================//
 
-  // update Supplier
-  public updateSupplier = this.asyncWrapper.wrap(
-    { bodySchema: this.validator.UpdateSupplierValidator },
-    async (req: Request, res: Response) => {
-      const { code, ...data } = await this.service.updateSupplier(req);
+	// create Supplier
+	public createSupplier = this.asyncWrapper.wrap(
+		{ bodySchema: this.validator.createSupplierValidatorValidator },
+		async (req: Request, res: Response) => {
+			const { code, ...data } = await this.service.createSupplier(req);
 
-      res.status(code).json(data);
-    }
-  );
+			res.status(code).json(data);
+		}
+	);
 
-  // Supplier payment report
-  public getSupplierLedgerReport = this.asyncWrapper.wrap(
-    null,
-    async (req: Request, res: Response) => {
-      const { code, ...data } = await this.service.getSupplierLedgerReport(req);
+	// get All Supplier
+	public getAllSupplier = this.asyncWrapper.wrap(
+		{ querySchema: this.validator.getAllSupplierQueryValidator },
+		async (req: Request, res: Response) => {
+			const { code, ...data } = await this.service.getAllSupplier(req);
 
-      res.status(code).json(data);
-    }
-  );
+			res.status(code).json(data);
+		}
+	);
+
+	// get All Supplier payment
+	public getAllSupplierPayment = this.asyncWrapper.wrap(
+		null,
+		async (req: Request, res: Response) => {
+			const { code, ...data } = await this.service.getAllSupplierPayment(
+				req
+			);
+
+			res.status(code).json(data);
+		}
+	);
+
+	// update Supplier
+	public updateSupplier = this.asyncWrapper.wrap(
+		{ bodySchema: this.validator.UpdateSupplierValidator },
+		async (req: Request, res: Response) => {
+			const { code, ...data } = await this.service.updateSupplier(req);
+
+			res.status(code).json(data);
+		}
+	);
+
+	// delete Supplier
+	public deleteSupplier = this.asyncWrapper.wrap(
+		{ paramSchema: this.commonValidator.singleParamStringValidator() },
+		async (req: Request, res: Response) => {
+			const { code, ...data } = await this.service.deleteSupplier(req);
+
+			res.status(code).json(data);
+		}
+	);
+
+	// Supplier payment report
+	public getSupplierLedgerReport = this.asyncWrapper.wrap(
+		null,
+		async (req: Request, res: Response) => {
+			const { code, ...data } =
+				await this.service.getSupplierLedgerReport(req);
+
+			res.status(code).json(data);
+		}
+	);
 }
 export default CommonInvController;

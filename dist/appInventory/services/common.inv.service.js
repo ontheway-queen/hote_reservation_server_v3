@@ -74,27 +74,41 @@ class CommonInvService extends abstract_service_1.default {
     updateCategory(req) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
-                const { hotel_code, id: admin_id } = req.hotel_admin;
+                const { hotel_code } = req.hotel_admin;
                 const { id } = req.params;
                 const updatePayload = req.body;
                 const model = this.Model.CommonInventoryModel(trx);
-                const { data } = yield model.getAllCategory({
-                    name: updatePayload.name,
+                const { data: existingCategory } = yield model.getAllCategory({
                     hotel_code,
-                    excludeId: parseInt(req.params.id),
+                    id: parseInt(id),
                 });
-                if (data.length) {
+                if (!existingCategory.length) {
                     return {
                         success: false,
-                        code: this.StatusCode.HTTP_CONFLICT,
-                        message: "Category name already exists",
+                        code: this.StatusCode.HTTP_NOT_FOUND,
+                        message: "Category not found with this ID",
                     };
                 }
-                const res = yield model.updateCategory(parseInt(id), {
-                    name: updatePayload.name,
-                    status: updatePayload.status,
-                    updated_by: admin_id,
-                });
+                if (updatePayload.name) {
+                    const { data: duplicateName } = yield model.getAllCategory({
+                        name: updatePayload.name,
+                        hotel_code,
+                        excludeId: parseInt(id),
+                    });
+                    if (duplicateName.length) {
+                        return {
+                            success: false,
+                            code: this.StatusCode.HTTP_CONFLICT,
+                            message: "Category name already exists",
+                        };
+                    }
+                }
+                const payloadToUpdate = {};
+                if (updatePayload.name !== undefined)
+                    payloadToUpdate.name = updatePayload.name;
+                if (updatePayload.status !== undefined)
+                    payloadToUpdate.status = updatePayload.status;
+                const res = yield model.updateCategory(parseInt(id), payloadToUpdate);
                 if (res === 1) {
                     return {
                         success: true,
@@ -102,11 +116,46 @@ class CommonInvService extends abstract_service_1.default {
                         message: "Category updated successfully",
                     };
                 }
+                return {
+                    success: false,
+                    code: this.StatusCode.HTTP_NOT_FOUND,
+                    message: "Category not found with this ID",
+                };
+            }));
+        });
+    }
+    deleteCategory(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
+                const { hotel_code } = req.hotel_admin;
+                const { id } = req.params;
+                const model = this.Model.CommonInventoryModel(trx);
+                const { data: existingCategory } = yield model.getAllCategory({
+                    hotel_code,
+                    id: parseInt(id),
+                });
+                if (!existingCategory.length) {
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_NOT_FOUND,
+                        message: "Category not found with this ID",
+                    };
+                }
+                const res = yield model.updateCategory(parseInt(id), {
+                    is_deleted: true,
+                });
+                if (res) {
+                    return {
+                        success: true,
+                        code: this.StatusCode.HTTP_OK,
+                        message: "Category deleted successfully",
+                    };
+                }
                 else {
                     return {
                         success: false,
                         code: this.StatusCode.HTTP_NOT_FOUND,
-                        message: "Category didn't find  from this ID",
+                        message: "Category didn't find from this ID",
                     };
                 }
             }));
@@ -118,10 +167,13 @@ class CommonInvService extends abstract_service_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
                 const { hotel_code, id: admin_id } = req.hotel_admin;
-                const { name } = req.body;
+                const { name, short_code } = req.body;
                 // Category name check
                 const Model = this.Model.CommonInventoryModel(trx);
-                const { data } = yield Model.getAllUnit({ name, hotel_code });
+                const { data } = yield Model.getAllUnit({
+                    key: name || short_code,
+                    hotel_code,
+                });
                 if (data.length) {
                     return {
                         success: false,
@@ -132,6 +184,7 @@ class CommonInvService extends abstract_service_1.default {
                 yield Model.createUnit({
                     hotel_code,
                     name,
+                    short_code,
                     created_by: admin_id,
                 });
                 return {
@@ -149,7 +202,7 @@ class CommonInvService extends abstract_service_1.default {
             const { hotel_code } = req.hotel_admin;
             const model = this.Model.CommonInventoryModel();
             const { data, total } = yield model.getAllUnit({
-                name: name,
+                key: name,
                 status: status,
                 limit: limit,
                 skip: skip,
@@ -171,23 +224,36 @@ class CommonInvService extends abstract_service_1.default {
                 const { id } = req.params;
                 const updatePayload = req.body;
                 const model = this.Model.CommonInventoryModel(trx);
-                const { data } = yield model.getAllUnit({
-                    name: updatePayload.name,
-                    hotel_code,
-                    excludeId: parseInt(req.params.id),
-                });
-                if (data.length) {
-                    return {
-                        success: false,
-                        code: this.StatusCode.HTTP_CONFLICT,
-                        message: "Unit name already exists",
-                    };
+                const { name, short_code } = updatePayload;
+                if (name) {
+                    const { data: nameExists } = yield model.getAllUnit({
+                        key: name,
+                        hotel_code,
+                        excludeId: parseInt(id),
+                    });
+                    if (nameExists.length) {
+                        return {
+                            success: false,
+                            code: this.StatusCode.HTTP_CONFLICT,
+                            message: "Unit name already exists",
+                        };
+                    }
                 }
-                const res = yield model.updateUnit(parseInt(id), hotel_code, {
-                    name: updatePayload.name,
-                    status: updatePayload.status,
-                    updated_by: admin_id,
-                });
+                if (short_code) {
+                    const { data: shortCodeExists } = yield model.getAllUnit({
+                        key: short_code,
+                        hotel_code,
+                        excludeId: parseInt(id),
+                    });
+                    if (shortCodeExists.length) {
+                        return {
+                            success: false,
+                            code: this.StatusCode.HTTP_CONFLICT,
+                            message: "Unit short code already exists",
+                        };
+                    }
+                }
+                const res = yield model.updateUnit(parseInt(id), hotel_code, updatePayload);
                 if (res === 1) {
                     return {
                         success: true,
@@ -200,6 +266,32 @@ class CommonInvService extends abstract_service_1.default {
                         success: false,
                         code: this.StatusCode.HTTP_NOT_FOUND,
                         message: "Unit didn't find  from this ID",
+                    };
+                }
+            }));
+        });
+    }
+    deleteUnit(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
+                const { hotel_code } = req.hotel_admin;
+                const { id } = req.params;
+                const model = this.Model.CommonInventoryModel(trx);
+                const res = yield model.updateUnit(parseInt(id), hotel_code, {
+                    is_deleted: true,
+                });
+                if (res) {
+                    return {
+                        success: true,
+                        code: this.StatusCode.HTTP_OK,
+                        message: "Unit deleted successfully",
+                    };
+                }
+                else {
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_NOT_FOUND,
+                        message: "Unit didn't find from this ID",
                     };
                 }
             }));
@@ -276,11 +368,7 @@ class CommonInvService extends abstract_service_1.default {
                         message: "Brand name already exists",
                     };
                 }
-                const res = yield model.updateBrand(parseInt(id), hotel_code, {
-                    name: updatePayload.name,
-                    status: updatePayload.status,
-                    updated_by: admin_id,
-                });
+                const res = yield model.updateBrand(parseInt(id), hotel_code, updatePayload);
                 if (res === 1) {
                     return {
                         success: true,
@@ -298,13 +386,40 @@ class CommonInvService extends abstract_service_1.default {
             }));
         });
     }
+    // Delete Brand
+    deleteBrand(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
+                const { hotel_code } = req.hotel_admin;
+                const { id } = req.params;
+                const model = this.Model.CommonInventoryModel(trx);
+                const res = yield model.updateBrand(parseInt(id), hotel_code, {
+                    is_deleted: true,
+                });
+                if (res) {
+                    return {
+                        success: true,
+                        code: this.StatusCode.HTTP_OK,
+                        message: "Brand deleted successfully",
+                    };
+                }
+                else {
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_NOT_FOUND,
+                        message: "Brand didn't find from this ID",
+                    };
+                }
+            }));
+        });
+    }
     //=================== Supplier service ======================//
     // create Supplier
     createSupplier(req) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
                 const { hotel_code, id: admin_id } = req.hotel_admin;
-                const { name, phone } = req.body;
+                const { name, phone, last_balance } = req.body;
                 // Supplier name check
                 const Model = this.Model.CommonInventoryModel(trx);
                 const { data } = yield Model.getAllSupplier({ name, hotel_code });
@@ -319,6 +434,7 @@ class CommonInvService extends abstract_service_1.default {
                     hotel_code,
                     name,
                     phone,
+                    last_balance,
                     created_by: admin_id,
                 });
                 return {
@@ -399,23 +515,17 @@ class CommonInvService extends abstract_service_1.default {
                 const updatePayload = req.body;
                 const model = this.Model.CommonInventoryModel(trx);
                 const { data } = yield model.getAllSupplier({
-                    name: updatePayload.name,
+                    id: parseInt(id),
                     hotel_code,
-                    excludeId: parseInt(req.params.id),
                 });
-                if (data.length) {
+                if (!data.length) {
                     return {
                         success: false,
-                        code: this.StatusCode.HTTP_CONFLICT,
-                        message: "Supplier name already exists",
+                        code: this.StatusCode.HTTP_NOT_FOUND,
+                        message: "Supplier not found with this ID",
                     };
                 }
-                const res = yield model.updateSupplier(parseInt(id), hotel_code, {
-                    name: updatePayload.name,
-                    phone: updatePayload.phone,
-                    status: updatePayload.status,
-                    updated_by: admin_id,
-                });
+                const res = yield model.updateSupplier(parseInt(id), hotel_code, updatePayload);
                 if (res === 1) {
                     return {
                         success: true,
@@ -428,6 +538,33 @@ class CommonInvService extends abstract_service_1.default {
                         success: false,
                         code: this.StatusCode.HTTP_NOT_FOUND,
                         message: "Supplier not found with this ID",
+                    };
+                }
+            }));
+        });
+    }
+    // Delete Supplier
+    deleteSupplier(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
+                const { hotel_code, id: admin_id } = req.hotel_admin;
+                const { id } = req.params;
+                const model = this.Model.CommonInventoryModel(trx);
+                const res = yield model.updateSupplier(parseInt(id), hotel_code, {
+                    is_deleted: true,
+                });
+                if (res) {
+                    return {
+                        success: true,
+                        code: this.StatusCode.HTTP_OK,
+                        message: "Supplier deleted successfully",
+                    };
+                }
+                else {
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_NOT_FOUND,
+                        message: "Supplier didn't find from this ID",
                     };
                 }
             }));
