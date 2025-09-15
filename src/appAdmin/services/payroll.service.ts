@@ -152,6 +152,7 @@ class PayRollService extends AbstractServices {
 			const payload = {
 				employee_id: rest.employee_id,
 				account_id,
+				payment_method: rest.payment_method,
 				basic_salary: rest.basic_salary,
 				total_allowance: totalAllowances,
 				total_deduction: totalDeductions,

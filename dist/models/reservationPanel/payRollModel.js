@@ -72,7 +72,7 @@ class PayRollModel extends schema_1.default {
                 .select("p.id", "e.name as employee_name", "de.name as designation", "p.total_allowance", this.db.raw(`(SELECT SUM(p2.total_deduction + p2.unpaid_leave_deduction)
      FROM ${this.HR_SCHEMA}.payroll p2
      WHERE p2.employee_id = p.employee_id
-       AND p2.hotel_code = p.hotel_code) as total_deduction`), "p.basic_salary", "p.gross_salary", "p.net_salary", "p.salary_date")
+       AND p2.hotel_code = p.hotel_code) as total_deduction`), "p.basic_salary", "p.payment_method", "p.gross_salary", "p.net_salary", "p.salary_date")
                 .leftJoin("employee as e", "e.id", "p.employee_id")
                 .leftJoin("designation as de", "de.id", "e.designation_id")
                 .where("p.hotel_code", hotel_code)
@@ -113,7 +113,7 @@ class PayRollModel extends schema_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("payroll as p")
                 .withSchema(this.HR_SCHEMA)
-                .select("p.id", "h.name as hotel_name", "h.address as hotel_address", "h.country_code", "h.city_code", "h.postal_code", "e.id as employee_id", "e.name as employee_name", "des.name as employee_designation", "e.contact_no as employee_phone", "p.total_allowance", "p.total_deduction", "p.unpaid_leave_days", "p.leave_days", "p.salary_basis", "p.unpaid_leave_deduction", "p.payable_days", "p.daily_rate", "p.basic_salary", "p.gross_salary", "p.net_salary", "p.salary_date", "p.note", "p.total_days", "p.docs", "p.created_by", "ua.name as created_by_name", "p.is_deleted")
+                .select("p.id", "h.name as hotel_name", "h.address as hotel_address", "h.country_code", "h.city_code", "h.postal_code", "e.id as employee_id", "e.name as employee_name", "des.name as employee_designation", "e.contact_no as employee_phone", "p.total_allowance", "p.total_deduction", "p.unpaid_leave_days", "p.leave_days", "p.salary_basis", "p.unpaid_leave_deduction", "p.payable_days", "p.daily_rate", "p.basic_salary", "p.payment_method", "p.gross_salary", "p.net_salary", "p.salary_date", "p.note", "p.total_days", "p.docs", "p.created_by", "ua.name as created_by_name", "p.is_deleted")
                 .joinRaw(`JOIN ?? as h ON h.hotel_code = p.hotel_code`, [
                 `${this.RESERVATION_SCHEMA}.${this.TABLES.hotels}`,
             ])

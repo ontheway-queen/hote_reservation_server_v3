@@ -9,6 +9,9 @@ class PayRollValidator {
         this.CreatePayrollValidator = joi_1.default.object({
             employee_id: joi_1.default.number().required(),
             account_id: joi_1.default.number().required(),
+            payment_method: joi_1.default.string()
+                .required()
+                .valid("BANK", "CASH", "MOBILE_BANKING"),
             basic_salary: joi_1.default.number().required(),
             salary_basis: joi_1.default.string().required().valid("calendar", "working"),
             leave_days: joi_1.default.number().optional(),
@@ -75,6 +78,9 @@ class PayRollValidator {
         this.updatePayrollValidator = joi_1.default.object({
             employee_id: joi_1.default.number().optional(),
             account_id: joi_1.default.number().optional(),
+            payment_method: joi_1.default.string()
+                .optional()
+                .valid("BANK", "CASH", "MOBILE_BANKING"),
             basic_salary: joi_1.default.number().optional(),
             salary_basis: joi_1.default.string().optional().valid("calendar", "working"),
             leave_days: joi_1.default.number().optional(),

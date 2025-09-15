@@ -2,6 +2,7 @@ export interface ICreatePayrollBody {
 	hotel_code: number;
 	employee_id: number;
 	account_id: number;
+	payment_method: "BANK" | "CASH" | "MOBILE_BANKING" | string;
 	basic_salary: number;
 	salary_basis: "calendar" | "working" | string;
 	total_days: number;

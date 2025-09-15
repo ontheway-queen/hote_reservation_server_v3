@@ -4,6 +4,9 @@ class PayRollValidator {
 	public CreatePayrollValidator = Joi.object({
 		employee_id: Joi.number().required(),
 		account_id: Joi.number().required(),
+		payment_method: Joi.string()
+			.required()
+			.valid("BANK", "CASH", "MOBILE_BANKING"),
 		basic_salary: Joi.number().required(),
 		salary_basis: Joi.string().required().valid("calendar", "working"),
 		leave_days: Joi.number().optional(),
@@ -74,6 +77,9 @@ class PayRollValidator {
 	public updatePayrollValidator = Joi.object({
 		employee_id: Joi.number().optional(),
 		account_id: Joi.number().optional(),
+		payment_method: Joi.string()
+			.optional()
+			.valid("BANK", "CASH", "MOBILE_BANKING"),
 		basic_salary: Joi.number().optional(),
 		salary_basis: Joi.string().optional().valid("calendar", "working"),
 		leave_days: Joi.number().optional(),

@@ -96,6 +96,7 @@ class PayRollModel extends Schema {
        AND p2.hotel_code = p.hotel_code) as total_deduction`
 				),
 				"p.basic_salary",
+				"p.payment_method",
 				"p.gross_salary",
 				"p.net_salary",
 				"p.salary_date"
@@ -164,6 +165,7 @@ class PayRollModel extends Schema {
 				"p.payable_days",
 				"p.daily_rate",
 				"p.basic_salary",
+				"p.payment_method",
 				"p.gross_salary",
 				"p.net_salary",
 				"p.salary_date",
