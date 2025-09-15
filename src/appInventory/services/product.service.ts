@@ -1,222 +1,264 @@
 import { Request } from "express";
 import AbstractServices from "../../abstarcts/abstract.service";
 import {
-  ICreateDamagedProductBody,
-  ICreateDemagedProductPayload,
-  ICreateProductPayload,
+	ICreateDamagedProductBody,
+	ICreateDemagedProductPayload,
+	ICreateProductPayload,
+	IupdateProductPayload,
 } from "../utils/interfaces/product.interface";
 
 class ProductInvService extends AbstractServices {
-  constructor() {
-    super();
-  }
+	constructor() {
+		super();
+	}
 
-  // Create Product
+	// Create Product
 
-  public async createProduct(req: Request) {
-    const { hotel_code, id: admin_id } = req.hotel_admin;
-    const body = req.body as ICreateProductPayload;
+	public async createProduct(req: Request) {
+		const { hotel_code, id: admin_id } = req.hotel_admin;
+		const body = req.body as ICreateProductPayload;
 
-    const model = this.Model.productInventoryModel();
+		const model = this.Model.productInventoryModel();
 
-    const { data } = await model.getAllProduct({
-      key: body.name,
-      hotel_code,
-    });
+		const { data } = await model.getAllProduct({
+			key: body.name,
+			hotel_code,
+		});
+		console.log(1);
+		if (data.length) {
+			return {
+				success: false,
+				code: this.StatusCode.HTTP_CONFLICT,
+				message: "Product name already exists",
+			};
+		}
+		console.log(2);
+		const files = (req.files as Express.Multer.File[]) || [];
 
-    if (data.length) {
-      return {
-        success: false,
-        code: this.StatusCode.HTTP_CONFLICT,
-        message: "Product name already exists",
-      };
-    }
+		if (files.length) {
+			body["image"] = files[0].filename;
+		}
+		console.log(3);
+		const year = new Date().getFullYear();
 
-    const files = (req.files as Express.Multer.File[]) || [];
+		// get last voucher ID
+		const productData = await model.getAllProductsForLastId();
 
-    if (files.length) {
-      body["image"] = files[0].filename;
-    }
+		const productNo = productData.length ? productData[0].id + 1 : 1;
 
-    const year = new Date().getFullYear();
+		// Product create
+		await model.createProduct({
+			...body,
+			product_code: `P-${year}${productNo}`,
+			hotel_code,
+			created_by: admin_id,
+		});
 
-    // get last voucher ID
-    const productData = await model.getAllProductsForLastId();
+		return {
+			success: true,
+			code: this.StatusCode.HTTP_SUCCESSFUL,
+			message: "Product created successfully.",
+		};
+	}
 
-    const productNo = productData.length ? productData[0].id + 1 : 1;
+	// Get all Product
+	public async getAllProduct(req: Request) {
+		const { hotel_code } = req.hotel_admin;
+		const { limit, skip, key, in_stock, unit, category, brand } = req.query;
 
-    // Product create
-    await model.createProduct({
-      ...body,
-      product_code: `P-${year}${productNo}`,
-      hotel_code,
-      created_by: admin_id,
-    });
+		const model = this.Model.productInventoryModel();
 
-    return {
-      success: true,
-      code: this.StatusCode.HTTP_SUCCESSFUL,
-      message: "Product created successfully.",
-    };
-  }
+		const { data, total } = await model.getAllProduct({
+			key: key as string,
+			unit: unit as string,
+			brand: brand as string,
+			category: category as string,
+			in_stock: in_stock as string,
+			limit: limit as string,
+			skip: skip as string,
+			hotel_code,
+		});
+		return {
+			success: true,
+			code: this.StatusCode.HTTP_OK,
+			total,
+			data,
+		};
+	}
 
-  // Get all Product
-  public async getAllProduct(req: Request) {
-    const { hotel_code } = req.hotel_admin;
-    const { limit, skip, key, in_stock, unit, category, brand } = req.query;
+	// Update Product
+	public async updateProduct(req: Request) {
+		return await this.db.transaction(async (trx) => {
+			const id = Number(req.params.id);
+			const { hotel_code } = req.hotel_admin;
 
-    const model = this.Model.productInventoryModel();
+			const body = req.body as IupdateProductPayload;
+			const model = this.Model.productInventoryModel(trx);
 
-    const { data, total } = await model.getAllProduct({
-      key: key as string,
-      unit: unit as string,
-      brand: brand as string,
-      category: category as string,
-      in_stock: in_stock as string,
-      limit: limit as string,
-      skip: skip as string,
-      hotel_code,
-    });
-    return {
-      success: true,
-      code: this.StatusCode.HTTP_OK,
-      total,
-      data,
-    };
-  }
+			const files = (req.files as Express.Multer.File[]) || [];
 
-  // create Damaged Product
-  public async createDamagedProduct(req: Request) {
-    return await this.db.transaction(async (trx) => {
-      const { hotel_code, id } = req.hotel_admin;
-      const { date, damaged_items } = req.body as ICreateDamagedProductBody;
+			if (files.length) {
+				body["image"] = files[0].filename;
+			}
 
-      // Check product
-      const model = this.Model.productInventoryModel(trx);
+			const check = await model.getAllProduct({
+				hotel_code,
+				pd_ids: [id],
+			});
 
-      // Check inventory
-      const PModel = this.Model.purchaseInventoryModel(trx);
+			if (!check.data.length) {
+				return {
+					success: false,
+					code: this.StatusCode.HTTP_NOT_FOUND,
+					message: "Product not found",
+				};
+			}
 
-      // Insert purchase item
-      const stockItemsPayload: ICreateDemagedProductPayload[] = [];
+			await model.updateProduct(id, body);
+			return {
+				success: true,
+				code: this.StatusCode.HTTP_OK,
+				message: "Product updated successfully.",
+			};
+		});
+	}
 
-      for (const item of damaged_items) {
-        const existingItem = stockItemsPayload.find(
-          (p) => p.product_id === item.product_id
-        );
-        if (existingItem) {
-          existingItem.quantity += item.quantity;
-        } else {
-          stockItemsPayload.push({
-            product_id: item.product_id,
-            hotel_code,
-            date: date,
-            quantity: item.quantity,
-            note: item.note,
-            created_by: id,
-          });
-        }
-      }
-      // Insert dm product
-      await model.createDamagedProduct(stockItemsPayload);
+	// create Damaged Product
+	public async createDamagedProduct(req: Request) {
+		return await this.db.transaction(async (trx) => {
+			const { hotel_code, id } = req.hotel_admin;
+			const { date, damaged_items } =
+				req.body as ICreateDamagedProductBody;
 
-      // Inventory step
-      const modifyInventoryProduct: {
-        id: number;
-        available_quantity: number;
-        total_damaged: number;
-      }[] = [];
+			// Check product
+			const model = this.Model.productInventoryModel(trx);
 
-      const purchase_product_ids = damaged_items.map((item) => item.product_id);
+			// Check inventory
+			const PModel = this.Model.purchaseInventoryModel(trx);
 
-      const getInventoryProduct = await PModel.getAllInventory({
-        hotel_code,
-        product_id: purchase_product_ids,
-      });
+			// Insert purchase item
+			const stockItemsPayload: ICreateDemagedProductPayload[] = [];
 
-      for (const payloadItem of stockItemsPayload) {
-        const inventoryItem = getInventoryProduct.find(
-          (g) => g.product_id === payloadItem.product_id
-        );
+			for (const item of damaged_items) {
+				const existingItem = stockItemsPayload.find(
+					(p) => p.product_id === item.product_id
+				);
+				if (existingItem) {
+					existingItem.quantity += item.quantity;
+				} else {
+					stockItemsPayload.push({
+						product_id: item.product_id,
+						hotel_code,
+						date: date,
+						quantity: item.quantity,
+						note: item.note,
+						created_by: id,
+					});
+				}
+			}
+			// Insert dm product
+			await model.createDamagedProduct(stockItemsPayload);
 
-        if (inventoryItem) {
-          modifyInventoryProduct.push({
-            available_quantity:
-              parseFloat(inventoryItem.available_quantity) -
-              payloadItem.quantity,
-            total_damaged:
-              parseFloat(inventoryItem.total_damaged) + payloadItem.quantity,
-            id: inventoryItem.id,
-          });
-        }
-      }
+			// Inventory step
+			const modifyInventoryProduct: {
+				id: number;
+				available_quantity: number;
+				total_damaged: number;
+			}[] = [];
 
-      if (modifyInventoryProduct.length) {
-        await Promise.all(
-          modifyInventoryProduct.map(async (item) => {
-            await PModel.updateInInventory(
-              {
-                available_quantity: item.available_quantity,
-                total_damaged: item.total_damaged,
-              },
+			const purchase_product_ids = damaged_items.map(
+				(item) => item.product_id
+			);
 
-              { id: item.id }
-            );
-          })
-        );
-      }
-      return {
-        success: true,
-        code: this.StatusCode.HTTP_SUCCESSFUL,
-        message: "Damaged Product Created successfully.",
-      };
-    });
-  }
+			const getInventoryProduct = await PModel.getAllInventory({
+				hotel_code,
+				product_id: purchase_product_ids,
+			});
 
-  // Get all Damaged Product
-  public async getAllDamagedProduct(req: Request) {
-    const { hotel_code } = req.hotel_admin;
-    const { limit, skip, key, status } = req.query;
+			for (const payloadItem of stockItemsPayload) {
+				const inventoryItem = getInventoryProduct.find(
+					(g) => g.product_id === payloadItem.product_id
+				);
 
-    const model = this.Model.productInventoryModel();
+				if (inventoryItem) {
+					modifyInventoryProduct.push({
+						available_quantity:
+							parseFloat(inventoryItem.available_quantity) -
+							payloadItem.quantity,
+						total_damaged:
+							parseFloat(inventoryItem.total_damaged) +
+							payloadItem.quantity,
+						id: inventoryItem.id,
+					});
+				}
+			}
 
-    const { data, total } = await model.getAllDamagedProduct({
-      key: key as string,
-      limit: limit as string,
-      skip: skip as string,
-      hotel_code,
-    });
-    return {
-      success: true,
-      code: this.StatusCode.HTTP_OK,
-      total,
-      data,
-    };
-  }
+			if (modifyInventoryProduct.length) {
+				await Promise.all(
+					modifyInventoryProduct.map(async (item) => {
+						await PModel.updateInInventory(
+							{
+								available_quantity: item.available_quantity,
+								total_damaged: item.total_damaged,
+							},
 
-  // Get Single Damaged Product
-  public async getSingleDamagedProduct(req: Request) {
-    const { id } = req.params;
-    const { hotel_code } = req.hotel_admin;
+							{ id: item.id }
+						);
+					})
+				);
+			}
+			return {
+				success: true,
+				code: this.StatusCode.HTTP_SUCCESSFUL,
+				message: "Damaged Product Created successfully.",
+			};
+		});
+	}
 
-    const data =
-      await this.Model.productInventoryModel().getSingleDamagedProduct(
-        parseInt(id),
-        hotel_code
-      );
+	// Get all Damaged Product
+	public async getAllDamagedProduct(req: Request) {
+		const { hotel_code } = req.hotel_admin;
+		const { limit, skip, key, status } = req.query;
 
-    if (!data.length) {
-      return {
-        success: false,
-        code: this.StatusCode.HTTP_NOT_FOUND,
-        message: this.ResMsg.HTTP_NOT_FOUND,
-      };
-    }
-    return {
-      success: true,
-      code: this.StatusCode.HTTP_OK,
-      data: data[0],
-    };
-  }
+		const model = this.Model.productInventoryModel();
+
+		const { data, total } = await model.getAllDamagedProduct({
+			key: key as string,
+			limit: limit as string,
+			skip: skip as string,
+			hotel_code,
+		});
+		return {
+			success: true,
+			code: this.StatusCode.HTTP_OK,
+			total,
+			data,
+		};
+	}
+
+	// Get Single Damaged Product
+	public async getSingleDamagedProduct(req: Request) {
+		const { id } = req.params;
+		const { hotel_code } = req.hotel_admin;
+
+		const data =
+			await this.Model.productInventoryModel().getSingleDamagedProduct(
+				parseInt(id),
+				hotel_code
+			);
+
+		if (!data.length) {
+			return {
+				success: false,
+				code: this.StatusCode.HTTP_NOT_FOUND,
+				message: this.ResMsg.HTTP_NOT_FOUND,
+			};
+		}
+		return {
+			success: true,
+			code: this.StatusCode.HTTP_OK,
+			data: data[0],
+		};
+	}
 }
 export default ProductInvService;

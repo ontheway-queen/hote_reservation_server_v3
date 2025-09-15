@@ -17,6 +17,9 @@ class ProductInvRouter extends abstract_router_1.default {
             .route("/")
             .post(this.uploader.cloudUploadRaw(this.fileFolders.INVENTORY_FILES), this.controller.createProduct)
             .get(this.controller.getAllProduct);
+        this.router
+            .route("/:id")
+            .patch(this.uploader.cloudUploadRaw(this.fileFolders.INVENTORY_FILES), this.controller.updateProduct);
         //=================== Damaged Purchase ======================//
         // Damaged
         this.router

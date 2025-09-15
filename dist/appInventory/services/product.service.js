@@ -27,6 +27,7 @@ class ProductInvService extends abstract_service_1.default {
                 key: body.name,
                 hotel_code,
             });
+            console.log(1);
             if (data.length) {
                 return {
                     success: false,
@@ -34,10 +35,12 @@ class ProductInvService extends abstract_service_1.default {
                     message: "Product name already exists",
                 };
             }
+            console.log(2);
             const files = req.files || [];
             if (files.length) {
                 body["image"] = files[0].filename;
             }
+            console.log(3);
             const year = new Date().getFullYear();
             // get last voucher ID
             const productData = yield model.getAllProductsForLastId();
@@ -73,6 +76,38 @@ class ProductInvService extends abstract_service_1.default {
                 total,
                 data,
             };
+        });
+    }
+    // Update Product
+    updateProduct(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
+                const id = Number(req.params.id);
+                const { hotel_code } = req.hotel_admin;
+                const body = req.body;
+                const model = this.Model.productInventoryModel(trx);
+                const files = req.files || [];
+                if (files.length) {
+                    body["image"] = files[0].filename;
+                }
+                const check = yield model.getAllProduct({
+                    hotel_code,
+                    pd_ids: [id],
+                });
+                if (!check.data.length) {
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_NOT_FOUND,
+                        message: "Product not found",
+                    };
+                }
+                yield model.updateProduct(id, body);
+                return {
+                    success: true,
+                    code: this.StatusCode.HTTP_OK,
+                    message: "Product updated successfully.",
+                };
+            }));
         });
     }
     // create Damaged Product
@@ -118,7 +153,8 @@ class ProductInvService extends abstract_service_1.default {
                         modifyInventoryProduct.push({
                             available_quantity: parseFloat(inventoryItem.available_quantity) -
                                 payloadItem.quantity,
-                            total_damaged: parseFloat(inventoryItem.total_damaged) + payloadItem.quantity,
+                            total_damaged: parseFloat(inventoryItem.total_damaged) +
+                                payloadItem.quantity,
                             id: inventoryItem.id,
                         });
                     }

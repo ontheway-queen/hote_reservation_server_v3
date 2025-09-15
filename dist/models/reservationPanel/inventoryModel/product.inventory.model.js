@@ -23,7 +23,7 @@ class ProductInventoryModel extends schema_1.default {
     createProduct(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("products")
-                .withSchema(this.RESERVATION_SCHEMA)
+                .withSchema(this.INVENTORY_SCHEMA)
                 .insert(payload);
         });
     }
@@ -37,13 +37,13 @@ class ProductInventoryModel extends schema_1.default {
                 dtbs.offset(parseInt(skip));
             }
             const data = yield dtbs
-                .withSchema(this.RESERVATION_SCHEMA)
+                .withSchema(this.INVENTORY_SCHEMA)
                 .select("p.id", "p.product_code", "p.name", "p.model", "c.name as category", "u.name as unit", "b.name as brand", "i.available_quantity as in_stock", "p.status as status", "p.details", "p.image")
                 .where("p.hotel_code", hotel_code)
-                .leftJoin("category as c", "p.category_id", "c.id")
+                .leftJoin("categories as c", "p.category_id", "c.id")
                 .leftJoin("inventory as i", "p.id", "i.product_id")
-                .leftJoin("unit as u", "p.unit_id", "u.id")
-                .leftJoin("brand as b", "p.brand_id", "b.id")
+                .leftJoin("units as u", "p.unit_id", "u.id")
+                .leftJoin("brands as b", "p.brand_id", "b.id")
                 .andWhere(function () {
                 if (key) {
                     this.andWhere("p.name", "like", `%${key}%`).orWhere("p.model", "like", `%${key}%`);
@@ -66,13 +66,13 @@ class ProductInventoryModel extends schema_1.default {
             })
                 .orderBy("p.id", "desc");
             const total = yield this.db("products as p")
-                .withSchema(this.RESERVATION_SCHEMA)
+                .withSchema(this.INVENTORY_SCHEMA)
                 .count("p.id as total")
                 .where("p.hotel_code", hotel_code)
-                .leftJoin("category as c", "p.category_id", "c.id")
+                .leftJoin("categories as c", "p.category_id", "c.id")
                 .leftJoin("inventory as i", "p.id", "i.product_id")
-                .leftJoin("unit as u", "p.unit_id", "u.id")
-                .leftJoin("brand as b", "p.brand_id", "b.id")
+                .leftJoin("units as u", "p.unit_id", "u.id")
+                .leftJoin("brands as b", "p.brand_id", "b.id")
                 .andWhere(function () {
                 if (key) {
                     this.andWhere("p.name", "like", `%${key}%`).orWhere("p.model", "like", `%${key}%`);
@@ -101,7 +101,7 @@ class ProductInventoryModel extends schema_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("products")
                 .select("id")
-                .withSchema(this.RESERVATION_SCHEMA)
+                .withSchema(this.INVENTORY_SCHEMA)
                 .orderBy("id", "desc")
                 .limit(1);
         });
@@ -110,7 +110,7 @@ class ProductInventoryModel extends schema_1.default {
     updateProduct(id, payload) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("products")
-                .withSchema(this.RESERVATION_SCHEMA)
+                .withSchema(this.INVENTORY_SCHEMA)
                 .where({ id })
                 .update(payload);
         });
