@@ -29,7 +29,7 @@ class InventoryModel extends Schema {
 		const { limit, skip, key, hotel_code } = payload;
 
 		const baseQuery = this.db("inventory as i")
-			.withSchema(this.INVENTORY_SCHEMA)
+			.withSchema(this.HOTEL_INVENTORY_SCHEMA)
 			.leftJoin("products as p", "p.id", "i.product_id")
 			.leftJoin("categories as c", "c.id", "p.category_id")
 			.where("i.hotel_code", hotel_code)
@@ -72,7 +72,7 @@ class InventoryModel extends Schema {
 	}) {
 		const { hotel_code, id } = payload;
 		return await this.db("inventory as i")
-			.withSchema(this.INVENTORY_SCHEMA)
+			.withSchema(this.HOTEL_INVENTORY_SCHEMA)
 			.select(
 				"i.id",
 				"i.hotel_code",

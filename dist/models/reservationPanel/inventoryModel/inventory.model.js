@@ -22,7 +22,7 @@ class InventoryModel extends schema_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             const { limit, skip, key, hotel_code } = payload;
             const baseQuery = this.db("inventory as i")
-                .withSchema(this.INVENTORY_SCHEMA)
+                .withSchema(this.HOTEL_INVENTORY_SCHEMA)
                 .leftJoin("products as p", "p.id", "i.product_id")
                 .leftJoin("categories as c", "c.id", "p.category_id")
                 .where("i.hotel_code", hotel_code)
@@ -52,7 +52,7 @@ class InventoryModel extends schema_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             const { hotel_code, id } = payload;
             return yield this.db("inventory as i")
-                .withSchema(this.INVENTORY_SCHEMA)
+                .withSchema(this.HOTEL_INVENTORY_SCHEMA)
                 .select("i.id", "i.hotel_code", "i.product_id", "p.product_code", "p.model as product_model", "p.name as product_name", "p.details as product_details", "p.image as product_image", "p.status as product_status", "p.category_id", "c.name as category", "p.unit_id", "u.name as unit", "p.brand_id", "b.name as brand", "i.available_quantity", "i.quantity_used", "i.total_damaged")
                 .leftJoin("products as p", "p.id", "i.product_id")
                 .leftJoin("categories as c", "c.id", "p.category_id")

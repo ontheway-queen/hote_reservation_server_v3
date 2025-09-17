@@ -17,7 +17,7 @@ class PurchaseInventoryModel extends Schema {
 	// create purchase
 	public async createPurchase(payload: ICreateInvPurchaseBody) {
 		return await this.db("purchase")
-			.withSchema(this.INVENTORY_SCHEMA)
+			.withSchema(this.HOTEL_INVENTORY_SCHEMA)
 			.insert(payload, "id");
 	}
 
@@ -33,7 +33,7 @@ class PurchaseInventoryModel extends Schema {
 		where: { id: number }
 	) {
 		return await this.db("purchase")
-			.withSchema(this.INVENTORY_SCHEMA)
+			.withSchema(this.HOTEL_INVENTORY_SCHEMA)
 			.update(payload)
 			.where("id", where.id);
 	}
@@ -57,7 +57,7 @@ class PurchaseInventoryModel extends Schema {
 		}
 
 		const data = await dtbs
-			.withSchema(this.INVENTORY_SCHEMA)
+			.withSchema(this.HOTEL_INVENTORY_SCHEMA)
 			.select(
 				"p.id",
 				"p.voucher_no",
@@ -93,7 +93,7 @@ class PurchaseInventoryModel extends Schema {
 			.orderBy("p.id", "desc");
 
 		const total = await this.db("purchase as p")
-			.withSchema(this.INVENTORY_SCHEMA)
+			.withSchema(this.HOTEL_INVENTORY_SCHEMA)
 			.count("p.id as total")
 			.where("p.hotel_code", hotel_code)
 			.leftJoin("suppliers as s", "p.supplier_id", "s.id")
@@ -120,7 +120,7 @@ class PurchaseInventoryModel extends Schema {
 	public async getSinglePurchase(id: number, hotel_code: number) {
 		const dtbs = this.db("purchase_view as p");
 		return await dtbs
-			.withSchema(this.INVENTORY_SCHEMA)
+			.withSchema(this.HOTEL_INVENTORY_SCHEMA)
 			.select("p.*")
 			.where("p.id", id)
 			.andWhere("p.hotel_code", hotel_code);
@@ -129,14 +129,14 @@ class PurchaseInventoryModel extends Schema {
 	// create purchase item
 	public async createPurchaseItem(payload: ICreateInvPurchaseItemBody[]) {
 		return await this.db("purchase_item")
-			.withSchema(this.INVENTORY_SCHEMA)
+			.withSchema(this.HOTEL_INVENTORY_SCHEMA)
 			.insert(payload);
 	}
 
 	// insert invoice supplier ledger
 	public async insertInvSupplierLedger(payload: IinsertInvSupplierLedger) {
 		return await this.db("sup_ledger")
-			.withSchema(this.INVENTORY_SCHEMA)
+			.withSchema(this.HOTEL_INVENTORY_SCHEMA)
 			.insert(payload);
 	}
 
@@ -144,7 +144,7 @@ class PurchaseInventoryModel extends Schema {
 	public async getAllPurchaseForLastId() {
 		return await this.db("purchase")
 			.select("id")
-			.withSchema(this.INVENTORY_SCHEMA)
+			.withSchema(this.HOTEL_INVENTORY_SCHEMA)
 			.orderBy("id", "desc")
 			.limit(1);
 	}
@@ -158,7 +158,7 @@ class PurchaseInventoryModel extends Schema {
 		}[]
 	) {
 		return await this.db("inventory")
-			.withSchema(this.INVENTORY_SCHEMA)
+			.withSchema(this.HOTEL_INVENTORY_SCHEMA)
 			.insert(payload);
 	}
 
@@ -172,7 +172,7 @@ class PurchaseInventoryModel extends Schema {
 		where: { id: number }
 	) {
 		return await this.db("inventory")
-			.withSchema(this.INVENTORY_SCHEMA)
+			.withSchema(this.HOTEL_INVENTORY_SCHEMA)
 			.update(payload)
 			.where("id", where.id);
 	}
@@ -184,7 +184,7 @@ class PurchaseInventoryModel extends Schema {
 	}) {
 		const { product_id, hotel_code } = where;
 		return await this.db("inventory")
-			.withSchema(this.INVENTORY_SCHEMA)
+			.withSchema(this.HOTEL_INVENTORY_SCHEMA)
 			.select("*")
 			.where("hotel_code", hotel_code)
 			.andWhere(function () {
@@ -211,7 +211,7 @@ class PurchaseInventoryModel extends Schema {
 		}
 
 		const data = await dtbs
-			.withSchema(this.INVENTORY_SCHEMA)
+			.withSchema(this.HOTEL_INVENTORY_SCHEMA)
 			.select(
 				"inv.id",
 				"inv.product_id",
@@ -240,7 +240,7 @@ class PurchaseInventoryModel extends Schema {
 		inv_id: number;
 	}) {
 		return await this.db("purchase_sub_invoice")
-			.withSchema(this.INVENTORY_SCHEMA)
+			.withSchema(this.HOTEL_INVENTORY_SCHEMA)
 			.insert(payload);
 	}
 
@@ -254,7 +254,7 @@ class PurchaseInventoryModel extends Schema {
 		}[]
 	) {
 		return await this.db("pur_sub_invoice_item")
-			.withSchema(this.INVENTORY_SCHEMA)
+			.withSchema(this.HOTEL_INVENTORY_SCHEMA)
 			.insert(payload);
 	}
 }

@@ -22,7 +22,7 @@ class CommonInventoryModel extends Schema {
 	// create Category
 	public async createCategory(payload: ICreateCommonInvPayload) {
 		return await this.db("categories")
-			.withSchema(this.INVENTORY_SCHEMA)
+			.withSchema(this.HOTEL_INVENTORY_SCHEMA)
 			.insert(payload);
 	}
 
@@ -47,7 +47,7 @@ class CommonInventoryModel extends Schema {
 		}
 
 		const data = await dtbs
-			.withSchema(this.INVENTORY_SCHEMA)
+			.withSchema(this.HOTEL_INVENTORY_SCHEMA)
 			.select(
 				"c.id",
 				"c.hotel_code",
@@ -79,7 +79,7 @@ class CommonInventoryModel extends Schema {
 			.orderBy("c.id", "desc");
 
 		const total = await this.db("categories as c")
-			.withSchema(this.INVENTORY_SCHEMA)
+			.withSchema(this.HOTEL_INVENTORY_SCHEMA)
 			.count("c.id as total")
 			.where(function () {
 				this.whereNull("c.hotel_code").orWhere(
@@ -108,7 +108,7 @@ class CommonInventoryModel extends Schema {
 	// Update Category
 	public async updateCategory(id: number, payload: IUpdateCommonInvPayload) {
 		return await this.db("categories")
-			.withSchema(this.INVENTORY_SCHEMA)
+			.withSchema(this.HOTEL_INVENTORY_SCHEMA)
 			.where({ id })
 			.update(payload);
 	}
@@ -118,7 +118,7 @@ class CommonInventoryModel extends Schema {
 	// create Unit
 	public async createUnit(payload: ICreateCommonInvPayload) {
 		return await this.db("units")
-			.withSchema(this.INVENTORY_SCHEMA)
+			.withSchema(this.HOTEL_INVENTORY_SCHEMA)
 			.insert(payload);
 	}
 
@@ -141,7 +141,7 @@ class CommonInventoryModel extends Schema {
 		}
 
 		const data = await dtbs
-			.withSchema(this.INVENTORY_SCHEMA)
+			.withSchema(this.HOTEL_INVENTORY_SCHEMA)
 			.select(
 				"u.id",
 				"u.hotel_code",
@@ -178,7 +178,7 @@ class CommonInventoryModel extends Schema {
 			.orderBy("u.id", "desc");
 
 		const total = await this.db("units as u")
-			.withSchema(this.INVENTORY_SCHEMA)
+			.withSchema(this.HOTEL_INVENTORY_SCHEMA)
 			.count("u.id as total")
 			.where(function () {
 				this.whereNull("u.hotel_code").orWhere(
@@ -215,7 +215,7 @@ class CommonInventoryModel extends Schema {
 		payload: IUpdateCommonInvPayload
 	) {
 		return await this.db("units")
-			.withSchema(this.INVENTORY_SCHEMA)
+			.withSchema(this.HOTEL_INVENTORY_SCHEMA)
 			.where({ id, hotel_code })
 			.update(payload);
 	}
@@ -225,7 +225,7 @@ class CommonInventoryModel extends Schema {
 	// create Brand
 	public async createBrand(payload: ICreateCommonInvPayload) {
 		return await this.db("brands")
-			.withSchema(this.INVENTORY_SCHEMA)
+			.withSchema(this.HOTEL_INVENTORY_SCHEMA)
 			.insert(payload);
 	}
 
@@ -248,7 +248,7 @@ class CommonInventoryModel extends Schema {
 		}
 
 		const data = await dtbs
-			.withSchema(this.INVENTORY_SCHEMA)
+			.withSchema(this.HOTEL_INVENTORY_SCHEMA)
 			.select(
 				"b.id",
 				"b.hotel_code",
@@ -277,7 +277,7 @@ class CommonInventoryModel extends Schema {
 			.orderBy("b.id", "desc");
 
 		const total = await this.db("brands as b")
-			.withSchema(this.INVENTORY_SCHEMA)
+			.withSchema(this.HOTEL_INVENTORY_SCHEMA)
 			.count("b.id as total")
 			.andWhere("b.is_deleted", false)
 			.where(function () {
@@ -308,7 +308,7 @@ class CommonInventoryModel extends Schema {
 		payload: IUpdateCommonInvPayload
 	) {
 		return await this.db("brands")
-			.withSchema(this.INVENTORY_SCHEMA)
+			.withSchema(this.HOTEL_INVENTORY_SCHEMA)
 			.where({ id, hotel_code })
 			.update(payload);
 	}
@@ -318,7 +318,7 @@ class CommonInventoryModel extends Schema {
 	// create Supplier
 	public async createSupplier(payload: ICreateInvSupplierPayload) {
 		return await this.db("suppliers")
-			.withSchema(this.INVENTORY_SCHEMA)
+			.withSchema(this.HOTEL_INVENTORY_SCHEMA)
 			.insert(payload);
 	}
 
@@ -343,7 +343,7 @@ class CommonInventoryModel extends Schema {
 		}
 
 		const data = await dtbs
-			.withSchema(this.INVENTORY_SCHEMA)
+			.withSchema(this.HOTEL_INVENTORY_SCHEMA)
 			.select(
 				"s.id",
 				"s.name",
@@ -370,7 +370,7 @@ class CommonInventoryModel extends Schema {
 			.orderBy("s.id", "desc");
 
 		const total = await this.db("suppliers as s")
-			.withSchema(this.INVENTORY_SCHEMA)
+			.withSchema(this.HOTEL_INVENTORY_SCHEMA)
 			.count("s.id as total")
 			.where("s.hotel_code", hotel_code)
 			.andWhere(function () {
@@ -394,7 +394,7 @@ class CommonInventoryModel extends Schema {
 	// get single supplier
 	public async getSingleSupplier(id: number, hotel_code: number) {
 		return await this.db("suppliers as s")
-			.withSchema(this.INVENTORY_SCHEMA)
+			.withSchema(this.HOTEL_INVENTORY_SCHEMA)
 			.select("*")
 			.where("s.id", id)
 			.andWhere("s.hotel_code", hotel_code);
@@ -536,7 +536,7 @@ class CommonInventoryModel extends Schema {
 		payload: IUpdateInvSupplierPayload
 	) {
 		return await this.db("suppliers")
-			.withSchema(this.INVENTORY_SCHEMA)
+			.withSchema(this.HOTEL_INVENTORY_SCHEMA)
 			.where({ id, hotel_code })
 			.update(payload);
 	}
@@ -555,7 +555,7 @@ class CommonInventoryModel extends Schema {
 	}) {
 		console.log({ payload });
 		return await this.db("supplier_payment")
-			.withSchema(this.INVENTORY_SCHEMA)
+			.withSchema(this.HOTEL_INVENTORY_SCHEMA)
 			.insert(payload);
 	}
 }

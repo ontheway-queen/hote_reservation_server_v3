@@ -2,7 +2,7 @@ class Schema {
 	public readonly PUBLIC_SCHEMA = "public";
 	public readonly CM_SCHEMA = "channel_manager";
 	public readonly RESERVATION_SCHEMA = "hotel_reservation";
-	public readonly INVENTORY_SCHEMA = "hotel_inventory";
+	public readonly HOTEL_INVENTORY_SCHEMA = "hotel_inventory";
 	public readonly HR_SCHEMA = "hr";
 	public readonly DBO_SCHEMA = "dbo";
 	public readonly BTOC_SCHEMA = "btoc";

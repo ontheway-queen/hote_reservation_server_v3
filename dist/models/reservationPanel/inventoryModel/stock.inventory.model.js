@@ -22,14 +22,14 @@ class StockInventoryModel extends schema_1.default {
     createStockIn(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("stocks")
-                .withSchema(this.INVENTORY_SCHEMA)
+                .withSchema(this.HOTEL_INVENTORY_SCHEMA)
                 .insert(payload, "id");
         });
     }
     createStockOut(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("stocks")
-                .withSchema(this.INVENTORY_SCHEMA)
+                .withSchema(this.HOTEL_INVENTORY_SCHEMA)
                 .insert(payload, "id");
         });
     }
@@ -43,7 +43,7 @@ class StockInventoryModel extends schema_1.default {
                 dtbs.offset(parseInt(skip));
             }
             const data = yield dtbs
-                .withSchema(this.INVENTORY_SCHEMA)
+                .withSchema(this.HOTEL_INVENTORY_SCHEMA)
                 .select("sv.stock_id", "sv.created_at as date", "acc.name as account_name", "acc.acc_type as account_type", "sv.status", "sv.paid_amount", "sv.note")
                 .where("sv.hotel_code", hotel_code)
                 .joinRaw(`LEFT JOIN ?? as acc ON acc.id = sv.ac_tr_ac_id`, [
@@ -59,7 +59,7 @@ class StockInventoryModel extends schema_1.default {
             })
                 .orderBy("sv.stock_id", "desc");
             const total = yield this.db("stock_view as sv")
-                .withSchema(this.INVENTORY_SCHEMA)
+                .withSchema(this.HOTEL_INVENTORY_SCHEMA)
                 .count("sv.stock_id as total")
                 .where("sv.hotel_code", hotel_code)
                 .joinRaw(`LEFT JOIN ?? as acc ON acc.id = sv.ac_tr_ac_id`, [
@@ -80,7 +80,7 @@ class StockInventoryModel extends schema_1.default {
     getSingleStock(id, hotel_code) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("stock_view as sv")
-                .withSchema(this.INVENTORY_SCHEMA)
+                .withSchema(this.HOTEL_INVENTORY_SCHEMA)
                 .select("sv.*")
                 .where("sv.stock_id", id)
                 .andWhere("sv.hotel_code", hotel_code)
@@ -91,7 +91,7 @@ class StockInventoryModel extends schema_1.default {
     updateStockItems(payload, where) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("stock_items")
-                .withSchema(this.INVENTORY_SCHEMA)
+                .withSchema(this.HOTEL_INVENTORY_SCHEMA)
                 .update(payload)
                 .where("id", where.id);
         });
@@ -100,7 +100,7 @@ class StockInventoryModel extends schema_1.default {
     createStockItem(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("stock_items")
-                .withSchema(this.INVENTORY_SCHEMA)
+                .withSchema(this.HOTEL_INVENTORY_SCHEMA)
                 .insert(payload);
         });
     }
@@ -108,7 +108,7 @@ class StockInventoryModel extends schema_1.default {
     insertInInventory(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("inventory")
-                .withSchema(this.INVENTORY_SCHEMA)
+                .withSchema(this.HOTEL_INVENTORY_SCHEMA)
                 .insert(payload);
         });
     }
@@ -116,7 +116,7 @@ class StockInventoryModel extends schema_1.default {
     updateInInventory(payload, where) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("inventory")
-                .withSchema(this.INVENTORY_SCHEMA)
+                .withSchema(this.HOTEL_INVENTORY_SCHEMA)
                 .update(payload)
                 .modify((qb) => {
                 if (where.product_id) {
@@ -133,7 +133,7 @@ class StockInventoryModel extends schema_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             const { product_id, hotel_code } = where;
             return yield this.db("inventory")
-                .withSchema(this.INVENTORY_SCHEMA)
+                .withSchema(this.HOTEL_INVENTORY_SCHEMA)
                 .select("*")
                 .where("hotel_code", hotel_code)
                 .andWhere(function () {
@@ -153,7 +153,7 @@ class StockInventoryModel extends schema_1.default {
                 dtbs.offset(parseInt(skip));
             }
             const data = yield dtbs
-                .withSchema(this.INVENTORY_SCHEMA)
+                .withSchema(this.HOTEL_INVENTORY_SCHEMA)
                 .select("inv.id", "inv.product_id", "ing.name", "ing.measurement", "inv.available_quantity", "inv.quantity_used")
                 .leftJoin("ingredient as ing", "inv.product_id", "ing.id")
                 .where({ "inv.hotel_code": hotel_code })

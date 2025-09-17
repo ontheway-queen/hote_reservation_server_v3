@@ -20,7 +20,7 @@ class ProductInventoryModel extends Schema {
 	// create Product
 	public async createProduct(payload: ICreateProductPayload) {
 		return await this.db("products")
-			.withSchema(this.INVENTORY_SCHEMA)
+			.withSchema(this.HOTEL_INVENTORY_SCHEMA)
 			.insert(payload);
 	}
 
@@ -56,7 +56,7 @@ class ProductInventoryModel extends Schema {
 		}
 
 		const data = await dtbs
-			.withSchema(this.INVENTORY_SCHEMA)
+			.withSchema(this.HOTEL_INVENTORY_SCHEMA)
 			.select(
 				"p.id",
 				"p.product_code",
@@ -105,7 +105,7 @@ class ProductInventoryModel extends Schema {
 			.orderBy("p.id", "desc");
 
 		const total = await this.db("products as p")
-			.withSchema(this.INVENTORY_SCHEMA)
+			.withSchema(this.HOTEL_INVENTORY_SCHEMA)
 			.count("p.id as total")
 			.where("p.hotel_code", hotel_code)
 			.leftJoin("categories as c", "p.category_id", "c.id")
@@ -144,7 +144,7 @@ class ProductInventoryModel extends Schema {
 	public async getAllProductsForLastId() {
 		return await this.db("products")
 			.select("id")
-			.withSchema(this.INVENTORY_SCHEMA)
+			.withSchema(this.HOTEL_INVENTORY_SCHEMA)
 			.orderBy("id", "desc")
 			.limit(1);
 	}
@@ -152,7 +152,7 @@ class ProductInventoryModel extends Schema {
 	// Update Product
 	public async updateProduct(id: number, payload: IupdateProductPayload) {
 		return await this.db("products")
-			.withSchema(this.INVENTORY_SCHEMA)
+			.withSchema(this.HOTEL_INVENTORY_SCHEMA)
 			.where({ id })
 			.update(payload);
 	}
@@ -162,7 +162,7 @@ class ProductInventoryModel extends Schema {
 	// create Damaged Product
 	public async createDamagedProduct(payload: ICreateDemagedProductPayload[]) {
 		return await this.db("damaged_products")
-			.withSchema(this.INVENTORY_SCHEMA)
+			.withSchema(this.HOTEL_INVENTORY_SCHEMA)
 			.insert(payload);
 	}
 
@@ -183,13 +183,13 @@ class ProductInventoryModel extends Schema {
 	// 	}
 
 	// 	const data = await dtbs
-	// 		.withSchema(this.INVENTORY_SCHEMA)
+	// 		.withSchema(this.HOTEL_INVENTORY_SCHEMA)
 	// 		.select("*")
 	// 		.where("dv.hotel_code", hotel_code)
 	// 		.orderBy("dv.id", "desc");
 
 	// 	const total = await this.db("damaged_product_view as dv")
-	// 		.withSchema(this.INVENTORY_SCHEMA)
+	// 		.withSchema(this.HOTEL_INVENTORY_SCHEMA)
 	// 		.count("dv.id as total")
 	// 		.where("dv.hotel_code", hotel_code);
 
@@ -215,7 +215,7 @@ class ProductInventoryModel extends Schema {
 		console.log("date_from:", date_from);
 		console.log("date_to:", date_to);
 		const query = this.db("damaged_products as dm")
-			.withSchema(this.INVENTORY_SCHEMA)
+			.withSchema(this.HOTEL_INVENTORY_SCHEMA)
 			.select(
 				"dm.id",
 				"dm.hotel_code",
@@ -272,7 +272,7 @@ class ProductInventoryModel extends Schema {
 	// get single Damaged Product
 	public async getSingleDamagedProduct(id: number, hotel_code: number) {
 		return await this.db("damaged_product_view as dv")
-			.withSchema(this.INVENTORY_SCHEMA)
+			.withSchema(this.HOTEL_INVENTORY_SCHEMA)
 			.select("dv.*")
 			.where("dv.id", id)
 			.andWhere("dv.hotel_code", hotel_code);

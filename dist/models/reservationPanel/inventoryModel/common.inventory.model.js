@@ -23,7 +23,7 @@ class CommonInventoryModel extends schema_1.default {
     createCategory(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("categories")
-                .withSchema(this.INVENTORY_SCHEMA)
+                .withSchema(this.HOTEL_INVENTORY_SCHEMA)
                 .insert(payload);
         });
     }
@@ -37,7 +37,7 @@ class CommonInventoryModel extends schema_1.default {
                 dtbs.offset(parseInt(skip));
             }
             const data = yield dtbs
-                .withSchema(this.INVENTORY_SCHEMA)
+                .withSchema(this.HOTEL_INVENTORY_SCHEMA)
                 .select("c.id", "c.hotel_code", "c.name", "c.status", "c.is_deleted")
                 .andWhere("c.is_deleted", false)
                 .where(function () {
@@ -59,7 +59,7 @@ class CommonInventoryModel extends schema_1.default {
             })
                 .orderBy("c.id", "desc");
             const total = yield this.db("categories as c")
-                .withSchema(this.INVENTORY_SCHEMA)
+                .withSchema(this.HOTEL_INVENTORY_SCHEMA)
                 .count("c.id as total")
                 .where(function () {
                 this.whereNull("c.hotel_code").orWhere("c.hotel_code", hotel_code);
@@ -85,7 +85,7 @@ class CommonInventoryModel extends schema_1.default {
     updateCategory(id, payload) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("categories")
-                .withSchema(this.INVENTORY_SCHEMA)
+                .withSchema(this.HOTEL_INVENTORY_SCHEMA)
                 .where({ id })
                 .update(payload);
         });
@@ -95,7 +95,7 @@ class CommonInventoryModel extends schema_1.default {
     createUnit(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("units")
-                .withSchema(this.INVENTORY_SCHEMA)
+                .withSchema(this.HOTEL_INVENTORY_SCHEMA)
                 .insert(payload);
         });
     }
@@ -109,7 +109,7 @@ class CommonInventoryModel extends schema_1.default {
                 dtbs.offset(parseInt(skip));
             }
             const data = yield dtbs
-                .withSchema(this.INVENTORY_SCHEMA)
+                .withSchema(this.HOTEL_INVENTORY_SCHEMA)
                 .select("u.id", "u.hotel_code", "u.name", "u.short_code", "u.status", "u.is_deleted")
                 .where(function () {
                 this.whereNull("u.hotel_code").orWhere("u.hotel_code", hotel_code);
@@ -130,7 +130,7 @@ class CommonInventoryModel extends schema_1.default {
             })
                 .orderBy("u.id", "desc");
             const total = yield this.db("units as u")
-                .withSchema(this.INVENTORY_SCHEMA)
+                .withSchema(this.HOTEL_INVENTORY_SCHEMA)
                 .count("u.id as total")
                 .where(function () {
                 this.whereNull("u.hotel_code").orWhere("u.hotel_code", hotel_code);
@@ -156,7 +156,7 @@ class CommonInventoryModel extends schema_1.default {
     updateUnit(id, hotel_code, payload) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("units")
-                .withSchema(this.INVENTORY_SCHEMA)
+                .withSchema(this.HOTEL_INVENTORY_SCHEMA)
                 .where({ id, hotel_code })
                 .update(payload);
         });
@@ -166,7 +166,7 @@ class CommonInventoryModel extends schema_1.default {
     createBrand(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("brands")
-                .withSchema(this.INVENTORY_SCHEMA)
+                .withSchema(this.HOTEL_INVENTORY_SCHEMA)
                 .insert(payload);
         });
     }
@@ -180,7 +180,7 @@ class CommonInventoryModel extends schema_1.default {
                 dtbs.offset(parseInt(skip));
             }
             const data = yield dtbs
-                .withSchema(this.INVENTORY_SCHEMA)
+                .withSchema(this.HOTEL_INVENTORY_SCHEMA)
                 .select("b.id", "b.hotel_code", "b.name", "b.status", "b.is_deleted")
                 .andWhere("b.is_deleted", false)
                 .where(function () {
@@ -199,7 +199,7 @@ class CommonInventoryModel extends schema_1.default {
             })
                 .orderBy("b.id", "desc");
             const total = yield this.db("brands as b")
-                .withSchema(this.INVENTORY_SCHEMA)
+                .withSchema(this.HOTEL_INVENTORY_SCHEMA)
                 .count("b.id as total")
                 .andWhere("b.is_deleted", false)
                 .where(function () {
@@ -223,7 +223,7 @@ class CommonInventoryModel extends schema_1.default {
     updateBrand(id, hotel_code, payload) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("brands")
-                .withSchema(this.INVENTORY_SCHEMA)
+                .withSchema(this.HOTEL_INVENTORY_SCHEMA)
                 .where({ id, hotel_code })
                 .update(payload);
         });
@@ -233,7 +233,7 @@ class CommonInventoryModel extends schema_1.default {
     createSupplier(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("suppliers")
-                .withSchema(this.INVENTORY_SCHEMA)
+                .withSchema(this.HOTEL_INVENTORY_SCHEMA)
                 .insert(payload);
         });
     }
@@ -247,7 +247,7 @@ class CommonInventoryModel extends schema_1.default {
                 dtbs.offset(parseInt(skip));
             }
             const data = yield dtbs
-                .withSchema(this.INVENTORY_SCHEMA)
+                .withSchema(this.HOTEL_INVENTORY_SCHEMA)
                 .select("s.id", "s.name", "s.phone", "s.last_balance", "s.status", "s.is_deleted")
                 .where("s.hotel_code", hotel_code)
                 .andWhere(function () {
@@ -266,7 +266,7 @@ class CommonInventoryModel extends schema_1.default {
             })
                 .orderBy("s.id", "desc");
             const total = yield this.db("suppliers as s")
-                .withSchema(this.INVENTORY_SCHEMA)
+                .withSchema(this.HOTEL_INVENTORY_SCHEMA)
                 .count("s.id as total")
                 .where("s.hotel_code", hotel_code)
                 .andWhere(function () {
@@ -290,7 +290,7 @@ class CommonInventoryModel extends schema_1.default {
     getSingleSupplier(id, hotel_code) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("suppliers as s")
-                .withSchema(this.INVENTORY_SCHEMA)
+                .withSchema(this.HOTEL_INVENTORY_SCHEMA)
                 .select("*")
                 .where("s.id", id)
                 .andWhere("s.hotel_code", hotel_code);
@@ -381,7 +381,7 @@ class CommonInventoryModel extends schema_1.default {
     updateSupplier(id, hotel_code, payload) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("suppliers")
-                .withSchema(this.INVENTORY_SCHEMA)
+                .withSchema(this.HOTEL_INVENTORY_SCHEMA)
                 .where({ id, hotel_code })
                 .update(payload);
         });
@@ -391,7 +391,7 @@ class CommonInventoryModel extends schema_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             console.log({ payload });
             return yield this.db("supplier_payment")
-                .withSchema(this.INVENTORY_SCHEMA)
+                .withSchema(this.HOTEL_INVENTORY_SCHEMA)
                 .insert(payload);
         });
     }

@@ -17,13 +17,13 @@ class StockInventoryModel extends Schema {
 	// create stock
 	public async createStockIn(payload: ICreateStockInBody) {
 		return await this.db("stocks")
-			.withSchema(this.INVENTORY_SCHEMA)
+			.withSchema(this.HOTEL_INVENTORY_SCHEMA)
 			.insert(payload, "id");
 	}
 
 	public async createStockOut(payload: ICreateStockOutBody) {
 		return await this.db("stocks")
-			.withSchema(this.INVENTORY_SCHEMA)
+			.withSchema(this.HOTEL_INVENTORY_SCHEMA)
 			.insert(payload, "id");
 	}
 
@@ -45,7 +45,7 @@ class StockInventoryModel extends Schema {
 		}
 
 		const data = await dtbs
-			.withSchema(this.INVENTORY_SCHEMA)
+			.withSchema(this.HOTEL_INVENTORY_SCHEMA)
 			.select(
 				"sv.stock_id",
 				"sv.created_at as date",
@@ -70,7 +70,7 @@ class StockInventoryModel extends Schema {
 			.orderBy("sv.stock_id", "desc");
 
 		const total = await this.db("stock_view as sv")
-			.withSchema(this.INVENTORY_SCHEMA)
+			.withSchema(this.HOTEL_INVENTORY_SCHEMA)
 			.count("sv.stock_id as total")
 			.where("sv.hotel_code", hotel_code)
 			.joinRaw(`LEFT JOIN ?? as acc ON acc.id = sv.ac_tr_ac_id`, [
@@ -90,7 +90,7 @@ class StockInventoryModel extends Schema {
 	// get single stock
 	public async getSingleStock(id: number, hotel_code: number) {
 		return await this.db("stock_view as sv")
-			.withSchema(this.INVENTORY_SCHEMA)
+			.withSchema(this.HOTEL_INVENTORY_SCHEMA)
 			.select("sv.*")
 			.where("sv.stock_id", id)
 			.andWhere("sv.hotel_code", hotel_code)
@@ -103,7 +103,7 @@ class StockInventoryModel extends Schema {
 		where: { id: number }
 	) {
 		return await this.db("stock_items")
-			.withSchema(this.INVENTORY_SCHEMA)
+			.withSchema(this.HOTEL_INVENTORY_SCHEMA)
 			.update(payload)
 			.where("id", where.id);
 	}
@@ -111,7 +111,7 @@ class StockInventoryModel extends Schema {
 	// create stock item
 	public async createStockItem(payload: ICreateStockItemBody[]) {
 		return await this.db("stock_items")
-			.withSchema(this.INVENTORY_SCHEMA)
+			.withSchema(this.HOTEL_INVENTORY_SCHEMA)
 			.insert(payload);
 	}
 
@@ -124,7 +124,7 @@ class StockInventoryModel extends Schema {
 		}[]
 	) {
 		return await this.db("inventory")
-			.withSchema(this.INVENTORY_SCHEMA)
+			.withSchema(this.HOTEL_INVENTORY_SCHEMA)
 			.insert(payload);
 	}
 
@@ -137,7 +137,7 @@ class StockInventoryModel extends Schema {
 		where: { id?: number; product_id?: number }
 	) {
 		return await this.db("inventory")
-			.withSchema(this.INVENTORY_SCHEMA)
+			.withSchema(this.HOTEL_INVENTORY_SCHEMA)
 			.update(payload)
 			.modify((qb) => {
 				if (where.product_id) {
@@ -156,7 +156,7 @@ class StockInventoryModel extends Schema {
 	}) {
 		const { product_id, hotel_code } = where;
 		return await this.db("inventory")
-			.withSchema(this.INVENTORY_SCHEMA)
+			.withSchema(this.HOTEL_INVENTORY_SCHEMA)
 			.select("*")
 			.where("hotel_code", hotel_code)
 			.andWhere(function () {
@@ -183,7 +183,7 @@ class StockInventoryModel extends Schema {
 		}
 
 		const data = await dtbs
-			.withSchema(this.INVENTORY_SCHEMA)
+			.withSchema(this.HOTEL_INVENTORY_SCHEMA)
 			.select(
 				"inv.id",
 				"inv.product_id",
