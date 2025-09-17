@@ -127,6 +127,7 @@ class ProductInvService extends AbstractServices {
 	public async createDamagedProduct(req: Request) {
 		return await this.db.transaction(async (trx) => {
 			const { hotel_code, id } = req.hotel_admin;
+			console.log({ hotel_code, id });
 			const { date, damaged_items } =
 				req.body as ICreateDamagedProductBody;
 
@@ -218,15 +219,17 @@ class ProductInvService extends AbstractServices {
 	// Get all Damaged Product
 	public async getAllDamagedProduct(req: Request) {
 		const { hotel_code } = req.hotel_admin;
-		const { limit, skip, key, status } = req.query;
+		const { limit, skip, key, date_from, date_to } = req.query;
 
 		const model = this.Model.productInventoryModel();
 
 		const { data, total } = await model.getAllDamagedProduct({
 			key: key as string,
-			limit: limit as string,
-			skip: skip as string,
+			limit: Number(limit),
+			skip: Number(skip),
 			hotel_code,
+			date_from: date_from as string,
+			date_to: date_to as string,
 		});
 		return {
 			success: true,

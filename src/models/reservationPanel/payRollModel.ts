@@ -160,6 +160,7 @@ class PayRollModel extends Schema {
 				"p.total_deduction",
 				"p.unpaid_leave_days",
 				"p.leave_days",
+				"p.account_id",
 				"p.salary_basis",
 				"p.unpaid_leave_deduction",
 				"p.payable_days",

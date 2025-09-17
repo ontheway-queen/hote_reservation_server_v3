@@ -19,7 +19,10 @@ class StockInvRouter extends abstract_router_1.default {
             .post(this.controller.createStock)
             .get(this.controller.getAllStock);
         // single Stock
-        this.router.route("/:id").get(this.controller.getSingleStock);
+        this.router
+            .route("/:id")
+            .get(this.controller.getSingleStock)
+            .patch(this.controller.updateStockController);
     }
 }
 exports.default = StockInvRouter;

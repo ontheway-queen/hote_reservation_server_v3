@@ -21,7 +21,7 @@ class StockInvService extends abstract_service_1.default {
     createStock(req) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
-                const { hotel_code } = req.hotel_admin;
+                const { hotel_code, id: hotel_admin_id } = req.hotel_admin;
                 const { stock_in, stock_out, note, stock_items } = req.body;
                 // Check purchase
                 const PModel = this.Model.stockInventoryModel(trx);
@@ -48,26 +48,26 @@ class StockInvService extends abstract_service_1.default {
                     //   };
                     // }
                     // get last account ledger
-                    const lastAL = yield Model.getLastAccountLedgerId(hotel_code);
-                    const ledger_id = lastAL.length ? lastAL[0].ledger_id + 1 : 1;
-                    const year = new Date().getFullYear();
-                    // Insert account ledger
-                    yield Model.insertAccountLedger({
-                        ac_tr_ac_id: req.body.ac_tr_ac_id,
-                        hotel_code,
-                        transaction_no: `TRX-${year - ledger_id}`,
-                        ledger_debit_amount: req.body.paid_amount,
-                        ledger_details: `Balance Debited by Update Stock`,
-                    });
+                    // const lastAL = await Model.getLastAccountLedgerId(hotel_code);
+                    // const ledger_id = lastAL.length ? lastAL[0].ledger_id + 1 : 1;
+                    // const year = new Date().getFullYear();
+                    // // Insert account ledger
+                    // await Model.insertAccountLedger({
+                    //   ac_tr_ac_id: req.body.ac_tr_ac_id,
+                    //   hotel_code,
+                    //   transaction_no: `TRX-${year - ledger_id}`,
+                    //   ledger_debit_amount: req.body.paid_amount,
+                    //   ledger_details: `Balance Debited by Update Stock`,
+                    // });
                     // Insert purchase
                     const createdStock = yield PModel.createStockIn({
                         hotel_code,
+                        created_by: req.hotel_admin.id,
                         ac_tr_ac_id: req.body.ac_tr_ac_id,
                         status: "in",
                         note,
                         paid_amount: req.body.paid_amount,
                     });
-                    console.log(req.body);
                     // Insert purchase item
                     const stockItemsPayload = [];
                     for (const item of stock_items) {
@@ -78,13 +78,12 @@ class StockInvService extends abstract_service_1.default {
                         else {
                             stockItemsPayload.push({
                                 product_id: item.product_id,
-                                stock_id: createdStock[0],
+                                stock_id: createdStock[0].id,
                                 quantity: item.quantity,
                             });
                         }
                     }
                     yield PModel.createStockItem(stockItemsPayload);
-                    console.log({ stockItemsPayload });
                     // Inventory step
                     const modifyInventoryProduct = [];
                     const addedInventoryProduct = [];
@@ -114,8 +113,6 @@ class StockInvService extends abstract_service_1.default {
                     if (addedInventoryProduct.length) {
                         yield PModel.insertInInventory(addedInventoryProduct);
                     }
-                    // console.log({ modifyInventoryProduct });
-                    console.log({ modifyInventoryProduct });
                     if (modifyInventoryProduct.length) {
                         yield Promise.all(modifyInventoryProduct.map((item) => __awaiter(this, void 0, void 0, function* () {
                             yield PModel.updateInInventory({ available_quantity: item.available_quantity }, { id: item.id });
@@ -128,6 +125,7 @@ class StockInvService extends abstract_service_1.default {
                         hotel_code,
                         note,
                         status: "out",
+                        created_by: hotel_admin_id,
                     });
                     // Insert purchase item
                     const stockItemsPayload = [];
@@ -139,7 +137,7 @@ class StockInvService extends abstract_service_1.default {
                         else {
                             stockItemsPayload.push({
                                 product_id: item.product_id,
-                                stock_id: createdStock[0],
+                                stock_id: createdStock[0].id,
                                 quantity: item.quantity,
                             });
                         }
@@ -158,7 +156,8 @@ class StockInvService extends abstract_service_1.default {
                             modifyInventoryProduct.push({
                                 available_quantity: parseFloat(inventoryItem.available_quantity) -
                                     payloadItem.quantity,
-                                quantity_used: parseFloat(inventoryItem.quantity_used) + payloadItem.quantity,
+                                quantity_used: parseFloat(inventoryItem.quantity_used) +
+                                    payloadItem.quantity,
                                 id: inventoryItem.id,
                             });
                         }
@@ -216,6 +215,67 @@ class StockInvService extends abstract_service_1.default {
                 success: true,
                 code: this.StatusCode.HTTP_OK,
                 data,
+            };
+        });
+    }
+    updateStockService(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { id } = req.params;
+            const { hotel_code } = req.hotel_admin;
+            const { product_id, type, quantity } = req.body;
+            const model = this.Model.stockInventoryModel();
+            const inventoryModel = this.Model.inventoryModel();
+            const check = yield model.getSingleStock(parseInt(id), hotel_code);
+            if (!check) {
+                return {
+                    success: false,
+                    code: this.StatusCode.HTTP_NOT_FOUND,
+                    message: "Stock not found",
+                };
+            }
+            const { stock_items } = check;
+            const findProduct = stock_items.find((p) => p.product_id === product_id);
+            if (!findProduct) {
+                return {
+                    success: false,
+                    code: this.StatusCode.HTTP_NOT_FOUND,
+                    message: "Product not found",
+                };
+            }
+            const isInventoryExists = yield inventoryModel.getSingleInventoryDetails({
+                hotel_code,
+                product_id: findProduct.product_id,
+            });
+            if (!isInventoryExists) {
+                return {
+                    success: false,
+                    code: this.StatusCode.HTTP_NOT_FOUND,
+                    message: "Inventory not found",
+                };
+            }
+            if (type === "increase") {
+                yield model.updateStockItems({ quantity: Number(findProduct.quantity) + quantity }, { id: findProduct.id });
+                yield model.updateInInventory({
+                    available_quantity: isInventoryExists.available_quantity + quantity,
+                }, { product_id: findProduct.product_id });
+            }
+            else {
+                if (findProduct.quantity < quantity) {
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_NOT_FOUND,
+                        message: "Stock not enough",
+                    };
+                }
+                yield model.updateStockItems({ quantity: findProduct.quantity - quantity }, { id: findProduct.id });
+                yield model.updateInInventory({
+                    available_quantity: isInventoryExists.available_quantity - quantity,
+                }, { product_id: findProduct.product_id });
+            }
+            return {
+                success: true,
+                code: this.StatusCode.HTTP_OK,
+                message: "Stock updated successfully",
             };
         });
     }

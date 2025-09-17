@@ -21,16 +21,16 @@ class StockInventoryModel extends schema_1.default {
     // create stock
     createStockIn(payload) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("stock")
-                .withSchema(this.RESERVATION_SCHEMA)
-                .insert(payload);
+            return yield this.db("stocks")
+                .withSchema(this.INVENTORY_SCHEMA)
+                .insert(payload, "id");
         });
     }
     createStockOut(payload) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("stock")
-                .withSchema(this.RESERVATION_SCHEMA)
-                .insert(payload);
+            return yield this.db("stocks")
+                .withSchema(this.INVENTORY_SCHEMA)
+                .insert(payload, "id");
         });
     }
     // Get All stock
@@ -43,27 +43,31 @@ class StockInventoryModel extends schema_1.default {
                 dtbs.offset(parseInt(skip));
             }
             const data = yield dtbs
-                .withSchema(this.RESERVATION_SCHEMA)
-                .select("sv.id", "sv.created_at as date", "a.name as account_name", "a.ac_type as account_type", "sv.status", "sv.paid_amount", "sv.note")
+                .withSchema(this.INVENTORY_SCHEMA)
+                .select("sv.stock_id", "sv.created_at as date", "acc.name as account_name", "acc.acc_type as account_type", "sv.status", "sv.paid_amount", "sv.note")
                 .where("sv.hotel_code", hotel_code)
-                .leftJoin("account as a", "sv.ac_tr_ac_id", "a.id")
+                .joinRaw(`LEFT JOIN ?? as acc ON acc.id = sv.ac_tr_ac_id`, [
+                `${this.ACC_SCHEMA}.${this.TABLES.accounts}`,
+            ])
                 .andWhere(function () {
                 if (key) {
-                    this.andWhere("a.name", "like", `%${key}%`);
+                    this.andWhere("acc.name", "like", `%${key}%`);
                 }
                 if (status) {
                     this.andWhere("sv.status", "like", `%${status}%`);
                 }
             })
-                .orderBy("sv.id", "desc");
+                .orderBy("sv.stock_id", "desc");
             const total = yield this.db("stock_view as sv")
-                .withSchema(this.RESERVATION_SCHEMA)
-                .count("sv.id as total")
+                .withSchema(this.INVENTORY_SCHEMA)
+                .count("sv.stock_id as total")
                 .where("sv.hotel_code", hotel_code)
-                .leftJoin("account as a", "sv.ac_tr_ac_id", "a.id")
+                .joinRaw(`LEFT JOIN ?? as acc ON acc.id = sv.ac_tr_ac_id`, [
+                `${this.ACC_SCHEMA}.${this.TABLES.accounts}`,
+            ])
                 .andWhere(function () {
                 if (key) {
-                    this.andWhere("a.name", "like", `%${key}%`);
+                    this.andWhere("acc.name", "like", `%${key}%`);
                 }
                 if (status) {
                     this.andWhere("sv.status", "like", `%${status}%`);
@@ -75,21 +79,28 @@ class StockInventoryModel extends schema_1.default {
     // get single stock
     getSingleStock(id, hotel_code) {
         return __awaiter(this, void 0, void 0, function* () {
-            const dtbs = this.db("stock_view as sv");
-            const data = yield dtbs
-                .withSchema(this.RESERVATION_SCHEMA)
-                .select("sv.*", "a.name as account_name", "a.ac_type as account_type")
-                .leftJoin("account as a", "sv.ac_tr_ac_id", "a.id")
-                .where("sv.id", id)
-                .andWhere("sv.hotel_code", hotel_code);
-            return data.length > 0 ? data[0] : [];
+            return yield this.db("stock_view as sv")
+                .withSchema(this.INVENTORY_SCHEMA)
+                .select("sv.*")
+                .where("sv.stock_id", id)
+                .andWhere("sv.hotel_code", hotel_code)
+                .first();
+        });
+    }
+    // update stock
+    updateStockItems(payload, where) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("stock_items")
+                .withSchema(this.INVENTORY_SCHEMA)
+                .update(payload)
+                .where("id", where.id);
         });
     }
     // create stock item
     createStockItem(payload) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("stock_item")
-                .withSchema(this.RESERVATION_SCHEMA)
+            return yield this.db("stock_items")
+                .withSchema(this.INVENTORY_SCHEMA)
                 .insert(payload);
         });
     }
@@ -97,7 +108,7 @@ class StockInventoryModel extends schema_1.default {
     insertInInventory(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("inventory")
-                .withSchema(this.RESERVATION_SCHEMA)
+                .withSchema(this.INVENTORY_SCHEMA)
                 .insert(payload);
         });
     }
@@ -105,9 +116,16 @@ class StockInventoryModel extends schema_1.default {
     updateInInventory(payload, where) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("inventory")
-                .withSchema(this.RESERVATION_SCHEMA)
+                .withSchema(this.INVENTORY_SCHEMA)
                 .update(payload)
-                .where("id", where.id);
+                .modify((qb) => {
+                if (where.product_id) {
+                    qb.where("product_id", where.product_id);
+                }
+                if (where.id) {
+                    qb.where("id", where.id);
+                }
+            });
         });
     }
     // get all inventory
@@ -115,7 +133,7 @@ class StockInventoryModel extends schema_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             const { product_id, hotel_code } = where;
             return yield this.db("inventory")
-                .withSchema(this.RESERVATION_SCHEMA)
+                .withSchema(this.INVENTORY_SCHEMA)
                 .select("*")
                 .where("hotel_code", hotel_code)
                 .andWhere(function () {
@@ -135,7 +153,7 @@ class StockInventoryModel extends schema_1.default {
                 dtbs.offset(parseInt(skip));
             }
             const data = yield dtbs
-                .withSchema(this.RESERVATION_SCHEMA)
+                .withSchema(this.INVENTORY_SCHEMA)
                 .select("inv.id", "inv.product_id", "ing.name", "ing.measurement", "inv.available_quantity", "inv.quantity_used")
                 .leftJoin("ingredient as ing", "inv.product_id", "ing.id")
                 .where({ "inv.hotel_code": hotel_code })

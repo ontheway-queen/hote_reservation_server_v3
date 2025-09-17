@@ -27,6 +27,11 @@ class StockInvValidator {
             limit: joi_1.default.string().allow("").optional(),
             skip: joi_1.default.string().allow("").optional(),
         });
+        this.updateStockValidator = joi_1.default.object({
+            product_id: joi_1.default.number().required(),
+            quantity: joi_1.default.number().required(),
+            type: joi_1.default.string().valid("increase", "decrease").required(),
+        });
     }
 }
 exports.default = StockInvValidator;

@@ -22,15 +22,15 @@ class PurchaseInventoryModel extends schema_1.default {
     createPurchase(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("purchase")
-                .withSchema(this.RESERVATION_SCHEMA)
-                .insert(payload);
+                .withSchema(this.INVENTORY_SCHEMA)
+                .insert(payload, "id");
         });
     }
     // update purchase
     updatePurchase(payload, where) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("purchase")
-                .withSchema(this.RESERVATION_SCHEMA)
+                .withSchema(this.INVENTORY_SCHEMA)
                 .update(payload)
                 .where("id", where.id);
         });
@@ -45,10 +45,10 @@ class PurchaseInventoryModel extends schema_1.default {
                 dtbs.offset(parseInt(skip));
             }
             const data = yield dtbs
-                .withSchema(this.RESERVATION_SCHEMA)
-                .select("p.id", "p.voucher_no", "p.supplier_id", "p.purchase_date", "s.name as supplier_name", "p.sub_total", "p.discount_amount", "p.grand_total", "p.due")
+                .withSchema(this.INVENTORY_SCHEMA)
+                .select("p.id", "p.voucher_no", "p.supplier_id", "p.purchase_date", "s.name as supplier_name", "p.sub_total", "p.discount_amount", "p.shipping_cost", "p.vat", "p.paid_amount", "p.grand_total", "p.due")
                 .where("p.hotel_code", hotel_code)
-                .leftJoin("supplier as s", "p.supplier_id", "s.id")
+                .leftJoin("suppliers as s", "p.supplier_id", "s.id")
                 .andWhere(function () {
                 if (key) {
                     this.andWhere("p.voucher_no", "like", `%${key}%`).orWhere("s.name", "like", `%${key}%`);
@@ -62,10 +62,10 @@ class PurchaseInventoryModel extends schema_1.default {
             })
                 .orderBy("p.id", "desc");
             const total = yield this.db("purchase as p")
-                .withSchema(this.RESERVATION_SCHEMA)
+                .withSchema(this.INVENTORY_SCHEMA)
                 .count("p.id as total")
                 .where("p.hotel_code", hotel_code)
-                .leftJoin("supplier as s", "p.supplier_id", "s.id")
+                .leftJoin("suppliers as s", "p.supplier_id", "s.id")
                 .andWhere(function () {
                 if (key) {
                     this.andWhere("p.voucher_no", "like", `%${key}%`).orWhere("s.name", "like", `%${key}%`);
@@ -83,19 +83,19 @@ class PurchaseInventoryModel extends schema_1.default {
     // get single Purchase
     getSinglePurchase(id, hotel_code) {
         return __awaiter(this, void 0, void 0, function* () {
-            const dtbs = this.db("purchase_view as pv");
+            const dtbs = this.db("purchase_view as p");
             return yield dtbs
-                .withSchema(this.RESERVATION_SCHEMA)
-                .select("*")
-                .where("pv.id", id)
-                .andWhere("pv.hotel_code", hotel_code);
+                .withSchema(this.INVENTORY_SCHEMA)
+                .select("p.*")
+                .where("p.id", id)
+                .andWhere("p.hotel_code", hotel_code);
         });
     }
     // create purchase item
     createPurchaseItem(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("purchase_item")
-                .withSchema(this.RESERVATION_SCHEMA)
+                .withSchema(this.INVENTORY_SCHEMA)
                 .insert(payload);
         });
     }
@@ -103,7 +103,7 @@ class PurchaseInventoryModel extends schema_1.default {
     insertInvSupplierLedger(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("sup_ledger")
-                .withSchema(this.RESERVATION_SCHEMA)
+                .withSchema(this.INVENTORY_SCHEMA)
                 .insert(payload);
         });
     }
@@ -112,7 +112,7 @@ class PurchaseInventoryModel extends schema_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("purchase")
                 .select("id")
-                .withSchema(this.RESERVATION_SCHEMA)
+                .withSchema(this.INVENTORY_SCHEMA)
                 .orderBy("id", "desc")
                 .limit(1);
         });
@@ -121,7 +121,7 @@ class PurchaseInventoryModel extends schema_1.default {
     insertInInventory(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("inventory")
-                .withSchema(this.RESERVATION_SCHEMA)
+                .withSchema(this.INVENTORY_SCHEMA)
                 .insert(payload);
         });
     }
@@ -129,7 +129,7 @@ class PurchaseInventoryModel extends schema_1.default {
     updateInInventory(payload, where) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("inventory")
-                .withSchema(this.RESERVATION_SCHEMA)
+                .withSchema(this.INVENTORY_SCHEMA)
                 .update(payload)
                 .where("id", where.id);
         });
@@ -139,7 +139,7 @@ class PurchaseInventoryModel extends schema_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             const { product_id, hotel_code } = where;
             return yield this.db("inventory")
-                .withSchema(this.RESERVATION_SCHEMA)
+                .withSchema(this.INVENTORY_SCHEMA)
                 .select("*")
                 .where("hotel_code", hotel_code)
                 .andWhere(function () {
@@ -159,7 +159,7 @@ class PurchaseInventoryModel extends schema_1.default {
                 dtbs.offset(parseInt(skip));
             }
             const data = yield dtbs
-                .withSchema(this.RESERVATION_SCHEMA)
+                .withSchema(this.INVENTORY_SCHEMA)
                 .select("inv.id", "inv.product_id", "ing.name", "ing.measurement", "inv.available_quantity", "inv.quantity_used")
                 .leftJoin("ingredient as ing", "inv.product_id", "ing.id")
                 .where({ "inv.hotel_code": hotel_code })
@@ -178,7 +178,7 @@ class PurchaseInventoryModel extends schema_1.default {
     insertPurchaseSubInvoice(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("purchase_sub_invoice")
-                .withSchema(this.RESERVATION_SCHEMA)
+                .withSchema(this.INVENTORY_SCHEMA)
                 .insert(payload);
         });
     }
@@ -186,7 +186,7 @@ class PurchaseInventoryModel extends schema_1.default {
     inserturchaseSubInvoicItem(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("pur_sub_invoice_item")
-                .withSchema(this.RESERVATION_SCHEMA)
+                .withSchema(this.INVENTORY_SCHEMA)
                 .insert(payload);
         });
     }

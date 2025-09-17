@@ -11,6 +11,23 @@ export interface ICreateProductPayload {
 	created_by: number;
 }
 
+export interface IGetProduct {
+	id: number;
+	product_code: string;
+	name: string;
+	model: string;
+	category_id: number;
+	category: string;
+	unit_id: number;
+	unit: string;
+	brand_id: number;
+	brand: string;
+	in_stock: number;
+	status: boolean;
+	details: string;
+	image: string;
+}
+
 export interface IupdateProductPayload {
 	name?: string;
 	model?: string;

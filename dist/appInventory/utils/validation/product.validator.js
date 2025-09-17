@@ -54,6 +54,7 @@ class ProductInvValidator {
             status: joi_1.default.string().allow("").optional(),
             limit: joi_1.default.string().allow("").optional(),
             skip: joi_1.default.string().allow("").optional(),
+            date_from: joi_1.default.date().allow("").optional(),
         });
     }
 }

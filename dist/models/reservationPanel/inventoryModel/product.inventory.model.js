@@ -38,7 +38,7 @@ class ProductInventoryModel extends schema_1.default {
             }
             const data = yield dtbs
                 .withSchema(this.INVENTORY_SCHEMA)
-                .select("p.id", "p.product_code", "p.name", "p.model", "c.name as category", "u.name as unit", "b.name as brand", "i.available_quantity as in_stock", "p.status as status", "p.details", "p.image")
+                .select("p.id", "p.product_code", "p.name", "p.model", "p.category_id", "c.name as category", "p.unit_id", "u.name as unit", "p.brand_id", "b.name as brand", "i.available_quantity as in_stock", "p.status as status", "p.details", "p.image")
                 .where("p.hotel_code", hotel_code)
                 .leftJoin("categories as c", "p.category_id", "c.id")
                 .leftJoin("inventory as i", "p.id", "i.product_id")
@@ -119,37 +119,83 @@ class ProductInventoryModel extends schema_1.default {
     // create Damaged Product
     createDamagedProduct(payload) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("damaged_product")
-                .withSchema(this.RESERVATION_SCHEMA)
+            return yield this.db("damaged_products")
+                .withSchema(this.INVENTORY_SCHEMA)
                 .insert(payload);
         });
     }
     // Get All Damaged Product
-    getAllDamagedProduct(payload) {
+    // public async getAllDamagedProduct(payload: {
+    // 	limit?: string;
+    // 	skip?: string;
+    // 	key?: string;
+    // 	hotel_code: number;
+    // }) {
+    // 	const { limit, skip, hotel_code, key } = payload;
+    // 	const dtbs = this.db("damaged_product_view as dv");
+    // 	if (limit && skip) {
+    // 		dtbs.limit(parseInt(limit as string));
+    // 		dtbs.offset(parseInt(skip as string));
+    // 	}
+    // 	const data = await dtbs
+    // 		.withSchema(this.INVENTORY_SCHEMA)
+    // 		.select("*")
+    // 		.where("dv.hotel_code", hotel_code)
+    // 		.orderBy("dv.id", "desc");
+    // 	const total = await this.db("damaged_product_view as dv")
+    // 		.withSchema(this.INVENTORY_SCHEMA)
+    // 		.count("dv.id as total")
+    // 		.where("dv.hotel_code", hotel_code);
+    // 	return { total: total[0].total, data };
+    // }
+    getAllDamagedProduct(params) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { limit, skip, hotel_code, key } = payload;
-            const dtbs = this.db("damaged_product_view as dv");
-            if (limit && skip) {
-                dtbs.limit(parseInt(limit));
-                dtbs.offset(parseInt(skip));
+            const { hotel_code, key, limit = 10, skip = 0, date_from, date_to, } = params;
+            console.log("date_from:", date_from);
+            console.log("date_to:", date_to);
+            const query = this.db("damaged_products as dm")
+                .withSchema(this.INVENTORY_SCHEMA)
+                .select("dm.id", "dm.hotel_code", "dm.product_id", "pv.name", "pv.model", "pv.product_code", "u.name as unit_name", "b.name as brand_name", "dm.quantity", "dm.note", "dm.created_at", "ua.name as inserted_by")
+                .leftJoin("products as pv", "dm.product_id", "pv.id")
+                .leftJoin("units as u", "u.id", "pv.unit_id")
+                .leftJoin("brands as b", "b.id", "pv.brand_id")
+                .joinRaw(`LEFT JOIN ?? as ua ON ua.id = dm.created_by`, [
+                `${this.RESERVATION_SCHEMA}.${this.TABLES.user_admin}`,
+            ])
+                .where("dm.hotel_code", hotel_code);
+            if (key) {
+                query.andWhere((qb) => {
+                    qb.whereILike("pv.name", `%${key}%`)
+                        .orWhereILike("pv.model", `%${key}%`)
+                        .orWhereILike("pv.product_code", `%${key}%`)
+                        .orWhereILike("b.name", `%${key}%`);
+                });
             }
-            const data = yield dtbs
-                .withSchema(this.RESERVATION_SCHEMA)
-                .select("*")
-                .where("dv.hotel_code", hotel_code)
-                .orderBy("dv.dmp_id", "desc");
-            const total = yield this.db("damaged_product_view as dv")
-                .withSchema(this.RESERVATION_SCHEMA)
-                .count("dv.dmp_id as total")
-                .where("dv.hotel_code", hotel_code);
-            return { total: total[0].total, data };
+            if (date_from)
+                query.andWhereRaw("DATE(dm.created_at) >= ?", [date_from]);
+            if (date_to)
+                query.andWhereRaw("DATE(dm.created_at) <= ?", [date_to]);
+            const totalResult = yield query
+                .clone()
+                .clearSelect()
+                .count("* as count")
+                .first();
+            const total = Number((totalResult === null || totalResult === void 0 ? void 0 : totalResult.count) || 0);
+            const data = yield query
+                .orderBy("dm.created_at", "desc")
+                .limit(limit)
+                .offset(skip);
+            return {
+                total,
+                data,
+            };
         });
     }
     // get single Damaged Product
     getSingleDamagedProduct(id, hotel_code) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("damaged_product_view as dv")
-                .withSchema(this.RESERVATION_SCHEMA)
+                .withSchema(this.INVENTORY_SCHEMA)
                 .select("dv.*")
                 .where("dv.id", id)
                 .andWhere("dv.hotel_code", hotel_code);

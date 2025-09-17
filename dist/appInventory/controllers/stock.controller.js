@@ -47,6 +47,14 @@ class StockInvController extends abstract_controller_1.default {
             const _c = yield this.service.getSingleStock(req), { code } = _c, data = __rest(_c, ["code"]);
             res.status(code).json(data);
         }));
+        // get single Purchase
+        this.updateStockController = this.asyncWrapper.wrap({
+            paramSchema: this.commonValidator.singleParamValidator(),
+            bodySchema: this.validator.updateStockValidator,
+        }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _d = yield this.service.updateStockService(req), { code } = _d, data = __rest(_d, ["code"]);
+            res.status(code).json(data);
+        }));
     }
 }
 exports.default = StockInvController;

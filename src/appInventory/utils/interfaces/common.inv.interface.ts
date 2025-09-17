@@ -5,6 +5,25 @@ export interface ICreateCommonInvPayload {
 	created_by: number;
 }
 
+export interface IGetCommonInv {
+	id: number;
+	hotel_code: number;
+	name: string;
+	short_code?: string;
+	status: boolean;
+	is_deleted: boolean;
+}
+
+export interface IGetInvSupplier {
+	id: number;
+	hotel_code: number;
+	name: string;
+	phone: string;
+	last_balance: number;
+	status: boolean;
+	is_deleted: boolean;
+}
+
 export interface IUpdateCommonInvPayload {
 	name?: string;
 	short_code?: string;

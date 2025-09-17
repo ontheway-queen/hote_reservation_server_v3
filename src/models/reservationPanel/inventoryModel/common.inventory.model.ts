@@ -1,6 +1,8 @@
 import {
 	ICreateCommonInvPayload,
 	ICreateInvSupplierPayload,
+	IGetCommonInv,
+	IGetInvSupplier,
 	IUpdateCommonInvPayload,
 	IUpdateInvSupplierPayload,
 } from "../../../appInventory/utils/interfaces/common.inv.interface";
@@ -33,7 +35,7 @@ class CommonInventoryModel extends Schema {
 		hotel_code: number;
 		excludeId?: number;
 		id?: number;
-	}) {
+	}): Promise<{ data: IGetCommonInv[]; total: number }> {
 		const { id, limit, skip, name, status, hotel_code, excludeId } =
 			payload;
 
@@ -100,7 +102,7 @@ class CommonInventoryModel extends Schema {
 				}
 			});
 
-		return { total: total[0].total, data };
+		return { total: total[0].total as number, data };
 	}
 
 	// Update Category
@@ -128,7 +130,7 @@ class CommonInventoryModel extends Schema {
 		status?: string;
 		hotel_code: number;
 		excludeId?: number;
-	}) {
+	}): Promise<{ data: IGetCommonInv[]; total: number }> {
 		const { limit, skip, key, status, hotel_code, excludeId } = payload;
 
 		const dtbs = this.db("units as u");
@@ -203,7 +205,7 @@ class CommonInventoryModel extends Schema {
 				}
 			});
 
-		return { total: total[0].total, data };
+		return { total: total[0].total as number, data };
 	}
 
 	// Update Unit
@@ -235,7 +237,7 @@ class CommonInventoryModel extends Schema {
 		status?: string;
 		hotel_code: number;
 		excludeId?: number;
-	}) {
+	}): Promise<{ data: IGetCommonInv[]; total: number }> {
 		const { limit, skip, name, status, hotel_code, excludeId } = payload;
 
 		const dtbs = this.db("brands as b");
@@ -296,7 +298,7 @@ class CommonInventoryModel extends Schema {
 				}
 			});
 
-		return { total: total[0].total, data };
+		return { total: total[0].total as number, data };
 	}
 
 	// Update Brand
@@ -329,7 +331,7 @@ class CommonInventoryModel extends Schema {
 		status?: string;
 		hotel_code: number;
 		id?: number;
-	}) {
+	}): Promise<{ data: IGetInvSupplier[]; total: number }> {
 		const { excludeId, limit, skip, hotel_code, name, status, id } =
 			payload;
 
@@ -386,7 +388,7 @@ class CommonInventoryModel extends Schema {
 				}
 			});
 
-		return { total: total[0].total, data };
+		return { total: total[0].total as number, data };
 	}
 
 	// get single supplier
@@ -548,9 +550,12 @@ class CommonInventoryModel extends Schema {
 		total_paid_amount: number;
 		created_by: number;
 		supplier_id: number;
+		payment_no?: string;
+		payment_type?: string;
 	}) {
+		console.log({ payload });
 		return await this.db("supplier_payment")
-			.withSchema(this.RESERVATION_SCHEMA)
+			.withSchema(this.INVENTORY_SCHEMA)
 			.insert(payload);
 	}
 }

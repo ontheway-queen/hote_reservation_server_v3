@@ -5,7 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ReservationRootRouter = void 0;
 const express_1 = require("express");
-const inventory_app_router_1 = __importDefault(require("../appInventory/routers/inventory.app.router"));
+const inventory_app_router_1 = __importDefault(require("../appInventory/inventory.app.router"));
 const authChecker_1 = __importDefault(require("../common/middleware/authChecker/authChecker"));
 const account_router_1 = __importDefault(require("./routers/account.router"));
 const adminBtocHandler_router_1 = __importDefault(require("./routers/adminBtocHandler.router"));

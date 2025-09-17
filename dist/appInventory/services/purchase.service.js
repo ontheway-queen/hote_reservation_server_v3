@@ -56,7 +56,10 @@ class PurchaseInvService extends abstract_service_1.default {
                 }
                 // const last_balance = checkAccount[0].last_balance;
                 const sub_total = purchase_items.reduce((acc, curr) => acc + curr.quantity * curr.price, 0);
-                const grand_total = parseFloat(Number.parseFloat((sub_total + vat + shipping_cost - discount_amount).toString()).toFixed(2));
+                const grand_total = parseFloat(Number.parseFloat((sub_total +
+                    vat +
+                    shipping_cost -
+                    discount_amount).toString()).toFixed(2));
                 const due = grand_total - paid_amount;
                 console.log({ checkAccount, grand_total });
                 if (paid_amount > grand_total) {
@@ -71,7 +74,9 @@ class PurchaseInvService extends abstract_service_1.default {
                 const year = new Date().getFullYear();
                 // get last voucher ID
                 const purchaseData = yield pInvModel.getAllPurchaseForLastId();
-                const purchase_no = purchaseData.length ? purchaseData[0].id + 1 : 1;
+                const purchase_no = purchaseData.length
+                    ? purchaseData[0].id + 1
+                    : 1;
                 // Insert purchase
                 const createdPurchase = yield pInvModel.createPurchase({
                     hotel_code,
@@ -105,7 +110,7 @@ class PurchaseInvService extends abstract_service_1.default {
                     else {
                         purchaseItemsPayload.push({
                             product_id: item.product_id,
-                            purchase_id: createdPurchase[0],
+                            purchase_id: createdPurchase[0].id,
                             price: item.price * item.quantity,
                             quantity: item.quantity,
                             product_name: item.product_name,
@@ -158,22 +163,26 @@ class PurchaseInvService extends abstract_service_1.default {
                     yield cmnInvModel.insertSupplierPayment({
                         created_by: admin_id,
                         hotel_code: hotel_code,
-                        purchase_id: createdPurchase[0],
+                        purchase_id: createdPurchase[0].id,
                         total_paid_amount: paid_amount,
                         ac_tr_ac_id,
                         supplier_id,
+                        payment_no: `PUR-${year}${purchase_no}`,
+                        payment_type: payment_type,
                     });
                     // get last account ledger
-                    const lastAL = yield accModel.getLastAccountLedgerId(hotel_code);
-                    const ledger_id = lastAL.length ? lastAL[0].ledger_id + 1 : 1;
+                    // const lastAL = await accModel.getLastAccountLedgerId(
+                    // 	hotel_code
+                    // );
+                    // const ledger_id = lastAL.length ? lastAL[0].ledger_id + 1 : 1;
                     // Insert account ledger
-                    yield accModel.insertAccountLedger({
-                        ac_tr_ac_id,
-                        hotel_code,
-                        transaction_no: `PUR-${year}${purchase_no}`,
-                        ledger_debit_amount: paid_amount,
-                        ledger_details: `Balance Debited by Purchase`,
-                    });
+                    // await accModel.insertAccountLedger({
+                    // 	ac_tr_ac_id,
+                    // 	hotel_code,
+                    // 	transaction_no: `PUR-${year}${purchase_no}`,
+                    // 	ledger_debit_amount: paid_amount,
+                    // 	ledger_details: `Balance Debited by Purchase`,
+                    // });
                     // Insert supplier ledger
                     yield pInvModel.insertInvSupplierLedger({
                         ac_tr_ac_id,
@@ -353,7 +362,8 @@ class PurchaseInvService extends abstract_service_1.default {
                     for (let i = 0; i < unpaidInvoice.length; i++) {
                         if (remainingPaidAmount > 0) {
                             if (paid_amount >= unpaidInvoice[i].due) {
-                                remainingPaidAmount = paid_amount - unpaidInvoice[i].due;
+                                remainingPaidAmount =
+                                    paid_amount - unpaidInvoice[i].due;
                                 paidingInvoice.push({
                                     id: unpaidInvoice[i].id,
                                     due: unpaidInvoice[i].due - unpaidInvoice[i].due,
@@ -362,7 +372,8 @@ class PurchaseInvService extends abstract_service_1.default {
                                 });
                             }
                             else {
-                                remainingPaidAmount = paid_amount - unpaidInvoice[i].due;
+                                remainingPaidAmount =
+                                    paid_amount - unpaidInvoice[i].due;
                                 paidingInvoice.push({
                                     id: unpaidInvoice[i].id,
                                     due: unpaidInvoice[i].due - paid_amount,

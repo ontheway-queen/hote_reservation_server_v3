@@ -59,6 +59,7 @@ export interface ISinglePayroll {
 	city_code: number;
 	postal_code: any;
 	employee_id: number;
+	account_id: number;
 	employee_name: string;
 	employee_designation: string;
 	employee_phone: string;

@@ -1,6 +1,7 @@
 import {
 	ICreateDemagedProductPayload,
 	ICreateProductPayload,
+	IGetProduct,
 	IupdateProductPayload,
 } from "../../../appInventory/utils/interfaces/product.interface";
 import { TDB } from "../../../common/types/commontypes";
@@ -34,7 +35,7 @@ class ProductInventoryModel extends Schema {
 		unit?: string;
 		category?: string;
 		brand?: string;
-	}) {
+	}): Promise<{ data: IGetProduct[]; total: number }> {
 		const {
 			limit,
 			skip,
@@ -61,8 +62,11 @@ class ProductInventoryModel extends Schema {
 				"p.product_code",
 				"p.name",
 				"p.model",
+				"p.category_id",
 				"c.name as category",
+				"p.unit_id",
 				"u.name as unit",
+				"p.brand_id",
 				"b.name as brand",
 				"i.available_quantity as in_stock",
 				"p.status as status",
@@ -133,7 +137,7 @@ class ProductInventoryModel extends Schema {
 				}
 			});
 
-		return { total: total[0].total, data };
+		return { total: total[0].total as number, data };
 	}
 
 	// get all Products for last id
@@ -157,45 +161,118 @@ class ProductInventoryModel extends Schema {
 
 	// create Damaged Product
 	public async createDamagedProduct(payload: ICreateDemagedProductPayload[]) {
-		return await this.db("damaged_product")
-			.withSchema(this.RESERVATION_SCHEMA)
+		return await this.db("damaged_products")
+			.withSchema(this.INVENTORY_SCHEMA)
 			.insert(payload);
 	}
 
 	// Get All Damaged Product
-	public async getAllDamagedProduct(payload: {
-		limit?: string;
-		skip?: string;
+	// public async getAllDamagedProduct(payload: {
+	// 	limit?: string;
+	// 	skip?: string;
+	// 	key?: string;
+	// 	hotel_code: number;
+	// }) {
+	// 	const { limit, skip, hotel_code, key } = payload;
+
+	// 	const dtbs = this.db("damaged_product_view as dv");
+
+	// 	if (limit && skip) {
+	// 		dtbs.limit(parseInt(limit as string));
+	// 		dtbs.offset(parseInt(skip as string));
+	// 	}
+
+	// 	const data = await dtbs
+	// 		.withSchema(this.INVENTORY_SCHEMA)
+	// 		.select("*")
+	// 		.where("dv.hotel_code", hotel_code)
+	// 		.orderBy("dv.id", "desc");
+
+	// 	const total = await this.db("damaged_product_view as dv")
+	// 		.withSchema(this.INVENTORY_SCHEMA)
+	// 		.count("dv.id as total")
+	// 		.where("dv.hotel_code", hotel_code);
+
+	// 	return { total: total[0].total, data };
+	// }
+
+	public async getAllDamagedProduct(params: {
 		key?: string;
+		limit?: number;
+		skip?: number;
 		hotel_code: number;
+		date_from?: string;
+		date_to?: string;
 	}) {
-		const { limit, skip, hotel_code, key } = payload;
+		const {
+			hotel_code,
+			key,
+			limit = 10,
+			skip = 0,
+			date_from,
+			date_to,
+		} = params;
+		console.log("date_from:", date_from);
+		console.log("date_to:", date_to);
+		const query = this.db("damaged_products as dm")
+			.withSchema(this.INVENTORY_SCHEMA)
+			.select(
+				"dm.id",
+				"dm.hotel_code",
+				"dm.product_id",
+				"pv.name",
+				"pv.model",
+				"pv.product_code",
+				"u.name as unit_name",
+				"b.name as brand_name",
+				"dm.quantity",
+				"dm.note",
+				"dm.created_at",
+				"ua.name as inserted_by"
+			)
+			.leftJoin("products as pv", "dm.product_id", "pv.id")
+			.leftJoin("units as u", "u.id", "pv.unit_id")
+			.leftJoin("brands as b", "b.id", "pv.brand_id")
+			.joinRaw(`LEFT JOIN ?? as ua ON ua.id = dm.created_by`, [
+				`${this.RESERVATION_SCHEMA}.${this.TABLES.user_admin}`,
+			])
+			.where("dm.hotel_code", hotel_code);
 
-		const dtbs = this.db("damaged_product_view as dv");
-
-		if (limit && skip) {
-			dtbs.limit(parseInt(limit as string));
-			dtbs.offset(parseInt(skip as string));
+		if (key) {
+			query.andWhere((qb) => {
+				qb.whereILike("pv.name", `%${key}%`)
+					.orWhereILike("pv.model", `%${key}%`)
+					.orWhereILike("pv.product_code", `%${key}%`)
+					.orWhereILike("b.name", `%${key}%`);
+			});
 		}
+		if (date_from)
+			query.andWhereRaw("DATE(dm.created_at) >= ?", [date_from]);
+		if (date_to) query.andWhereRaw("DATE(dm.created_at) <= ?", [date_to]);
 
-		const data = await dtbs
-			.withSchema(this.RESERVATION_SCHEMA)
-			.select("*")
-			.where("dv.hotel_code", hotel_code)
-			.orderBy("dv.dmp_id", "desc");
+		const totalResult = await query
+			.clone()
+			.clearSelect()
+			.count<{ count: string }[]>("* as count")
+			.first();
 
-		const total = await this.db("damaged_product_view as dv")
-			.withSchema(this.RESERVATION_SCHEMA)
-			.count("dv.dmp_id as total")
-			.where("dv.hotel_code", hotel_code);
+		const total = Number(totalResult?.count || 0);
 
-		return { total: total[0].total, data };
+		const data = await query
+			.orderBy("dm.created_at", "desc")
+			.limit(limit)
+			.offset(skip);
+
+		return {
+			total,
+			data,
+		};
 	}
 
 	// get single Damaged Product
 	public async getSingleDamagedProduct(id: number, hotel_code: number) {
 		return await this.db("damaged_product_view as dv")
-			.withSchema(this.RESERVATION_SCHEMA)
+			.withSchema(this.INVENTORY_SCHEMA)
 			.select("dv.*")
 			.where("dv.id", id)
 			.andWhere("dv.hotel_code", hotel_code);
