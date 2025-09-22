@@ -102,16 +102,16 @@ class PayRollService extends AbstractServices {
 					this.StatusCode.HTTP_BAD_REQUEST
 				);
 			}
-			console.log({ deductions, allowances });
 			const deduction_parse = deductions ? JSON.parse(deductions) : [];
 			const allowances_parse = allowances ? JSON.parse(allowances) : [];
-			console.log({ deduction_parse, allowances_parse });
 			let totalDeductions = 0;
 			let totalAllowances = 0;
 
 			// 🔹 Handle Deductions
 			let deductionsPayload: any[] = [];
-			if (deduction_parse && deduction_parse.length) {
+			if (
+				deduction_parse.some((obj: any) => Object.keys(obj).length > 0)
+			) {
 				deductionsPayload = await Promise.all(
 					deduction_parse.map(async (deduction: any) => {
 						const amount = Number(deduction.deduction_amount);
@@ -128,7 +128,9 @@ class PayRollService extends AbstractServices {
 
 			// 🔹 Handle Allowances
 			let allowancesPayload: any[] = [];
-			if (allowances_parse.length) {
+			if (
+				allowances_parse.some((obj: any) => Object.keys(obj).length > 0)
+			) {
 				allowancesPayload = await Promise.all(
 					allowances_parse.map(async (allowance: any) => {
 						const amount = Number(allowance.allowance_amount);
@@ -175,26 +177,24 @@ class PayRollService extends AbstractServices {
 			const res = await model.CreatePayRoll(payload);
 			const payroll_id = res[0]?.id;
 
-			console.log({ deductionsPayload });
 			if (deductionsPayload.length) {
 				const deductionsWithPayrollId = deductionsPayload.map((d) => ({
 					...d,
 					payroll_id,
 				}));
-				console.log({ deductionsWithPayrollId });
 				await model.createEmployeeDeductions(deductionsWithPayrollId);
 			}
 
-			if (expectedUnpaidDeduction) {
-				await model.createEmployeeDeductions([
-					{
-						employee_id: rest.employee_id,
-						deduction_amount: expectedUnpaidDeduction,
-						deduction_name: "Unpaid Leave Deduction",
-						payroll_id,
-					},
-				]);
-			}
+			// if (expectedUnpaidDeduction) {
+			// 	await model.createEmployeeDeductions([
+			// 		{
+			// 			employee_id: rest.employee_id,
+			// 			deduction_amount: expectedUnpaidDeduction,
+			// 			deduction_name: "Unpaid Leave Deduction",
+			// 			payroll_id,
+			// 		},
+			// 	]);
+			// }
 
 			if (allowancesPayload.length) {
 				const allowancesWithPayrollId = allowancesPayload.map((a) => ({
@@ -265,6 +265,8 @@ class PayRollService extends AbstractServices {
 			const { id } = req.params;
 			const { hotel_code, id: admin_id } = req.hotel_admin;
 			const {
+				allowances,
+				deductions,
 				add_deductions,
 				delete_deductions,
 				add_allowances,
@@ -273,77 +275,6 @@ class PayRollService extends AbstractServices {
 				...rest
 			} = req.body;
 
-			const files = (req.files as Express.Multer.File[]) || [];
-			files.forEach(
-				({ fieldname, filename }) => (rest[fieldname] = filename)
-			);
-
-			const employeeModel = this.Model.employeeModel(trx);
-			const model = this.Model.payRollModel(trx);
-			const accountModel = this.Model.accountModel(trx);
-
-			// Validate existing payroll
-			const existingPayroll = await model.getSinglePayRoll(
-				parseInt(id),
-				hotel_code
-			);
-			if (!existingPayroll) {
-				return {
-					success: false,
-					code: this.StatusCode.HTTP_NOT_FOUND,
-					message: "Payroll not found",
-				};
-			}
-
-			// Validate employee
-			const employee = await employeeModel.getSingleEmployee(
-				existingPayroll.employee_id,
-				hotel_code
-			);
-			if (!employee) {
-				throw new CustomError(
-					"Employee not found!",
-					this.StatusCode.HTTP_NOT_FOUND
-				);
-			}
-			console.log(1);
-			// Validate account
-			const account = await accountModel.getSingleAccount({
-				hotel_code,
-				id: account_id,
-			});
-			if (!account.length) {
-				return {
-					success: false,
-					code: this.StatusCode.HTTP_NOT_FOUND,
-					message: "Account not found",
-				};
-			}
-
-			// Calculate base rates
-			rest.daily_rate = Number(rest.basic_salary) / rest.total_days;
-			rest.payable_days =
-				Number(rest.total_days) -
-				(Number(rest.leave_days || 0) +
-					Number(rest.unpaid_leave_days || 0));
-			const expectedUnpaidDeduction =
-				rest.daily_rate * Number(rest.unpaid_leave_days || 0);
-			rest.unpaid_leave_deduction = expectedUnpaidDeduction;
-
-			// Validate total days
-			if (
-				Number(rest.total_days) !==
-				rest.payable_days +
-					Number(rest.leave_days || 0) +
-					Number(rest.unpaid_leave_days || 0)
-			) {
-				throw new CustomError(
-					"Total days mismatch!",
-					this.StatusCode.HTTP_BAD_REQUEST
-				);
-			}
-			console.log(2);
-			// Parse additions/deletions
 			const deductionsToAdd = add_deductions
 				? JSON.parse(add_deductions)
 				: [];
@@ -357,95 +288,157 @@ class PayRollService extends AbstractServices {
 				? JSON.parse(delete_allowances)
 				: [];
 
+			const deductionsPayload = deductions ? JSON.parse(deductions) : [];
+			const allowancesPayload = allowances ? JSON.parse(allowances) : [];
+
+			const files = (req.files as Express.Multer.File[]) || [];
+			files.forEach(
+				({ fieldname, filename }) => (rest[fieldname] = filename)
+			);
+
+			const employeeModel = this.Model.employeeModel(trx);
+			const model = this.Model.payRollModel(trx);
+			const accountModel = this.Model.accountModel(trx);
+
+			const existingPayroll = await model.getSinglePayRoll(
+				parseInt(id),
+				hotel_code
+			);
+			if (!existingPayroll) {
+				return {
+					success: false,
+					code: this.StatusCode.HTTP_NOT_FOUND,
+					message: "Payroll not found",
+				};
+			}
+
+			const employee = await employeeModel.getSingleEmployee(
+				existingPayroll.employee_id,
+				hotel_code
+			);
+			if (!employee) {
+				throw new CustomError(
+					"Employee not found!",
+					this.StatusCode.HTTP_NOT_FOUND
+				);
+			}
+
+			const account = await accountModel.getSingleAccount({
+				hotel_code,
+				id: account_id,
+			});
+			if (!account.length) {
+				return {
+					success: false,
+					code: this.StatusCode.HTTP_NOT_FOUND,
+					message: "Account not found",
+				};
+			}
+
+			rest.daily_rate = Number(rest.basic_salary) / rest.total_days;
+			rest.payable_days =
+				Number(rest.total_days) -
+				(Number(rest.leave_days || 0) +
+					Number(rest.unpaid_leave_days || 0));
+
+			rest.unpaid_leave_deduction =
+				rest.daily_rate * Number(rest.unpaid_leave_days || 0);
+
+			if (
+				Number(rest.total_days) !==
+				rest.payable_days +
+					Number(rest.leave_days || 0) +
+					Number(rest.unpaid_leave_days || 0)
+			) {
+				throw new CustomError(
+					"Total days mismatch!",
+					this.StatusCode.HTTP_BAD_REQUEST
+				);
+			}
+
 			let totalDeductions = 0;
 			let totalAllowances = 0;
-			console.log(3);
-			// Delete specified deductions/allowances
-			if (deductionsToDelete.length)
+
+			if (deductionsToDelete.length) {
 				await model.deleteEmployeeDeductionsNotIn({
-					payroll_id: parseInt(id),
+					payroll_id: Number(id),
 					ids: deductionsToDelete,
 				});
-			if (allowancesToDelete.length)
+			}
+
+			if (allowancesToDelete.length) {
 				await model.deleteEmployeeAllowancesNotIn({
-					payroll_id: parseInt(id),
-					ids: allowancesToDelete,
+					payroll_id: Number(id),
+					ids: [allowancesToDelete],
 				});
-			console.log(4);
-			// Handle deductions
-			const existingDeductions =
-				await model.getEmployeeDeductionsByPayrollId(parseInt(id));
-			const existingDedMap = new Map(
-				existingDeductions.map((d) => [d.id, d])
-			);
-			console.log(5);
-			for (const d of deductionsToAdd) {
-				const amount = Number(d.deduction_amount || 0);
-				totalDeductions += amount;
-				console.log(6);
-				if (d.id && existingDedMap.has(d.id)) {
-					console.log(7);
-					await model.updateEmployeeDeductions({
-						id: d.id,
-						payload: {
-							deduction_name: d.deduction_name,
-							amount,
-							employee_id: employee.id,
-							is_deleted: d.is_deleted,
-						},
-					});
-				} else if (!d.is_deleted) {
-					console.log(8);
+			}
+
+			if (deductionsToAdd.length) {
+				for (const d of deductionsToAdd) {
+					const amount = Number(d.deduction_amount || 0);
+					totalDeductions += amount;
+
 					await model.createEmployeeDeductions([
 						{
-							payroll_id: parseInt(id),
-							employee_id: employee.id,
+							payroll_id: Number(id),
+							employee_id: existingPayroll.employee_id,
 							deduction_name: d.deduction_name,
 							deduction_amount: amount,
 						},
 					]);
 				}
 			}
-			console.log(9);
-			// Handle allowances
-			const existingAllowances =
-				await model.getEmployeeAllowancesByPayrollId(parseInt(id));
-			const existingAllowMap = new Map(
-				existingAllowances.map((a) => [a.id, a])
-			);
-			console.log(10);
-			for (const a of allowancesToAdd) {
-				const amount = Number(a.allowance_amount || 0);
-				totalAllowances += amount;
-				console.log(11);
-				if (a.id && existingAllowMap.has(a.id)) {
-					await model.updateEmployeeAllowances({
-						id: a.id,
-						payload: {
-							employee_id: employee.id,
-							allowance_id: a.allowance_id,
-							allowance_amount: amount,
-							is_deleted: a.is_deleted,
-						},
-					});
-				} else if (!a.is_deleted) {
-					console.log(12);
+
+			if (allowancesToAdd.length) {
+				for (const a of allowancesToAdd) {
+					const amount = Number(a.allowance_amount || 0);
+					totalAllowances += amount;
+
 					await model.createEmployeeAllowances([
 						{
-							payroll_id: parseInt(id),
-							employee_id: employee.id,
+							payroll_id: Number(id),
+							employee_id: existingPayroll.employee_id,
 							allowance_name: a.allowance_name,
 							allowance_amount: amount,
 						},
 					]);
-					console.log(13);
 				}
 			}
-			console.log(14);
+
+			if (allowancesPayload.length) {
+				for (const a of allowancesPayload) {
+					const amount = Number(a.allowance_amount || 0);
+					totalAllowances += amount;
+					await model.updateEmployeeAllowances({
+						id: a.id,
+						payload: {
+							allowance_name: a.allowance_name,
+							allowance_amount: amount,
+						},
+					});
+				}
+			}
+
+			if (deductionsPayload.length) {
+				for (const d of deductionsPayload) {
+					const amount = Number(d.deduction_amount || 0);
+					totalDeductions += amount;
+					await model.updateEmployeeDeductions({
+						id: d.id,
+						payload: {
+							deduction_name: d.deduction_name,
+							deduction_amount: amount,
+						},
+					});
+				}
+			}
+
 			// Recalculate salaries
 			const grossSalary =
-				rest.payable_days * rest.daily_rate + totalAllowances;
-			const netSalary = grossSalary - totalDeductions;
+				rest.payable_days * rest.daily_rate +
+				(Number(totalAllowances) || 0);
+			const netSalary =
+				Number(grossSalary) - (Number(totalDeductions) || 0);
 
 			const payload = {
 				...rest,
@@ -459,18 +452,6 @@ class PayRollService extends AbstractServices {
 			};
 
 			await model.updatePayRoll({ id: parseInt(id), payload });
-
-			// Ensure unpaid leave deduction exists
-			if (expectedUnpaidDeduction) {
-				await model.createEmployeeDeductions([
-					{
-						employee_id: employee.id,
-						deduction_amount: expectedUnpaidDeduction,
-						deduction_name: "Unpaid Leave Deduction",
-						payroll_id: Number(id),
-					},
-				]);
-			}
 
 			return {
 				success: true,

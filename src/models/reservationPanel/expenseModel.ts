@@ -125,7 +125,7 @@ class ExpenseModel extends Schema {
               'remarks', ei.remarks,
               'amount', ei.amount
             )
-          ) FILTER (WHERE ei.id IS NOT NULL), '[]'
+          ) FILTER (WHERE ei.id IS NOT NULL AND ei.is_deleted = false), '[]'
         ) as expense_items
       `)
 			)
@@ -218,6 +218,7 @@ class ExpenseModel extends Schema {
 				"ev.expense_no",
 				"h.name as hotel_name",
 				"h.address as hotel_address",
+				"acc.id as account_id",
 				"acc_head.name as account_name",
 				"acc.acc_type as account_type",
 				"ev.pay_method",
@@ -234,11 +235,16 @@ class ExpenseModel extends Schema {
 				"ev.branch_name",
 				"ev.expense_amount",
 				"ev.expense_note",
+				"ev.expense_by as expense_by_id",
+				"emp.name as expense_by_name",
+				"ev.expense_voucher_url_1 as file_1",
+				"ev.expense_voucher_url_2 as file_2",
 				this.db.raw(`
         COALESCE(
           json_agg(
             json_build_object(
-              'id', ah.id,
+              'id', ei.id,
+              'expense_head_id', ei.expense_head_id,
               'head_name', ah.name,
               'remarks', ei.remarks,
               'amount', ei.amount
@@ -247,6 +253,9 @@ class ExpenseModel extends Schema {
         ) as expense_items
       `)
 			)
+			.joinRaw(`JOIN ?? AS emp ON emp.id = ev.expense_by`, [
+				`${this.HR_SCHEMA}.${this.TABLES.employee}`,
+			])
 			.joinRaw(`JOIN ?? AS acc ON acc.id = ev.account_id`, [
 				`${this.ACC_SCHEMA}.${this.TABLES.accounts}`,
 			])
@@ -285,7 +294,9 @@ class ExpenseModel extends Schema {
 				"ev.cheque_date",
 				"ev.bank_name",
 				"ev.branch_name",
-				"acc_head.name"
+				"acc_head.name",
+				"acc.id",
+				"emp.name"
 			);
 
 		return data;

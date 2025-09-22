@@ -184,7 +184,8 @@ class PayRollModel extends schema_1.default {
             return yield this.db("employee_deductions")
                 .withSchema(this.HR_SCHEMA)
                 .select("*")
-                .where({ payroll_id });
+                .where({ payroll_id })
+                .andWhere({ is_deleted: false });
         });
     }
     getEmployeeAllowancesByPayrollId(payroll_id) {
@@ -200,7 +201,7 @@ class PayRollModel extends schema_1.default {
             return yield this.db("employee_deductions")
                 .withSchema(this.HR_SCHEMA)
                 .where({ payroll_id })
-                .whereNotIn("id", ids)
+                .whereIn("id", ids)
                 .update({ is_deleted: true });
         });
     }
@@ -209,8 +210,26 @@ class PayRollModel extends schema_1.default {
             return yield this.db("employee_allowances")
                 .withSchema(this.HR_SCHEMA)
                 .where({ payroll_id })
-                .whereNotIn("id", ids)
+                .whereIn("id", ids)
                 .update({ is_deleted: true });
+        });
+    }
+    getSingleEmployeeDeduction(id) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("employee_deductions")
+                .withSchema(this.HR_SCHEMA)
+                .select("*")
+                .where("id", id)
+                .first();
+        });
+    }
+    getSingleEmployeeAllowance(id) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("employee_allowances")
+                .withSchema(this.HR_SCHEMA)
+                .select("*")
+                .where("id", id)
+                .first();
         });
     }
 }

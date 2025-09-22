@@ -72,6 +72,7 @@ class EmployeeService extends abstract_service_1.default {
                 // insert into emp bank info
                 yield hrModel.insertIntoEmpbankInfo({
                     emp_id: insertRes.id,
+                    id: insertRes.id + 1,
                 });
                 return {
                     success: true,

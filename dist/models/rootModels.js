@@ -8,6 +8,11 @@ const btoc_invoiceModel_1 = __importDefault(require("./btocInvModel/btoc.invoice
 const btoc_model_1 = require("./btocModels/btoc.model");
 const commonModel_1 = __importDefault(require("./commonModel/commonModel"));
 const dboModel_1 = __importDefault(require("./commonModel/dboModel"));
+const service_model_1 = __importDefault(require("./hotelServiceModel/service.model"));
+const serviceCategories_model_1 = __importDefault(require("./hotelServiceModel/serviceCategories.model"));
+const serviceImage_model_1 = __importDefault(require("./hotelServiceModel/serviceImage.model"));
+const servicePricing_model_1 = __importDefault(require("./hotelServiceModel/servicePricing.model"));
+const serviceSchedule_model_1 = __importDefault(require("./hotelServiceModel/serviceSchedule.model"));
 const mAdministration_model_1 = __importDefault(require("./managementsModel/mAdministrationModel/mAdministration.model"));
 const mConfigurationModel_1 = __importDefault(require("./managementsModel/mConfigurationModel/mConfigurationModel"));
 const accountModel_1 = __importDefault(require("./reservationPanel/accountModel/accountModel"));
@@ -129,6 +134,21 @@ class Models {
     }
     inventoryModel(trx) {
         return new inventory_model_1.default(trx || this.db);
+    }
+    serviceCategoriesModel(trx) {
+        return new serviceCategories_model_1.default(trx || this.db);
+    }
+    serviceModel(trx) {
+        return new service_model_1.default(trx || this.db);
+    }
+    serviceImageModel(trx) {
+        return new serviceImage_model_1.default(trx || this.db);
+    }
+    servicePricingModel(trx) {
+        return new servicePricing_model_1.default(trx || this.db);
+    }
+    serviceScheduleModel(trx) {
+        return new serviceSchedule_model_1.default(trx || this.db);
     }
 }
 exports.default = Models;

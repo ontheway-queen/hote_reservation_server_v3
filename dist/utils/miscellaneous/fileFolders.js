@@ -15,6 +15,7 @@ FileFolder.HOTEL_PAYROLL_FILES = "hotel-payroll-files";
 FileFolder.INVENTORY_FILES = "inventory-files";
 FileFolder.BTOC_USERS_FILES = "btoc-user-files";
 FileFolder.BTOC_BOOKING_FILES = "btoc-booking-files";
+FileFolder.HOTEL_SERVICE_FILES = "hotel-service-files";
 FileFolder.B2C_SITE_CONFIG = "b2c/site-config";
 FileFolder.B2C_SITE_CONFIG_HERO_BG = "b2c/hero-bg";
 FileFolder.B2C_SITE_CONFIG_OTHERS = "b2c/others";

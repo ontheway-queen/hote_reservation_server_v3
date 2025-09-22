@@ -17,6 +17,8 @@ import ReportRouter from "./routers/reports.router";
 import { ReservationRouter } from "./routers/reservation.router";
 import RoomGuestRouter from "./routers/room.guest.router";
 import RoomRouter from "./routers/room.router";
+import ServiceRouter from "./routers/service.router";
+import ServiceCategoriesRouter from "./routers/serviceCategories.router";
 import SettingRouter from "./routers/setting.router";
 
 export class ReservationRootRouter {
@@ -128,6 +130,18 @@ export class ReservationRootRouter {
 			"/payroll",
 			this.authChecker.hotelAdminAuthChecker,
 			new PayRollRouter().router
+		);
+
+		this.router.use(
+			"/service-categories",
+			this.authChecker.hotelAdminAuthChecker,
+			new ServiceCategoriesRouter().router
+		);
+
+		this.router.use(
+			"/services",
+			this.authChecker.hotelAdminAuthChecker,
+			new ServiceRouter().router
 		);
 
 		this.router.use(

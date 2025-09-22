@@ -23,6 +23,8 @@ const reports_router_1 = __importDefault(require("./routers/reports.router"));
 const reservation_router_1 = require("./routers/reservation.router");
 const room_guest_router_1 = __importDefault(require("./routers/room.guest.router"));
 const room_router_1 = __importDefault(require("./routers/room.router"));
+const service_router_1 = __importDefault(require("./routers/service.router"));
+const serviceCategories_router_1 = __importDefault(require("./routers/serviceCategories.router"));
 const setting_router_1 = __importDefault(require("./routers/setting.router"));
 class ReservationRootRouter {
     constructor() {
@@ -48,6 +50,8 @@ class ReservationRootRouter {
         this.router.use("/inventory", this.authChecker.hotelAdminAuthChecker, new inventory_app_router_1.default().router);
         this.router.use("/btoc", this.authChecker.hotelAdminAuthChecker, new adminBtocHandler_router_1.default().router);
         this.router.use("/payroll", this.authChecker.hotelAdminAuthChecker, new payRoll_router_1.default().router);
+        this.router.use("/service-categories", this.authChecker.hotelAdminAuthChecker, new serviceCategories_router_1.default().router);
+        this.router.use("/services", this.authChecker.hotelAdminAuthChecker, new service_router_1.default().router);
         this.router.use("/", this.authChecker.hotelAdminAuthChecker, new reservation_router_1.ReservationRouter().router);
     }
 }

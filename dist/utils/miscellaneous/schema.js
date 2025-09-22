@@ -6,6 +6,7 @@ class Schema {
         this.CM_SCHEMA = "channel_manager";
         this.RESERVATION_SCHEMA = "hotel_reservation";
         this.HOTEL_INVENTORY_SCHEMA = "hotel_inventory";
+        this.HOTEL_SERVICE_SCHEMA = "hotel_service";
         this.HR_SCHEMA = "hr";
         this.DBO_SCHEMA = "dbo";
         this.BTOC_SCHEMA = "btoc";

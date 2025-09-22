@@ -95,6 +95,44 @@ class PayRollValidator {
 
 		note: Joi.string().allow("").optional(),
 
+		deductions: Joi.string()
+			.custom((value, helpers) => {
+				try {
+					const parsedObject = JSON.parse(value);
+					const deductionType = typeof parsedObject;
+					if (deductionType !== "object") {
+						return helpers.message({
+							custom: "invalid deductions, should be a JSON object",
+						});
+					}
+					return value;
+				} catch (err) {
+					return helpers.message({
+						custom: "invalid deductions, should be a valid JSON Object",
+					});
+				}
+			})
+			.optional(),
+
+		allowances: Joi.string()
+			.custom((value, helpers) => {
+				try {
+					const parsedObject = JSON.parse(value);
+					const otherType = typeof parsedObject;
+					if (otherType !== "object") {
+						return helpers.message({
+							custom: "invalid allowances, should be a JSON object",
+						});
+					}
+					return value;
+				} catch (err) {
+					return helpers.message({
+						custom: "invalid allowances, should be a valid JSON Object",
+					});
+				}
+			})
+			.optional(),
+
 		add_deductions: Joi.string()
 			.custom((value, helpers) => {
 				try {
@@ -131,6 +169,7 @@ class PayRollValidator {
 					});
 				}
 			}),
+
 		add_allowances: Joi.string()
 			.custom((value, helpers) => {
 				try {

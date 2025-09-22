@@ -45,7 +45,7 @@ export class ExpenseService extends AbstractServices {
 			const accountModel = this.Model.accountModel(trx);
 			const employeeModel = this.Model.employeeModel(trx);
 			const model = this.Model.expenseModel(trx);
-
+			console.log(1);
 			// account check
 			const [acc] = await accountModel.getSingleAccount({
 				hotel_code,
@@ -64,7 +64,7 @@ export class ExpenseService extends AbstractServices {
 				rest.expense_by,
 				hotel_code
 			);
-
+			console.log(2);
 			if (!getSingleEmployee) {
 				return {
 					success: false,
@@ -77,7 +77,7 @@ export class ExpenseService extends AbstractServices {
 				(acc, cu) => acc + cu.amount,
 				0
 			);
-
+			console.log(3);
 			// ___________________________________  Accounting _________________________________//
 
 			// accounting
@@ -106,7 +106,7 @@ export class ExpenseService extends AbstractServices {
 				voucher_type,
 				trx
 			);
-
+			console.log(4);
 			// generate expense no
 			const expenseNo = await Lib.generateExpenseNo(trx);
 
@@ -134,7 +134,7 @@ export class ExpenseService extends AbstractServices {
 			]);
 
 			//_______________________________________ END _________________________________//
-
+			console.log(5);
 			// Insert expense record
 			const payload = {
 				...rest,
@@ -148,9 +148,13 @@ export class ExpenseService extends AbstractServices {
 			const expenseRes = await model.createExpense(payload);
 
 			const expenseItemPayload = expense_items.map(
-				(item: { id: number; remarks: string; amount: number }) => {
+				(item: {
+					expense_head_id: number;
+					remarks: string;
+					amount: number;
+				}) => {
 					return {
-						expense_head_id: item.id,
+						expense_head_id: item.expense_head_id,
 						remarks: item.remarks,
 						amount: item.amount,
 						expense_id: expenseRes[0].id,
@@ -158,9 +162,10 @@ export class ExpenseService extends AbstractServices {
 					};
 				}
 			);
-
+			console.log(5.5);
+			console.log({ expenseItemPayload });
 			await model.createExpenseItem(expenseItemPayload);
-
+			console.log(6);
 			return {
 				success: true,
 				code: this.StatusCode.HTTP_SUCCESSFUL,
@@ -218,6 +223,7 @@ export class ExpenseService extends AbstractServices {
 			const { id } = req.params;
 			const { id: user_id, hotel_code } = req.hotel_admin;
 			const { expense_items, ...rest } = req.body;
+			console.log({ expense_items, data: rest });
 
 			const expenseModel = this.Model.expenseModel(trx);
 			const employeeModel = this.Model.employeeModel(trx);
@@ -239,27 +245,46 @@ export class ExpenseService extends AbstractServices {
 			if (Array.isArray(expense_items) && expense_items.length) {
 				const existingItems =
 					await expenseModel.getExpenseItemByExpenseId(expenseId);
+
 				const existingMap = new Map(
 					existingItems.map((it: any) => [it.id, it])
 				);
 
 				await Promise.all(
 					expense_items.map(async (item: any) => {
+						const normalizedItem = {
+							...item,
+							is_deleted:
+								item.is_deleted === 1 ||
+								item.is_deleted === "1",
+						};
 						if (item.id && existingMap.has(item.id)) {
 							await expenseModel.updateExpenseItems({
 								id: item.id,
-								payload: { ...item },
+								payload: normalizedItem,
 							});
 						} else {
 							await expenseModel.createExpenseItem({
 								expense_id: expenseId,
 								expense_head_id:
-									existingItems[0].expense_head_id,
-								...item,
+									existingItems[0]?.expense_head_id,
+								...normalizedItem,
 							});
 						}
 					})
 				);
+
+				const updatedItems =
+					await expenseModel.getExpenseItemByExpenseId(expenseId);
+				const totalAmount = updatedItems
+					.filter((item) => !item.is_deleted)
+					.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+
+				await expenseModel.updateExpense({
+					id: expenseId,
+					hotel_code,
+					payload: { expense_amount: totalAmount },
+				});
 			}
 
 			const files = req.files;

@@ -4,6 +4,11 @@ import BtocInvoiceModel from "./btocInvModel/btoc.invoiceModel";
 import { BtocUserModel } from "./btocModels/btoc.model";
 import CommonModel from "./commonModel/commonModel";
 import DboModel from "./commonModel/dboModel";
+import ServiceModel from "./hotelServiceModel/service.model";
+import ServiceCategoriesModel from "./hotelServiceModel/serviceCategories.model";
+import ServicImageModel from "./hotelServiceModel/serviceImage.model";
+import ServicePricingModel from "./hotelServiceModel/servicePricing.model";
+import ServiceScheduleModel from "./hotelServiceModel/serviceSchedule.model";
 import MAdministrationModel from "./managementsModel/mAdministrationModel/mAdministration.model";
 import MConfigurationModel from "./managementsModel/mConfigurationModel/mConfigurationModel";
 import AccountModel from "./reservationPanel/accountModel/accountModel";
@@ -158,6 +163,26 @@ class Models {
 
 	public inventoryModel(trx?: Knex.Transaction) {
 		return new InventoryModel(trx || this.db);
+	}
+
+	public serviceCategoriesModel(trx?: Knex.Transaction) {
+		return new ServiceCategoriesModel(trx || this.db);
+	}
+
+	public serviceModel(trx?: Knex.Transaction) {
+		return new ServiceModel(trx || this.db);
+	}
+
+	public serviceImageModel(trx?: Knex.Transaction) {
+		return new ServicImageModel(trx || this.db);
+	}
+
+	public servicePricingModel(trx?: Knex.Transaction) {
+		return new ServicePricingModel(trx || this.db);
+	}
+
+	public serviceScheduleModel(trx?: Knex.Transaction) {
+		return new ServiceScheduleModel(trx || this.db);
 	}
 }
 export default Models;

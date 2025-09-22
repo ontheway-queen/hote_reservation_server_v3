@@ -279,7 +279,8 @@ class PayRollModel extends Schema {
 		return await this.db("employee_deductions")
 			.withSchema(this.HR_SCHEMA)
 			.select("*")
-			.where({ payroll_id });
+			.where({ payroll_id })
+			.andWhere({ is_deleted: false });
 	}
 
 	public async getEmployeeAllowancesByPayrollId(payroll_id: number) {
@@ -299,7 +300,7 @@ class PayRollModel extends Schema {
 		return await this.db("employee_deductions")
 			.withSchema(this.HR_SCHEMA)
 			.where({ payroll_id })
-			.whereNotIn("id", ids)
+			.whereIn("id", ids)
 			.update({ is_deleted: true });
 	}
 
@@ -313,8 +314,24 @@ class PayRollModel extends Schema {
 		return await this.db("employee_allowances")
 			.withSchema(this.HR_SCHEMA)
 			.where({ payroll_id })
-			.whereNotIn("id", ids)
+			.whereIn("id", ids)
 			.update({ is_deleted: true });
+	}
+
+	public async getSingleEmployeeDeduction(id: number) {
+		return await this.db("employee_deductions")
+			.withSchema(this.HR_SCHEMA)
+			.select("*")
+			.where("id", id)
+			.first();
+	}
+
+	public async getSingleEmployeeAllowance(id: number) {
+		return await this.db("employee_allowances")
+			.withSchema(this.HR_SCHEMA)
+			.select("*")
+			.where("id", id)
+			.first();
 	}
 }
 export default PayRollModel;

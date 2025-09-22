@@ -78,7 +78,7 @@ class ExpenseValidator {
                     }
                     // validate each item inside array
                     for (const item of parsed) {
-                        if (typeof item.id !== "number") {
+                        if (item.id && typeof item.id !== "number") {
                             return helpers.message({
                                 custom: "Each expense item must have a numeric id",
                             });
@@ -94,7 +94,7 @@ class ExpenseValidator {
                             });
                         }
                     }
-                    return parsed; // ✅ will pass parsed array to `req.body`
+                    return parsed;
                 }
                 catch (err) {
                     return helpers.message({
@@ -164,6 +164,7 @@ class ExpenseValidator {
                     }
                     // validate each item inside array
                     for (const item of parsed) {
+                        console.log({ item });
                         if (item.id && typeof item.id !== "number") {
                             return helpers.message({
                                 custom: "Each expense item must have a numeric id",
@@ -180,9 +181,9 @@ class ExpenseValidator {
                             });
                         }
                         if (item.is_deleted &&
-                            typeof item.is_deleted !== "boolean") {
+                            typeof item.is_deleted !== "number") {
                             return helpers.message({
-                                custom: "Each expense item must have a boolean is_deleted",
+                                custom: "Each expense item must have 0 or 1",
                             });
                         }
                     }

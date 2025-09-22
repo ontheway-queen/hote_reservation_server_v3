@@ -104,7 +104,7 @@ class ExpenseModel extends schema_1.default {
               'remarks', ei.remarks,
               'amount', ei.amount
             )
-          ) FILTER (WHERE ei.id IS NOT NULL), '[]'
+          ) FILTER (WHERE ei.id IS NOT NULL AND ei.is_deleted = false), '[]'
         ) as expense_items
       `))
                 .joinRaw(`JOIN ?? AS acc ON acc.id = ev.account_id`, [
@@ -175,11 +175,12 @@ class ExpenseModel extends schema_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             const dtbs = this.db("expense as ev").withSchema(this.ACC_SCHEMA);
             const data = yield dtbs
-                .select("ev.id", "ev.hotel_code", "ev.expense_no", "h.name as hotel_name", "h.address as hotel_address", "acc_head.name as account_name", "acc.acc_type as account_type", "ev.pay_method", this.db.raw(`to_char(ev.expense_date, 'YYYY-MM-DD') as expense_date`), this.db.raw(`to_char(ev.created_at, 'YYYY-MM-DD') as expense_created_at`), "ev.transaction_no", "ev.cheque_no", "ev.cheque_date", "ev.bank_name", "ev.branch_name", "ev.expense_amount", "ev.expense_note", this.db.raw(`
+                .select("ev.id", "ev.hotel_code", "ev.expense_no", "h.name as hotel_name", "h.address as hotel_address", "acc.id as account_id", "acc_head.name as account_name", "acc.acc_type as account_type", "ev.pay_method", this.db.raw(`to_char(ev.expense_date, 'YYYY-MM-DD') as expense_date`), this.db.raw(`to_char(ev.created_at, 'YYYY-MM-DD') as expense_created_at`), "ev.transaction_no", "ev.cheque_no", "ev.cheque_date", "ev.bank_name", "ev.branch_name", "ev.expense_amount", "ev.expense_note", "ev.expense_by as expense_by_id", "emp.name as expense_by_name", "ev.expense_voucher_url_1 as file_1", "ev.expense_voucher_url_2 as file_2", this.db.raw(`
         COALESCE(
           json_agg(
             json_build_object(
-              'id', ah.id,
+              'id', ei.id,
+              'expense_head_id', ei.expense_head_id,
               'head_name', ah.name,
               'remarks', ei.remarks,
               'amount', ei.amount
@@ -187,6 +188,9 @@ class ExpenseModel extends schema_1.default {
           ) FILTER (WHERE ei.id IS NOT NULL), '[]'
         ) as expense_items
       `))
+                .joinRaw(`JOIN ?? AS emp ON emp.id = ev.expense_by`, [
+                `${this.HR_SCHEMA}.${this.TABLES.employee}`,
+            ])
                 .joinRaw(`JOIN ?? AS acc ON acc.id = ev.account_id`, [
                 `${this.ACC_SCHEMA}.${this.TABLES.accounts}`,
             ])
@@ -201,7 +205,7 @@ class ExpenseModel extends schema_1.default {
                 .where("ev.id", id)
                 .andWhere("ev.hotel_code", hotel_code)
                 .andWhere("ev.is_deleted", false)
-                .groupBy("ev.id", "ev.voucher_no", "ev.account_id", "ev.expense_date", "acc.name", "acc.acc_type", "ev.created_at", "h.name", "h.address", "ev.pay_method", "ev.transaction_no", "ev.cheque_no", "ev.cheque_date", "ev.bank_name", "ev.branch_name", "acc_head.name");
+                .groupBy("ev.id", "ev.voucher_no", "ev.account_id", "ev.expense_date", "acc.name", "acc.acc_type", "ev.created_at", "h.name", "h.address", "ev.pay_method", "ev.transaction_no", "ev.cheque_no", "ev.cheque_date", "ev.bank_name", "ev.branch_name", "acc_head.name", "acc.id", "emp.name");
             return data;
         });
     }
