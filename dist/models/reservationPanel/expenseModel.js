@@ -37,9 +37,7 @@ class ExpenseModel extends schema_1.default {
                 .withSchema(this.ACC_SCHEMA)
                 .where("group_code", constants_1.EXPENSE_GROUP)
                 .andWhere((builder) => {
-                builder
-                    .whereNull("hotel_code")
-                    .orWhere("hotel_code", hotel_code);
+                builder.whereNull("hotel_code").orWhere("hotel_code", hotel_code);
             })
                 .modify((e) => {
                 if (search)
@@ -124,14 +122,11 @@ class ExpenseModel extends schema_1.default {
                 .andWhere("ev.is_deleted", false)
                 .modify((builder) => {
                 if (from_date && endDate) {
-                    builder.andWhereBetween("ev.expense_date", [
-                        from_date,
-                        endDate,
-                    ]);
+                    builder.andWhereBetween("ev.expense_date", [from_date, endDate]);
                 }
                 if (key) {
                     builder.andWhere((q) => {
-                        q.orWhere("eh.name", "like", `%${key}%`)
+                        q.orWhere("ev.expense_no", "like", `%${key}%`)
                             .orWhere("acc.name", "like", `%${key}%`)
                             .orWhere("ev.voucher_no", "like", `%${key}%`);
                     });
@@ -154,14 +149,11 @@ class ExpenseModel extends schema_1.default {
                 .andWhere("ev.is_deleted", false)
                 .modify((builder) => {
                 if (from_date && endDate) {
-                    builder.andWhereBetween("ev.expense_date", [
-                        from_date,
-                        endDate,
-                    ]);
+                    builder.andWhereBetween("ev.expense_date", [from_date, endDate]);
                 }
                 if (key) {
                     builder.andWhere((q) => {
-                        q.orWhere("eh.name", "like", `%${key}%`)
+                        q.orWhere("ev.expense_no", "like", `%${key}%`)
                             .orWhere("acc.name", "like", `%${key}%`)
                             .orWhere("ev.voucher_no", "like", `%${key}%`);
                     });

@@ -58,7 +58,18 @@ class ProductInventoryModel extends schema_1.default {
                     this.andWhere("b.name", "like", `%${brand}%`);
                 }
                 if (in_stock) {
-                    this.andWhere("p.status", "like", `%${in_stock}%`);
+                    this.whereExists(function () {
+                        if (in_stock === "1")
+                            this.select("*")
+                                .from("hotel_inventory.inventory as i")
+                                .whereRaw("i.product_id = p.id")
+                                .andWhere("i.available_quantity", ">", 0);
+                        else if (in_stock === "0")
+                            this.select("*")
+                                .from("hotel_inventory.inventory as i")
+                                .whereRaw("i.product_id = p.id")
+                                .andWhere("i.available_quantity", "<=", 0);
+                    });
                 }
                 if (pd_ids) {
                     this.whereIn("p.id", pd_ids);
@@ -87,7 +98,18 @@ class ProductInventoryModel extends schema_1.default {
                     this.andWhere("b.name", "like", `%${brand}%`);
                 }
                 if (in_stock) {
-                    this.andWhere("p.status", "like", `%${in_stock}%`);
+                    this.whereExists(function () {
+                        if (in_stock === "1")
+                            this.select("*")
+                                .from("hotel_inventory.inventory as i")
+                                .whereRaw("i.product_id = p.id")
+                                .andWhere("i.available_quantity", ">", 0);
+                        else if (in_stock === "0")
+                            this.select("*")
+                                .from("hotel_inventory.inventory as i")
+                                .whereRaw("i.product_id = p.id")
+                                .andWhere("i.available_quantity", "<=", 0);
+                    });
                 }
                 if (pd_ids) {
                     this.whereIn("p.id", pd_ids);

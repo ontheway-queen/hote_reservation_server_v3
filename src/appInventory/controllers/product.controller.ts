@@ -4,82 +4,69 @@ import ProductInvService from "../services/product.service";
 import ProductInvValidator from "../utils/validation/product.validator";
 
 class ProductInvController extends AbstractController {
-	private service = new ProductInvService();
-	private validator = new ProductInvValidator();
-	constructor() {
-		super();
-	}
+  private service = new ProductInvService();
+  private validator = new ProductInvValidator();
+  constructor() {
+    super();
+  }
 
-	//=================== Product ======================//
+  public createProduct = this.asyncWrapper.wrap(
+    { bodySchema: this.validator.createProductInvValidator },
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.createProduct(req);
 
-	// Create Product
-	public createProduct = this.asyncWrapper.wrap(
-		{ bodySchema: this.validator.createProductInvValidator },
-		async (req: Request, res: Response) => {
-			const { code, ...data } = await this.service.createProduct(req);
+      res.status(code).json(data);
+    }
+  );
 
-			res.status(code).json(data);
-		}
-	);
+  public getAllProduct = this.asyncWrapper.wrap(
+    { querySchema: this.validator.getAllProductInvValidator },
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.getAllProduct(req);
 
-	// Get All Product
-	public getAllProduct = this.asyncWrapper.wrap(
-		{ querySchema: this.validator.getAllProductInvValidator },
-		async (req: Request, res: Response) => {
-			const { code, ...data } = await this.service.getAllProduct(req);
+      res.status(code).json(data);
+    }
+  );
 
-			res.status(code).json(data);
-		}
-	);
+  public updateProduct = this.asyncWrapper.wrap(
+    {
+      paramSchema: this.commonValidator.singleParamStringValidator(),
+      bodySchema: this.validator.updateProductInvValidator,
+    },
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.updateProduct(req);
 
-	// Update Product
-	public updateProduct = this.asyncWrapper.wrap(
-		{
-			paramSchema: this.commonValidator.singleParamStringValidator(),
-			bodySchema: this.validator.updateProductInvValidator,
-		},
-		async (req: Request, res: Response) => {
-			const { code, ...data } = await this.service.updateProduct(req);
+      res.status(code).json(data);
+    }
+  );
 
-			res.status(code).json(data);
-		}
-	);
+  //=================== Damaged Product  ======================//
 
-	//=================== Damaged Product  ======================//
+  public createDamagedProduct = this.asyncWrapper.wrap(
+    { bodySchema: this.validator.createDamagedProductValidator },
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.createDamagedProduct(req);
 
-	// Create Damaged Product
-	public createDamagedProduct = this.asyncWrapper.wrap(
-		{ bodySchema: this.validator.createDamagedProductValidator },
-		async (req: Request, res: Response) => {
-			const { code, ...data } = await this.service.createDamagedProduct(
-				req
-			);
+      res.status(code).json(data);
+    }
+  );
 
-			res.status(code).json(data);
-		}
-	);
+  public getAllDamagedProduct = this.asyncWrapper.wrap(
+    { querySchema: this.validator.getAllDamagedProductValidator },
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.getAllDamagedProduct(req);
 
-	// Get All Damaged Product
-	public getAllDamagedProduct = this.asyncWrapper.wrap(
-		{ querySchema: this.validator.getAllDamagedProductValidator },
-		async (req: Request, res: Response) => {
-			const { code, ...data } = await this.service.getAllDamagedProduct(
-				req
-			);
+      res.status(code).json(data);
+    }
+  );
 
-			res.status(code).json(data);
-		}
-	);
+  public getSingleDamagedProduct = this.asyncWrapper.wrap(
+    { paramSchema: this.commonValidator.singleParamValidator() },
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.getSingleDamagedProduct(req);
 
-	// get single Damaged Product
-	public getSingleDamagedProduct = this.asyncWrapper.wrap(
-		{ paramSchema: this.commonValidator.singleParamValidator() },
-		async (req: Request, res: Response) => {
-			const { code, ...data } =
-				await this.service.getSingleDamagedProduct(req);
-
-			res.status(code).json(data);
-		}
-	);
+      res.status(code).json(data);
+    }
+  );
 }
 export default ProductInvController;

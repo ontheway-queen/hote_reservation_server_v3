@@ -31,18 +31,14 @@ class ProductInvController extends abstract_controller_1.default {
         super();
         this.service = new product_service_1.default();
         this.validator = new product_validator_1.default();
-        //=================== Product ======================//
-        // Create Product
         this.createProduct = this.asyncWrapper.wrap({ bodySchema: this.validator.createProductInvValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
             const _a = yield this.service.createProduct(req), { code } = _a, data = __rest(_a, ["code"]);
             res.status(code).json(data);
         }));
-        // Get All Product
         this.getAllProduct = this.asyncWrapper.wrap({ querySchema: this.validator.getAllProductInvValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
             const _b = yield this.service.getAllProduct(req), { code } = _b, data = __rest(_b, ["code"]);
             res.status(code).json(data);
         }));
-        // Update Product
         this.updateProduct = this.asyncWrapper.wrap({
             paramSchema: this.commonValidator.singleParamStringValidator(),
             bodySchema: this.validator.updateProductInvValidator,
@@ -51,17 +47,14 @@ class ProductInvController extends abstract_controller_1.default {
             res.status(code).json(data);
         }));
         //=================== Damaged Product  ======================//
-        // Create Damaged Product
         this.createDamagedProduct = this.asyncWrapper.wrap({ bodySchema: this.validator.createDamagedProductValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
             const _d = yield this.service.createDamagedProduct(req), { code } = _d, data = __rest(_d, ["code"]);
             res.status(code).json(data);
         }));
-        // Get All Damaged Product
         this.getAllDamagedProduct = this.asyncWrapper.wrap({ querySchema: this.validator.getAllDamagedProductValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
             const _e = yield this.service.getAllDamagedProduct(req), { code } = _e, data = __rest(_e, ["code"]);
             res.status(code).json(data);
         }));
-        // get single Damaged Product
         this.getSingleDamagedProduct = this.asyncWrapper.wrap({ paramSchema: this.commonValidator.singleParamValidator() }, (req, res) => __awaiter(this, void 0, void 0, function* () {
             const _f = yield this.service.getSingleDamagedProduct(req), { code } = _f, data = __rest(_f, ["code"]);
             res.status(code).json(data);

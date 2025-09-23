@@ -9,20 +9,12 @@ class PayRollValidator {
         this.CreatePayrollValidator = joi_1.default.object({
             employee_id: joi_1.default.number().required(),
             account_id: joi_1.default.number().required(),
-            payment_method: joi_1.default.string()
-                .required()
-                .valid("BANK", "CASH", "MOBILE_BANKING"),
             basic_salary: joi_1.default.number().required(),
-            salary_basis: joi_1.default.string().required().valid("calendar", "working"),
-            leave_days: joi_1.default.number().optional(),
-            unpaid_leave_days: joi_1.default.number().optional(),
-            unpaid_leave_deduction: joi_1.default.number().optional(),
+            leave_days: joi_1.default.number().optional().default(0),
+            gurranted_leave_days: joi_1.default.number().required().default(0),
             total_days: joi_1.default.number().required(),
-            payable_days: joi_1.default.number().required(),
-            daily_rate: joi_1.default.number().required(),
-            gross_salary: joi_1.default.number().required(),
-            net_salary: joi_1.default.number().required(),
             salary_date: joi_1.default.string().required(),
+            payroll_month: joi_1.default.string().required(),
             note: joi_1.default.string().allow("").optional(),
             deductions: joi_1.default.string()
                 .custom((value, helpers) => {
@@ -34,7 +26,7 @@ class PayRollValidator {
                             custom: "invalid deductions, should be a JSON object",
                         });
                     }
-                    return value;
+                    return parsedObject;
                 }
                 catch (err) {
                     return helpers.message({
@@ -53,7 +45,7 @@ class PayRollValidator {
                             custom: "invalid allowances, should be a JSON object",
                         });
                     }
-                    return value;
+                    return parsedObject;
                 }
                 catch (err) {
                     return helpers.message({
@@ -78,21 +70,18 @@ class PayRollValidator {
         this.updatePayrollValidator = joi_1.default.object({
             employee_id: joi_1.default.number().optional(),
             account_id: joi_1.default.number().optional(),
-            payment_method: joi_1.default.string()
-                .optional()
-                .valid("BANK", "CASH", "MOBILE_BANKING"),
             basic_salary: joi_1.default.number().optional(),
-            salary_basis: joi_1.default.string().optional().valid("calendar", "working"),
             leave_days: joi_1.default.number().optional(),
             unpaid_leave_days: joi_1.default.number().optional(),
-            unpaid_leave_deduction: joi_1.default.number().optional(),
             total_days: joi_1.default.number().optional(),
             payable_days: joi_1.default.number().optional(),
             daily_rate: joi_1.default.number().optional(),
             gross_salary: joi_1.default.number().optional(),
             net_salary: joi_1.default.number().optional(),
             salary_date: joi_1.default.string().optional(),
+            payroll_month: joi_1.default.string().optional(),
             note: joi_1.default.string().allow("").optional(),
+            gurranted_leave_days: joi_1.default.number().required().default(0),
             deductions: joi_1.default.string()
                 .custom((value, helpers) => {
                 try {
@@ -122,7 +111,7 @@ class PayRollValidator {
                             custom: "invalid allowances, should be a JSON object",
                         });
                     }
-                    return value;
+                    return parsedObject;
                 }
                 catch (err) {
                     return helpers.message({
@@ -141,7 +130,7 @@ class PayRollValidator {
                             custom: "invalid deductions, should be a JSON object",
                         });
                     }
-                    return value;
+                    return parsedObject;
                 }
                 catch (err) {
                     return helpers.message({
@@ -161,7 +150,7 @@ class PayRollValidator {
                             custom: "invalid delete deductions, should be a JSON object",
                         });
                     }
-                    return value;
+                    return parsedObject;
                 }
                 catch (err) {
                     return helpers.message({
@@ -179,7 +168,7 @@ class PayRollValidator {
                             custom: "invalid allowances, should be a JSON object",
                         });
                     }
-                    return value;
+                    return parsedObject;
                 }
                 catch (err) {
                     return helpers.message({
@@ -197,7 +186,7 @@ class PayRollValidator {
                             custom: "invalid allowances, should be a JSON object",
                         });
                     }
-                    return value;
+                    return parsedObject;
                 }
                 catch (err) {
                     return helpers.message({

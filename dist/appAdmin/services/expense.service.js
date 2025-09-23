@@ -219,8 +219,7 @@ class ExpenseService extends abstract_service_1.default {
                     const existingMap = new Map(existingItems.map((it) => [it.id, it]));
                     yield Promise.all(expense_items.map((item) => __awaiter(this, void 0, void 0, function* () {
                         var _b;
-                        const normalizedItem = Object.assign(Object.assign({}, item), { is_deleted: item.is_deleted === 1 ||
-                                item.is_deleted === "1" });
+                        const normalizedItem = Object.assign(Object.assign({}, item), { is_deleted: item.is_deleted === 1 || item.is_deleted === "1" });
                         if (item.id && existingMap.has(item.id)) {
                             yield expenseModel.updateExpenseItems({
                                 id: item.id,

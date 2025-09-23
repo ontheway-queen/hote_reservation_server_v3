@@ -12,9 +12,7 @@ class ExpenseRouter extends abstract_router_1.default {
         this.callRouter();
     }
     callRouter() {
-        this.router
-            .route("/head")
-            .get(this.expenseController.getAllExpenseHead);
+        this.router.route("/head").get(this.expenseController.getAllExpenseHead);
         this.router
             .route("/")
             .post(this.uploader.cloudUploadRaw(this.fileFolders.EXPENSE_FILES), this.expenseController.createExpense)

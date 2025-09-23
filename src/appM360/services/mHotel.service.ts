@@ -1,5 +1,9 @@
 import { Request } from "express";
+import { v4 as uuidv4 } from "uuid";
 import AbstractServices from "../../abstarcts/abstract.service";
+import { IinsertAccHeadReqBodyForMpanel } from "../../appAdmin/utlis/interfaces/doubleEntry.interface";
+import { AccountHead } from "../../appAdmin/utlis/interfaces/report.interface";
+import config from "../../config/config";
 import { newHotelUserAccount } from "../../templates/mHotelUserCredentials.template";
 import Lib from "../../utils/lib/lib";
 import { OTP_FOR_CREDENTIALS } from "../../utils/miscellaneous/constants";
@@ -7,14 +11,6 @@ import {
   IhotelCreateRequestBodyPayload,
   IUpdateHotelReqBody,
 } from "../utlis/interfaces/mHotel.common.interface";
-import config from "../../config/config";
-import { AccountHead } from "../../appAdmin/utlis/interfaces/report.interface";
-import {
-  IinsertAccHeadReqBody,
-  IinsertAccHeadReqBodyForMpanel,
-} from "../../appAdmin/utlis/interfaces/doubleEntry.interface";
-import { body } from "express-validator";
-import { v4 as uuidv4 } from "uuid";
 class MHotelService extends AbstractServices {
   constructor() {
     super();

@@ -23,12 +23,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const uuid_1 = require("uuid");
 const abstract_service_1 = __importDefault(require("../../abstarcts/abstract.service"));
+const config_1 = __importDefault(require("../../config/config"));
 const mHotelUserCredentials_template_1 = require("../../templates/mHotelUserCredentials.template");
 const lib_1 = __importDefault(require("../../utils/lib/lib"));
 const constants_1 = require("../../utils/miscellaneous/constants");
-const config_1 = __importDefault(require("../../config/config"));
-const uuid_1 = require("uuid");
 class MHotelService extends abstract_service_1.default {
     constructor() {
         super();

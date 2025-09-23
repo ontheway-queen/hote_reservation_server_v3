@@ -17,7 +17,6 @@ class ProductInvService extends abstract_service_1.default {
     constructor() {
         super();
     }
-    // Create Product
     createProduct(req) {
         return __awaiter(this, void 0, void 0, function* () {
             const { hotel_code, id: admin_id } = req.hotel_admin;
@@ -54,13 +53,11 @@ class ProductInvService extends abstract_service_1.default {
             };
         });
     }
-    // Get all Product
     getAllProduct(req) {
         return __awaiter(this, void 0, void 0, function* () {
             const { hotel_code } = req.hotel_admin;
             const { limit, skip, key, in_stock, unit, category, brand } = req.query;
-            const model = this.Model.productInventoryModel();
-            const { data, total } = yield model.getAllProduct({
+            const { data, total } = yield this.Model.productInventoryModel().getAllProduct({
                 key: key,
                 unit: unit,
                 brand: brand,
@@ -78,7 +75,6 @@ class ProductInvService extends abstract_service_1.default {
             };
         });
     }
-    // Update Product
     updateProduct(req) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
@@ -110,7 +106,6 @@ class ProductInvService extends abstract_service_1.default {
             }));
         });
     }
-    // create Damaged Product
     createDamagedProduct(req) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
@@ -154,8 +149,7 @@ class ProductInvService extends abstract_service_1.default {
                         modifyInventoryProduct.push({
                             available_quantity: parseFloat(inventoryItem.available_quantity) -
                                 payloadItem.quantity,
-                            total_damaged: parseFloat(inventoryItem.total_damaged) +
-                                payloadItem.quantity,
+                            total_damaged: parseFloat(inventoryItem.total_damaged) + payloadItem.quantity,
                             id: inventoryItem.id,
                         });
                     }
@@ -176,7 +170,6 @@ class ProductInvService extends abstract_service_1.default {
             }));
         });
     }
-    // Get all Damaged Product
     getAllDamagedProduct(req) {
         return __awaiter(this, void 0, void 0, function* () {
             const { hotel_code } = req.hotel_admin;
@@ -198,7 +191,6 @@ class ProductInvService extends abstract_service_1.default {
             };
         });
     }
-    // Get Single Damaged Product
     getSingleDamagedProduct(req) {
         return __awaiter(this, void 0, void 0, function* () {
             const { id } = req.params;

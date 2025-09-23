@@ -19,7 +19,7 @@ class PayRollModel extends schema_1.default {
         this.db = db;
     }
     // Check payroll
-    hasPayrollForMonth({ employee_id, hotel_code, salary_date, }) {
+    hasPayrollForMonth({ employee_id, hotel_code, payroll_month, }) {
         return __awaiter(this, void 0, void 0, function* () {
             const result = yield this.db("payroll as p")
                 .withSchema(this.HR_SCHEMA)
@@ -27,14 +27,13 @@ class PayRollModel extends schema_1.default {
                 .where("p.employee_id", employee_id)
                 .andWhere("p.hotel_code", hotel_code)
                 .andWhere("p.is_deleted", false)
-                .andWhereRaw("TO_CHAR(p.salary_date, 'YYYY-MM') = TO_CHAR(?::date, 'YYYY-MM')", [salary_date]);
+                .andWhereRaw("TO_CHAR(p.payroll_month, 'YYYY-MM') = TO_CHAR(?::date, 'YYYY-MM')", [payroll_month]);
             return Number(result[0].total) > 0;
         });
     }
     // Create PayRoll
     CreatePayRoll(payload) {
         return __awaiter(this, void 0, void 0, function* () {
-            console.log({ a: payload.account_id });
             return yield this.db("payroll")
                 .withSchema(this.HR_SCHEMA)
                 .insert(payload, "id");
@@ -82,9 +81,7 @@ class PayRollModel extends schema_1.default {
                     this.andWhereBetween("p.salary_date", [from_date, to_date]);
                 }
                 if (key) {
-                    this.andWhere("e.name", "like", `%${key}%`)
-                        .orWhere("de.name", "like", `%${key}%`)
-                        .orWhere("a.name", "like", `%${key}%`);
+                    this.andWhere("e.name", "like", `%${key}%`).orWhere("de.name", "like", `%${key}%`);
                 }
             })
                 .orderBy("p.id", "desc");
@@ -100,9 +97,7 @@ class PayRollModel extends schema_1.default {
                     this.andWhereBetween("p.salary_date", [from_date, to_date]);
                 }
                 if (key) {
-                    this.andWhere("e.name", "like", `%${key}%`)
-                        .orWhere("de.name", "like", `%${key}%`)
-                        .orWhere("a.name", "like", `%${key}%`);
+                    this.andWhere("e.name", "like", `%${key}%`).orWhere("de.name", "like", `%${key}%`);
                 }
             });
             return { data, total: Number(total[0].total) };
@@ -113,7 +108,7 @@ class PayRollModel extends schema_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("payroll as p")
                 .withSchema(this.HR_SCHEMA)
-                .select("p.id", "h.name as hotel_name", "h.address as hotel_address", "h.country_code", "h.city_code", "h.postal_code", "e.id as employee_id", "e.name as employee_name", "des.name as employee_designation", "e.contact_no as employee_phone", "p.total_allowance", "p.total_deduction", "p.unpaid_leave_days", "p.leave_days", "p.account_id", "p.salary_basis", "p.unpaid_leave_deduction", "p.payable_days", "p.daily_rate", "p.basic_salary", "p.payment_method", "p.gross_salary", "p.net_salary", "p.salary_date", "p.note", "p.total_days", "p.docs", "p.created_by", "ua.name as created_by_name", "p.is_deleted")
+                .select("p.id", "h.name as hotel_name", "h.address as hotel_address", "h.country_code", "h.city_code", "h.postal_code", "e.id as employee_id", "e.name as employee_name", "des.name as employee_designation", "e.contact_no as employee_phone", "p.total_allowance", "p.total_deduction", "p.unpaid_leave_days", "p.leave_days", "p.account_id", "p.unpaid_leave_deduction", "p.payable_days", "p.daily_rate", "p.basic_salary", "p.payment_method", "p.gross_salary", "p.net_salary", "p.payroll_month", "p.salary_date", "p.note", "p.total_days", "p.gurranted_leave_days", "p.docs", "p.created_by", "ua.name as created_by_name", "p.is_deleted")
                 .joinRaw(`JOIN ?? as h ON h.hotel_code = p.hotel_code`, [
                 `${this.RESERVATION_SCHEMA}.${this.TABLES.hotels}`,
             ])
@@ -162,6 +157,14 @@ class PayRollModel extends schema_1.default {
                 .update(payload);
         });
     }
+    deletePayRoll({ id, payload, }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("payroll")
+                .withSchema(this.HR_SCHEMA)
+                .where({ id })
+                .update(payload);
+        });
+    }
     updateEmployeeAllowances({ id, payload, }) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("employee_allowances")
@@ -196,7 +199,7 @@ class PayRollModel extends schema_1.default {
                 .where({ payroll_id });
         });
     }
-    deleteEmployeeDeductionsNotIn({ payroll_id, ids, }) {
+    deleteEmployeeDeductionsByIds({ payroll_id, ids, }) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("employee_deductions")
                 .withSchema(this.HR_SCHEMA)
@@ -205,7 +208,7 @@ class PayRollModel extends schema_1.default {
                 .update({ is_deleted: true });
         });
     }
-    deleteEmployeeAllowancesNotIn({ payroll_id, ids, }) {
+    deleteEmployeeAllowancesByIds({ payroll_id, ids, }) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("employee_allowances")
                 .withSchema(this.HR_SCHEMA)

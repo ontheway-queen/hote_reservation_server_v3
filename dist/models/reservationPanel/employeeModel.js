@@ -29,7 +29,7 @@ class EmployeeModel extends schema_1.default {
     // Get All Employee Model
     getAllEmployee(payload) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { key, hotel_code, limit, skip, department, designation, status, } = payload;
+            const { key, hotel_code, limit, skip, department, designation, status } = payload;
             console.log(payload);
             const dtbs = this.db("employee as e");
             if (limit && skip) {
@@ -98,7 +98,9 @@ class EmployeeModel extends schema_1.default {
             return yield this.db("employee as e")
                 .withSchema(this.HR_SCHEMA)
                 .select("e.id", "e.name", "e.email", "e.contact_no", "e.photo", "e.blood_group as blood_group_id", "bg.name as blood_group_name", "des.id as designation_id", "des.name as designation_name", "e.salary", this.db.raw("JSON_AGG(JSON_BUILD_OBJECT('id', d.id, 'name', d.name)) as department"), this.db.raw("to_char(e.dob, 'YYYY-MM-DD') as dob"), this.db.raw("to_char(e.appointment_date, 'YYYY-MM-DD') as appointment_date"), this.db.raw("to_char(e.joining_date, 'YYYY-MM-DD') as joining_date"), "ua.id as created_by_id", "ua.name as created_by_name", "e.address", "e.status", "e.created_at", "e.is_deleted", this.db.raw("JSON_BUILD_OBJECT('bank_info_id',ebi.id,'bank_name',ebi.bank_name,'beneficiary_name',ebi.beneficiary_name, 'acc_no',ebi.acc_no,'branch_name',ebi.branch_name,'routing_no',ebi.routing_no,'swift_code',ebi.swift_code) as emp_bank_info"))
-                .joinRaw("LEFT JOIN ??.hotels as h ON e.hotel_code = h.hotel_code", [this.RESERVATION_SCHEMA])
+                .joinRaw("LEFT JOIN ??.hotels as h ON e.hotel_code = h.hotel_code", [
+                this.RESERVATION_SCHEMA,
+            ])
                 .joinRaw("LEFT JOIN ??.user_admin as ua  ON e.created_by = ua.id", [
                 this.RESERVATION_SCHEMA,
             ])

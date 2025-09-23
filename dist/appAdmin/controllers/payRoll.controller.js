@@ -26,12 +26,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const abstract_controller_1 = __importDefault(require("../../abstarcts/abstract.controller"));
 const payroll_service_1 = __importDefault(require("../services/payroll.service"));
 const payRoll_validator_1 = __importDefault(require("../utlis/validator/payRoll.validator"));
+// mehedi
 class PayRollController extends abstract_controller_1.default {
     constructor() {
         super();
         this.service = new payroll_service_1.default();
         this.payRollValidator = new payRoll_validator_1.default();
-        // Create Pay Roll
         this.createPayRoll = this.asyncWrapper.wrap({ bodySchema: this.payRollValidator.CreatePayrollValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
             const _a = yield this.service.createPayRoll(req), { code } = _a, data = __rest(_a, ["code"]);
             if (data.success) {
@@ -41,12 +41,10 @@ class PayRollController extends abstract_controller_1.default {
                 this.error(data.message, code);
             }
         }));
-        // get all Pay Roll
         this.getAllPayRoll = this.asyncWrapper.wrap({ querySchema: this.payRollValidator.getAllPayRollValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
             const _b = yield this.service.getAllPayRoll(req), { code } = _b, data = __rest(_b, ["code"]);
             res.status(code).json(data);
         }));
-        // get Single Pay Roll
         this.getSinglePayRoll = this.asyncWrapper.wrap({ paramSchema: this.commonValidator.singleParamValidator() }, (req, res) => __awaiter(this, void 0, void 0, function* () {
             const _c = yield this.service.getSinglePayRoll(req), { code } = _c, data = __rest(_c, ["code"]);
             res.status(code).json(data);
