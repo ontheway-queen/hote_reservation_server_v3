@@ -25,6 +25,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ServiceCategoriesService = void 0;
 const abstract_service_1 = __importDefault(require("../../abstarcts/abstract.service"));
+const lib_1 = __importDefault(require("../../utils/lib/lib"));
 class ServiceCategoriesService extends abstract_service_1.default {
     constructor() {
         super();
@@ -45,10 +46,12 @@ class ServiceCategoriesService extends abstract_service_1.default {
                     message: "Service Category name already exists",
                 };
             }
+            const category_code = yield lib_1.default.generateCategoryCode(hotel_code, name);
             yield serviceCategoriesModel.createServiceCategory({
                 hotel_code,
                 name,
                 created_by: id,
+                category_code,
             });
             return {
                 success: true,
@@ -60,10 +63,11 @@ class ServiceCategoriesService extends abstract_service_1.default {
     getAllServiceCategories(req) {
         return __awaiter(this, void 0, void 0, function* () {
             const { hotel_code } = req.hotel_admin;
-            const { key, limit, skip } = req.query;
+            const { name, limit, skip, status } = req.query;
             const serviceCategoriesModel = this.Model.serviceCategoriesModel();
             const data = yield serviceCategoriesModel.getServiceCategories({
-                key: key,
+                key: name,
+                status: status,
                 limit: Number(limit),
                 skip: Number(skip),
                 hotel_code,
@@ -91,10 +95,11 @@ class ServiceCategoriesService extends abstract_service_1.default {
                         };
                     }
                 }
+                const category_code = yield lib_1.default.generateCategoryCode(hotel_code, name);
                 yield serviceCategoriesModel.updateServiceCategory({
                     id,
                     hotel_code,
-                }, Object.assign({ name }, rest));
+                }, Object.assign({ name, category_code }, rest));
                 return {
                     success: true,
                     code: this.StatusCode.HTTP_SUCCESSFUL,

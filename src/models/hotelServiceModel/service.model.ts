@@ -1,6 +1,7 @@
 import {
 	IGetServiceList,
 	IGetSingleService,
+	IHotelServicePayload,
 } from "../../appAdmin/utlis/interfaces/service.interface";
 import { TDB } from "../../common/types/commontypes";
 import Schema from "../../utils/miscellaneous/schema";
@@ -23,7 +24,7 @@ class ServiceModel extends Schema {
 			.first();
 	}
 
-	public async createService(payload: any) {
+	public async createService(payload: IHotelServicePayload) {
 		return await this.db("services")
 			.withSchema(this.HOTEL_SERVICE_SCHEMA)
 			.insert(payload, "id");
@@ -125,6 +126,7 @@ class ServiceModel extends Schema {
 		hotel_code: number;
 		limit?: number;
 		skip?: number;
+		status?: string;
 	}): Promise<{ data: IGetServiceList[]; total: number }> {
 		const baseQuery = this.db("services as s")
 			.withSchema(this.HOTEL_SERVICE_SCHEMA)
@@ -179,9 +181,8 @@ class ServiceModel extends Schema {
 		payload,
 	}: {
 		where: { id: number; hotel_code: number };
-		payload: any;
+		payload: Partial<IHotelServicePayload>;
 	}) {
-		console.log({ payload });
 		await this.db("services")
 			.withSchema(this.HOTEL_SERVICE_SCHEMA)
 			.where("id", where.id)

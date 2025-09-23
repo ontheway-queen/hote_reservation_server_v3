@@ -12,15 +12,16 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const constants_1 = require("../miscellaneous/constants");
-const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
-const config_1 = __importDefault(require("../../config/config"));
+const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const nodemailer_1 = __importDefault(require("nodemailer"));
-const chartOfAcc_1 = require("../miscellaneous/chartOfAcc");
+const database_1 = require("../../app/database");
+const config_1 = __importDefault(require("../../config/config"));
 const accountModel_1 = __importDefault(require("../../models/reservationPanel/accountModel/accountModel"));
-const hotel_model_1 = __importDefault(require("../../models/reservationPanel/hotel.model"));
 const expenseModel_1 = __importDefault(require("../../models/reservationPanel/expenseModel"));
+const hotel_model_1 = __importDefault(require("../../models/reservationPanel/hotel.model"));
+const chartOfAcc_1 = require("../miscellaneous/chartOfAcc");
+const constants_1 = require("../miscellaneous/constants");
 class Lib {
     // make hashed password
     static hashPass(password) {
@@ -42,7 +43,10 @@ class Lib {
             (1000 * 60 * 60 * 24));
     }
     static generateBookingReferenceWithId(hotelPrefix, lastBookingId) {
-        const datePart = new Date().toISOString().slice(2, 10).replace(/-/g, "");
+        const datePart = new Date()
+            .toISOString()
+            .slice(2, 10)
+            .replace(/-/g, "");
         const idPart = String(lastBookingId + 1).padStart(6, "0");
         return `${hotelPrefix}-${datePart}-${idPart}`;
     }
@@ -169,13 +173,41 @@ class Lib {
             let nextSeq = 1;
             const lastRow = yield new expenseModel_1.default(trx).getLastExpenseNo();
             const lastExpenseNo = lastRow === null || lastRow === void 0 ? void 0 : lastRow.expense_no;
-            if (lastExpenseNo && lastExpenseNo.startsWith(`${prefix}-${datePart}`)) {
+            if (lastExpenseNo &&
+                lastExpenseNo.startsWith(`${prefix}-${datePart}`)) {
                 // Extract last sequence number
                 const lastSeq = parseInt(lastExpenseNo.split("-").pop() || "0", 10);
                 nextSeq = lastSeq + 1;
             }
             const seqPart = String(nextSeq).padStart(4, "0");
             return `${prefix}-${datePart}-${seqPart}`;
+        });
+    }
+    static generateCategoryCode(hotel_code, name) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const prefix = "SC";
+            const words = name.trim().split(/\s+/);
+            let code = words
+                .map((word) => word[0].toUpperCase())
+                .filter((c) => /[A-Z]/.test(c))
+                .join("");
+            code = code.substring(0, 6);
+            const lastCategory = yield (0, database_1.db)("service_categories")
+                .withSchema("hotel_service")
+                .select("category_code")
+                .where("hotel_code", hotel_code)
+                .orderBy("id", "desc")
+                .first();
+            let newSerial = 1;
+            if (lastCategory && lastCategory.category_code) {
+                const parts = lastCategory.category_code.split("-");
+                const lastSerial = parseInt(parts[2], 10);
+                if (!isNaN(lastSerial)) {
+                    newSerial = lastSerial + 1;
+                }
+            }
+            const serial = String(newSerial).padStart(3, "0");
+            return `${prefix}-${code}-${serial}`;
         });
     }
 }

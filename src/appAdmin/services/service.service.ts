@@ -57,20 +57,6 @@ export class ServiceService extends AbstractServices {
 			const servicePricingModel = this.Model.servicePricingModel(trx);
 			const serviceScheduleModel = this.Model.serviceScheduleModel(trx);
 
-			const check = await serviceModel.getSingleService({
-				name: services.name,
-				hotel_code,
-				category_id: services.category_id,
-			});
-
-			if (check) {
-				return {
-					success: false,
-					code: this.StatusCode.HTTP_CONFLICT,
-					message: "Same service with same category already exists",
-				};
-			}
-
 			const isServiceExists =
 				await serviceCategoryModel.getServiceCategory({
 					hotel_code,
@@ -85,9 +71,31 @@ export class ServiceService extends AbstractServices {
 				};
 			}
 
+			const check = await serviceModel.getSingleService({
+				name: services.name,
+				hotel_code,
+				category_id: services.category_id,
+			});
+
+			if (check) {
+				return {
+					success: false,
+					code: this.StatusCode.HTTP_CONFLICT,
+					message: "Same service with same category already exists",
+				};
+			}
+
 			const lastServiceCode = await serviceModel.getLastServiceCode(
 				hotel_code
 			);
+			const words = services.name.trim().split(/\s+/);
+			let codeWord = words
+				.map((word: string) => word[0].toUpperCase())
+				.filter((c: string) => /[A-Z]/.test(c))
+				.join("");
+
+			codeWord = codeWord.substring(0, 10);
+
 			const code = lastServiceCode?.service_code.split("-")[2] || "0000";
 			const newServiceCode = (parseInt(code) + 1)
 				.toString()
@@ -96,7 +104,7 @@ export class ServiceService extends AbstractServices {
 			const [newCategory] = await serviceModel.createService({
 				hotel_code,
 				created_by: id,
-				service_code: `SER-${hotel_code}-${newServiceCode}`,
+				service_code: `SER-${codeWord}-${newServiceCode}`,
 				...services,
 			});
 
@@ -136,7 +144,20 @@ export class ServiceService extends AbstractServices {
 						if (price.vat_percent && price.vat_percent > 0) {
 							vatPrice = (total * price.vat_percent) / 100;
 						}
-
+						console.log({
+							...price,
+							hotel_code,
+							service_id: newCategory.id,
+							total_price:
+								discount_price > 0
+									? (discount_price || 0) +
+									  (vatPrice || 0) +
+									  (price.delivery_charge || 0)
+									: mainPrice +
+									  (vatPrice || 0) +
+									  (price.delivery_charge || 0),
+							discount_price,
+						});
 						return servicePricingModel.createServicePricing({
 							...price,
 							hotel_code,
@@ -177,11 +198,12 @@ export class ServiceService extends AbstractServices {
 
 	public async getAllServices(req: Request) {
 		const { hotel_code } = req.hotel_admin;
-		const { key, limit, skip } = req.query;
+		const { key, limit, skip, status } = req.query;
 		const serviceModel = this.Model.serviceModel();
 
 		const data = await serviceModel.getAllServices({
 			key: key as string,
+			status: status as string,
 			limit: Number(limit),
 			skip: Number(skip),
 			hotel_code,

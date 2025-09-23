@@ -144,7 +144,6 @@ class ServiceModel extends schema_1.default {
     }
     updateService({ where, payload, }) {
         return __awaiter(this, void 0, void 0, function* () {
-            console.log({ payload });
             yield this.db("services")
                 .withSchema(this.HOTEL_SERVICE_SCHEMA)
                 .where("id", where.id)

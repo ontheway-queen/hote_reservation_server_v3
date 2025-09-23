@@ -28,7 +28,7 @@ class ServicImageModel extends Schema {
 		payload,
 	}: {
 		where: { id?: number; service_id?: number; hotel_code: number };
-		payload: { is_deleted?: boolean };
+		payload: { image_url?: string; status?: string; is_deleted?: boolean };
 	}) {
 		return await this.db("service_images")
 			.withSchema(this.HOTEL_SERVICE_SCHEMA)

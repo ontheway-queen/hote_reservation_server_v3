@@ -8,7 +8,8 @@ class ServiceCategoriesValidator {
 	public getServiceCategoryQueryValidator = Joi.object({
 		limit: Joi.number().optional(),
 		skip: Joi.number().optional(),
-		key: Joi.string().optional(),
+		name: Joi.string().optional(),
+		status: Joi.string().optional(),
 	});
 
 	public updateServiceCategoryValidator = Joi.object({

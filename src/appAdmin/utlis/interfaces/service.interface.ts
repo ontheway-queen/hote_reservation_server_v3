@@ -1,3 +1,17 @@
+export interface IHotelServicePayload {
+	hotel_code: number;
+	created_by: number;
+	service_code: string;
+	category_id: number;
+	name: string;
+	description: string;
+	min_persons: number;
+	max_persons: number;
+	is_always_open: boolean;
+	delivery_required: boolean;
+	thumbnail_url: string;
+}
+
 export interface IGetServiceList {
 	id: number;
 	thumbnail_url: string;
@@ -31,6 +45,20 @@ export interface IGetSingleService {
 export interface IImages {
 	id: number;
 	file: string;
+}
+
+export interface IServicePricingPayload {
+	pricing_model: string;
+	price: number;
+	vat_percent: number;
+	delivery_charge: number;
+	delivery_types: string;
+	delivery_time_estimate: number;
+	discount_percent: number;
+	hotel_code: number;
+	service_id: number;
+	total_price: number;
+	discount_price: number;
 }
 
 export interface PricingModel {

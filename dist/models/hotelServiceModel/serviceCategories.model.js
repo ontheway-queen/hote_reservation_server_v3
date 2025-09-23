@@ -37,7 +37,7 @@ class ServiceCategoriesModel extends schema_1.default {
                     qb.andWhere("id", where.id);
                 }
                 if (where.name) {
-                    qb.andWhere("name", "ilike", `%${where.name}%`);
+                    qb.andWhere("name", "ilike", `%${where.name}%`).orWhere("category_code", "ilike", `%${where.name}%`);
                 }
             })
                 .first();
@@ -45,7 +45,7 @@ class ServiceCategoriesModel extends schema_1.default {
     }
     getServiceCategories(query) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { hotel_code, limit, skip, key } = query;
+            const { hotel_code, status, limit, skip, key } = query;
             const baseQuery = this.db("service_categories as sc")
                 .withSchema(this.HOTEL_SERVICE_SCHEMA)
                 .joinRaw(`LEFT JOIN ?? as ua ON sc.created_by = ua.id`, [
@@ -55,7 +55,10 @@ class ServiceCategoriesModel extends schema_1.default {
                 .andWhere("sc.is_deleted", false)
                 .modify((qb) => {
                 if (key) {
-                    qb.andWhere("sc.name", "ilike", `%${key}%`);
+                    qb.andWhere("sc.name", "ilike", `%${key}%`).orWhere("sc.category_code", "ilike", `%${key}%`);
+                }
+                if (status === "0" || status === "1") {
+                    qb.andWhere("sc.status", status === "0" ? false : true);
                 }
             })
                 .orderBy("sc.id", "desc");
@@ -69,7 +72,7 @@ class ServiceCategoriesModel extends schema_1.default {
                 dataQuery.limit(limit);
             if (skip)
                 dataQuery.offset(skip);
-            const data = yield dataQuery.select("sc.id", "sc.hotel_code", "sc.name", "sc.status", "ua.name as created_by", "sc.is_deleted", "sc.created_at", this.db.raw(`
+            const data = yield dataQuery.select("sc.id", "sc.hotel_code", "sc.name", "sc.category_code", "sc.status", "ua.name as created_by", "sc.is_deleted", "sc.created_at", this.db.raw(`
     (
       SELECT COUNT(*) 
       FROM ?? as s

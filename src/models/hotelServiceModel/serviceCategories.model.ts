@@ -16,6 +16,7 @@ class ServiceCategoriesModel extends Schema {
 	public async createServiceCategory(payload: {
 		hotel_code: number;
 		name: string;
+		category_code: string;
 		created_by: number;
 	}) {
 		return await this.db("service_categories")
@@ -38,7 +39,11 @@ class ServiceCategoriesModel extends Schema {
 					qb.andWhere("id", where.id);
 				}
 				if (where.name) {
-					qb.andWhere("name", "ilike", `%${where.name}%`);
+					qb.andWhere("name", "ilike", `%${where.name}%`).orWhere(
+						"category_code",
+						"ilike",
+						`%${where.name}%`
+					);
 				}
 			})
 			.first();
@@ -49,8 +54,9 @@ class ServiceCategoriesModel extends Schema {
 		limit?: number;
 		skip?: number;
 		key?: string;
+		status?: string;
 	}): Promise<{ data: IGetServiceCategories[]; total: number }> {
-		const { hotel_code, limit, skip, key } = query;
+		const { hotel_code, status, limit, skip, key } = query;
 
 		const baseQuery = this.db("service_categories as sc")
 			.withSchema(this.HOTEL_SERVICE_SCHEMA)
@@ -61,7 +67,14 @@ class ServiceCategoriesModel extends Schema {
 			.andWhere("sc.is_deleted", false)
 			.modify((qb) => {
 				if (key) {
-					qb.andWhere("sc.name", "ilike", `%${key}%`);
+					qb.andWhere("sc.name", "ilike", `%${key}%`).orWhere(
+						"sc.category_code",
+						"ilike",
+						`%${key}%`
+					);
+				}
+				if (status === "0" || status === "1") {
+					qb.andWhere("sc.status", status === "0" ? false : true);
 				}
 			})
 			.orderBy("sc.id", "desc");
@@ -81,6 +94,7 @@ class ServiceCategoriesModel extends Schema {
 			"sc.id",
 			"sc.hotel_code",
 			"sc.name",
+			"sc.category_code",
 			"sc.status",
 			"ua.name as created_by",
 			"sc.is_deleted",
@@ -106,6 +120,7 @@ class ServiceCategoriesModel extends Schema {
 		where: { hotel_code: number; id: number },
 		payload: {
 			name?: string;
+			category_code?: string;
 			status?: string;
 			is_deleted?: boolean;
 		}

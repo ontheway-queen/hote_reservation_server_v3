@@ -12,7 +12,8 @@ class ServiceCategoriesValidator {
         this.getServiceCategoryQueryValidator = joi_1.default.object({
             limit: joi_1.default.number().optional(),
             skip: joi_1.default.number().optional(),
-            key: joi_1.default.string().optional(),
+            name: joi_1.default.string().optional(),
+            status: joi_1.default.string().optional(),
         });
         this.updateServiceCategoryValidator = joi_1.default.object({
             name: joi_1.default.string().optional(),

@@ -61,6 +61,17 @@ class ServiceService extends abstract_service_1.default {
                 const serviceImageModel = this.Model.serviceImageModel(trx);
                 const servicePricingModel = this.Model.servicePricingModel(trx);
                 const serviceScheduleModel = this.Model.serviceScheduleModel(trx);
+                const isServiceExists = yield serviceCategoryModel.getServiceCategory({
+                    hotel_code,
+                    id: services.category_id,
+                });
+                if (!isServiceExists) {
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_CONFLICT,
+                        message: "Service Category does not exist",
+                    };
+                }
                 const check = yield serviceModel.getSingleService({
                     name: services.name,
                     hotel_code,
@@ -73,23 +84,18 @@ class ServiceService extends abstract_service_1.default {
                         message: "Same service with same category already exists",
                     };
                 }
-                const isServiceExists = yield serviceCategoryModel.getServiceCategory({
-                    hotel_code,
-                    id: services.category_id,
-                });
-                if (!isServiceExists) {
-                    return {
-                        success: false,
-                        code: this.StatusCode.HTTP_CONFLICT,
-                        message: "Service Category does not exist",
-                    };
-                }
                 const lastServiceCode = yield serviceModel.getLastServiceCode(hotel_code);
+                const words = services.name.trim().split(/\s+/);
+                let codeWord = words
+                    .map((word) => word[0].toUpperCase())
+                    .filter((c) => /[A-Z]/.test(c))
+                    .join("");
+                codeWord = codeWord.substring(0, 10);
                 const code = (lastServiceCode === null || lastServiceCode === void 0 ? void 0 : lastServiceCode.service_code.split("-")[2]) || "0000";
                 const newServiceCode = (parseInt(code) + 1)
                     .toString()
                     .padStart(4, "0");
-                const [newCategory] = yield serviceModel.createService(Object.assign({ hotel_code, created_by: id, service_code: `SER-${hotel_code}-${newServiceCode}` }, services));
+                const [newCategory] = yield serviceModel.createService(Object.assign({ hotel_code, created_by: id, service_code: `SER-${codeWord}-${newServiceCode}` }, services));
                 console.log({ newCategory });
                 if (services_images && services_images.length) {
                     yield Promise.all(services_images.map((img) => serviceImageModel.uploadServiceImage(Object.assign(Object.assign({}, img), { service_id: newCategory.id }))));
@@ -111,6 +117,13 @@ class ServiceService extends abstract_service_1.default {
                         if (price.vat_percent && price.vat_percent > 0) {
                             vatPrice = (total * price.vat_percent) / 100;
                         }
+                        console.log(Object.assign(Object.assign({}, price), { hotel_code, service_id: newCategory.id, total_price: discount_price > 0
+                                ? (discount_price || 0) +
+                                    (vatPrice || 0) +
+                                    (price.delivery_charge || 0)
+                                : mainPrice +
+                                    (vatPrice || 0) +
+                                    (price.delivery_charge || 0), discount_price }));
                         return servicePricingModel.createServicePricing(Object.assign(Object.assign({}, price), { hotel_code, service_id: newCategory.id, total_price: discount_price > 0
                                 ? (discount_price || 0) +
                                     (vatPrice || 0) +
@@ -136,10 +149,11 @@ class ServiceService extends abstract_service_1.default {
     getAllServices(req) {
         return __awaiter(this, void 0, void 0, function* () {
             const { hotel_code } = req.hotel_admin;
-            const { key, limit, skip } = req.query;
+            const { key, limit, skip, status } = req.query;
             const serviceModel = this.Model.serviceModel();
             const data = yield serviceModel.getAllServices({
                 key: key,
+                status: status,
                 limit: Number(limit),
                 skip: Number(skip),
                 hotel_code,

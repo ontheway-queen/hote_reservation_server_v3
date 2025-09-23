@@ -1,3 +1,4 @@
+import { IServicePricingPayload } from "../../appAdmin/utlis/interfaces/service.interface";
 import { TDB } from "../../common/types/commontypes";
 import Schema from "../../utils/miscellaneous/schema";
 
@@ -9,7 +10,7 @@ class ServicePricingModel extends Schema {
 		this.db = db;
 	}
 
-	public async createServicePricing(payload: any) {
+	public async createServicePricing(payload: IServicePricingPayload) {
 		return await this.db("service_pricing")
 			.withSchema(this.HOTEL_SERVICE_SCHEMA)
 			.insert(payload, "id");
@@ -32,7 +33,7 @@ class ServicePricingModel extends Schema {
 		payload,
 	}: {
 		where: { id: number; hotel_code: number };
-		payload: any;
+		payload: Partial<IServicePricingPayload> & { is_deleted?: boolean };
 	}) {
 		return await this.db("service_pricing")
 			.withSchema(this.HOTEL_SERVICE_SCHEMA)

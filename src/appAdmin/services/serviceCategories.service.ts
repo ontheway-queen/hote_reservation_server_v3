@@ -1,5 +1,6 @@
 import { Request } from "express";
 import AbstractServices from "../../abstarcts/abstract.service";
+import Lib from "../../utils/lib/lib";
 
 export class ServiceCategoriesService extends AbstractServices {
 	constructor() {
@@ -25,10 +26,13 @@ export class ServiceCategoriesService extends AbstractServices {
 			};
 		}
 
+		const category_code = await Lib.generateCategoryCode(hotel_code, name);
+
 		await serviceCategoriesModel.createServiceCategory({
 			hotel_code,
 			name,
 			created_by: id,
+			category_code,
 		});
 
 		return {
@@ -40,11 +44,12 @@ export class ServiceCategoriesService extends AbstractServices {
 
 	public async getAllServiceCategories(req: Request) {
 		const { hotel_code } = req.hotel_admin;
-		const { key, limit, skip } = req.query;
+		const { name, limit, skip, status } = req.query;
 		const serviceCategoriesModel = this.Model.serviceCategoriesModel();
 
 		const data = await serviceCategoriesModel.getServiceCategories({
-			key: key as string,
+			key: name as string,
+			status: status as string,
 			limit: Number(limit),
 			skip: Number(skip),
 			hotel_code,
@@ -82,12 +87,17 @@ export class ServiceCategoriesService extends AbstractServices {
 				}
 			}
 
+			const category_code = await Lib.generateCategoryCode(
+				hotel_code,
+				name
+			);
+
 			await serviceCategoriesModel.updateServiceCategory(
 				{
 					id,
 					hotel_code,
 				},
-				{ name, ...rest }
+				{ name, category_code, ...rest }
 			);
 
 			return {
