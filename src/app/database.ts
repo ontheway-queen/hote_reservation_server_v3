@@ -13,6 +13,7 @@ const createDbCon = () => {
         user: config.DB_USER,
         password: config.DB_PASS,
         database: config.DB_NAME,
+        // database
         ssl: {
           rejectUnauthorized: false,
         },
