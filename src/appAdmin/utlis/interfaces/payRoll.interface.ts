@@ -13,8 +13,8 @@ export interface IpayrollRequestBody {
   account_id: number;
   basic_salary: number;
   total_days: number;
-  leave_days: number;
-  gurranted_leave_days: number;
+  total_attendance_days: number;
+  granted_leave_days: number;
   deductions: reqDeduction[];
   allowances: reqAllowance[];
   salary_date: string;
@@ -26,10 +26,18 @@ export interface IpayrollUpdateRequestBody {
   account_id: number;
   basic_salary: number;
   total_days: number;
-  leave_days: number;
-  gurranted_leave_days: number;
-  allowances: number[];
-  deductions: number[];
+  total_attendance_days: number;
+  granted_leave_days: number;
+  allowances: {
+    id: number;
+    allowance_name: string;
+    allowance_amount: number;
+  }[];
+  deductions: {
+    id: number;
+    deduction_name: string;
+    deduction_amount: number;
+  }[];
   add_deductions: reqDeduction[];
   delete_deductions: number[];
   add_allowances: reqAllowance[];
@@ -47,9 +55,11 @@ export interface ICreatePayrollBody {
   basic_salary: number;
   total_days: number;
   payable_days: number;
-  leave_days?: number;
-  unpaid_leave_days?: number;
-  unpaid_leave_deduction?: number;
+  granted_leave_days: number;
+  leave_days: number;
+  unpaid_leave_days: number;
+  unpaid_leave_deduction: number;
+  total_attendance_days: number;
   daily_rate: number;
   gross_salary: number;
   net_salary: number;
@@ -65,14 +75,15 @@ export interface IUpdatePayrollBody {
   account_id: number;
   payment_method: "BANK" | "CASH" | "MOBILE_BANKING" | string;
   basic_salary: number;
+  granted_leave_days: number;
+  total_attendance_days: number;
   total_days: number;
   payable_days: number;
   leave_days?: number;
   unpaid_leave_days?: number;
   unpaid_leave_deduction?: number;
   daily_rate: number;
-  total_deduction: number;
-  total_allowance: number;
+
   gross_salary: number;
   net_salary: number;
   docs?: string;
