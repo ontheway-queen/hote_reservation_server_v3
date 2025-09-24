@@ -58,7 +58,7 @@ export class RoomService extends AbstractServices {
         room_type_id
       );
 
-      if (availability) {
+      if (availability.length) {
         const updates: IUpdateRoomAvailabilitiesPayload[] = availability.map(
           (row) => {
             const updatedTotal = row.total_rooms + 1;
@@ -95,6 +95,7 @@ export class RoomService extends AbstractServices {
             total_rooms: 1,
           });
         }
+
         await roomModel.insertInRoomAvilabilities(roomAvaibilityPayload);
       }
 
