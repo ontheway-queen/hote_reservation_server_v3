@@ -24,7 +24,7 @@ export interface ICreateInvPurchasePayload {
   paid_amount: number;
   due: number;
   invoice_no: number;
-  payment_type: any;
+
   purchase_items: ICreateInvPurchaseItemBody[];
 }
 
@@ -38,12 +38,9 @@ export interface ICreateInvPurchaseItemBody {
 
 export interface IinsertInvSupplierLedger {
   hotel_code: number;
-  res_id?: number;
-  ac_tr_ac_id?: number;
-  acc_ledger_id?: number;
-
   supplier_id: number;
-  ledger_debit_amount?: number;
-  ledger_credit_amount?: number;
+  debit: number;
+  credit: number;
   ledger_details: string;
+  voucher_no: string;
 }

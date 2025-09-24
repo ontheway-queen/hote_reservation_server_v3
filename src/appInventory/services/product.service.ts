@@ -22,7 +22,7 @@ class ProductInvService extends AbstractServices {
       key: body.name,
       hotel_code,
     });
-    console.log(1);
+
     if (data.length) {
       return {
         success: false,
@@ -30,13 +30,13 @@ class ProductInvService extends AbstractServices {
         message: "Product name already exists",
       };
     }
-    console.log(2);
+
     const files = (req.files as Express.Multer.File[]) || [];
 
     if (files.length) {
       body["image"] = files[0].filename;
     }
-    console.log(3);
+
     const year = new Date().getFullYear();
 
     // get last voucher ID
@@ -47,7 +47,7 @@ class ProductInvService extends AbstractServices {
     // Product create
     await model.createProduct({
       ...body,
-      product_code: `P-${year}${productNo}`,
+      product_code: `P${year}${productNo}`,
       hotel_code,
       created_by: admin_id,
     });

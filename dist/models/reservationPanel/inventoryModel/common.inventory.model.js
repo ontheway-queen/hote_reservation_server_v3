@@ -389,7 +389,6 @@ class CommonInventoryModel extends schema_1.default {
     // insert supplier payment
     insertSupplierPayment(payload) {
         return __awaiter(this, void 0, void 0, function* () {
-            console.log({ payload });
             return yield this.db("supplier_payment")
                 .withSchema(this.HOTEL_INVENTORY_SCHEMA)
                 .insert(payload);

@@ -13,6 +13,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const abstract_service_1 = __importDefault(require("../../abstarcts/abstract.service"));
+const helperLib_1 = __importDefault(require("../../appAdmin/utlis/library/helperLib"));
 class PurchaseInvService extends abstract_service_1.default {
     constructor() {
         super();
@@ -22,7 +23,7 @@ class PurchaseInvService extends abstract_service_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
                 const { hotel_code, id: admin_id } = req.hotel_admin;
-                const { purchase_date, supplier_id, ac_tr_ac_id, discount_amount, vat, shipping_cost, paid_amount, purchase_items, payment_type, } = req.body;
+                const { purchase_date, supplier_id, ac_tr_ac_id, discount_amount, vat, shipping_cost, paid_amount, purchase_items, } = req.body;
                 // Check supplier
                 const cmnInvModel = this.Model.CommonInventoryModel(trx);
                 // Check account
@@ -32,14 +33,22 @@ class PurchaseInvService extends abstract_service_1.default {
                 const pdModel = this.Model.productInventoryModel(trx);
                 const checkSupplier = yield cmnInvModel.getSingleSupplier(supplier_id, hotel_code);
                 if (!checkSupplier.length) {
-                    throw new Error("Invalid Supplier Information");
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_NOT_FOUND,
+                        message: "Supplier not found",
+                    };
                 }
                 const checkAccount = yield accModel.getSingleAccount({
                     hotel_code,
                     id: ac_tr_ac_id,
                 });
                 if (!checkAccount.length) {
-                    throw new Error("Account not found");
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_NOT_FOUND,
+                        message: "Account not found",
+                    };
                 }
                 // check purchase item exist or not
                 const pdIds = purchase_items.map((item) => item.product_id);
@@ -56,27 +65,23 @@ class PurchaseInvService extends abstract_service_1.default {
                 }
                 // const last_balance = checkAccount[0].last_balance;
                 const sub_total = purchase_items.reduce((acc, curr) => acc + curr.quantity * curr.price, 0);
-                const grand_total = parseFloat(Number.parseFloat((sub_total +
-                    vat +
-                    shipping_cost -
-                    discount_amount).toString()).toFixed(2));
+                const grand_total = parseFloat(Number.parseFloat((sub_total + vat + shipping_cost - discount_amount).toString()).toFixed(2));
                 const due = grand_total - paid_amount;
-                console.log({ checkAccount, grand_total });
                 if (paid_amount > grand_total) {
-                    throw new Error("Paid Amount cannot be greater than grand total");
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_BAD_REQUEST,
+                        message: "Paid Amount cannot be greater than grand total",
+                    };
                 }
                 if (discount_amount > grand_total) {
-                    throw new Error("Discount amount cannot be greater than grand total");
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_BAD_REQUEST,
+                        message: "Discount amount cannot be greater than grand total",
+                    };
                 }
-                // if (last_balance < paid_amount) {
-                //   throw new Error("Insufficient balance in this account for payment");
-                // }
-                const year = new Date().getFullYear();
-                // get last voucher ID
-                const purchaseData = yield pInvModel.getAllPurchaseForLastId();
-                const purchase_no = purchaseData.length
-                    ? purchaseData[0].id + 1
-                    : 1;
+                const p_voucher_no = yield new helperLib_1.default(trx).generatePurchaseVoucher();
                 // Insert purchase
                 const createdPurchase = yield pInvModel.createPurchase({
                     hotel_code,
@@ -89,16 +94,8 @@ class PurchaseInvService extends abstract_service_1.default {
                     vat,
                     shipping_cost,
                     due,
-                    voucher_no: `PUR-${year}${purchase_no}`,
+                    voucher_no: p_voucher_no,
                 });
-                // product name include in purchase items
-                for (let i = 0; i < checkPd.length; i++) {
-                    for (let j = 0; j < purchase_items.length; j++) {
-                        if (checkPd[i].id == purchase_items[j].product_id) {
-                            purchase_items[j].product_name = checkPd[i].name;
-                        }
-                    }
-                }
                 // Insert purchase item
                 const purchaseItemsPayload = [];
                 for (const item of purchase_items) {
@@ -152,46 +149,50 @@ class PurchaseInvService extends abstract_service_1.default {
                         yield pInvModel.updateInInventory({ available_quantity: item.available_quantity }, { id: item.id });
                     })));
                 }
-                // Insert supplier ledger
-                yield pInvModel.insertInvSupplierLedger({
-                    supplier_id,
-                    hotel_code,
-                    ledger_debit_amount: grand_total,
-                    ledger_details: `Balance will be debited from hotel for sell something from supplier`,
-                });
                 if (paid_amount > 0) {
                     yield cmnInvModel.insertSupplierPayment({
                         created_by: admin_id,
                         hotel_code: hotel_code,
-                        purchase_id: createdPurchase[0].id,
-                        total_paid_amount: paid_amount,
-                        ac_tr_ac_id,
+                        voucher_no: p_voucher_no,
+                        debit: paid_amount,
+                        credit: 0,
+                        acc_id: ac_tr_ac_id,
                         supplier_id,
-                        payment_no: `PUR-${year}${purchase_no}`,
-                        payment_type: payment_type,
-                    });
-                    // get last account ledger
-                    // const lastAL = await accModel.getLastAccountLedgerId(
-                    // 	hotel_code
-                    // );
-                    // const ledger_id = lastAL.length ? lastAL[0].ledger_id + 1 : 1;
-                    // Insert account ledger
-                    // await accModel.insertAccountLedger({
-                    // 	ac_tr_ac_id,
-                    // 	hotel_code,
-                    // 	transaction_no: `PUR-${year}${purchase_no}`,
-                    // 	ledger_debit_amount: paid_amount,
-                    // 	ledger_details: `Balance Debited by Purchase`,
-                    // });
-                    // Insert supplier ledger
-                    yield pInvModel.insertInvSupplierLedger({
-                        ac_tr_ac_id,
-                        supplier_id,
-                        hotel_code,
-                        ledger_credit_amount: paid_amount,
-                        ledger_details: `Balance credited for sell something`,
                     });
                 }
+                //   invoice and money receipt generate
+                const hotelInvoiceModel = this.Model.hotelInvoiceModel(trx);
+                const invoiceRes = yield hotelInvoiceModel.insertInInvoice({
+                    hotel_code,
+                    invoice_date: new Date().toISOString(),
+                    invoice_number: p_voucher_no,
+                    total_amount: grand_total,
+                    notes: `Purchase from ${checkSupplier[0].supplier_name}`,
+                });
+                //   insert in invoice items
+                const invoiceItemPayload = purchaseItemsPayload.map((item) => ({
+                    inv_id: invoiceRes[0].id,
+                    name: item.product_name,
+                    quantity: item.quantity,
+                    total_price: item.price,
+                }));
+                yield hotelInvoiceModel.insertInInvoiceItems(invoiceItemPayload);
+                yield hotelInvoiceModel.insertMoneyReceipt({
+                    hotel_code,
+                    receipt_no: p_voucher_no,
+                    receipt_date: new Date().toISOString(),
+                    amount_paid: paid_amount,
+                    acc_id: ac_tr_ac_id,
+                    payment_method: checkAccount[0].acc_type,
+                    received_by: admin_id,
+                    notes: `Payment for purchase invoice no ${p_voucher_no}`,
+                    voucher_no: p_voucher_no,
+                });
+                yield hotelInvoiceModel.insertMoneyReceiptItem({
+                    money_receipt_id: invoiceRes[0].id,
+                    invoice_id: invoiceRes[0].id,
+                    paid_amount: paid_amount,
+                });
                 return {
                     success: true,
                     code: this.StatusCode.HTTP_SUCCESSFUL,
@@ -307,15 +308,6 @@ class PurchaseInvService extends abstract_service_1.default {
                         ledger_debit_amount: paid_amount,
                         ledger_details: `Balance Debited by Purchase`,
                     });
-                    // Insert supplier ledger
-                    yield pInvModel.insertInvSupplierLedger({
-                        ac_tr_ac_id,
-                        supplier_id,
-                        hotel_code,
-                        acc_ledger_id: ledgerRes[0],
-                        ledger_credit_amount: paid_amount,
-                        ledger_details: `Balance credited for sell something`,
-                    });
                     // ================= update purchase ================ //
                     const remainingBalance = due - paid_amount;
                     yield pInvModel.updatePurchase({
@@ -323,11 +315,12 @@ class PurchaseInvService extends abstract_service_1.default {
                     }, { id: purchase_id });
                     // insert in payment supplier
                     yield cmnInvModel.insertSupplierPayment({
-                        ac_tr_ac_id,
+                        acc_id: ac_tr_ac_id,
                         created_by: admin_id,
                         hotel_code: hotel_code,
-                        purchase_id,
-                        total_paid_amount: paid_amount,
+                        debit: paid_amount,
+                        credit: 0,
+                        voucher_no: purchase_id,
                         supplier_id,
                     });
                 }
@@ -362,8 +355,7 @@ class PurchaseInvService extends abstract_service_1.default {
                     for (let i = 0; i < unpaidInvoice.length; i++) {
                         if (remainingPaidAmount > 0) {
                             if (paid_amount >= unpaidInvoice[i].due) {
-                                remainingPaidAmount =
-                                    paid_amount - unpaidInvoice[i].due;
+                                remainingPaidAmount = paid_amount - unpaidInvoice[i].due;
                                 paidingInvoice.push({
                                     id: unpaidInvoice[i].id,
                                     due: unpaidInvoice[i].due - unpaidInvoice[i].due,
@@ -372,8 +364,7 @@ class PurchaseInvService extends abstract_service_1.default {
                                 });
                             }
                             else {
-                                remainingPaidAmount =
-                                    paid_amount - unpaidInvoice[i].due;
+                                remainingPaidAmount = paid_amount - unpaidInvoice[i].due;
                                 paidingInvoice.push({
                                     id: unpaidInvoice[i].id,
                                     due: unpaidInvoice[i].due - paid_amount,
@@ -399,22 +390,18 @@ class PurchaseInvService extends abstract_service_1.default {
                         ledger_debit_amount: paid_amount,
                         ledger_details: `Balance Debited by purchase Money Reciept`,
                     });
-                    // Insert supplier ledger
-                    yield pInvModel.insertInvSupplierLedger({
-                        ac_tr_ac_id,
-                        supplier_id,
-                        hotel_code,
-                        ledger_credit_amount: paid_amount,
-                        ledger_details: `Balance credited by purchase Money Reciept`,
-                    });
                     // money recipet item
                     yield Promise.all(paidingInvoice.map((item) => __awaiter(this, void 0, void 0, function* () {
                         yield cmnInvModel.insertSupplierPayment({
                             created_by: admin_id,
                             hotel_code,
-                            purchase_id: purchase_id[0],
-                            total_paid_amount: item.total_paid_amount,
-                            ac_tr_ac_id,
+                            //   purchase_id: purchase_id[0],
+                            acc_id: ac_tr_ac_id,
+                            debit: item.total_paid_amount,
+                            credit: 0,
+                            //   total_paid_amount: item.total_paid_amount,
+                            //   ac_tr_ac_id,
+                            voucher_no: "",
                             supplier_id,
                         });
                     })));

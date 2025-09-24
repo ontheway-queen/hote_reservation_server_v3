@@ -1,5 +1,6 @@
 import { Knex } from "knex";
 import AccountModel from "../../../models/reservationPanel/accountModel/accountModel";
+import PurchaseInventoryModel from "../../../models/reservationPanel/inventoryModel/puschase.inventory.model";
 
 export default class HelperLib {
   private trx: Knex.Transaction;
@@ -78,5 +79,16 @@ export default class HelperLib {
     }
 
     return newHeadCode;
+  }
+
+  public async generatePurchaseVoucher() {
+    const pInvModel = new PurchaseInventoryModel(this.trx);
+
+    const year = new Date().getFullYear();
+    // get last voucher ID
+    const purchaseData = await pInvModel.getAllPurchaseForLastId();
+    const purchase_no = purchaseData.length ? purchaseData[0].id + 1 : 1;
+
+    return `PUR-${year}${purchase_no}`;
   }
 }

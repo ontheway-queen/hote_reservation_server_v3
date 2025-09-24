@@ -26,7 +26,6 @@ class ProductInvService extends abstract_service_1.default {
                 key: body.name,
                 hotel_code,
             });
-            console.log(1);
             if (data.length) {
                 return {
                     success: false,
@@ -34,18 +33,16 @@ class ProductInvService extends abstract_service_1.default {
                     message: "Product name already exists",
                 };
             }
-            console.log(2);
             const files = req.files || [];
             if (files.length) {
                 body["image"] = files[0].filename;
             }
-            console.log(3);
             const year = new Date().getFullYear();
             // get last voucher ID
             const productData = yield model.getAllProductsForLastId();
             const productNo = productData.length ? productData[0].id + 1 : 1;
             // Product create
-            yield model.createProduct(Object.assign(Object.assign({}, body), { product_code: `P-${year}${productNo}`, hotel_code, created_by: admin_id }));
+            yield model.createProduct(Object.assign(Object.assign({}, body), { product_code: `P${year}${productNo}`, hotel_code, created_by: admin_id }));
             return {
                 success: true,
                 code: this.StatusCode.HTTP_SUCCESSFUL,

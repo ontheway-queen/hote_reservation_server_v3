@@ -90,9 +90,23 @@ class HotelInvoiceModel extends schema_1.default {
                 .insert(payload, "id");
         });
     }
+    insertInInvoiceItems(payload) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("invoice_items")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .insert(payload);
+        });
+    }
     insertMoneyReceipt(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("money_receipts")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .insert(payload, "id");
+        });
+    }
+    insertMoneyReceiptItem(payload) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("money_receipt_item")
                 .withSchema(this.RESERVATION_SCHEMA)
                 .insert(payload, "id");
         });

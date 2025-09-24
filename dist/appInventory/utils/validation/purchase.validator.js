@@ -11,17 +11,14 @@ class PurchaseInvValidator {
             supplier_id: joi_1.default.number().required(),
             purchase_date: joi_1.default.date().required(),
             ac_tr_ac_id: joi_1.default.number().required(),
-            sub_total: joi_1.default.number().allow("").optional(),
             vat: joi_1.default.number().allow("").optional(),
             shipping_cost: joi_1.default.number().allow("").optional(),
             discount_amount: joi_1.default.number().allow("").optional(),
             paid_amount: joi_1.default.number().allow("").optional(),
-            payment_type: joi_1.default.string()
-                .valid("bank", "cash", "cheque", "mobile-banking")
-                .optional(),
             purchase_items: joi_1.default.array()
                 .items(joi_1.default.object({
                 product_id: joi_1.default.number().required(),
+                product_name: joi_1.default.string().required(),
                 quantity: joi_1.default.number().required(),
                 price: joi_1.default.number().required(),
             }))

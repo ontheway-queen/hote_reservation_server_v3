@@ -103,6 +103,18 @@ class HotelInvoiceModel extends Schema {
       .withSchema(this.RESERVATION_SCHEMA)
       .insert(payload, "id");
   }
+  public async insertInInvoiceItems(
+    payload: {
+      inv_id: number;
+      name: string;
+      quantity: number;
+      total_price: number;
+    }[]
+  ) {
+    return await this.db("invoice_items")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .insert(payload);
+  }
 
   public async insertMoneyReceipt(payload: {
     hotel_code: number;
@@ -116,6 +128,16 @@ class HotelInvoiceModel extends Schema {
     voucher_no?: string;
   }) {
     return await this.db("money_receipts")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .insert(payload, "id");
+  }
+
+  public async insertMoneyReceiptItem(payload: {
+    money_receipt_id: number;
+    invoice_id: number;
+    paid_amount: number;
+  }) {
+    return await this.db("money_receipt_item")
       .withSchema(this.RESERVATION_SCHEMA)
       .insert(payload, "id");
   }
