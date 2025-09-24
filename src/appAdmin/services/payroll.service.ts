@@ -282,6 +282,8 @@ class PayRollService extends AbstractServices {
         delete_deductions,
         add_allowances,
         delete_allowances,
+        allowances,
+        deductions,
         account_id,
         basic_salary,
         employee_id,
@@ -289,7 +291,6 @@ class PayRollService extends AbstractServices {
         total_days,
         gurranted_leave_days,
         payroll_month,
-
         ...rest
       } = req.body as IpayrollUpdateRequestBody;
 
@@ -350,40 +351,56 @@ class PayRollService extends AbstractServices {
 
       let totalDeductionsAmount = 0;
       let totalAllowancesAmount = 0;
-      let deductionsPayload: any[] = [];
-      let allowancesPayload: any[] = [];
 
-      if (add_deductions.length)
-        deductionsPayload = add_deductions.map((deduction) => {
+      if (add_deductions?.length) {
+        const deductionsPayload: {
+          employee_id: number;
+          payroll_id: number;
+          deduction_name: string;
+          deduction_amount: number;
+        }[] = add_deductions.map((deduction) => {
           const amount = Number(deduction.deduction_amount);
           totalDeductionsAmount = totalDeductionsAmount + amount;
           return {
             employee_id,
+            payroll_id: Number(id),
             deduction_name: deduction.deduction_name,
             deduction_amount: amount,
           };
         });
 
-      if (delete_deductions.length) {
+        await model.createEmployeeDeductions(deductionsPayload);
+      }
+
+      if (delete_deductions?.length) {
         await model.deleteEmployeeDeductionsByIds({
           payroll_id: Number(id),
           ids: delete_deductions,
         });
       }
 
-      if (allowancesPayload.length)
-        allowancesPayload = add_allowances.map((allowance) => {
+      if (add_allowances?.length) {
+        const allowancesPayload: {
+          payroll_id: number;
+          employee_id: number;
+          allowance_name: string;
+          allowance_amount: number;
+        }[] = add_allowances.map((allowance) => {
           const amount = Number(allowance.allowance_amount);
           totalAllowancesAmount = totalAllowancesAmount + amount;
 
           return {
             employee_id,
+            payroll_id: Number(id),
             allowance_name: allowance.allowance_name,
             allowance_amount: amount,
           };
         });
 
-      if (delete_allowances.length) {
+        await model.createEmployeeAllowances(allowancesPayload);
+      }
+
+      if (delete_allowances?.length) {
         await model.deleteEmployeeAllowancesByIds({
           payroll_id: Number(id),
           ids: delete_allowances,

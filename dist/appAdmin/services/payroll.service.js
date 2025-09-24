@@ -236,7 +236,7 @@ class PayRollService extends abstract_service_1.default {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
                 const { id } = req.params;
                 const { hotel_code, id: admin_id } = req.hotel_admin;
-                const _a = req.body, { add_deductions, delete_deductions, add_allowances, delete_allowances, account_id, basic_salary, employee_id, leave_days, total_days, gurranted_leave_days, payroll_month } = _a, rest = __rest(_a, ["add_deductions", "delete_deductions", "add_allowances", "delete_allowances", "account_id", "basic_salary", "employee_id", "leave_days", "total_days", "gurranted_leave_days", "payroll_month"]);
+                const _a = req.body, { add_deductions, delete_deductions, add_allowances, delete_allowances, allowances, deductions, account_id, basic_salary, employee_id, leave_days, total_days, gurranted_leave_days, payroll_month } = _a, rest = __rest(_a, ["add_deductions", "delete_deductions", "add_allowances", "delete_allowances", "allowances", "deductions", "account_id", "basic_salary", "employee_id", "leave_days", "total_days", "gurranted_leave_days", "payroll_month"]);
                 const files = req.files || [];
                 if (files.length)
                     files.forEach(({ fieldname, filename }) => (req.body[fieldname] = filename));
@@ -273,35 +273,39 @@ class PayRollService extends abstract_service_1.default {
                 const payable_basic = daily_rate * payable_days;
                 let totalDeductionsAmount = 0;
                 let totalAllowancesAmount = 0;
-                let deductionsPayload = [];
-                let allowancesPayload = [];
-                if (add_deductions.length)
-                    deductionsPayload = add_deductions.map((deduction) => {
+                if (add_deductions === null || add_deductions === void 0 ? void 0 : add_deductions.length) {
+                    const deductionsPayload = add_deductions.map((deduction) => {
                         const amount = Number(deduction.deduction_amount);
                         totalDeductionsAmount = totalDeductionsAmount + amount;
                         return {
                             employee_id,
+                            payroll_id: Number(id),
                             deduction_name: deduction.deduction_name,
                             deduction_amount: amount,
                         };
                     });
-                if (delete_deductions.length) {
+                    yield model.createEmployeeDeductions(deductionsPayload);
+                }
+                if (delete_deductions === null || delete_deductions === void 0 ? void 0 : delete_deductions.length) {
                     yield model.deleteEmployeeDeductionsByIds({
                         payroll_id: Number(id),
                         ids: delete_deductions,
                     });
                 }
-                if (allowancesPayload.length)
-                    allowancesPayload = add_allowances.map((allowance) => {
+                if (add_allowances === null || add_allowances === void 0 ? void 0 : add_allowances.length) {
+                    const allowancesPayload = add_allowances.map((allowance) => {
                         const amount = Number(allowance.allowance_amount);
                         totalAllowancesAmount = totalAllowancesAmount + amount;
                         return {
                             employee_id,
+                            payroll_id: Number(id),
                             allowance_name: allowance.allowance_name,
                             allowance_amount: amount,
                         };
                     });
-                if (delete_allowances.length) {
+                    yield model.createEmployeeAllowances(allowancesPayload);
+                }
+                if (delete_allowances === null || delete_allowances === void 0 ? void 0 : delete_allowances.length) {
                     yield model.deleteEmployeeAllowancesByIds({
                         payroll_id: Number(id),
                         ids: delete_allowances,

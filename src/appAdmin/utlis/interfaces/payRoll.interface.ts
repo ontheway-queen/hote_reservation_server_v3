@@ -28,6 +28,8 @@ export interface IpayrollUpdateRequestBody {
   total_days: number;
   leave_days: number;
   gurranted_leave_days: number;
+  allowances: number[];
+  deductions: number[];
   add_deductions: reqDeduction[];
   delete_deductions: number[];
   add_allowances: reqAllowance[];
@@ -91,7 +93,7 @@ export interface ICreatedeductionBody {
 export interface ICreateAdditionBody {
   payroll_id: number;
   allowance_amount: number;
-  allowance_name: number;
+  allowance_name: string;
   employee_id: number;
 }
 

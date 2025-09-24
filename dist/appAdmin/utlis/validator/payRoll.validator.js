@@ -92,7 +92,7 @@ class PayRollValidator {
                             custom: "invalid deductions, should be a JSON object",
                         });
                     }
-                    return value;
+                    return parsedObject;
                 }
                 catch (err) {
                     return helpers.message({
