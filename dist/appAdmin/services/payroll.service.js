@@ -34,117 +34,107 @@ class PayRollService extends abstract_service_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
                 var _a;
-                const { hotel_code, id } = req.hotel_admin;
-                const _b = req.body, { deductions, allowances, account_id, total_days, gurranted_leave_days, basic_salary, employee_id } = _b, rest = __rest(_b, ["deductions", "allowances", "account_id", "total_days", "gurranted_leave_days", "basic_salary", "employee_id"]);
-                const files = req.files || [];
-                if (files.length) {
-                    for (const { fieldname, filename } of files) {
-                        req.body[fieldname] = filename;
-                    }
-                }
+                const { hotel_code, id: admin_id } = req.hotel_admin;
+                const { deductions = [], allowances = [], account_id, total_days, granted_leave_days, total_attendance_days, basic_salary, employee_id, payroll_month, salary_date, note, } = req.body;
+                (_a = req.files) === null || _a === void 0 ? void 0 : _a.forEach(({ fieldname, filename }) => (req.body[fieldname] = filename));
                 const employeeModel = this.Model.employeeModel(trx);
                 const model = this.Model.payRollModel(trx);
                 const accountModel = this.Model.accountModel(trx);
-                const isEmployeeExists = yield employeeModel.getSingleEmployee(employee_id, hotel_code);
-                if (!isEmployeeExists) {
-                    throw new customEror_1.default("Employee with the related id not found!", this.StatusCode.HTTP_NOT_FOUND);
+                const hotelModel = this.Model.HotelModel(trx);
+                /** ---------------- Validate Employee & Payroll ---------------- */
+                const employee = yield employeeModel.getSingleEmployee(employee_id, hotel_code);
+                if (!employee) {
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_NOT_FOUND,
+                        message: "Employee not found",
+                    };
                 }
-                console.log({ isEmployeeExists });
-                const isPayrollExistsForMonth = yield model.hasPayrollForMonth({
-                    employee_id: isEmployeeExists.id,
+                const hasPayroll = yield model.hasPayrollForMonth({
+                    employee_id: employee.id,
                     hotel_code,
-                    payroll_month: rest.payroll_month,
+                    payroll_month,
                 });
-                if (isPayrollExistsForMonth) {
+                if (hasPayroll) {
                     return {
                         success: false,
                         code: this.StatusCode.HTTP_CONFLICT,
                         message: this.ResMsg.HTTP_CONFLICT,
                     };
                 }
-                // Check account
-                const checkAccount = yield accountModel.getSingleAccount({
+                /** ---------------- Validate Account ---------------- */
+                const account = yield accountModel.getSingleAccount({
                     hotel_code,
                     id: account_id,
                 });
-                if (!checkAccount.length) {
+                if (!account.length) {
                     return {
                         success: false,
                         code: this.StatusCode.HTTP_NOT_FOUND,
                         message: "Account not found",
                     };
                 }
+                /** ---------------- Salary Calculations ---------------- */
                 const daily_rate = Number(basic_salary) / total_days;
-                const unpaid_leave_days = total_days - gurranted_leave_days;
-                const payable_days = total_days - unpaid_leave_days;
-                const total_unpaid_leave_deduction_amount = daily_rate * unpaid_leave_days;
+                const unpaid_leave_days = total_days - granted_leave_days;
+                const payable_days = total_attendance_days + granted_leave_days;
                 const payable_basic = daily_rate * payable_days;
-                let totalDeductionsAmount = 0;
-                let totalAllowancesAmount = 0;
-                let deductionsPayload = [];
-                if (deductions.length)
-                    deductionsPayload = deductions.map((deduction) => {
-                        const amount = Number(deduction.deduction_amount);
-                        totalDeductionsAmount = totalDeductionsAmount + amount;
-                        return {
-                            employee_id: isEmployeeExists.id,
-                            deduction_name: deduction.deduction_name,
-                            deduction_amount: amount,
-                        };
-                    });
-                //  Handle Allowances
-                let allowancesPayload = [];
-                allowancesPayload = allowances.map((allowance) => {
-                    const amount = Number(allowance.allowance_amount);
-                    totalAllowancesAmount = totalAllowancesAmount + amount;
+                const unpaid_leave_deduction = daily_rate * unpaid_leave_days;
+                let total_deduction = 0;
+                let total_allowance = 0;
+                const deductionsPayload = deductions.map((d) => {
+                    const amount = Number(d.deduction_amount);
+                    total_deduction += amount;
+                    return {
+                        employee_id: employee.id,
+                        deduction_name: d.deduction_name,
+                        deduction_amount: amount,
+                    };
+                });
+                const allowancesPayload = allowances.map((a) => {
+                    const amount = Number(a.allowance_amount);
+                    total_allowance += amount;
                     return {
                         employee_id,
-                        allowance_name: allowance.allowance_name,
+                        allowance_name: a.allowance_name,
                         allowance_amount: amount,
                     };
                 });
-                const gross_salary = payable_basic + totalAllowancesAmount;
-                const netSalary = gross_salary - totalDeductionsAmount || 0;
-                console.log({ id });
+                const gross_salary = payable_basic + total_allowance;
+                const net_salary = gross_salary - total_deduction;
+                /** ---------------- Payroll Insert ---------------- */
                 const payload = {
                     employee_id,
                     account_id,
-                    payment_method: checkAccount[0].acc_type,
+                    payment_method: account[0].acc_type,
                     basic_salary,
                     payable_basic,
-                    total_allowance: totalAllowancesAmount,
-                    total_deduction: totalDeductionsAmount,
-                    net_salary: netSalary,
+                    net_salary,
                     gross_salary,
-                    unpaid_leave_deduction: total_unpaid_leave_deduction_amount,
+                    unpaid_leave_deduction,
                     docs: req.body.docs,
-                    leave_days: rest.leave_days,
+                    leave_days: total_days - total_attendance_days,
                     unpaid_leave_days,
-                    note: rest.note,
+                    note,
                     total_days,
                     payable_days,
                     daily_rate,
-                    salary_date: rest.salary_date,
-                    created_by: id,
+                    salary_date,
+                    created_by: admin_id,
                     hotel_code,
-                    gurranted_leave_days,
-                    payroll_month: rest.payroll_month,
+                    granted_leave_days,
+                    payroll_month,
+                    total_attendance_days,
                 };
-                const res = yield model.CreatePayRoll(payload);
-                const payroll_id = (_a = res[0]) === null || _a === void 0 ? void 0 : _a.id;
-                console.log({ payroll_id });
-                console.log({ deductionsPayload, deductions });
+                const [{ id: payroll_id }] = yield model.CreatePayRoll(payload);
                 if (deductionsPayload.length) {
-                    const deductionsWithPayrollId = deductionsPayload.map((d) => (Object.assign(Object.assign({}, d), { payroll_id })));
-                    yield model.createEmployeeDeductions(deductionsWithPayrollId);
+                    yield model.createEmployeeDeductions(deductionsPayload.map((d) => (Object.assign(Object.assign({}, d), { payroll_id }))));
                 }
                 if (allowancesPayload.length) {
-                    const allowancesWithPayrollId = allowancesPayload.map((a) => (Object.assign(Object.assign({}, a), { payroll_id })));
-                    yield model.createEmployeeAllowances(allowancesWithPayrollId);
+                    yield model.createEmployeeAllowances(allowancesPayload.map((a) => (Object.assign(Object.assign({}, a), { payroll_id }))));
                 }
-                // _____________________ Accounting __________________________//
+                /** ---------------- Accounting ---------------- */
                 const helper = new helperFunction_1.HelperFunction();
-                const hotelModel = this.Model.HotelModel(trx);
                 const heads = yield hotelModel.getHotelAccConfig(hotel_code, [
                     "PAYROLL_HEAD_ID",
                 ]);
@@ -152,35 +142,31 @@ class PayRollService extends abstract_service_1.default {
                 if (!payroll_head) {
                     throw new Error("PAYROLL_HEAD_ID not configured for this hotel");
                 }
-                const voucher_no1 = yield helper.generateVoucherNo("JV", trx);
                 const today = new Date().toISOString();
-                console.log({ payroll_head });
+                // Debit expense
                 yield accountModel.insertAccVoucher([
                     {
                         acc_head_id: payroll_head.head_id,
-                        created_by: id,
-                        debit: netSalary,
+                        created_by: admin_id,
+                        debit: net_salary,
                         credit: 0,
                         description: `Expense for payroll`,
                         voucher_date: today,
-                        voucher_no: voucher_no1,
+                        voucher_no: yield helper.generateVoucherNo("JV", trx),
                         hotel_code,
                     },
                 ]);
-                let voucher_type = "CCV";
-                if (checkAccount[0].acc_type === "BANK") {
-                    voucher_type = "BCV";
-                }
-                const voucher_no = yield helper.generateVoucherNo(voucher_type, trx);
+                // Credit account
+                const voucher_type = account[0].acc_type === "BANK" ? "BCV" : "CCV";
                 yield accountModel.insertAccVoucher([
                     {
-                        acc_head_id: checkAccount[0].acc_head_id,
-                        created_by: id,
+                        acc_head_id: account[0].acc_head_id,
+                        created_by: admin_id,
                         debit: 0,
-                        credit: netSalary,
+                        credit: net_salary,
                         description: `Expense for payroll`,
                         voucher_date: today,
-                        voucher_no,
+                        voucher_no: yield helper.generateVoucherNo(voucher_type, trx),
                         hotel_code,
                     },
                 ]);
@@ -234,16 +220,16 @@ class PayRollService extends abstract_service_1.default {
     updatePayRoll(req) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
+                var _a;
                 const { id } = req.params;
                 const { hotel_code, id: admin_id } = req.hotel_admin;
-                const _a = req.body, { add_deductions, delete_deductions, add_allowances, delete_allowances, allowances, deductions, account_id, basic_salary, employee_id, leave_days, total_days, gurranted_leave_days, payroll_month } = _a, rest = __rest(_a, ["add_deductions", "delete_deductions", "add_allowances", "delete_allowances", "allowances", "deductions", "account_id", "basic_salary", "employee_id", "leave_days", "total_days", "gurranted_leave_days", "payroll_month"]);
-                const files = req.files || [];
-                if (files.length)
-                    files.forEach(({ fieldname, filename }) => (req.body[fieldname] = filename));
+                const _b = req.body, { add_deductions = [], delete_deductions = [], add_allowances = [], delete_allowances = [], allowances = [], deductions = [], account_id, basic_salary, employee_id, total_days, granted_leave_days, total_attendance_days, payroll_month } = _b, rest = __rest(_b, ["add_deductions", "delete_deductions", "add_allowances", "delete_allowances", "allowances", "deductions", "account_id", "basic_salary", "employee_id", "total_days", "granted_leave_days", "total_attendance_days", "payroll_month"]);
+                // Attach file names if uploaded
+                (_a = req.files) === null || _a === void 0 ? void 0 : _a.forEach(({ fieldname, filename }) => (req.body[fieldname] = filename));
                 const employeeModel = this.Model.employeeModel(trx);
                 const model = this.Model.payRollModel(trx);
                 const accountModel = this.Model.accountModel(trx);
-                const existingPayroll = yield model.getSinglePayRoll(parseInt(id), hotel_code);
+                const existingPayroll = yield model.getSinglePayRoll(Number(id), hotel_code);
                 if (!existingPayroll) {
                     return {
                         success: false,
@@ -266,61 +252,75 @@ class PayRollService extends abstract_service_1.default {
                         message: "Account not found",
                     };
                 }
+                /** ---------------- Salary Calculations ---------------- */
                 const daily_rate = Number(basic_salary) / total_days;
-                const unpaid_leave_days = total_days - gurranted_leave_days;
-                const payable_days = total_days - unpaid_leave_days;
-                const total_unpaid_leave_deduction_amount = daily_rate * unpaid_leave_days;
+                const unpaid_leave_days = total_days - granted_leave_days;
+                const payable_days = total_attendance_days + granted_leave_days;
                 const payable_basic = daily_rate * payable_days;
+                const unpaid_leave_deduction = daily_rate * unpaid_leave_days;
                 let totalDeductionsAmount = 0;
                 let totalAllowancesAmount = 0;
-                if (add_deductions === null || add_deductions === void 0 ? void 0 : add_deductions.length) {
-                    const deductionsPayload = add_deductions.map((deduction) => {
-                        const amount = Number(deduction.deduction_amount);
-                        totalDeductionsAmount = totalDeductionsAmount + amount;
-                        return {
-                            employee_id,
-                            payroll_id: Number(id),
-                            deduction_name: deduction.deduction_name,
-                            deduction_amount: amount,
-                        };
+                /** ---------------- Update Existing Allowances ---------------- */
+                if (allowances.length) {
+                    totalAllowancesAmount += allowances.reduce((sum, a) => sum + Number(a.allowance_amount), 0);
+                    yield Promise.all(allowances.map((_a) => {
+                        var { id } = _a, payload = __rest(_a, ["id"]);
+                        return model.updateEmployeeAllowances({ id, payload });
+                    }));
+                }
+                /** ---------------- Update Existing Deductions ---------------- */
+                if (deductions.length) {
+                    totalDeductionsAmount += deductions.reduce((sum, d) => sum + Number(d.deduction_amount), 0);
+                    yield Promise.all(deductions.map((_a) => {
+                        var { id } = _a, payload = __rest(_a, ["id"]);
+                        return model.updateEmployeeDeductions({ id, payload });
+                    }));
+                }
+                /** ---------------- Add/Delete Deductions ---------------- */
+                if (add_deductions.length) {
+                    const deductionsPayload = add_deductions.map((d) => {
+                        const amount = Number(d.deduction_amount);
+                        totalDeductionsAmount += amount;
+                        return Object.assign(Object.assign({ payroll_id: Number(id), employee_id }, d), { deduction_amount: amount });
                     });
                     yield model.createEmployeeDeductions(deductionsPayload);
                 }
-                if (delete_deductions === null || delete_deductions === void 0 ? void 0 : delete_deductions.length) {
+                if (delete_deductions.length) {
                     yield model.deleteEmployeeDeductionsByIds({
                         payroll_id: Number(id),
                         ids: delete_deductions,
                     });
                 }
-                if (add_allowances === null || add_allowances === void 0 ? void 0 : add_allowances.length) {
-                    const allowancesPayload = add_allowances.map((allowance) => {
-                        const amount = Number(allowance.allowance_amount);
-                        totalAllowancesAmount = totalAllowancesAmount + amount;
-                        return {
-                            employee_id,
-                            payroll_id: Number(id),
-                            allowance_name: allowance.allowance_name,
-                            allowance_amount: amount,
-                        };
+                /** ---------------- Add/Delete Allowances ---------------- */
+                if (add_allowances.length) {
+                    const allowancesPayload = add_allowances.map((a) => {
+                        const amount = Number(a.allowance_amount);
+                        totalAllowancesAmount += amount;
+                        return Object.assign(Object.assign({ payroll_id: Number(id), employee_id }, a), { allowance_amount: amount });
                     });
                     yield model.createEmployeeAllowances(allowancesPayload);
                 }
-                if (delete_allowances === null || delete_allowances === void 0 ? void 0 : delete_allowances.length) {
+                if (delete_allowances.length) {
                     yield model.deleteEmployeeAllowancesByIds({
                         payroll_id: Number(id),
                         ids: delete_allowances,
                     });
                 }
+                /** ---------------- Final Salary Calculation ---------------- */
                 const gross_salary = payable_basic + totalAllowancesAmount;
-                const netSalary = gross_salary - totalDeductionsAmount;
+                const net_salary = gross_salary - totalDeductionsAmount;
                 const payload = Object.assign(Object.assign({}, rest), { payment_method: account[0].acc_type, basic_salary,
                     employee_id,
                     payable_days,
                     daily_rate,
-                    total_days,
-                    leave_days, unpaid_leave_deduction: total_unpaid_leave_deduction_amount, account_id, total_allowance: totalAllowancesAmount, total_deduction: totalDeductionsAmount, gross_salary, net_salary: netSalary, updated_by: admin_id, hotel_code,
-                    payroll_month });
-                yield model.updatePayRoll({ id: parseInt(id), payload });
+                    total_days, leave_days: total_days - total_attendance_days, unpaid_leave_deduction,
+                    account_id,
+                    gross_salary,
+                    net_salary, updated_by: admin_id, hotel_code,
+                    payroll_month,
+                    granted_leave_days,
+                    total_attendance_days });
+                yield model.updatePayRoll({ id: Number(id), payload });
                 return {
                     success: true,
                     code: this.StatusCode.HTTP_SUCCESSFUL,

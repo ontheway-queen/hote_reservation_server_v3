@@ -89,12 +89,15 @@ class PayRollModel extends Schema {
         "p.id",
         "e.name as employee_name",
         "de.name as designation",
-        "p.total_allowance",
         this.db.raw(
-          `(SELECT SUM(p2.total_deduction + p2.unpaid_leave_deduction)
-     FROM ${this.HR_SCHEMA}.payroll p2
-     WHERE p2.employee_id = p.employee_id
-       AND p2.hotel_code = p.hotel_code) as total_deduction`
+          `(SELECT COALESCE(SUM(ea.allowance_amount), 0)
+         FROM ${this.HR_SCHEMA}.employee_allowances ea
+         WHERE p.id = ea.payroll_id) as total_allowance`
+        ),
+        this.db.raw(
+          `(SELECT COALESCE(SUM(ed.deduction_amount), 0)
+         FROM ${this.HR_SCHEMA}.employee_deductions ed
+         WHERE p.id = ed.payroll_id) as total_deduction`
         ),
         "p.basic_salary",
         "p.payment_method",
@@ -161,8 +164,16 @@ class PayRollModel extends Schema {
         "e.name as employee_name",
         "des.name as employee_designation",
         "e.contact_no as employee_phone",
-        "p.total_allowance",
-        "p.total_deduction",
+        this.db.raw(
+          `(SELECT COALESCE(SUM(ea.allowance_amount), 0)
+         FROM ${this.HR_SCHEMA}.employee_allowances ea
+         WHERE p.id = ea.payroll_id) as total_allowance`
+        ),
+        this.db.raw(
+          `(SELECT COALESCE(SUM(ed.deduction_amount), 0)
+         FROM ${this.HR_SCHEMA}.employee_deductions ed
+         WHERE p.id = ed.payroll_id) as total_deduction`
+        ),
         "p.unpaid_leave_days",
         "p.leave_days",
         "p.account_id",
@@ -177,7 +188,8 @@ class PayRollModel extends Schema {
         "p.salary_date",
         "p.note",
         "p.total_days",
-        "p.gurranted_leave_days",
+        "p.granted_leave_days",
+        "p.total_attendance_days",
         "p.docs",
         "p.created_by",
         "ua.name as created_by_name",
@@ -306,11 +318,62 @@ class PayRollModel extends Schema {
       .andWhere({ is_deleted: false });
   }
 
-  public async getEmployeeAllowancesByPayrollId(payroll_id: number) {
+  public async getEmployeeDeductionsByIds({
+    ids,
+    payroll_id,
+  }: {
+    payroll_id: number;
+    ids: number[];
+  }): Promise<
+    {
+      id: number;
+      employee_id: number;
+      deduction_amount: number;
+      deduction_name: string;
+    }[]
+  > {
+    return await this.db("employee_deductions")
+      .withSchema(this.HR_SCHEMA)
+      .select("*")
+      .where({ payroll_id })
+      .where("id", ids);
+  }
+
+  public async getEmployeeAllowancesByPayrollId(payroll_id: number): Promise<
+    {
+      id: number;
+      employee_id: number;
+      allowance_name: string;
+      allowance_amount: number;
+      payroll_id: number;
+    }[]
+  > {
+    return await this.db("employee_allowances")
+      .withSchema(this.HR_SCHEMA)
+      .select("id", "employee_id", "allowance_amount", "payroll_id")
+      .where({ payroll_id })
+      .andWhere({ is_deleted: false });
+  }
+
+  public async getEmployeeAllowancesByIds({
+    payroll_id,
+    ids,
+  }: {
+    payroll_id: number;
+    ids: number[];
+  }): Promise<
+    {
+      id: number;
+      employee_id: number;
+      allowance_amount: number;
+      payroll_id: number;
+    }[]
+  > {
     return await this.db("employee_allowances")
       .withSchema(this.HR_SCHEMA)
       .select("*")
-      .where({ payroll_id });
+      .whereIn("id", ids)
+      .andWhere({ payroll_id });
   }
 
   public async deleteEmployeeDeductionsByIds({
@@ -324,7 +387,7 @@ class PayRollModel extends Schema {
       .withSchema(this.HR_SCHEMA)
       .where({ payroll_id })
       .whereIn("id", ids)
-      .update({ is_deleted: true });
+      .del();
   }
 
   public async deleteEmployeeAllowancesByIds({
@@ -338,7 +401,7 @@ class PayRollModel extends Schema {
       .withSchema(this.HR_SCHEMA)
       .where({ payroll_id })
       .whereIn("id", ids)
-      .update({ is_deleted: true });
+      .del();
   }
 
   public async getSingleEmployeeDeduction(id: number) {
