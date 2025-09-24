@@ -23,8 +23,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const lib_1 = __importDefault(require("../../utils/lib/lib"));
 const abstract_service_1 = __importDefault(require("../../abstarcts/abstract.service"));
+const lib_1 = __importDefault(require("../../utils/lib/lib"));
 class MAdministrationService extends abstract_service_1.default {
     constructor() {
         super();

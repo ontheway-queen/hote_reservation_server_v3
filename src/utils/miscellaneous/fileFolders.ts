@@ -19,5 +19,6 @@ class FileFolder {
 	static readonly B2C_SITE_CONFIG_OTHERS = "b2c/others";
 	static readonly B2C_SITE_CONFIG_POP_UP = "b2c/pop-up";
 	static readonly EXPENSE_FILES = "expense";
+	static readonly HOTEL_RESTAURANT_FILES = "hotel-restaurant-files";
 }
 export default FileFolder;

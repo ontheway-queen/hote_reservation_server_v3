@@ -7,13 +7,13 @@ import Schema from "../utils/miscellaneous/schema";
 import StatusCode from "../utils/miscellaneous/statusCode";
 
 abstract class AbstractServices {
-  protected db = db;
-  protected manageFile = new ManageFile();
-  protected ResMsg = ResMsg;
-  protected StatusCode = StatusCode;
-  protected Model = new Models(this.db);
-  protected BtocModels = new BtocModels(this.db);
-  protected schema = new Schema();
+	protected db = db;
+	protected manageFile = new ManageFile();
+	protected ResMsg = ResMsg;
+	protected StatusCode = StatusCode;
+	protected Model = new Models(this.db);
+	protected BtocModels = new BtocModels(this.db);
+	protected schema = new Schema();
 }
 
 export default AbstractServices;

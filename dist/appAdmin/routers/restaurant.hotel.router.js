@@ -5,22 +5,23 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const abstract_router_1 = __importDefault(require("../../abstarcts/abstract.router"));
 const restaurant_hotel_controller_1 = __importDefault(require("../controllers/restaurant.hotel.controller"));
-class hotelRestaurantRouter extends abstract_router_1.default {
+class HotelRestaurantRouter extends abstract_router_1.default {
     constructor() {
         super();
         this.Controller = new restaurant_hotel_controller_1.default();
         this.callRouter();
     }
     callRouter() {
-        //=================== Restaurant Router ======================//
-        // Create and View Restaurant
         this.router
             .route("/")
-            .post(this.Controller.createRestaurant)
+            .post(this.uploader.cloudUploadRaw(this.fileFolders.HOTEL_RESTAURANT_FILES), this.Controller.createRestaurant)
             .get(this.Controller.getAllRestaurant);
-        // update hotel restaurant
-        this.router.route("/:id").patch(this.Controller.updateHotelRestaurant);
+        this.router
+            .route("/:id")
+            .get(this.Controller.getRestaurantWithAdmin)
+            .patch(this.uploader.cloudUploadRaw(this.fileFolders.HOTEL_RESTAURANT_FILES), this.Controller.updateHotelRestaurantAndAdmin)
+            .delete(this.Controller.deleteHotelRestaurantAndAdmin);
     }
 }
-exports.default = hotelRestaurantRouter;
+exports.default = HotelRestaurantRouter;
 //# sourceMappingURL=restaurant.hotel.router.js.map
