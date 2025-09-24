@@ -49,7 +49,7 @@ class RoomService extends abstract_service_1.default {
                 yield roomModel.createRoom(Object.assign(Object.assign({}, req.body), { hotel_code, created_by: user_id }));
                 // Handle room availability
                 const availability = yield roomModel.getRoomAvailabilitiesByRoomTypeId(hotel_code, room_type_id);
-                if (availability) {
+                if (availability.length) {
                     const updates = availability.map((row) => {
                         const updatedTotal = row.total_rooms + 1;
                         const updatedAvailable = row.available_rooms + 1;

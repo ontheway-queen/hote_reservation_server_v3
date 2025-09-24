@@ -18,6 +18,7 @@ exports.origin = [
     "https://thehotel360.com",
     "https://admin.thehotel360.com",
     "https://www.admin.thehotel360.com",
+    "http://10.10.220.147:4050",
 ];
 exports.allStrings = [
     1,
