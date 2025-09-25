@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.SERVER_SRJ_PAYMENT_CANCELLED_URL = exports.SERVER_SRJ_PAYMENT_SUCCESS_RETURN_URL = exports.PAYMENT_CANCELLED_URL = exports.PAYMENT_SUCCESS_RETURN_URL = exports.PAYMENT_VERIFY_URL = exports.PAYMENT_PAY_URL = exports.GET_TOKEN_URL = exports.BTOC_CLIENT_DOMAIN = exports.CLIENT_DOMAIN = exports.RETURN_DOMAIN = exports.SURJO_BASE_URL = exports.ROOM_TYPE_AVAILABILITY_DAYS = exports.FUNCTION_TYPE_HOTEL = exports.CONTENT_TYPE_VIDEO = exports.CONTENT_TYPE_PHOTO = exports.ACC_HEAD_CONFIG = exports.ERROR_LEVEL_CRITICAL = exports.ERROR_LEVEL_ERROR = exports.ERROR_LEVEL_WARNING = exports.ERROR_LEVEL_INFO = exports.ERROR_LEVEL_DEBUG = exports.OTP_FOR_CREDENTIALS = exports.OTP_FOR = exports.OTP_EMAIL_SUBJECT = exports.OTP_TYPE_FORGET_RES_ADMIN = exports.OTP_TYPE_FORGET_BTOC_USER = exports.OTP_TYPE_FORGET_HOTEL_ADMIN = exports.OTP_TYPE_FORGET_M_ADMIN = exports.DIVIDEND_GROUP = exports.EXPENSE_GROUP = exports.INCOME_GROUP = exports.CAPITAL_GROUP = exports.LIABILITY_GROUP = exports.ASSET_GROUP = exports.allStrings = exports.origin = void 0;
+exports.SERVER_SRJ_PAYMENT_CANCELLED_URL = exports.SERVER_SRJ_PAYMENT_SUCCESS_RETURN_URL = exports.PAYMENT_CANCELLED_URL = exports.PAYMENT_SUCCESS_RETURN_URL = exports.PAYMENT_VERIFY_URL = exports.PAYMENT_PAY_URL = exports.GET_TOKEN_URL = exports.BTOC_CLIENT_DOMAIN = exports.CLIENT_DOMAIN = exports.RETURN_DOMAIN = exports.SURJO_BASE_URL = exports.ROOM_TYPE_AVAILABILITY_DAYS = exports.FUNCTION_TYPE_HOTEL = exports.CONTENT_TYPE_VIDEO = exports.CONTENT_TYPE_PHOTO = exports.ACC_HEAD_CONFIG = exports.ERROR_LEVEL_CRITICAL = exports.ERROR_LEVEL_ERROR = exports.ERROR_LEVEL_WARNING = exports.ERROR_LEVEL_INFO = exports.ERROR_LEVEL_DEBUG = exports.OTP_FOR_CREDENTIALS = exports.OTP_FOR = exports.OTP_EMAIL_SUBJECT = exports.OTP_TYPE_FORGET_RESTAURANT_ADMIN = exports.OTP_TYPE_FORGET_RES_ADMIN = exports.OTP_TYPE_FORGET_BTOC_USER = exports.OTP_TYPE_FORGET_HOTEL_ADMIN = exports.OTP_TYPE_FORGET_M_ADMIN = exports.DIVIDEND_GROUP = exports.EXPENSE_GROUP = exports.INCOME_GROUP = exports.CAPITAL_GROUP = exports.LIABILITY_GROUP = exports.ASSET_GROUP = exports.allStrings = exports.origin = void 0;
 const config_1 = __importDefault(require("../../config/config"));
 exports.origin = [
     "http://localhost:3000",
@@ -101,6 +101,7 @@ exports.OTP_TYPE_FORGET_M_ADMIN = "forget_m_admin";
 exports.OTP_TYPE_FORGET_HOTEL_ADMIN = "forget_h_admin";
 exports.OTP_TYPE_FORGET_BTOC_USER = "forget_btoc_user";
 exports.OTP_TYPE_FORGET_RES_ADMIN = "forget_res_admin";
+exports.OTP_TYPE_FORGET_RESTAURANT_ADMIN = "forget_restaurant_admin";
 // Send OTP Email subject
 exports.OTP_EMAIL_SUBJECT = "Your One Time Password For Reservation Verification";
 // OTP for

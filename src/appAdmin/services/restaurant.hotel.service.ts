@@ -34,9 +34,10 @@ class HotelRestaurantService extends AbstractServices {
 				}
 			}
 
-			const model = this.Model.restaurantModel(trx);
+			const restaurantModel = this.Model.restaurantModel(trx);
+			const restaurantAdminModel = this.Model.restaurantAdminModel(trx);
 
-			const checkRestaurant = await model.getAllRestaurant({
+			const checkRestaurant = await restaurantModel.getAllRestaurant({
 				hotel_code,
 			});
 
@@ -70,10 +71,11 @@ class HotelRestaurantService extends AbstractServices {
 				}
 			}
 
-			const adminEmailExists = await model.getAllRestaurantAdminEmail({
-				email: user.email,
-				hotel_code,
-			});
+			const adminEmailExists =
+				await restaurantAdminModel.getAllRestaurantAdminEmail({
+					email: user.email,
+					hotel_code,
+				});
 
 			if (adminEmailExists) {
 				return {
@@ -85,7 +87,7 @@ class HotelRestaurantService extends AbstractServices {
 			}
 			const hashPass = await Lib.hashPass(user.password);
 
-			const [newRestaurant] = await model.createRestaurant({
+			const [newRestaurant] = await restaurantModel.createRestaurant({
 				...restaurant,
 				hotel_code,
 				created_by: admin_id,
@@ -93,7 +95,7 @@ class HotelRestaurantService extends AbstractServices {
 
 			//! Need to check the role and permission before creating the admin user & restaurant.
 
-			await model.createRestaurantAdmin({
+			await restaurantAdminModel.createRestaurantAdmin({
 				restaurant_id: newRestaurant.id,
 				hotel_code,
 				email: user.email,
@@ -173,11 +175,12 @@ class HotelRestaurantService extends AbstractServices {
 			const { id } = req.params;
 
 			let {
-				user = {} as IUpdateRestaurantPayload,
-				restaurant = {} as IUpdateRestaurantUserAdminPayload,
+				user = {} as IUpdateRestaurantUserAdminPayload,
+				restaurant = {} as IUpdateRestaurantPayload,
 			} = req.body;
 
 			const restaurantModel = this.Model.restaurantModel(trx);
+			const restaurantAdminModel = this.Model.restaurantAdminModel(trx);
 
 			const files = (req.files as Express.Multer.File[]) || [];
 			for (const { fieldname, filename } of files) {
@@ -202,7 +205,7 @@ class HotelRestaurantService extends AbstractServices {
 
 			if (user?.email && user.email !== checkRestaurant.admin_email) {
 				const emailExists =
-					await restaurantModel.getAllRestaurantAdminEmail({
+					await restaurantAdminModel.getAllRestaurantAdminEmail({
 						email: user.email,
 						hotel_code,
 					});
@@ -243,7 +246,7 @@ class HotelRestaurantService extends AbstractServices {
 				payload: updatedRestaurant,
 			});
 
-			await restaurantModel.updateRestaurantAdmin({
+			await restaurantAdminModel.updateRestaurantAdmin({
 				id: checkRestaurant.admin_id,
 				payload: updatedAdmin,
 			});
@@ -252,45 +255,6 @@ class HotelRestaurantService extends AbstractServices {
 				success: true,
 				code: this.StatusCode.HTTP_OK,
 				message: "Restaurant updated successfully",
-			};
-		});
-	}
-
-	public async deleteHotelRestaurantAndAdmin(req: Request) {
-		return await this.db.transaction(async (trx) => {
-			const { id } = req.params;
-			const { hotel_code } = req.hotel_admin;
-
-			const restaurantModel = this.Model.restaurantModel(trx);
-
-			const checkRestaurant =
-				await restaurantModel.getRestaurantWithAdmin({
-					restaurant_id: Number(id),
-					hotel_code,
-				});
-
-			if (!checkRestaurant) {
-				return {
-					success: false,
-					code: this.StatusCode.HTTP_NOT_FOUND,
-					message: "Restaurant not found",
-				};
-			}
-
-			await restaurantModel.deleteRestaurant({
-				id: Number(id),
-				hotel_code,
-			});
-
-			// await restaurantModel.deleteRestaurantAdmin({
-			// 	restaurant_id: checkRestaurant.id,
-			// 	id: checkRestaurant.admin_id,
-			// });
-
-			return {
-				success: true,
-				code: this.StatusCode.HTTP_OK,
-				message: "Restaurant deleted successfully",
 			};
 		});
 	}

@@ -18,34 +18,6 @@ class RestaurantModel extends schema_1.default {
         super();
         this.db = db;
     }
-    //=================== Restaurant Admin  ======================//
-    createRestaurantAdmin(payload) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("user_admin")
-                .withSchema(this.RESTAURANT_SCHEMA)
-                .insert(payload);
-        });
-    }
-    getAllRestaurantAdminEmail(payload) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const { email, hotel_code } = payload;
-            const dtbs = this.db("user_admin as ua");
-            const data = yield dtbs
-                .withSchema(this.RESTAURANT_SCHEMA)
-                .where({ "ua.hotel_code": hotel_code })
-                .andWhere({ "ua.email": email })
-                .orderBy("id", "desc");
-            return data.length > 0 ? data[0] : null;
-        });
-    }
-    updateRestaurantAdmin({ id, payload, }) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("user_admin")
-                .withSchema(this.RESTAURANT_SCHEMA)
-                .update(payload)
-                .where({ id });
-        });
-    }
     //=================== Restaurant  ======================//
     createRestaurant(payload) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -103,14 +75,6 @@ class RestaurantModel extends schema_1.default {
                 .withSchema(this.RESTAURANT_SCHEMA)
                 .where("r.id", id)
                 .update(payload);
-        });
-    }
-    deleteRestaurant({ id, hotel_code, }) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("restaurant")
-                .withSchema(this.RESTAURANT_SCHEMA)
-                .where({ id, hotel_code })
-                .update({ is_deleted: true });
         });
     }
 }

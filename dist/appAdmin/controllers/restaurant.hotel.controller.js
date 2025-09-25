@@ -47,10 +47,6 @@ class HotelRestaurantController extends abstract_controller_1.default {
             const _d = yield this.Service.updateHotelRestaurantAndAdmin(req), { code } = _d, data = __rest(_d, ["code"]);
             res.status(code).json(data);
         }));
-        this.deleteHotelRestaurantAndAdmin = this.asyncWrapper.wrap({ bodySchema: this.Validator.updateHotelRestaurantValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _e = yield this.Service.deleteHotelRestaurantAndAdmin(req), { code } = _e, data = __rest(_e, ["code"]);
-            res.status(code).json(data);
-        }));
     }
 }
 exports.default = HotelRestaurantController;

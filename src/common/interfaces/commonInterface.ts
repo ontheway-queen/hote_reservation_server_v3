@@ -3,7 +3,8 @@ export interface OTPType {
 		| "forget_m_admin"
 		| "forget_h_admin"
 		| "forget_res_admin"
-		| "forget_btoc_user";
+		| "forget_btoc_user"
+		| "forget_restaurant_admin";
 }
 export interface IInsertOTPPayload extends OTPType {
 	hashed_otp: string;

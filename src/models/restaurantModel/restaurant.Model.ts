@@ -1,8 +1,6 @@
 import {
 	IRestaurantPayload,
-	IRestaurantUserAdminPayload,
 	IUpdateRestaurantPayload,
-	IUpdateRestaurantUserAdminPayload,
 } from "../../appAdmin/utlis/interfaces/restaurant.hotel.interface";
 import { TDB } from "../../common/types/commontypes";
 import Schema from "../../utils/miscellaneous/schema";
@@ -13,43 +11,6 @@ class RestaurantModel extends Schema {
 	constructor(db: TDB) {
 		super();
 		this.db = db;
-	}
-
-	//=================== Restaurant Admin  ======================//
-	public async createRestaurantAdmin(payload: IRestaurantUserAdminPayload) {
-		return await this.db("user_admin")
-			.withSchema(this.RESTAURANT_SCHEMA)
-			.insert(payload);
-	}
-
-	public async getAllRestaurantAdminEmail(payload: {
-		email: string;
-		hotel_code: number;
-	}) {
-		const { email, hotel_code } = payload;
-
-		const dtbs = this.db("user_admin as ua");
-
-		const data = await dtbs
-			.withSchema(this.RESTAURANT_SCHEMA)
-			.where({ "ua.hotel_code": hotel_code })
-			.andWhere({ "ua.email": email })
-			.orderBy("id", "desc");
-
-		return data.length > 0 ? data[0] : null;
-	}
-
-	public async updateRestaurantAdmin({
-		id,
-		payload,
-	}: {
-		id: number;
-		payload: IUpdateRestaurantUserAdminPayload;
-	}) {
-		return await this.db("user_admin")
-			.withSchema(this.RESTAURANT_SCHEMA)
-			.update(payload)
-			.where({ id });
 	}
 
 	//=================== Restaurant  ======================//
@@ -163,19 +124,6 @@ class RestaurantModel extends Schema {
 			.withSchema(this.RESTAURANT_SCHEMA)
 			.where("r.id", id)
 			.update(payload);
-	}
-
-	public async deleteRestaurant({
-		id,
-		hotel_code,
-	}: {
-		id: number;
-		hotel_code: number;
-	}) {
-		return await this.db("restaurant")
-			.withSchema(this.RESTAURANT_SCHEMA)
-			.where({ id, hotel_code })
-			.update({ is_deleted: true });
 	}
 }
 export default RestaurantModel;

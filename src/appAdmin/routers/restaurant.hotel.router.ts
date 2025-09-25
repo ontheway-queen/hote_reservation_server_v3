@@ -28,8 +28,7 @@ class HotelRestaurantRouter extends AbstractRouter {
 					this.fileFolders.HOTEL_RESTAURANT_FILES
 				),
 				this.Controller.updateHotelRestaurantAndAdmin
-			)
-			.delete(this.Controller.deleteHotelRestaurantAndAdmin);
+			);
 	}
 }
 export default HotelRestaurantRouter;

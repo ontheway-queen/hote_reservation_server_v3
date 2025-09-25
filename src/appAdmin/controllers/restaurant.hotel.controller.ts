@@ -47,15 +47,5 @@ class HotelRestaurantController extends AbstractController {
 			res.status(code).json(data);
 		}
 	);
-
-	public deleteHotelRestaurantAndAdmin = this.asyncWrapper.wrap(
-		{ bodySchema: this.Validator.updateHotelRestaurantValidator },
-		async (req: Request, res: Response) => {
-			const { code, ...data } =
-				await this.Service.deleteHotelRestaurantAndAdmin(req);
-
-			res.status(code).json(data);
-		}
-	);
 }
 export default HotelRestaurantController;

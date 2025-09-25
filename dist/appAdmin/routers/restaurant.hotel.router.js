@@ -19,8 +19,7 @@ class HotelRestaurantRouter extends abstract_router_1.default {
         this.router
             .route("/:id")
             .get(this.Controller.getRestaurantWithAdmin)
-            .patch(this.uploader.cloudUploadRaw(this.fileFolders.HOTEL_RESTAURANT_FILES), this.Controller.updateHotelRestaurantAndAdmin)
-            .delete(this.Controller.deleteHotelRestaurantAndAdmin);
+            .patch(this.uploader.cloudUploadRaw(this.fileFolders.HOTEL_RESTAURANT_FILES), this.Controller.updateHotelRestaurantAndAdmin);
     }
 }
 exports.default = HotelRestaurantRouter;

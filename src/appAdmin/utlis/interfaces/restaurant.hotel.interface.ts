@@ -24,11 +24,6 @@ export interface IRestaurantUserAdminRequest {
 	photo?: string | null;
 }
 
-// export interface ICreateRestaurantPayload {
-// 	user: IRestaurantUserAdminPayload;
-// 	restaurant: IRestaurantPayload;
-// }
-
 export interface IRestaurantPayload {
 	hotel_code: number;
 	name: string;
@@ -56,10 +51,11 @@ export interface IRestaurantUserAdminPayload {
 }
 
 export interface IUpdateRestaurantPayload extends Partial<IRestaurantPayload> {
-	status?: boolean;
-	is_deleted?: boolean;
+	status?: "active" | "inactive";
 	updated_by?: number;
 }
 
 export interface IUpdateRestaurantUserAdminPayload
-	extends Partial<IRestaurantUserAdminPayload> {}
+	extends Partial<IRestaurantUserAdminPayload> {
+	status?: "active" | "blocked";
+}

@@ -32,6 +32,7 @@ import ReportModel from "./reservationPanel/ReportModel/ReportModel";
 import { ReservationModel } from "./reservationPanel/reservation.model";
 import RoomModel from "./reservationPanel/Room.Model";
 import SettingModel from "./reservationPanel/Setting.Model";
+import HotelRestaurantAdminModel from "./restaurantModel/restaurant.admin.model";
 import RestaurantModel from "./restaurantModel/restaurant.Model";
 
 class Models {
@@ -188,6 +189,10 @@ class Models {
 
 	public restaurantModel(trx?: Knex.Transaction) {
 		return new RestaurantModel(trx || this.db);
+	}
+
+	public restaurantAdminModel(trx?: Knex.Transaction) {
+		return new HotelRestaurantAdminModel(trx || this.db);
 	}
 }
 export default Models;

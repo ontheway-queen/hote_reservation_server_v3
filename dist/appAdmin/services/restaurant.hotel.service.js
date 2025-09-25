@@ -38,8 +38,9 @@ class HotelRestaurantService extends abstract_service_1.default {
                             break;
                     }
                 }
-                const model = this.Model.restaurantModel(trx);
-                const checkRestaurant = yield model.getAllRestaurant({
+                const restaurantModel = this.Model.restaurantModel(trx);
+                const restaurantAdminModel = this.Model.restaurantAdminModel(trx);
+                const checkRestaurant = yield restaurantModel.getAllRestaurant({
                     hotel_code,
                 });
                 let emailExists = false;
@@ -62,7 +63,7 @@ class HotelRestaurantService extends abstract_service_1.default {
                         };
                     }
                 }
-                const adminEmailExists = yield model.getAllRestaurantAdminEmail({
+                const adminEmailExists = yield restaurantAdminModel.getAllRestaurantAdminEmail({
                     email: user.email,
                     hotel_code,
                 });
@@ -74,9 +75,9 @@ class HotelRestaurantService extends abstract_service_1.default {
                     };
                 }
                 const hashPass = yield lib_1.default.hashPass(user.password);
-                const [newRestaurant] = yield model.createRestaurant(Object.assign(Object.assign({}, restaurant), { hotel_code, created_by: admin_id }));
+                const [newRestaurant] = yield restaurantModel.createRestaurant(Object.assign(Object.assign({}, restaurant), { hotel_code, created_by: admin_id }));
                 //! Need to check the role and permission before creating the admin user & restaurant.
-                yield model.createRestaurantAdmin({
+                yield restaurantAdminModel.createRestaurantAdmin({
                     restaurant_id: newRestaurant.id,
                     hotel_code,
                     email: user.email,
@@ -146,6 +147,7 @@ class HotelRestaurantService extends abstract_service_1.default {
                 const { id } = req.params;
                 let { user = {}, restaurant = {}, } = req.body;
                 const restaurantModel = this.Model.restaurantModel(trx);
+                const restaurantAdminModel = this.Model.restaurantAdminModel(trx);
                 const files = req.files || [];
                 for (const { fieldname, filename } of files) {
                     if (fieldname === "restaurant_photo")
@@ -165,7 +167,7 @@ class HotelRestaurantService extends abstract_service_1.default {
                     };
                 }
                 if ((user === null || user === void 0 ? void 0 : user.email) && user.email !== checkRestaurant.admin_email) {
-                    const emailExists = yield restaurantModel.getAllRestaurantAdminEmail({
+                    const emailExists = yield restaurantAdminModel.getAllRestaurantAdminEmail({
                         email: user.email,
                         hotel_code,
                     });
@@ -199,7 +201,7 @@ class HotelRestaurantService extends abstract_service_1.default {
                     id: Number(id),
                     payload: updatedRestaurant,
                 });
-                yield restaurantModel.updateRestaurantAdmin({
+                yield restaurantAdminModel.updateRestaurantAdmin({
                     id: checkRestaurant.admin_id,
                     payload: updatedAdmin,
                 });
@@ -207,39 +209,6 @@ class HotelRestaurantService extends abstract_service_1.default {
                     success: true,
                     code: this.StatusCode.HTTP_OK,
                     message: "Restaurant updated successfully",
-                };
-            }));
-        });
-    }
-    deleteHotelRestaurantAndAdmin(req) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
-                const { id } = req.params;
-                const { hotel_code } = req.hotel_admin;
-                const restaurantModel = this.Model.restaurantModel(trx);
-                const checkRestaurant = yield restaurantModel.getRestaurantWithAdmin({
-                    restaurant_id: Number(id),
-                    hotel_code,
-                });
-                if (!checkRestaurant) {
-                    return {
-                        success: false,
-                        code: this.StatusCode.HTTP_NOT_FOUND,
-                        message: "Restaurant not found",
-                    };
-                }
-                yield restaurantModel.deleteRestaurant({
-                    id: Number(id),
-                    hotel_code,
-                });
-                // await restaurantModel.deleteRestaurantAdmin({
-                // 	restaurant_id: checkRestaurant.id,
-                // 	id: checkRestaurant.admin_id,
-                // });
-                return {
-                    success: true,
-                    code: this.StatusCode.HTTP_OK,
-                    message: "Restaurant deleted successfully",
                 };
             }));
         });
