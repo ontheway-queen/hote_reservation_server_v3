@@ -226,6 +226,7 @@ class PurchaseInvService extends AbstractServices {
       await hotelInvoiceModel.insertInPurchaseSubInvoice({
         inv_id: invoiceRes[0].id,
         purchase_id: createdPurchase[0].id,
+        sup_id: supplier_id,
       });
 
       if (paid_amount > 0) {

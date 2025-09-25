@@ -65,10 +65,12 @@ class CommonInvRouter extends AbstractRouter {
       .route("/supplier/payment/by-sup-id/:id")
       .get(this.controller.getAllSupplierPaymentById);
 
-    // Supplier ledger report
     this.router
-      .route("/supplier-ledger-report/by-sup-id/:id")
-      .get(this.controller.getSupplierLedgerReport);
+      .route("/supplier/invoice/by-sup-id/:id")
+      .get(this.controller.getAllSupplierInvoiceById);
+
+    // Supplier ledger report
+    this.router.route("/supplier-ledger-report/by-sup-id/:id").get();
 
     // edit Supplier
     this.router

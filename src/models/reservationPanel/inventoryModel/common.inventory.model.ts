@@ -448,54 +448,85 @@ class CommonInventoryModel extends Schema {
     return { data, total: total[0].total };
   }
 
-  // Supplier ledger report
-  public async getSupplierLedgerReport({
-    id,
+  public async getAllSupplierInvoiceBySupId({
     from_date,
     to_date,
     limit,
     skip,
+    key,
+    hotel_code,
+    sup_id,
   }: {
-    id: number;
+    hotel_code: number;
+    sup_id: number;
     limit: string;
     skip: string;
+    key: string;
     from_date: string;
     to_date: string;
   }) {
     const endDate = new Date(to_date);
     endDate.setDate(endDate.getDate() + 1);
-    return await this.db("supplier as s")
-      .withSchema(this.RESERVATION_SCHEMA)
-      .select(
-        "s.name as supplier_name",
-        "s.phone as supplier_phone",
-        this.db.raw(
-          `
-          (SELECT JSON_ARRAYAGG(
-              JSON_OBJECT(
-                'id', sl.id,
-                'ledger_debit_amount', sl.ledger_debit_amount,
-                'ledger_credit_amount', sl.ledger_credit_amount,
-                'ledger_balance', sl.ledger_balance,
-                'created_at', sl.created_at,
-                'ledger_details', sl.ledger_details
-                
-              )
-            )
-            FROM hotel_reservation.sup_ledger as sl
-            WHERE s.id = sl.supplier_id 
-           ${from_date && to_date ? "and sl.created_at between ? and ?" : ""} 
 
-           order by sl.id  ASC
-          ) as supplier_ledger
-        `,
-          from_date !== undefined && to_date !== undefined
-            ? [from_date, endDate]
-            : []
-        )
+    const dtbs = this.db("supplier_payment as sp");
+
+    if (limit && skip) {
+      dtbs.limit(parseInt(limit as string));
+      dtbs.offset(parseInt(skip as string));
+    }
+
+    const data = await dtbs
+      .withSchema(this.HOTEL_INVENTORY_SCHEMA)
+      .select(
+        "sp.id",
+        "sp.debit",
+        "sp.credit",
+        "sp.voucher_no",
+        "ac.name as account_name",
+        "ac.acc_type",
+        "sp.payment_date",
+        "s.name as supplier_name"
       )
-      .where("s.id", id)
-      .groupBy("s.id");
+      .joinRaw("LEFT JOIN acc.accounts as ac ON sp.acc_id = ac.id")
+      .leftJoin("suppliers as s", "sp.supplier_id", "s.id")
+      .where(function () {
+        this.andWhere("sp.hotel_code", hotel_code);
+
+        if (from_date && endDate) {
+          this.andWhereBetween("sp.payment_date", [from_date, endDate]);
+        }
+
+        if (key) {
+          this.andWhere(function () {
+            this.where("sp.voucher_no", "like", `%${key}%`)
+              .orWhere("s.name", "like", `%${key}%`)
+              .orWhere("ac.name", "like", `%${key}%`);
+          });
+        }
+      });
+
+    const total = await this.db("supplier_payment as sp")
+      .withSchema(this.HOTEL_INVENTORY_SCHEMA)
+      .count("sp.id as total")
+      .joinRaw("LEFT JOIN acc.accounts as ac ON sp.acc_id = ac.id")
+      .leftJoin("suppliers as s", "sp.supplier_id", "s.id")
+      .where(function () {
+        this.andWhere("sp.hotel_code", hotel_code);
+
+        if (from_date && endDate) {
+          this.andWhereBetween("sp.payment_date", [from_date, endDate]);
+        }
+
+        if (key) {
+          this.andWhere(function () {
+            this.where("sp.voucher_no", "like", `%${key}%`)
+              .orWhere("s.name", "like", `%${key}%`)
+              .orWhere("ac.name", "like", `%${key}%`);
+          });
+        }
+      });
+
+    return { data, total: total[0].total };
   }
 
   // Update supplier

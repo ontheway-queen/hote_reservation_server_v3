@@ -119,6 +119,7 @@ class HotelInvoiceModel extends Schema {
   public async insertInPurchaseSubInvoice(payload: {
     inv_id: number;
     purchase_id: number;
+    sup_id: number;
   }) {
     return await this.db("purchase_sub_invoice")
       .withSchema(this.RESERVATION_SCHEMA)

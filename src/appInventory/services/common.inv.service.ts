@@ -526,24 +526,26 @@ class CommonInvService extends AbstractServices {
     };
   }
 
-  // Supplier payment report
-  public async getSupplierLedgerReport(req: Request) {
+  public async getAllSupplierInvoiceById(req: Request) {
     const { hotel_code } = req.hotel_admin;
-    const { limit, skip, from_date, to_date } = req.query;
+    const { limit, skip, key, from_date, to_date } = req.query;
 
-    const data =
-      await this.Model.CommonInventoryModel().getSupplierLedgerReport({
-        limit: limit as string,
-        skip: skip as string,
+    const { data, total } =
+      await this.Model.CommonInventoryModel().getAllSupplierInvoiceBySupId({
+        key: key as string,
         from_date: from_date as string,
         to_date: to_date as string,
-        id: parseInt(req.params.id),
+        limit: limit as string,
+        skip: skip as string,
+        hotel_code,
+        sup_id: parseInt(req.params.id),
       });
 
     return {
       success: true,
       code: this.StatusCode.HTTP_OK,
-      data: data[0],
+      total,
+      data,
     };
   }
 

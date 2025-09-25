@@ -170,6 +170,17 @@ class CommonInvController extends AbstractController {
     }
   );
 
+  public getAllSupplierInvoiceById = this.asyncWrapper.wrap(
+    null,
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.getAllSupplierInvoiceById(
+        req
+      );
+
+      res.status(code).json(data);
+    }
+  );
+
   // update Supplier
   public updateSupplier = this.asyncWrapper.wrap(
     { bodySchema: this.validator.UpdateSupplierValidator },
@@ -185,16 +196,6 @@ class CommonInvController extends AbstractController {
     { paramSchema: this.commonValidator.singleParamStringValidator() },
     async (req: Request, res: Response) => {
       const { code, ...data } = await this.service.deleteSupplier(req);
-
-      res.status(code).json(data);
-    }
-  );
-
-  // Supplier payment report
-  public getSupplierLedgerReport = this.asyncWrapper.wrap(
-    null,
-    async (req: Request, res: Response) => {
-      const { code, ...data } = await this.service.getSupplierLedgerReport(req);
 
       res.status(code).json(data);
     }

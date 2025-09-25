@@ -169,6 +169,7 @@ class PurchaseInvService extends abstract_service_1.default {
                 yield hotelInvoiceModel.insertInPurchaseSubInvoice({
                     inv_id: invoiceRes[0].id,
                     purchase_id: createdPurchase[0].id,
+                    sup_id: supplier_id,
                 });
                 if (paid_amount > 0) {
                     const [mr] = yield hotelInvoiceModel.insertMoneyReceipt({
