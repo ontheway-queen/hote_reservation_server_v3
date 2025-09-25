@@ -81,7 +81,7 @@ class AuthHotelRestaurantAdminService extends abstract_service_1.default {
     }
     getProfile(req) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { id, hotel_code, restaurant_id } = req.restaurant_user;
+            const { id, hotel_code, restaurant_id } = req.restaurant_admin;
             const restaurantAdminModel = this.Model.restaurantAdminModel();
             const data = yield restaurantAdminModel.getRestaurantAdminProfile({
                 id,
@@ -104,7 +104,7 @@ class AuthHotelRestaurantAdminService extends abstract_service_1.default {
     }
     updateProfile(req) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { id, hotel_code } = req.restaurant_user;
+            const { id, hotel_code } = req.restaurant_admin;
             const body = req.body;
             console.log({ body });
             const model = this.Model.restaurantAdminModel();
@@ -145,7 +145,7 @@ class AuthHotelRestaurantAdminService extends abstract_service_1.default {
     }
     changeAdminPassword(req) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { id } = req.restaurant_user;
+            const { id } = req.restaurant_admin;
             const { old_password, new_password } = req.body;
             const model = this.Model.restaurantAdminModel();
             const checkAdmin = yield model.getRestaurantAdmin({

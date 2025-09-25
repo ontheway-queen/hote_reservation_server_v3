@@ -190,7 +190,7 @@ class AuthChecker extends AbstractServices {
 					message: ResMsg.HTTP_UNAUTHORIZED,
 				});
 			} else {
-				req.restaurant_user = verify as IrestaurantUser;
+				req.restaurant_admin = verify as IrestaurantUser;
 				next();
 			}
 		}

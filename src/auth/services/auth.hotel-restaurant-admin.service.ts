@@ -71,7 +71,7 @@ class AuthHotelRestaurantAdminService extends AbstractServices {
 	}
 
 	public async getProfile(req: Request) {
-		const { id, hotel_code, restaurant_id } = req.restaurant_user;
+		const { id, hotel_code, restaurant_id } = req.restaurant_admin;
 
 		const restaurantAdminModel = this.Model.restaurantAdminModel();
 		const data = await restaurantAdminModel.getRestaurantAdminProfile({
@@ -96,7 +96,7 @@ class AuthHotelRestaurantAdminService extends AbstractServices {
 	}
 
 	public async updateProfile(req: Request) {
-		const { id, hotel_code } = req.restaurant_user;
+		const { id, hotel_code } = req.restaurant_admin;
 		const body = req.body as IUpdateRestaurantUserAdminPayload;
 		console.log({ body });
 		const model = this.Model.restaurantAdminModel();
@@ -144,7 +144,7 @@ class AuthHotelRestaurantAdminService extends AbstractServices {
 	}
 
 	public async changeAdminPassword(req: Request) {
-		const { id } = req.restaurant_user;
+		const { id } = req.restaurant_admin;
 		const { old_password, new_password } = req.body as {
 			old_password: string;
 			new_password: string;

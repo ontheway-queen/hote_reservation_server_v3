@@ -152,7 +152,7 @@ class AuthChecker extends abstract_service_1.default {
                     });
                 }
                 else {
-                    req.restaurant_user = verify;
+                    req.restaurant_admin = verify;
                     next();
                 }
             }

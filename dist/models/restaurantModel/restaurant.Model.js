@@ -77,6 +77,174 @@ class RestaurantModel extends schema_1.default {
                 .update(payload);
         });
     }
+    //=================== Restaurant Tables  ======================//
+    createTable(payload) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("restaurant_tables")
+                .withSchema(this.RESTAURANT_SCHEMA)
+                .insert(payload, "id");
+        });
+    }
+    getTables(query) {
+        var _a, _b;
+        return __awaiter(this, void 0, void 0, function* () {
+            const baseQuery = this.db("restaurant_tables as rt")
+                .withSchema(this.RESTAURANT_SCHEMA)
+                .where("rt.hotel_code", query.hotel_code)
+                .andWhere("rt.restaurant_id", query.restaurant_id)
+                .andWhere("rt.is_deleted", false);
+            if (query.id) {
+                baseQuery.andWhere("rt.id", query.id);
+            }
+            if (query.name) {
+                baseQuery.andWhereILike("rt.name", `%${query.name}%`);
+            }
+            if (query.category) {
+                baseQuery.andWhere("rt.category", query.category);
+            }
+            if (query.status) {
+                baseQuery.andWhere("rt.status", query.status);
+            }
+            const data = yield baseQuery
+                .clone()
+                .select("rt.id", "rt.hotel_code", "rt.restaurant_id", "rt.name", "rt.category", "rt.status", "rt.is_deleted")
+                .orderBy("rt.id", "desc")
+                .limit((_a = query.limit) !== null && _a !== void 0 ? _a : 100)
+                .offset((_b = query.skip) !== null && _b !== void 0 ? _b : 0);
+            const countResult = yield baseQuery
+                .clone()
+                .count("rt.id as total");
+            const total = Number(countResult[0].total);
+            return { total, data };
+        });
+    }
+    updateTable({ id, payload, }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("restaurant_tables as rt")
+                .withSchema(this.RESTAURANT_SCHEMA)
+                .where("rt.id", id)
+                .update(payload);
+        });
+    }
+    deleteTable(where) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("restaurant_tables as rt")
+                .withSchema(this.RESTAURANT_SCHEMA)
+                .update({ is_deleted: true })
+                .where("rt.id", where.id);
+        });
+    }
+    // =================== Restaurant Menu Categories  ======================//
+    createMenuCategory(payload) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("menu_categories")
+                .withSchema(this.RESTAURANT_SCHEMA)
+                .insert(payload, "id");
+        });
+    }
+    getMenuCategories(query) {
+        var _a, _b;
+        return __awaiter(this, void 0, void 0, function* () {
+            const baseQuery = this.db("menu_categories as mc")
+                .withSchema(this.RESTAURANT_SCHEMA)
+                .leftJoin("user_admin as ua", "ua.id", "mc.created_by")
+                .where("mc.hotel_code", query.hotel_code)
+                .andWhere("mc.restaurant_id", query.restaurant_id)
+                .andWhere("mc.is_deleted", false);
+            if (query.id) {
+                baseQuery.andWhere("mc.id", query.id);
+            }
+            if (query.name) {
+                baseQuery.andWhereILike("mc.name", `%${query.name}%`);
+            }
+            if (query.status) {
+                baseQuery.andWhere("mc.status", query.status);
+            }
+            const [{ count }] = yield baseQuery
+                .clone()
+                .count("* as count");
+            const data = yield baseQuery
+                .clone()
+                .select("mc.id", "mc.hotel_code", "mc.restaurant_id", "mc.name", "mc.status", "mc.is_deleted", "mc.created_by", "ua.name as created_by_name")
+                .orderBy("mc.id", "desc")
+                .limit((_a = query.limit) !== null && _a !== void 0 ? _a : 100)
+                .offset((_b = query.skip) !== null && _b !== void 0 ? _b : 0);
+            return {
+                total: Number(count),
+                data,
+            };
+        });
+    }
+    updateMenuCategory({ id, payload, }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("menu_categories as rt")
+                .withSchema(this.RESTAURANT_SCHEMA)
+                .where("rt.id", id)
+                .andWhere("rt.is_deleted", false)
+                .update(payload, "id");
+        });
+    }
+    deleteMenuCategory(where) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("menu_categories as mc")
+                .withSchema(this.RESTAURANT_SCHEMA)
+                .update({ is_deleted: true })
+                .where("mc.id", where.id);
+        });
+    }
+    // =================== Measurement  ======================//
+    createMeasurement(payload) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("measurements")
+                .withSchema(this.RESTAURANT_SCHEMA)
+                .insert(payload, "id");
+        });
+    }
+    getMeasurements(query) {
+        var _a, _b;
+        return __awaiter(this, void 0, void 0, function* () {
+            const baseQuery = this.db("measurements as rt")
+                .withSchema(this.RESTAURANT_SCHEMA)
+                .where("rt.hotel_code", query.hotel_code)
+                .andWhere("rt.restaurant_id", query.restaurant_id)
+                .andWhere("rt.is_deleted", false);
+            if (query.id) {
+                baseQuery.andWhere("rt.id", query.id);
+            }
+            if (query.name) {
+                baseQuery.andWhereILike("rt.name", `%${query.name}%`);
+            }
+            const data = yield baseQuery
+                .clone()
+                .select("rt.id", "rt.hotel_code", "rt.restaurant_id", "rt.name", "rt.short_code", "rt.is_deleted")
+                .orderBy("rt.id", "desc")
+                .limit((_a = query.limit) !== null && _a !== void 0 ? _a : 100)
+                .offset((_b = query.skip) !== null && _b !== void 0 ? _b : 0);
+            const countResult = yield baseQuery
+                .clone()
+                .count("rt.id as total");
+            const total = Number(countResult[0].total);
+            return { total, data };
+        });
+    }
+    updateMeasurement({ id, payload, }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("measurements as rt")
+                .withSchema(this.RESTAURANT_SCHEMA)
+                .update(payload, "id")
+                .where("rt.id", id)
+                .andWhere("rt.is_deleted", false);
+        });
+    }
+    deleteMeasurement(where) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("measurements as rt")
+                .withSchema(this.RESTAURANT_SCHEMA)
+                .update({ is_deleted: true })
+                .where("rt.id", where.id)
+                .andWhere("rt.is_deleted", false);
+        });
+    }
 }
 exports.default = RestaurantModel;
 //# sourceMappingURL=restaurant.Model.js.map

@@ -13,7 +13,7 @@ declare global {
 			admin: IAdmin;
 			hotel_admin: IhAdmin;
 			btoc_user: IGBtocUser;
-			restaurant_user: IrestaurantUser;
+			restaurant_admin: IrestaurantUser;
 			web_token: IWebToken;
 			upFiles: string[];
 		}
