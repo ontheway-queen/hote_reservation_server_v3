@@ -106,8 +106,8 @@ class CommonInvController extends abstract_controller_1.default {
             res.status(code).json(data);
         }));
         // get All Supplier payment
-        this.getAllSupplierPayment = this.asyncWrapper.wrap(null, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _q = yield this.service.getAllSupplierPayment(req), { code } = _q, data = __rest(_q, ["code"]);
+        this.getAllSupplierPaymentById = this.asyncWrapper.wrap(null, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _q = yield this.service.getAllSupplierPaymentById(req), { code } = _q, data = __rest(_q, ["code"]);
             res.status(code).json(data);
         }));
         // update Supplier

@@ -11,7 +11,6 @@ class PurchaseInvService extends AbstractServices {
     super();
   }
 
-  // create purchase
   public async createPurchase(req: Request) {
     return await this.db.transaction(async (trx) => {
       const { hotel_code, id: admin_id } = req.hotel_admin;
@@ -202,20 +201,7 @@ class PurchaseInvService extends AbstractServices {
         );
       }
 
-      if (paid_amount > 0) {
-        await cmnInvModel.insertSupplierPayment({
-          created_by: admin_id,
-          hotel_code: hotel_code,
-          voucher_no: p_voucher_no,
-          debit: paid_amount,
-          credit: 0,
-          acc_id: ac_tr_ac_id,
-          supplier_id,
-        });
-      }
-
       //   invoice and money receipt generate
-
       const hotelInvoiceModel = this.Model.hotelInvoiceModel(trx);
 
       const invoiceRes = await hotelInvoiceModel.insertInInvoice({
@@ -236,23 +222,50 @@ class PurchaseInvService extends AbstractServices {
 
       await hotelInvoiceModel.insertInInvoiceItems(invoiceItemPayload);
 
-      await hotelInvoiceModel.insertMoneyReceipt({
-        hotel_code,
-        receipt_no: p_voucher_no,
-        receipt_date: new Date().toISOString(),
-        amount_paid: paid_amount,
-        acc_id: ac_tr_ac_id,
-        payment_method: checkAccount[0].acc_type,
-        received_by: admin_id,
-        notes: `Payment for purchase invoice no ${p_voucher_no}`,
-        voucher_no: p_voucher_no,
+      // insert in purchase sub invoice
+      await hotelInvoiceModel.insertInPurchaseSubInvoice({
+        inv_id: invoiceRes[0].id,
+        purchase_id: createdPurchase[0].id,
       });
 
-      await hotelInvoiceModel.insertMoneyReceiptItem({
-        money_receipt_id: invoiceRes[0].id,
-        invoice_id: invoiceRes[0].id,
-        paid_amount: paid_amount,
-      });
+      if (paid_amount > 0) {
+        const [mr] = await hotelInvoiceModel.insertMoneyReceipt({
+          hotel_code,
+          receipt_no: p_voucher_no,
+          receipt_date: new Date().toISOString(),
+          amount_paid: paid_amount,
+          acc_id: ac_tr_ac_id,
+          payment_method: checkAccount[0].acc_type,
+          received_by: admin_id,
+          notes: `Payment for purchase invoice no ${p_voucher_no}`,
+          voucher_no: p_voucher_no,
+        });
+
+        await hotelInvoiceModel.insertMoneyReceiptItem({
+          money_receipt_id: mr.id,
+          invoice_id: invoiceRes[0].id,
+          paid_amount: paid_amount,
+        });
+
+        // insert supplier payment
+        const [supplierPaymentID] = await cmnInvModel.insertSupplierPayment({
+          created_by: admin_id,
+          hotel_code: hotel_code,
+          debit: paid_amount,
+          credit: 0,
+          acc_id: ac_tr_ac_id,
+          supplier_id,
+        });
+
+        // supplier payment allocation
+        await cmnInvModel.insertSupplierPaymentAllocation([
+          {
+            supplier_payment_id: supplierPaymentID.id,
+            invoice_id: invoiceRes[0].id,
+            paid_amount,
+          },
+        ]);
+      }
 
       return {
         success: true,
@@ -262,7 +275,6 @@ class PurchaseInvService extends AbstractServices {
     });
   }
 
-  // Get all Purchase
   public async getAllPurchase(req: Request) {
     const { hotel_code } = req.hotel_admin;
     const { limit, skip, key, supplier_id, due } = req.query;
@@ -285,7 +297,6 @@ class PurchaseInvService extends AbstractServices {
     };
   }
 
-  // Get Single Purchase
   public async getSinglePurchase(req: Request) {
     const { id } = req.params;
     const { hotel_code } = req.hotel_admin;
@@ -297,11 +308,41 @@ class PurchaseInvService extends AbstractServices {
     return {
       success: true,
       code: this.StatusCode.HTTP_OK,
-      data: data[0],
+      data,
     };
   }
 
-  // create purchase money reciept
+  public async getInvoiceByPurchaseId(req: Request) {
+    const { id } = req.params;
+    const { hotel_code } = req.hotel_admin;
+    console.log({ id });
+    const data =
+      await this.Model.purchaseInventoryModel().getInvoiceByPurchaseId(
+        parseInt(id),
+        hotel_code
+      );
+
+    return {
+      success: true,
+      code: this.StatusCode.HTTP_OK,
+      data,
+    };
+  }
+
+  public async getMoneyReceiptById(req: Request) {
+    const data =
+      await this.Model.hotelInvoiceModel().getPurchaseMoneyReceiptById({
+        id: Number(req.params.id),
+        hotel_code: req.hotel_admin.hotel_code,
+      });
+
+    return {
+      success: true,
+      code: this.StatusCode.HTTP_OK,
+      data,
+    };
+  }
+
   public async createPurchaseMoneyReciept(req: Request) {
     return await this.db.transaction(async (trx) => {
       const { hotel_code, id: admin_id } = req.hotel_admin;
@@ -361,7 +402,7 @@ class PurchaseInvService extends AbstractServices {
 
         console.log({ checkSinglePurchase });
 
-        if (!checkSinglePurchase.length) {
+        if (!checkSinglePurchase) {
           return {
             success: false,
             code: this.StatusCode.HTTP_NOT_FOUND,
@@ -370,7 +411,7 @@ class PurchaseInvService extends AbstractServices {
         }
 
         const { due, grand_total, voucher_no, supplier_id } =
-          checkSinglePurchase[0];
+          checkSinglePurchase;
         console.log({ checkSinglePurchase });
 
         if (due == 0) {
@@ -421,7 +462,7 @@ class PurchaseInvService extends AbstractServices {
           hotel_code: hotel_code,
           debit: paid_amount,
           credit: 0,
-          voucher_no: purchase_id,
+          // voucher_no: purchase_id,
           supplier_id,
         });
       } else {
@@ -523,7 +564,7 @@ class PurchaseInvService extends AbstractServices {
               credit: 0,
               //   total_paid_amount: item.total_paid_amount,
               //   ac_tr_ac_id,
-              voucher_no: "",
+              // voucher_no: "",
               supplier_id,
             });
           })

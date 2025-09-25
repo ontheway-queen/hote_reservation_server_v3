@@ -12,7 +12,6 @@ class PurchaseInvRouter extends abstract_router_1.default {
         this.callRouter();
     }
     callRouter() {
-        //=================== Purchase ======================//
         // purchase
         this.router
             .route("/")
@@ -22,6 +21,13 @@ class PurchaseInvRouter extends abstract_router_1.default {
         this.router
             .route("/money-reciept")
             .post(this.controller.createPurchaseMoneyReciept);
+        // get money receipt by inoice id
+        this.router
+            .route("/receipt-by/purchase/:id")
+            .get(this.controller.getMoneyReceiptById);
+        this.router
+            .route("/invoice-by/purchase/:id")
+            .get(this.controller.getInvoiceByPurchaseId);
         // single purchase
         this.router.route("/:id").get(this.controller.getSinglePurchase);
     }

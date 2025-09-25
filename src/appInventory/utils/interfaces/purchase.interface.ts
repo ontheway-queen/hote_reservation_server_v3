@@ -44,3 +44,30 @@ export interface IinsertInvSupplierLedger {
   ledger_details: string;
   voucher_no: string;
 }
+
+export interface PurchaseItem {
+  id: number;
+  product_id: number;
+  product_name: string;
+  unit_name: string;
+  quantity: number;
+  price: number;
+}
+
+export interface ISinglePurchase {
+  id: number;
+  hotel_code: number;
+  purchase_date: string; // ISO date string
+  voucher_no: string;
+  supplier_name: string | null;
+  supplier_phone: string | null;
+  supplier_id: number;
+  sub_total: number;
+  discount_amount: number;
+  paid_amount: number;
+  vat: number;
+  shipping_cost: number;
+  grand_total: number;
+  due: number;
+  purchase_items: PurchaseItem[];
+}

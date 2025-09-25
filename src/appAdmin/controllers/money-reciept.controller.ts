@@ -17,6 +17,14 @@ class MoneyRecieptController extends AbstractController {
       res.status(code).json(data);
     }
   );
+
+  public getMoneyReceiptById = this.asyncWrapper.wrap(
+    {},
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.getMoneyReceiptById(req);
+      res.status(code).json(data);
+    }
+  );
 }
 
 export default MoneyRecieptController;

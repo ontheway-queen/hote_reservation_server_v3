@@ -369,7 +369,7 @@ class CommonInventoryModel extends Schema {
   }
 
   // Supplier payment report
-  public async getSupplierPayment({
+  public async getAllSupplierPaymentById({
     from_date,
     to_date,
     limit,
@@ -386,6 +386,7 @@ class CommonInventoryModel extends Schema {
   }) {
     const endDate = new Date(to_date);
     endDate.setDate(endDate.getDate() + 1);
+
     const dtbs = this.db("supplier_payment as sp");
 
     if (limit && skip) {
@@ -394,54 +395,54 @@ class CommonInventoryModel extends Schema {
     }
 
     const data = await dtbs
-      .withSchema(this.RESERVATION_SCHEMA)
+      .withSchema(this.HOTEL_INVENTORY_SCHEMA)
       .select(
         "sp.id",
-        "sp.total_paid_amount",
-        "p.voucher_no",
+        "sp.debit",
+        "sp.credit",
+        "sp.voucher_no",
         "ac.name as account_name",
-        "ac.ac_type",
-        "sp.created_at",
+        "ac.acc_type",
+        "sp.payment_date",
         "s.name as supplier_name"
       )
-      .leftJoin("purchase as p", "sp.purchase_id", "p.id")
-      .leftJoin("account as ac", "sp.ac_tr_ac_id", "ac.id")
-      .leftJoin("supplier as s", "sp.supplier_id", "s.id")
+      .joinRaw("LEFT JOIN acc.accounts as ac ON sp.acc_id = ac.id")
+      .leftJoin("suppliers as s", "sp.supplier_id", "s.id")
       .where(function () {
         this.andWhere("sp.hotel_code", hotel_code);
 
         if (from_date && endDate) {
-          this.andWhereBetween("sp.created_at", [from_date, endDate]);
+          this.andWhereBetween("sp.payment_date", [from_date, endDate]);
         }
 
         if (key) {
-          this.andWhere("p.voucher_no", "like", `%${key}%`)
-            .orWhere("s.name", "like", `%${key}%`)
-            .orWhere("ac.name", "like", `%${key}%`);
+          this.andWhere(function () {
+            this.where("sp.voucher_no", "like", `%${key}%`)
+              .orWhere("s.name", "like", `%${key}%`)
+              .orWhere("ac.name", "like", `%${key}%`);
+          });
         }
-
-        this.andWhereRaw("sp.res_id IS NULL");
       });
 
     const total = await this.db("supplier_payment as sp")
-      .withSchema(this.RESERVATION_SCHEMA)
+      .withSchema(this.HOTEL_INVENTORY_SCHEMA)
       .count("sp.id as total")
-      .leftJoin("account as ac", "sp.ac_tr_ac_id", "ac.id")
-      .leftJoin("purchase as p", "sp.purchase_id", "p.id")
-      .leftJoin("supplier as s", "sp.supplier_id", "s.id")
+      .joinRaw("LEFT JOIN acc.accounts as ac ON sp.acc_id = ac.id")
+      .leftJoin("suppliers as s", "sp.supplier_id", "s.id")
       .where(function () {
         this.andWhere("sp.hotel_code", hotel_code);
 
         if (from_date && endDate) {
-          this.andWhereBetween("sp.created_at", [from_date, endDate]);
+          this.andWhereBetween("sp.payment_date", [from_date, endDate]);
         }
 
         if (key) {
-          this.andWhere("p.voucher_no", "like", `%${key}%`)
-            .orWhere("s.name", "like", `%${key}%`)
-            .orWhere("ac.name", "like", `%${key}%`);
+          this.andWhere(function () {
+            this.where("sp.voucher_no", "like", `%${key}%`)
+              .orWhere("s.name", "like", `%${key}%`)
+              .orWhere("ac.name", "like", `%${key}%`);
+          });
         }
-        this.andWhereRaw("sp.res_id IS NULL");
       });
 
     return { data, total: total[0].total };
@@ -517,9 +518,20 @@ class CommonInventoryModel extends Schema {
     credit: number;
     created_by: number;
     supplier_id: number;
-    voucher_no: string;
-  }) {
+  }): Promise<{ id: number }[]> {
     return await this.db("supplier_payment")
+      .withSchema(this.HOTEL_INVENTORY_SCHEMA)
+      .insert(payload, "id");
+  }
+
+  public async insertSupplierPaymentAllocation(
+    payload: {
+      supplier_payment_id: number;
+      invoice_id: number;
+      paid_amount: number;
+    }[]
+  ) {
+    return await this.db("supplier_payment_allocation")
       .withSchema(this.HOTEL_INVENTORY_SCHEMA)
       .insert(payload);
   }

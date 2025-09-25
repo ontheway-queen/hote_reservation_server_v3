@@ -2,79 +2,79 @@ import AbstractRouter from "../../abstarcts/abstract.router";
 import CommonInvController from "../controllers/common.inv.controller";
 
 class CommonInvRouter extends AbstractRouter {
-	private controller = new CommonInvController();
+  private controller = new CommonInvController();
 
-	constructor() {
-		super();
-		this.callRouter();
-	}
+  constructor() {
+    super();
+    this.callRouter();
+  }
 
-	private callRouter() {
-		//=================== Category ======================//
+  private callRouter() {
+    //=================== Category ======================//
 
-		// Category
-		this.router
-			.route("/category")
-			.post(this.controller.createCategory)
-			.get(this.controller.getAllCategory);
+    // Category
+    this.router
+      .route("/category")
+      .post(this.controller.createCategory)
+      .get(this.controller.getAllCategory);
 
-		// edit Category
-		this.router
-			.route("/category/:id")
-			.patch(this.controller.updateCategory)
-			.delete(this.controller.deleteCategory);
+    // edit Category
+    this.router
+      .route("/category/:id")
+      .patch(this.controller.updateCategory)
+      .delete(this.controller.deleteCategory);
 
-		//=================== Unit ======================//
+    //=================== Unit ======================//
 
-		// Unit
-		this.router
-			.route("/unit")
-			.post(this.controller.createUnit)
-			.get(this.controller.getAllUnit);
+    // Unit
+    this.router
+      .route("/unit")
+      .post(this.controller.createUnit)
+      .get(this.controller.getAllUnit);
 
-		// edit Category
-		this.router
-			.route("/unit/:id")
-			.patch(this.controller.updateUnit)
-			.delete(this.controller.deleteUnit);
+    // edit Category
+    this.router
+      .route("/unit/:id")
+      .patch(this.controller.updateUnit)
+      .delete(this.controller.deleteUnit);
 
-		//=================== Brand ======================//
+    //=================== Brand ======================//
 
-		// Brand
-		this.router
-			.route("/brand")
-			.post(this.controller.createBrand)
-			.get(this.controller.getAllBrand);
+    // Brand
+    this.router
+      .route("/brand")
+      .post(this.controller.createBrand)
+      .get(this.controller.getAllBrand);
 
-		// edit Brand
-		this.router
-			.route("/brand/:id")
-			.patch(this.controller.updateBrand)
-			.delete(this.controller.deleteBrand);
+    // edit Brand
+    this.router
+      .route("/brand/:id")
+      .patch(this.controller.updateBrand)
+      .delete(this.controller.deleteBrand);
 
-		//=================== Supplier Router ======================//
+    //=================== Supplier Router ======================//
 
-		// Supplier
-		this.router
-			.route("/supplier")
-			.post(this.controller.createSupplier)
-			.get(this.controller.getAllSupplier);
+    // Supplier
+    this.router
+      .route("/supplier")
+      .post(this.controller.createSupplier)
+      .get(this.controller.getAllSupplier);
 
-		// Supplier
-		this.router
-			.route("/supplier/payment")
-			.get(this.controller.getAllSupplierPayment);
+    // Supplier
+    this.router
+      .route("/supplier/payment/by-sup-id/:id")
+      .get(this.controller.getAllSupplierPaymentById);
 
-		// Supplier ledger report
-		this.router
-			.route("/supplier-ledger-report/by-sup-id/:id")
-			.get(this.controller.getSupplierLedgerReport);
+    // Supplier ledger report
+    this.router
+      .route("/supplier-ledger-report/by-sup-id/:id")
+      .get(this.controller.getSupplierLedgerReport);
 
-		// edit Supplier
-		this.router
-			.route("/supplier/:id")
-			.patch(this.controller.updateSupplier)
-			.delete(this.controller.deleteSupplier);
-	}
+    // edit Supplier
+    this.router
+      .route("/supplier/:id")
+      .patch(this.controller.updateSupplier)
+      .delete(this.controller.deleteSupplier);
+  }
 }
 export default CommonInvRouter;

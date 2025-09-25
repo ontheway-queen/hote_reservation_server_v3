@@ -97,6 +97,13 @@ class HotelInvoiceModel extends schema_1.default {
                 .insert(payload);
         });
     }
+    insertInPurchaseSubInvoice(payload) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("purchase_sub_invoice")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .insert(payload);
+        });
+    }
     insertMoneyReceipt(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("money_receipts")
@@ -472,6 +479,52 @@ class HotelInvoiceModel extends schema_1.default {
                 .leftJoin("user_admin as ua", "mr.received_by", "ua.id")
                 .where("fmr.folio_id", folio_id)
                 .andWhere("mr.hotel_code", hotel_code);
+        });
+    }
+    getMoneyReceiptById({ id, hotel_code, }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("money_receipts as mr")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .select("mr.id", "mr.receipt_no", "mr.receipt_date", "mr.amount_paid", "mr.payment_method", "mr.notes", "ac.name as account_name", "ua.id as received_by_id", "ua.name as received_by_name")
+                .joinRaw("left join acc.accounts as ac on mr.acc_id =ac.id")
+                .leftJoin("user_admin as ua", "mr.received_by", "ua.id")
+                .where("mr.id", id)
+                .andWhere("mr.hotel_code", hotel_code)
+                .first();
+        });
+    }
+    getPurchaseMoneyReceiptById({ id, hotel_code, }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("purchase as p")
+                .withSchema(this.HOTEL_INVENTORY_SCHEMA)
+                .select("s.id as supplier_id", "s.name as supplier_name", "s.phone as supplier_phone", "mr.id as receipt_id", "mr.receipt_no", "mr.receipt_date", "mr.amount_paid", "mr.payment_method", "mr.notes as receipt_notes", "ac.name as account_name", "ua.id as received_by_id", "ua.name as received_by_name")
+                .joinRaw("LEFT JOIN hotel_inventory.suppliers as s ON p.supplier_id = s.id")
+                .joinRaw("LEFT JOIN hotel_reservation.purchase_sub_invoice as psi ON p.id = psi.purchase_id")
+                .joinRaw("LEFT JOIN hotel_reservation.money_receipt_item as mri ON psi.inv_id = mri.invoice_id")
+                .joinRaw("LEFT JOIN hotel_reservation.money_receipts as mr ON mri.money_receipt_id = mr.id")
+                .joinRaw("LEFT JOIN acc.accounts as ac ON mr.acc_id = ac.id")
+                .joinRaw("LEFT JOIN hotel_reservation.user_admin as ua ON mr.received_by = ua.id")
+                .where("mr.id", id)
+                .andWhere("mr.hotel_code", hotel_code)
+                .first();
+            // return await this.db("money_receipts as mr")
+            //   .withSchema(this.RESERVATION_SCHEMA)
+            //   .select(
+            //     "mr.id",
+            //     "mr.receipt_no",
+            //     "mr.receipt_date",
+            //     "mr.amount_paid",
+            //     "mr.payment_method",
+            //     "mr.notes",
+            //     "ac.name as account_name",
+            //     "ua.id as received_by_id",
+            //     "ua.name as received_by_name"
+            //   )
+            //   .joinRaw("left join acc.accounts as ac on mr.acc_id = ac.id")
+            //   .leftJoin("user_admin as ua", "mr.received_by", "ua.id")
+            //   .where("mr.id", id)
+            //   .andWhere("mr.hotel_code", hotel_code)
+            //   .first();
         });
     }
 }

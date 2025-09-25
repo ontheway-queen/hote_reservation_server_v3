@@ -467,11 +467,11 @@ class CommonInvService extends abstract_service_1.default {
         });
     }
     // Get all Supplier Payment
-    getAllSupplierPayment(req) {
+    getAllSupplierPaymentById(req) {
         return __awaiter(this, void 0, void 0, function* () {
             const { hotel_code } = req.hotel_admin;
             const { limit, skip, key, from_date, to_date } = req.query;
-            const { data, total } = yield this.Model.CommonInventoryModel().getSupplierPayment({
+            const { data, total } = yield this.Model.CommonInventoryModel().getAllSupplierPaymentById({
                 key: key,
                 from_date: from_date,
                 to_date: to_date,

@@ -297,7 +297,7 @@ class CommonInventoryModel extends schema_1.default {
         });
     }
     // Supplier payment report
-    getSupplierPayment({ from_date, to_date, limit, skip, key, hotel_code, }) {
+    getAllSupplierPaymentById({ from_date, to_date, limit, skip, key, hotel_code, }) {
         return __awaiter(this, void 0, void 0, function* () {
             const endDate = new Date(to_date);
             endDate.setDate(endDate.getDate() + 1);
@@ -307,40 +307,40 @@ class CommonInventoryModel extends schema_1.default {
                 dtbs.offset(parseInt(skip));
             }
             const data = yield dtbs
-                .withSchema(this.RESERVATION_SCHEMA)
-                .select("sp.id", "sp.total_paid_amount", "p.voucher_no", "ac.name as account_name", "ac.ac_type", "sp.created_at", "s.name as supplier_name")
-                .leftJoin("purchase as p", "sp.purchase_id", "p.id")
-                .leftJoin("account as ac", "sp.ac_tr_ac_id", "ac.id")
-                .leftJoin("supplier as s", "sp.supplier_id", "s.id")
+                .withSchema(this.HOTEL_INVENTORY_SCHEMA)
+                .select("sp.id", "sp.debit", "sp.credit", "sp.voucher_no", "ac.name as account_name", "ac.acc_type", "sp.payment_date", "s.name as supplier_name")
+                .joinRaw("LEFT JOIN acc.accounts as ac ON sp.acc_id = ac.id")
+                .leftJoin("suppliers as s", "sp.supplier_id", "s.id")
                 .where(function () {
                 this.andWhere("sp.hotel_code", hotel_code);
                 if (from_date && endDate) {
-                    this.andWhereBetween("sp.created_at", [from_date, endDate]);
+                    this.andWhereBetween("sp.payment_date", [from_date, endDate]);
                 }
                 if (key) {
-                    this.andWhere("p.voucher_no", "like", `%${key}%`)
-                        .orWhere("s.name", "like", `%${key}%`)
-                        .orWhere("ac.name", "like", `%${key}%`);
+                    this.andWhere(function () {
+                        this.where("sp.voucher_no", "like", `%${key}%`)
+                            .orWhere("s.name", "like", `%${key}%`)
+                            .orWhere("ac.name", "like", `%${key}%`);
+                    });
                 }
-                this.andWhereRaw("sp.res_id IS NULL");
             });
             const total = yield this.db("supplier_payment as sp")
-                .withSchema(this.RESERVATION_SCHEMA)
+                .withSchema(this.HOTEL_INVENTORY_SCHEMA)
                 .count("sp.id as total")
-                .leftJoin("account as ac", "sp.ac_tr_ac_id", "ac.id")
-                .leftJoin("purchase as p", "sp.purchase_id", "p.id")
-                .leftJoin("supplier as s", "sp.supplier_id", "s.id")
+                .joinRaw("LEFT JOIN acc.accounts as ac ON sp.acc_id = ac.id")
+                .leftJoin("suppliers as s", "sp.supplier_id", "s.id")
                 .where(function () {
                 this.andWhere("sp.hotel_code", hotel_code);
                 if (from_date && endDate) {
-                    this.andWhereBetween("sp.created_at", [from_date, endDate]);
+                    this.andWhereBetween("sp.payment_date", [from_date, endDate]);
                 }
                 if (key) {
-                    this.andWhere("p.voucher_no", "like", `%${key}%`)
-                        .orWhere("s.name", "like", `%${key}%`)
-                        .orWhere("ac.name", "like", `%${key}%`);
+                    this.andWhere(function () {
+                        this.where("sp.voucher_no", "like", `%${key}%`)
+                            .orWhere("s.name", "like", `%${key}%`)
+                            .orWhere("ac.name", "like", `%${key}%`);
+                    });
                 }
-                this.andWhereRaw("sp.res_id IS NULL");
             });
             return { data, total: total[0].total };
         });
@@ -390,6 +390,13 @@ class CommonInventoryModel extends schema_1.default {
     insertSupplierPayment(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("supplier_payment")
+                .withSchema(this.HOTEL_INVENTORY_SCHEMA)
+                .insert(payload, "id");
+        });
+    }
+    insertSupplierPaymentAllocation(payload) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("supplier_payment_allocation")
                 .withSchema(this.HOTEL_INVENTORY_SCHEMA)
                 .insert(payload);
         });
