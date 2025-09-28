@@ -5,7 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ReservationRootRouter = void 0;
 const express_1 = require("express");
-const inventory_app_router_1 = __importDefault(require("../appInventory/inventory.app.router"));
+const inventory_root_router_1 = __importDefault(require("../appInventory/inventory.root.router"));
 const authChecker_1 = __importDefault(require("../common/middleware/authChecker/authChecker"));
 const account_router_1 = __importDefault(require("./routers/account.router"));
 const adminBtocHandler_router_1 = __importDefault(require("./routers/adminBtocHandler.router"));
@@ -47,7 +47,7 @@ class ReservationRootRouter {
         this.router.use("/expense", this.authChecker.hotelAdminAuthChecker, new expense_router_1.default().router);
         this.router.use("/guest", this.authChecker.hotelAdminAuthChecker, new guest_router_1.default().router);
         this.router.use("/room-guest", this.authChecker.hotelAdminAuthChecker, new room_guest_router_1.default().router);
-        this.router.use("/inventory", this.authChecker.hotelAdminAuthChecker, new inventory_app_router_1.default().router);
+        this.router.use("/inventory", this.authChecker.hotelAdminAuthChecker, new inventory_root_router_1.default().router);
         this.router.use("/btoc", this.authChecker.hotelAdminAuthChecker, new adminBtocHandler_router_1.default().router);
         this.router.use("/service-categories", this.authChecker.hotelAdminAuthChecker, new serviceCategories_router_1.default().router);
         this.router.use("/services", this.authChecker.hotelAdminAuthChecker, new service_router_1.default().router);

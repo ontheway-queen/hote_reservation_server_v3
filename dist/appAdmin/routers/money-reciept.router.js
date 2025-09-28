@@ -15,6 +15,8 @@ class MoneyRecieptRouter extends abstract_router_1.default {
         this.router
             .route("/by-folio-id/:id")
             .get(this.controller.getMoneyReceiptByFolio);
+        // get single money receipt by id
+        this.router.route("/:id").get(this.controller.getMoneyReceiptById);
     }
 }
 exports.default = MoneyRecieptRouter;

@@ -36,6 +36,7 @@ class ProductInvValidator {
             details: joi_1.default.string().allow("").optional(),
             in_stock: joi_1.default.number().allow("").optional(),
             image: joi_1.default.string().allow("").optional(),
+            status: joi_1.default.boolean().optional(),
         });
         // create Damaged Product
         this.createDamagedProductValidator = joi_1.default.object({

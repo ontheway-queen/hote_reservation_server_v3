@@ -18,6 +18,18 @@ class MoneyRecieptService extends AbstractServices {
       data,
     };
   }
+  public async getMoneyReceiptById(req: Request) {
+    const data = await this.Model.hotelInvoiceModel().getMoneyReceiptById({
+      id: Number(req.params.id),
+      hotel_code: req.hotel_admin.hotel_code,
+    });
+
+    return {
+      success: true,
+      code: this.StatusCode.HTTP_OK,
+      data,
+    };
+  }
 }
 
 export default MoneyRecieptService;

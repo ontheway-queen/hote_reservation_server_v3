@@ -12,9 +12,7 @@ class InventoryRouter extends abstract_router_1.default {
         this.callRouter();
     }
     callRouter() {
-        this.router
-            .route("/")
-            .get(this.controller.getInventoryDetailsController);
+        this.router.route("/").get(this.controller.getInventoryDetailsController);
         this.router
             .route("/:id")
             .get(this.controller.getSingleInventoryDetailsController);

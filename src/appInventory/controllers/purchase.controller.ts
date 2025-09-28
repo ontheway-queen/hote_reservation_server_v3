@@ -42,6 +42,23 @@ class PurchaseInvController extends AbstractController {
     }
   );
 
+  public getInvoiceByPurchaseId = this.asyncWrapper.wrap(
+    { paramSchema: this.commonValidator.singleParamValidator() },
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.getInvoiceByPurchaseId(req);
+
+      res.status(code).json(data);
+    }
+  );
+
+  public getMoneyReceiptById = this.asyncWrapper.wrap(
+    {},
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.getMoneyReceiptById(req);
+      res.status(code).json(data);
+    }
+  );
+
   // Create Purchase Money reciept
   public createPurchaseMoneyReciept = this.asyncWrapper.wrap(
     {

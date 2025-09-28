@@ -1,5 +1,5 @@
 import { Router } from "express";
-import HotelInventoryRouter from "../appInventory/inventory.app.router";
+import HotelInventoryRouter from "../appInventory/inventory.root.router";
 import AuthChecker from "../common/middleware/authChecker/authChecker";
 import AccountRouter from "./routers/account.router";
 import AdminBtocHandlerRouter from "./routers/adminBtocHandler.router";

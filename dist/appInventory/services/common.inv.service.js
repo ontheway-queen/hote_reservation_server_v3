@@ -467,11 +467,11 @@ class CommonInvService extends abstract_service_1.default {
         });
     }
     // Get all Supplier Payment
-    getAllSupplierPayment(req) {
+    getAllSupplierPaymentById(req) {
         return __awaiter(this, void 0, void 0, function* () {
             const { hotel_code } = req.hotel_admin;
             const { limit, skip, key, from_date, to_date } = req.query;
-            const { data, total } = yield this.Model.CommonInventoryModel().getSupplierPayment({
+            const { data, total } = yield this.Model.CommonInventoryModel().getAllSupplierPaymentById({
                 key: key,
                 from_date: from_date,
                 to_date: to_date,
@@ -487,22 +487,24 @@ class CommonInvService extends abstract_service_1.default {
             };
         });
     }
-    // Supplier payment report
-    getSupplierLedgerReport(req) {
+    getAllSupplierInvoiceById(req) {
         return __awaiter(this, void 0, void 0, function* () {
             const { hotel_code } = req.hotel_admin;
-            const { limit, skip, from_date, to_date } = req.query;
-            const data = yield this.Model.CommonInventoryModel().getSupplierLedgerReport({
-                limit: limit,
-                skip: skip,
+            const { limit, skip, key, from_date, to_date } = req.query;
+            const { data, total } = yield this.Model.CommonInventoryModel().getAllSupplierInvoiceBySupId({
+                key: key,
                 from_date: from_date,
                 to_date: to_date,
-                id: parseInt(req.params.id),
+                limit: limit,
+                skip: skip,
+                hotel_code,
+                sup_id: parseInt(req.params.id),
             });
             return {
                 success: true,
                 code: this.StatusCode.HTTP_OK,
-                data: data[0],
+                total,
+                data,
             };
         });
     }
