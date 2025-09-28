@@ -17,6 +17,8 @@ class MoneyRecieptRouter extends AbstractRouter {
 
     // get single money receipt by id
     this.router.route("/:id").get(this.controller.getMoneyReceiptById);
+
+    this.router.route("/").get(this.controller.createMoneyReceipt);
   }
 }
 

@@ -17,14 +17,10 @@ class PurchaseInvRouter extends abstract_router_1.default {
             .route("/")
             .post(this.controller.createPurchase)
             .get(this.controller.getAllPurchase);
-        // create purchase money reciept
-        this.router
-            .route("/money-reciept")
-            .post(this.controller.createPurchaseMoneyReciept);
-        // get money receipt by inoice id
+        // get money receipt by purchase id
         this.router
             .route("/receipt-by/purchase/:id")
-            .get(this.controller.getMoneyReceiptById);
+            .get(this.controller.getMoneyReceiptByPurchaseId);
         this.router
             .route("/invoice-by/purchase/:id")
             .get(this.controller.getInvoiceByPurchaseId);

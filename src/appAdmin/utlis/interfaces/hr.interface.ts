@@ -1,128 +1,128 @@
 export interface IupdateEmployeeReqBody {
-	name: string;
-	photo: string;
-	new_department_ids: number[];
-	remove_department_ids: number[];
-	designation_id: number;
-	blood_group: string;
-	salary: number;
-	email: string;
-	contact_no: string;
-	dob: string;
-	appointment_date: string;
-	joining_date: string;
-	address: string;
-	created_by: number;
+  name: string;
+  photo: string;
+  new_department_ids: number[];
+  remove_department_ids: number[];
+  designation_id: number;
+  blood_group: string;
+  salary: number;
+  email: string;
+  contact_no: string;
+  dob: string;
+  appointment_date: string;
+  joining_date: string;
+  address: string;
+  created_by: number;
 }
 export interface IcreateEmployeeReqBody {
-	name: string;
-	photo?: string;
-	department_ids: number[];
-	designation_id: number;
-	blood_group?: string;
-	salary: number;
-	email?: string;
-	contact_no: string;
-	dob?: string;
-	appointment_date?: string;
-	joining_date?: string;
-	address?: string;
-	created_by?: number;
+  name: string;
+  photo?: string;
+  department_ids: number[];
+  designation_id: number;
+  blood_group?: string;
+  salary: number;
+  email?: string;
+  contact_no: string;
+  dob?: string;
+  appointment_date?: string;
+  joining_date?: string;
+  address?: string;
+  created_by?: number;
 }
 
 export interface IcreateEmployee {
-	hotel_code: number;
-	name: string;
-	photo?: string;
-	designation_id: number;
-	blood_group?: string;
-	salary: number;
-	email?: string;
-	contact_no: string;
-	dob?: string;
-	appointment_date?: string;
-	joining_date?: string;
-	address?: string;
-	created_by: number;
+  hotel_code: number;
+  name: string;
+  photo?: string;
+  designation_id: number;
+  blood_group?: string;
+  salary: number;
+  email?: string;
+  contact_no: string;
+  dob?: string;
+  appointment_date?: string;
+  joining_date?: string;
+  address?: string;
+  created_by: number;
 }
 
 export interface IupdateEmployee {
-	name: string;
-	photo: string;
-	designation_id: number;
-	blood_group: string;
-	salary: number;
-	email: string;
-	contact_no: string;
-	dob: string;
-	appointment_date: string;
-	joining_date: string;
-	address: string;
-	created_by: number;
+  name: string;
+  photo: string;
+  designation_id: number;
+  blood_group: string;
+  salary: number;
+  email: string;
+  contact_no: string;
+  dob: string;
+  appointment_date: string;
+  joining_date: string;
+  address: string;
+  created_by: number;
 }
 
 export interface IEmployeeListResponse {
-	id: number;
-	name: string;
-	email: string;
-	mobile_no: string;
-	department: string;
-	designation: string;
-	salary: string;
-	joining_date: Date;
-	status: boolean;
+  id: number;
+  name: string;
+  email: string;
+  mobile_no: string;
+  department: string;
+  designation: string;
+  salary: string;
+  joining_date: Date;
+  status: boolean;
 }
 
 export interface IEmployeeResponse {
-	id: number;
-	name: string;
-	email: string;
-	mobile_no: string;
-	photo: string;
-	blood_group_id: number;
-	blood_group_name: string;
-	department_id: number;
-	department_name: string;
-	designation_id: number;
-	designation_name: string;
-	salary: string;
-	dob: Date;
-	appointment_date: Date;
-	joining_date: Date;
-	hotel_code: number;
-	hotel_name: string;
-	created_by_id: number;
-	created_by_name: string;
-	address: string;
-	status: boolean;
-	created_at: Date;
-	is_deleted: boolean;
+  id: number;
+  name: string;
+  email: string;
+  mobile_no: string;
+  photo: string;
+  blood_group_id: number;
+  blood_group_name: string;
+  department_id: number;
+  department_name: string;
+  designation_id: number;
+  designation_name: string;
+  salary: string;
+  dob: Date;
+  appointment_date: Date;
+  joining_date: Date;
+  hotel_code: number;
+  hotel_name: string;
+  created_by_id: number;
+  created_by_name: string;
+  address: string;
+  status: boolean;
+  created_at: Date;
+  is_deleted: boolean;
 }
 
 export interface IShift {
-	id: number;
-	name: string;
-	start_time: string;
-	end_time: string;
-	hotel_code: number;
-	is_deleted: boolean;
+  id: number;
+  name: string;
+  start_time: string;
+  end_time: string;
+  hotel_code: number;
+  is_deleted: boolean;
 }
 
 export interface IAllowance {
-	id: number;
-	name: string;
-	type: string;
-	value: string;
-	is_taxable: boolean;
-	hotel_code: number;
-	is_deleted: boolean;
+  id: number;
+  name: string;
+  type: string;
+  value: string;
+  is_taxable: boolean;
+  hotel_code: number;
+  is_deleted: boolean;
 }
 
 export interface IDeduction {
-	id: number;
-	name: string;
-	type: string;
-	value: string;
-	hotel_code: number;
-	is_deleted: boolean;
+  id: number;
+  name: string;
+  type: string;
+  value: string;
+  hotel_code: number;
+  is_deleted: boolean;
 }

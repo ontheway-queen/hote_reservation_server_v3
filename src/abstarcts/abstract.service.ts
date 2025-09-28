@@ -1,5 +1,6 @@
 import { db } from "../app/database";
 import { BtocModels } from "../models/btoc.rootModel";
+import { RestaurantModels } from "../models/restaurantRootModel";
 import Models from "../models/rootModels";
 import ManageFile from "../utils/lib/manageFile";
 import ResMsg from "../utils/miscellaneous/responseMessage";
@@ -13,6 +14,7 @@ abstract class AbstractServices {
   protected StatusCode = StatusCode;
   protected Model = new Models(this.db);
   protected BtocModels = new BtocModels(this.db);
+  protected restaurantModel = new RestaurantModels(this.db);
   protected schema = new Schema();
 }
 

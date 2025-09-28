@@ -24,13 +24,13 @@ class PurchaseInvService extends abstract_service_1.default {
                 const { hotel_code, id: admin_id } = req.hotel_admin;
                 const { purchase_date, supplier_id, ac_tr_ac_id, discount_amount, vat, shipping_cost, paid_amount, purchase_items, } = req.body;
                 // Check supplier
-                const cmnInvModel = this.Model.CommonInventoryModel(trx);
+                const supplierModel = this.Model.supplierModel(trx);
                 // Check account
                 const accModel = this.Model.accountModel(trx);
                 // Check purchase
                 const pInvModel = this.Model.purchaseInventoryModel(trx);
-                const pdModel = this.Model.productInventoryModel(trx);
-                const checkSupplier = yield cmnInvModel.getSingleSupplier(supplier_id, hotel_code);
+                const pdModel = this.Model.inventoryModel(trx);
+                const checkSupplier = yield supplierModel.getSingleSupplier(supplier_id, hotel_code);
                 if (!checkSupplier.length) {
                     return {
                         success: false,
@@ -148,63 +148,19 @@ class PurchaseInvService extends abstract_service_1.default {
                         yield pInvModel.updateInInventory({ available_quantity: item.available_quantity }, { id: item.id });
                     })));
                 }
-                //   invoice and money receipt generate
-                const hotelInvoiceModel = this.Model.hotelInvoiceModel(trx);
-                const invoiceRes = yield hotelInvoiceModel.insertInInvoice({
-                    hotel_code,
-                    invoice_date: new Date().toISOString(),
-                    invoice_number: p_voucher_no,
-                    total_amount: grand_total,
-                    notes: `Purchase from ${checkSupplier[0].supplier_name}`,
-                });
-                //   insert in invoice items
-                const invoiceItemPayload = purchaseItemsPayload.map((item) => ({
-                    inv_id: invoiceRes[0].id,
-                    name: item.product_name,
-                    quantity: item.quantity,
-                    total_price: item.price,
-                }));
-                yield hotelInvoiceModel.insertInInvoiceItems(invoiceItemPayload);
-                // insert in purchase sub invoice
-                yield hotelInvoiceModel.insertInPurchaseSubInvoice({
-                    inv_id: invoiceRes[0].id,
-                    purchase_id: createdPurchase[0].id,
-                    sup_id: supplier_id,
-                });
                 if (paid_amount > 0) {
-                    const [mr] = yield hotelInvoiceModel.insertMoneyReceipt({
-                        hotel_code,
-                        receipt_no: p_voucher_no,
-                        receipt_date: new Date().toISOString(),
-                        amount_paid: paid_amount,
-                        acc_id: ac_tr_ac_id,
-                        payment_method: checkAccount[0].acc_type,
-                        received_by: admin_id,
-                        notes: `Payment for purchase invoice no ${p_voucher_no}`,
-                        voucher_no: p_voucher_no,
-                    });
-                    yield hotelInvoiceModel.insertMoneyReceiptItem({
-                        money_receipt_id: mr.id,
-                        invoice_id: invoiceRes[0].id,
-                        paid_amount: paid_amount,
-                    });
                     // insert supplier payment
-                    const [supplierPaymentID] = yield cmnInvModel.insertSupplierPayment({
+                    const [supplierPaymentID] = yield supplierModel.insertSupplierPayment({
                         created_by: admin_id,
                         hotel_code: hotel_code,
                         debit: paid_amount,
                         credit: 0,
                         acc_id: ac_tr_ac_id,
                         supplier_id,
+                        purchase_id: createdPurchase[0].id,
+                        voucher_no: p_voucher_no,
+                        payment_date: new Date().toISOString(),
                     });
-                    // supplier payment allocation
-                    yield cmnInvModel.insertSupplierPaymentAllocation([
-                        {
-                            supplier_payment_id: supplierPaymentID.id,
-                            invoice_id: invoiceRes[0].id,
-                            paid_amount,
-                        },
-                    ]);
                 }
                 return {
                     success: true,
@@ -251,8 +207,7 @@ class PurchaseInvService extends abstract_service_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             const { id } = req.params;
             const { hotel_code } = req.hotel_admin;
-            console.log({ id });
-            const data = yield this.Model.purchaseInventoryModel().getInvoiceByPurchaseId(parseInt(id), hotel_code);
+            const data = yield this.Model.purchaseInventoryModel().getSinglePurchase(parseInt(id), hotel_code);
             return {
                 success: true,
                 code: this.StatusCode.HTTP_OK,
@@ -260,9 +215,9 @@ class PurchaseInvService extends abstract_service_1.default {
             };
         });
     }
-    getMoneyReceiptById(req) {
+    getMoneyReceiptByPurchaseId(req) {
         return __awaiter(this, void 0, void 0, function* () {
-            const data = yield this.Model.hotelInvoiceModel().getPurchaseMoneyReceiptById({
+            const data = yield this.Model.hotelInvoiceModel().getMoneyReceiptByPurchaseId({
                 id: Number(req.params.id),
                 hotel_code: req.hotel_admin.hotel_code,
             });
@@ -271,183 +226,6 @@ class PurchaseInvService extends abstract_service_1.default {
                 code: this.StatusCode.HTTP_OK,
                 data,
             };
-        });
-    }
-    createPurchaseMoneyReciept(req) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
-                const { hotel_code, id: admin_id } = req.hotel_admin;
-                const { ac_tr_ac_id, supplier_id, paid_amount, reciept_type, purchase_id, remarks, } = req.body;
-                //   checking supplier
-                const cmnInvModel = this.Model.CommonInventoryModel(trx);
-                // Check account
-                const accModel = this.Model.accountModel(trx);
-                // Check purchase
-                const pInvModel = this.Model.purchaseInventoryModel(trx);
-                const checkSupplier = yield cmnInvModel.getSingleSupplier(supplier_id, hotel_code);
-                if (!checkSupplier.length) {
-                    return {
-                        success: false,
-                        code: this.StatusCode.HTTP_NOT_FOUND,
-                        message: "User not found",
-                    };
-                }
-                // const check account
-                const accountModel = this.Model.accountModel(trx);
-                const checkAccount = yield accountModel.getSingleAccount({
-                    hotel_code,
-                    id: parseInt(ac_tr_ac_id),
-                });
-                if (!checkAccount.length) {
-                    return {
-                        success: false,
-                        code: this.StatusCode.HTTP_NOT_FOUND,
-                        message: "Account not found",
-                    };
-                }
-                // check invoice
-                if (reciept_type === "invoice") {
-                    const checkSinglePurchase = yield pInvModel.getSinglePurchase(purchase_id, hotel_code);
-                    console.log({ checkSinglePurchase });
-                    if (!checkSinglePurchase) {
-                        return {
-                            success: false,
-                            code: this.StatusCode.HTTP_NOT_FOUND,
-                            message: "Invoice not found with this user",
-                        };
-                    }
-                    const { due, grand_total, voucher_no, supplier_id } = checkSinglePurchase;
-                    console.log({ checkSinglePurchase });
-                    if (due == 0) {
-                        return {
-                            success: false,
-                            code: this.StatusCode.HTTP_BAD_REQUEST,
-                            message: "Already paid this invoice",
-                        };
-                    }
-                    if (paid_amount != due) {
-                        return {
-                            success: false,
-                            code: this.StatusCode.HTTP_BAD_REQUEST,
-                            message: "Invoice due and paid amount are not same",
-                        };
-                    }
-                    // get last account ledger
-                    const lastAL = yield accountModel.getLastAccountLedgerId(hotel_code);
-                    const ledger_id = lastAL.length ? lastAL[0].ledger_id + 1 : 1;
-                    const year = new Date().getFullYear();
-                    // Insert account ledger
-                    const ledgerRes = yield accModel.insertAccountLedger({
-                        ac_tr_ac_id,
-                        hotel_code,
-                        transaction_no: `TRX-${year - ledger_id}`,
-                        ledger_debit_amount: paid_amount,
-                        ledger_details: `Balance Debited by Purchase`,
-                    });
-                    // ================= update purchase ================ //
-                    const remainingBalance = due - paid_amount;
-                    yield pInvModel.updatePurchase({
-                        due: remainingBalance,
-                    }, { id: purchase_id });
-                    // insert in payment supplier
-                    yield cmnInvModel.insertSupplierPayment({
-                        acc_id: ac_tr_ac_id,
-                        created_by: admin_id,
-                        hotel_code: hotel_code,
-                        debit: paid_amount,
-                        credit: 0,
-                        // voucher_no: purchase_id,
-                        supplier_id,
-                    });
-                }
-                else {
-                    // overall payment step
-                    const { data: allPurchaseInvoiceByUser } = yield pInvModel.getAllpurchase({
-                        hotel_code,
-                        by_supplier_id: supplier_id,
-                    });
-                    const unpaidInvoice = [];
-                    for (let i = 0; i < (allPurchaseInvoiceByUser === null || allPurchaseInvoiceByUser === void 0 ? void 0 : allPurchaseInvoiceByUser.length); i++) {
-                        if (parseFloat(allPurchaseInvoiceByUser[i].due) !== 0) {
-                            unpaidInvoice.push({
-                                id: allPurchaseInvoiceByUser[i].id,
-                                grand_total: allPurchaseInvoiceByUser[i].grand_total,
-                                due: allPurchaseInvoiceByUser[i].due,
-                                voucher_no: allPurchaseInvoiceByUser[i].voucher_no,
-                            });
-                        }
-                    }
-                    if (!unpaidInvoice.length) {
-                        return {
-                            success: false,
-                            code: this.StatusCode.HTTP_NOT_FOUND,
-                            message: "No due invoice found",
-                        };
-                    }
-                    // total due amount
-                    let remainingPaidAmount = paid_amount;
-                    const paidingInvoice = [];
-                    console.log({ unpaidInvoice });
-                    for (let i = 0; i < unpaidInvoice.length; i++) {
-                        if (remainingPaidAmount > 0) {
-                            if (paid_amount >= unpaidInvoice[i].due) {
-                                remainingPaidAmount = paid_amount - unpaidInvoice[i].due;
-                                paidingInvoice.push({
-                                    id: unpaidInvoice[i].id,
-                                    due: unpaidInvoice[i].due - unpaidInvoice[i].due,
-                                    purchase_id,
-                                    total_paid_amount: unpaidInvoice[i].due,
-                                });
-                            }
-                            else {
-                                remainingPaidAmount = paid_amount - unpaidInvoice[i].due;
-                                paidingInvoice.push({
-                                    id: unpaidInvoice[i].id,
-                                    due: unpaidInvoice[i].due - paid_amount,
-                                    purchase_id,
-                                    total_paid_amount: unpaidInvoice[i].due - paid_amount,
-                                });
-                            }
-                        }
-                    }
-                    // =============== update purchase ==============//
-                    yield Promise.all(paidingInvoice.map((item) => __awaiter(this, void 0, void 0, function* () {
-                        yield pInvModel.updatePurchase({ due: item.due }, { id: item.id });
-                    })));
-                    const year = new Date().getFullYear();
-                    // get last account ledger
-                    const lastAL = yield accountModel.getLastAccountLedgerId(hotel_code);
-                    const ledger_id = lastAL.length ? lastAL[0].ledger_id + 1 : 1;
-                    // Insert account ledger
-                    yield accModel.insertAccountLedger({
-                        ac_tr_ac_id,
-                        hotel_code,
-                        transaction_no: `TRX-${year - ledger_id}`,
-                        ledger_debit_amount: paid_amount,
-                        ledger_details: `Balance Debited by purchase Money Reciept`,
-                    });
-                    // money recipet item
-                    yield Promise.all(paidingInvoice.map((item) => __awaiter(this, void 0, void 0, function* () {
-                        yield cmnInvModel.insertSupplierPayment({
-                            created_by: admin_id,
-                            hotel_code,
-                            //   purchase_id: purchase_id[0],
-                            acc_id: ac_tr_ac_id,
-                            debit: item.total_paid_amount,
-                            credit: 0,
-                            //   total_paid_amount: item.total_paid_amount,
-                            //   ac_tr_ac_id,
-                            // voucher_no: "",
-                            supplier_id,
-                        });
-                    })));
-                }
-                return {
-                    success: true,
-                    code: this.StatusCode.HTTP_SUCCESSFUL,
-                    message: this.ResMsg.HTTP_SUCCESSFUL,
-                };
-            }));
         });
     }
 }

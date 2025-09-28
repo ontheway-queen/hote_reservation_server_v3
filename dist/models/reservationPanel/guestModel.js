@@ -54,13 +54,23 @@ class GuestModel extends schema_1.default {
     getUserLedgerLastId(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             const { hotel_code, user_id } = payload;
-            return yield this.db("user_ledger")
+            return yield this.db("guest_ledger")
                 .withSchema(this.RESERVATION_SCHEMA)
                 .select("id")
                 .where({ hotel_code })
                 .andWhere({ user_id })
                 .limit(1)
                 .orderBy("id", "desc");
+        });
+    }
+    getGuestLastBalance({ guest_id, hotel_code, }) {
+        var _a;
+        return __awaiter(this, void 0, void 0, function* () {
+            const result = yield this.db("guest_ledger")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .select(this.db.raw("COALESCE(SUM(credit),0) - COALESCE(SUM(debit),0) as balance"))
+                .where({ guest_id, hotel_code });
+            const balance = ((_a = result[0]) === null || _a === void 0 ? void 0 : _a.balance) || 0;
         });
     }
     getAllGuest(payload) {

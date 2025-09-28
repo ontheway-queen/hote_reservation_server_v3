@@ -26,9 +26,7 @@ const hotelInvoiceModel_1 = __importDefault(require("./reservationPanel/hotelInv
 const hrModel_1 = __importDefault(require("./reservationPanel/hrModel"));
 const common_inventory_model_1 = __importDefault(require("./reservationPanel/inventoryModel/common.inventory.model"));
 const inventory_model_1 = __importDefault(require("./reservationPanel/inventoryModel/inventory.model"));
-const product_inventory_model_1 = __importDefault(require("./reservationPanel/inventoryModel/product.inventory.model"));
 const puschase_inventory_model_1 = __importDefault(require("./reservationPanel/inventoryModel/puschase.inventory.model"));
-const stock_inventory_model_1 = __importDefault(require("./reservationPanel/inventoryModel/stock.inventory.model"));
 const payment_model_1 = __importDefault(require("./reservationPanel/paymentModel/payment.model"));
 const payRollModel_1 = __importDefault(require("./reservationPanel/payRollModel"));
 const rAdministration_model_1 = __importDefault(require("./reservationPanel/rAdministration.model"));
@@ -36,6 +34,7 @@ const ReportModel_1 = __importDefault(require("./reservationPanel/ReportModel/Re
 const reservation_model_1 = require("./reservationPanel/reservation.model");
 const Room_Model_1 = __importDefault(require("./reservationPanel/Room.Model"));
 const Setting_Model_1 = __importDefault(require("./reservationPanel/Setting.Model"));
+const supplierModel_1 = __importDefault(require("./reservationPanel/supplierModel"));
 class Models {
     constructor(db) {
         this.db = db;
@@ -70,6 +69,9 @@ class Models {
     guestModel(trx) {
         return new guestModel_1.default(trx || this.db);
     }
+    supplierModel(trx) {
+        return new supplierModel_1.default(trx || this.db);
+    }
     employeeModel(trx) {
         return new employeeModel_1.default(trx || this.db);
     }
@@ -90,17 +92,12 @@ class Models {
     CommonInventoryModel(trx) {
         return new common_inventory_model_1.default(trx || this.db);
     }
-    // product, damaged product
-    productInventoryModel(trx) {
-        return new product_inventory_model_1.default(trx || this.db);
-    }
     // puchase
     purchaseInventoryModel(trx) {
         return new puschase_inventory_model_1.default(trx || this.db);
     }
-    // stock
-    stockInventoryModel(trx) {
-        return new stock_inventory_model_1.default(trx || this.db);
+    inventoryModel(trx) {
+        return new inventory_model_1.default(trx || this.db);
     }
     // payment model
     paymentModel(trx) {
@@ -131,9 +128,6 @@ class Models {
     }
     btocInvoiceModel(trx) {
         return new btoc_invoiceModel_1.default(trx || this.db);
-    }
-    inventoryModel(trx) {
-        return new inventory_model_1.default(trx || this.db);
     }
     serviceCategoriesModel(trx) {
         return new serviceCategories_model_1.default(trx || this.db);

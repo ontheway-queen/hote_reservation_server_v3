@@ -1,6 +1,4 @@
-import IguestInterface, {
-  IuserTypeInterface,
-} from "../../appAdmin/utlis/interfaces/guest.interface";
+import IguestInterface from "../../appAdmin/utlis/interfaces/guest.interface";
 import { IUpdateUser } from "../../appM360/utlis/interfaces/hotel-user.interface";
 import { TDB } from "../../common/types/commontypes";
 import Schema from "../../utils/miscellaneous/schema";
@@ -59,13 +57,32 @@ class GuestModel extends Schema {
     user_id: number;
   }) {
     const { hotel_code, user_id } = payload;
-    return await this.db("user_ledger")
+    return await this.db("guest_ledger")
       .withSchema(this.RESERVATION_SCHEMA)
       .select("id")
       .where({ hotel_code })
       .andWhere({ user_id })
       .limit(1)
       .orderBy("id", "desc");
+  }
+
+  public async getGuestLastBalance({
+    guest_id,
+    hotel_code,
+  }: {
+    guest_id: number;
+    hotel_code: number;
+  }) {
+    const result = await this.db("guest_ledger")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .select(
+        this.db.raw(
+          "COALESCE(SUM(credit),0) - COALESCE(SUM(debit),0) as balance"
+        )
+      )
+      .where({ guest_id, hotel_code });
+
+    const balance = result[0]?.balance || 0;
   }
 
   public async getAllGuest(payload: {

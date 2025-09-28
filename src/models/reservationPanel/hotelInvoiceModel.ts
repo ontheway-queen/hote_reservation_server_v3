@@ -786,67 +786,52 @@ class HotelInvoiceModel extends Schema {
       .first();
   }
 
-  public async getPurchaseMoneyReceiptById({
+  public async getMoneyReceiptByPurchaseId({
     id,
     hotel_code,
   }: {
     id: number;
     hotel_code: number;
-  }) {
+  }): Promise<
+    | {
+        supplier_id: number;
+        supplier_name: string;
+        supplier_phone: string;
+        payment_id: number;
+        receipt_no: string;
+        payment_date: string;
+        paid_amount: number;
+        remarks: string;
+        received_by_name: string;
+        received_by_id: number;
+      }[]
+    | []
+  > {
     return await this.db("purchase as p")
       .withSchema(this.HOTEL_INVENTORY_SCHEMA)
       .select(
         "s.id as supplier_id",
         "s.name as supplier_name",
         "s.phone as supplier_phone",
-        "mr.id as receipt_id",
-        "mr.receipt_no",
-        "mr.receipt_date",
-        "mr.amount_paid",
-        "mr.payment_method",
-        "mr.notes as receipt_notes",
+        "sp.id as payment_id",
+        "sp.voucher_no as receipt_no",
+        "sp.payment_date",
+        "sp.debit as paid_amount",
+        "ac.acc_type as payment_method",
+        "sp.remarks",
         "ac.name as account_name",
         "ua.id as received_by_id",
         "ua.name as received_by_name"
       )
+      .leftJoin("suppliers as s", "p.supplier_id", "s.id")
+      .leftJoin("supplier_payment as sp", "sp.purchase_id", "p.id")
+      .joinRaw("LEFT JOIN acc.accounts as ac ON sp.acc_id = ac.id")
       .joinRaw(
-        "LEFT JOIN hotel_inventory.suppliers as s ON p.supplier_id = s.id"
+        "LEFT JOIN hotel_reservation.user_admin as ua ON sp.created_by = ua.id"
       )
-      .joinRaw(
-        "LEFT JOIN hotel_reservation.purchase_sub_invoice as psi ON p.id = psi.purchase_id"
-      )
-      .joinRaw(
-        "LEFT JOIN hotel_reservation.money_receipt_item as mri ON psi.inv_id = mri.invoice_id"
-      )
-      .joinRaw(
-        "LEFT JOIN hotel_reservation.money_receipts as mr ON mri.money_receipt_id = mr.id"
-      )
-      .joinRaw("LEFT JOIN acc.accounts as ac ON mr.acc_id = ac.id")
-      .joinRaw(
-        "LEFT JOIN hotel_reservation.user_admin as ua ON mr.received_by = ua.id"
-      )
-      .where("mr.id", id)
-      .andWhere("mr.hotel_code", hotel_code)
-      .first();
-
-    // return await this.db("money_receipts as mr")
-    //   .withSchema(this.RESERVATION_SCHEMA)
-    //   .select(
-    //     "mr.id",
-    //     "mr.receipt_no",
-    //     "mr.receipt_date",
-    //     "mr.amount_paid",
-    //     "mr.payment_method",
-    //     "mr.notes",
-    //     "ac.name as account_name",
-    //     "ua.id as received_by_id",
-    //     "ua.name as received_by_name"
-    //   )
-    //   .joinRaw("left join acc.accounts as ac on mr.acc_id = ac.id")
-    //   .leftJoin("user_admin as ua", "mr.received_by", "ua.id")
-    //   .where("mr.id", id)
-    //   .andWhere("mr.hotel_code", hotel_code)
-    //   .first();
+      .where("sp.hotel_code", hotel_code)
+      .andWhere("sp.purchase_id", id)
+      .andWhere("sp.debit", ">", "0");
   }
 }
 

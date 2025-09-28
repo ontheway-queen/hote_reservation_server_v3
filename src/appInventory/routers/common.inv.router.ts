@@ -51,32 +51,6 @@ class CommonInvRouter extends AbstractRouter {
       .route("/brand/:id")
       .patch(this.controller.updateBrand)
       .delete(this.controller.deleteBrand);
-
-    //=================== Supplier Router ======================//
-
-    // Supplier
-    this.router
-      .route("/supplier")
-      .post(this.controller.createSupplier)
-      .get(this.controller.getAllSupplier);
-
-    // Supplier
-    this.router
-      .route("/supplier/payment/by-sup-id/:id")
-      .get(this.controller.getAllSupplierPaymentById);
-
-    this.router
-      .route("/supplier/invoice/by-sup-id/:id")
-      .get(this.controller.getAllSupplierInvoiceById);
-
-    // Supplier ledger report
-    this.router.route("/supplier-ledger-report/by-sup-id/:id").get();
-
-    // edit Supplier
-    this.router
-      .route("/supplier/:id")
-      .patch(this.controller.updateSupplier)
-      .delete(this.controller.deleteSupplier);
   }
 }
 export default CommonInvRouter;

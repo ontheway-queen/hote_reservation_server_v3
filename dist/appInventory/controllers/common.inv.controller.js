@@ -94,36 +94,6 @@ class CommonInvController extends abstract_controller_1.default {
             const _m = yield this.service.deleteBrand(req), { code } = _m, data = __rest(_m, ["code"]);
             res.status(code).json(data);
         }));
-        //=================== Supplier Controller ======================//
-        // create Supplier
-        this.createSupplier = this.asyncWrapper.wrap({ bodySchema: this.validator.createSupplierValidatorValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _o = yield this.service.createSupplier(req), { code } = _o, data = __rest(_o, ["code"]);
-            res.status(code).json(data);
-        }));
-        // get All Supplier
-        this.getAllSupplier = this.asyncWrapper.wrap({ querySchema: this.validator.getAllSupplierQueryValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _p = yield this.service.getAllSupplier(req), { code } = _p, data = __rest(_p, ["code"]);
-            res.status(code).json(data);
-        }));
-        // get All Supplier payment
-        this.getAllSupplierPaymentById = this.asyncWrapper.wrap(null, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _q = yield this.service.getAllSupplierPaymentById(req), { code } = _q, data = __rest(_q, ["code"]);
-            res.status(code).json(data);
-        }));
-        this.getAllSupplierInvoiceById = this.asyncWrapper.wrap(null, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _r = yield this.service.getAllSupplierInvoiceById(req), { code } = _r, data = __rest(_r, ["code"]);
-            res.status(code).json(data);
-        }));
-        // update Supplier
-        this.updateSupplier = this.asyncWrapper.wrap({ bodySchema: this.validator.UpdateSupplierValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _s = yield this.service.updateSupplier(req), { code } = _s, data = __rest(_s, ["code"]);
-            res.status(code).json(data);
-        }));
-        // delete Supplier
-        this.deleteSupplier = this.asyncWrapper.wrap({ paramSchema: this.commonValidator.singleParamStringValidator() }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _t = yield this.service.deleteSupplier(req), { code } = _t, data = __rest(_t, ["code"]);
-            res.status(code).json(data);
-        }));
     }
 }
 exports.default = CommonInvController;

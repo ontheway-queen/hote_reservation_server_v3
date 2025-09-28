@@ -43,6 +43,19 @@ class MoneyRecieptService extends abstract_service_1.default {
             };
         });
     }
+    createMoneyReceipt(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const data = yield this.Model.hotelInvoiceModel().getMoneyReceiptById({
+                id: Number(req.params.id),
+                hotel_code: req.hotel_admin.hotel_code,
+            });
+            return {
+                success: true,
+                code: this.StatusCode.HTTP_OK,
+                data,
+            };
+        });
+    }
 }
 exports.default = MoneyRecieptService;
 //# sourceMappingURL=money-reciept.service.js.map

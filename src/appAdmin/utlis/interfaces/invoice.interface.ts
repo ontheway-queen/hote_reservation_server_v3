@@ -92,19 +92,29 @@ export interface IcreateInvoicePayload {
   invoice_item: IinvoiceItemPayload[];
 }
 
-export interface IcreateMoneyReciept {
-  hotel_code: number;
-  user_id?: number;
-  money_receipt_no: string;
-  description: string;
+// export interface IcreateMoneyReciept {
+//   hotel_code: number;
+//   user_id?: number;
+//   money_receipt_no: string;
+//   description: string;
+//   inv_id?: number;
+//   total_collected_amount: number;
+//   created_by: number;
+//   payment_type: "bank" | "cash" | "cheque" | "mobile-banking";
+//   remarks: string;
+//   return_date?: string;
+//   ac_ldg_id?: number;
+//   ac_tr_ac_id: number;
+// }
+export interface IcreateMoneyRecieptReqBody {
+  acc_id: number;
+  guest_id: number;
+  supplier_id?: number;
   inv_id?: number;
-  total_collected_amount: number;
-  created_by: number;
-  payment_type: "bank" | "cash" | "cheque" | "mobile-banking";
+  paid_amount: number;
+  receipt_type: "invoice" | "overall";
   remarks: string;
-  return_date?: string;
-  ac_ldg_id?: number;
-  ac_tr_ac_id: number;
+  payment_date: string;
 }
 
 export interface IinsertMoneyRecieptItem {
