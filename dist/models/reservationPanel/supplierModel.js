@@ -35,7 +35,7 @@ class SupplierModel extends schema_1.default {
             }
             const data = yield dtbs
                 .withSchema(this.HOTEL_INVENTORY_SCHEMA)
-                .select("s.id", "s.name", "s.phone", "s.last_balance", "s.status", "s.is_deleted")
+                .select("s.id", "s.name", "s.phone", "s.status", "s.is_deleted", this.db.raw(`COALESCE((SELECT SUM(sp.credit) - SUM(sp.debit) FROM ${this.HOTEL_INVENTORY_SCHEMA}.supplier_payment AS sp WHERE sp.supplier_id = s.id), 0) as last_balance`))
                 .where("s.hotel_code", hotel_code)
                 .andWhere(function () {
                 if (key) {
@@ -141,7 +141,7 @@ class SupplierModel extends schema_1.default {
             }
             const data = yield dtbs
                 .withSchema(this.HOTEL_INVENTORY_SCHEMA)
-                .select("p.id", "p.voucher_no", "p.grand_total", "p.paid_amount", "p.due")
+                .select("p.id", "p.purchase_no", "p.grand_total", "p.paid_amount", "p.due")
                 .leftJoin("suppliers as s", "p.supplier_id", "s.id")
                 .where(function () {
                 this.andWhere("p.hotel_code", hotel_code);
@@ -151,11 +151,11 @@ class SupplierModel extends schema_1.default {
                 }
                 if (key) {
                     this.andWhere(function () {
-                        this.where("p.voucher_no", "like", `%${key}%`);
+                        this.where("p.purchase_no", "like", `%${key}%`);
                     });
                 }
                 if (due) {
-                    this.andWhereRaw("(COALESCE(p.grand_total,0) - COALESCE(p.paid_amount,0)) > 0");
+                    this.andWhere("p.due", ">", 0);
                 }
             });
             const total = yield this.db("purchase as p")
@@ -170,11 +170,11 @@ class SupplierModel extends schema_1.default {
                 }
                 if (key) {
                     this.andWhere(function () {
-                        this.where("p.voucher_no", "like", `%${key}%`);
+                        this.where("p.purchase_no", "like", `%${key}%`);
                     });
                 }
                 if (due) {
-                    this.andWhereRaw("(COALESCE(p.grand_total,0) - COALESCE(p.paid_amount,0)) > 0");
+                    this.andWhere("p.due", ">", 0);
                 }
             });
             return { data, total: Number(total[0].total) };
@@ -193,6 +193,13 @@ class SupplierModel extends schema_1.default {
             return yield this.db("supplier_payment")
                 .withSchema(this.HOTEL_INVENTORY_SCHEMA)
                 .insert(payload, "id");
+        });
+    }
+    insertSupplierPaymentAllocation(payload) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("supplier_payment_allocation")
+                .withSchema(this.HOTEL_INVENTORY_SCHEMA)
+                .insert(payload);
         });
     }
     getAllSupplierPayment({ from_date, to_date, limit, skip, key, hotel_code, }) {
@@ -221,7 +228,8 @@ class SupplierModel extends schema_1.default {
                             .orWhere("ac.name", "like", `%${key}%`);
                     });
                 }
-            });
+            })
+                .orderBy("sp.id", "desc");
             const total = yield this.db("supplier_payment as sp")
                 .withSchema(this.HOTEL_INVENTORY_SCHEMA)
                 .count("sp.id as total")

@@ -5,6 +5,7 @@ import {
   ICreateInvPurchasePayload,
 } from "../utils/interfaces/purchase.interface";
 import HelperLib from "../../appAdmin/utlis/library/helperLib";
+import { HelperFunction } from "../../appAdmin/utlis/library/helperFunction";
 
 class PurchaseInvService extends AbstractServices {
   constructor() {
@@ -105,7 +106,7 @@ class PurchaseInvService extends AbstractServices {
         };
       }
 
-      const p_voucher_no = await new HelperLib(trx).generatePurchaseVoucher();
+      const purchase_no = await new HelperLib(trx).generatePurchaseVoucher();
 
       // Insert purchase
       const createdPurchase = await pInvModel.createPurchase({
@@ -119,7 +120,7 @@ class PurchaseInvService extends AbstractServices {
         vat,
         shipping_cost,
         due,
-        voucher_no: p_voucher_no,
+        purchase_no: purchase_no,
       });
 
       // Insert purchase item
@@ -201,7 +202,92 @@ class PurchaseInvService extends AbstractServices {
         );
       }
 
+      //__________________ accounting __________________ //
+
+      const helper = new HelperFunction();
+      const hotelModel = this.Model.HotelModel(trx);
+
+      const heads = await hotelModel.getHotelAccConfig(hotel_code, [
+        "ACCOUNT_PAYABLE_HEAD_ID",
+        // "FIXED_ASSET_HEAD_ID",
+      ]);
+
+      console.log({ heads, hotel_code });
+
+      const payable_head = heads.find(
+        (h) => h.config === "ACCOUNT_PAYABLE_HEAD_ID"
+      );
+
+      if (!payable_head) {
+        throw new Error(
+          "ACCOUNT_PAYABLE_HEAD_ID not configured for this hotel"
+        );
+      }
+
+      // const asset_head = heads.find((h) => h.config === "FIXED_ASSET_HEAD_ID");
+
+      // if (!asset_head) {
+      //   throw new Error("FIXED_ASSET_HEAD_ID not configured for this hotel");
+      // }
+
+      const accountModel = this.Model.accountModel(trx);
+
+      const voucher_no1 = await helper.generateVoucherNo("JV", trx);
+      const created_by = req.hotel_admin.id;
+      const today = new Date().toISOString();
+
+      await accountModel.insertAccVoucher([
+        // {
+        //   acc_head_id: asset_head.head_id,
+        //   created_by,
+        //   debit: 0,
+        //   credit: grand_total,
+        //   description: `Payable for purchasing ${p_voucher_no}`,
+        //   voucher_date: today,
+        //   voucher_no: voucher_no1,
+        //   hotel_code,
+        // },
+        {
+          acc_head_id: payable_head.head_id,
+          created_by,
+          debit: 0,
+          credit: grand_total,
+          description: `Payable for purchasing ${purchase_no}`,
+          voucher_date: today,
+          voucher_no: voucher_no1,
+          hotel_code,
+        },
+      ]);
+
       if (paid_amount > 0) {
+        const [acc] = await accountModel.getSingleAccount({
+          hotel_code,
+          id: ac_tr_ac_id,
+        });
+
+        if (!acc) throw new Error("Invalid Account");
+
+        let voucher_type: "CCV" | "BCV" = "CCV";
+
+        if (acc.acc_type === "BANK") {
+          voucher_type = "BCV";
+        }
+
+        const voucher_no = await helper.generateVoucherNo(voucher_type, trx);
+
+        await accountModel.insertAccVoucher([
+          {
+            acc_head_id: acc.acc_head_id,
+            created_by,
+            debit: 0,
+            credit: paid_amount,
+            description: `Payment given for purchase ${purchase_no}`,
+            voucher_date: today,
+            voucher_no,
+            hotel_code,
+          },
+        ]);
+
         // insert supplier payment
         const [supplierPaymentID] = await supplierModel.insertSupplierPayment({
           created_by: admin_id,
@@ -211,7 +297,7 @@ class PurchaseInvService extends AbstractServices {
           acc_id: ac_tr_ac_id,
           supplier_id,
           purchase_id: createdPurchase[0].id,
-          voucher_no: p_voucher_no,
+          voucher_no,
           payment_date: new Date().toISOString(),
         });
       }

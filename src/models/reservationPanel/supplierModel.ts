@@ -44,10 +44,13 @@ class SupplierModel extends Schema {
         "s.id",
         "s.name",
         "s.phone",
-        "s.last_balance",
         "s.status",
-        "s.is_deleted"
+        "s.is_deleted",
+        this.db.raw(
+          `COALESCE((SELECT SUM(sp.credit) - SUM(sp.debit) FROM ${this.HOTEL_INVENTORY_SCHEMA}.supplier_payment AS sp WHERE sp.supplier_id = s.id), 0) as last_balance`
+        )
       )
+
       .where("s.hotel_code", hotel_code)
       .andWhere(function () {
         if (key) {
@@ -216,7 +219,13 @@ class SupplierModel extends Schema {
 
     const data = await dtbs
       .withSchema(this.HOTEL_INVENTORY_SCHEMA)
-      .select("p.id", "p.voucher_no", "p.grand_total", "p.paid_amount", "p.due")
+      .select(
+        "p.id",
+        "p.purchase_no",
+        "p.grand_total",
+        "p.paid_amount",
+        "p.due"
+      )
       .leftJoin("suppliers as s", "p.supplier_id", "s.id")
       .where(function () {
         this.andWhere("p.hotel_code", hotel_code);
@@ -228,14 +237,12 @@ class SupplierModel extends Schema {
 
         if (key) {
           this.andWhere(function () {
-            this.where("p.voucher_no", "like", `%${key}%`);
+            this.where("p.purchase_no", "like", `%${key}%`);
           });
         }
 
         if (due) {
-          this.andWhereRaw(
-            "(COALESCE(p.grand_total,0) - COALESCE(p.paid_amount,0)) > 0"
-          );
+          this.andWhere("p.due", ">", 0);
         }
       });
 
@@ -253,14 +260,11 @@ class SupplierModel extends Schema {
 
         if (key) {
           this.andWhere(function () {
-            this.where("p.voucher_no", "like", `%${key}%`);
+            this.where("p.purchase_no", "like", `%${key}%`);
           });
         }
-
         if (due) {
-          this.andWhereRaw(
-            "(COALESCE(p.grand_total,0) - COALESCE(p.paid_amount,0)) > 0"
-          );
+          this.andWhere("p.due", ">", 0);
         }
       });
 
@@ -286,14 +290,26 @@ class SupplierModel extends Schema {
     created_by: number;
     supplier_id: number;
     voucher_no: string;
-    purchase_id: number;
+    purchase_id?: number;
     payment_date?: string;
+    remarks?: string;
   }): Promise<{ id: number }[]> {
     return await this.db("supplier_payment")
       .withSchema(this.HOTEL_INVENTORY_SCHEMA)
       .insert(payload, "id");
   }
 
+  public async insertSupplierPaymentAllocation(
+    payload: {
+      supplier_payment_id: number;
+      invoice_id: number;
+      paid_amount: number;
+    }[]
+  ) {
+    return await this.db("supplier_payment_allocation")
+      .withSchema(this.HOTEL_INVENTORY_SCHEMA)
+      .insert(payload);
+  }
   public async getAllSupplierPayment({
     from_date,
     to_date,
@@ -348,7 +364,8 @@ class SupplierModel extends Schema {
               .orWhere("ac.name", "like", `%${key}%`);
           });
         }
-      });
+      })
+      .orderBy("sp.id", "desc");
 
     const total = await this.db("supplier_payment as sp")
       .withSchema(this.HOTEL_INVENTORY_SCHEMA)

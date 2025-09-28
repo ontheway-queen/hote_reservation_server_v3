@@ -14,6 +14,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const abstract_service_1 = __importDefault(require("../../abstarcts/abstract.service"));
 const helperLib_1 = __importDefault(require("../../appAdmin/utlis/library/helperLib"));
+const helperFunction_1 = require("../../appAdmin/utlis/library/helperFunction");
 class PurchaseInvService extends abstract_service_1.default {
     constructor() {
         super();
@@ -80,7 +81,7 @@ class PurchaseInvService extends abstract_service_1.default {
                         message: "Discount amount cannot be greater than grand total",
                     };
                 }
-                const p_voucher_no = yield new helperLib_1.default(trx).generatePurchaseVoucher();
+                const purchase_no = yield new helperLib_1.default(trx).generatePurchaseVoucher();
                 // Insert purchase
                 const createdPurchase = yield pInvModel.createPurchase({
                     hotel_code,
@@ -93,7 +94,7 @@ class PurchaseInvService extends abstract_service_1.default {
                     vat,
                     shipping_cost,
                     due,
-                    voucher_no: p_voucher_no,
+                    purchase_no: purchase_no,
                 });
                 // Insert purchase item
                 const purchaseItemsPayload = [];
@@ -148,7 +149,72 @@ class PurchaseInvService extends abstract_service_1.default {
                         yield pInvModel.updateInInventory({ available_quantity: item.available_quantity }, { id: item.id });
                     })));
                 }
+                //__________________ accounting __________________ //
+                const helper = new helperFunction_1.HelperFunction();
+                const hotelModel = this.Model.HotelModel(trx);
+                const heads = yield hotelModel.getHotelAccConfig(hotel_code, [
+                    "ACCOUNT_PAYABLE_HEAD_ID",
+                    // "FIXED_ASSET_HEAD_ID",
+                ]);
+                console.log({ heads, hotel_code });
+                const payable_head = heads.find((h) => h.config === "ACCOUNT_PAYABLE_HEAD_ID");
+                if (!payable_head) {
+                    throw new Error("ACCOUNT_PAYABLE_HEAD_ID not configured for this hotel");
+                }
+                // const asset_head = heads.find((h) => h.config === "FIXED_ASSET_HEAD_ID");
+                // if (!asset_head) {
+                //   throw new Error("FIXED_ASSET_HEAD_ID not configured for this hotel");
+                // }
+                const accountModel = this.Model.accountModel(trx);
+                const voucher_no1 = yield helper.generateVoucherNo("JV", trx);
+                const created_by = req.hotel_admin.id;
+                const today = new Date().toISOString();
+                yield accountModel.insertAccVoucher([
+                    // {
+                    //   acc_head_id: asset_head.head_id,
+                    //   created_by,
+                    //   debit: 0,
+                    //   credit: grand_total,
+                    //   description: `Payable for purchasing ${p_voucher_no}`,
+                    //   voucher_date: today,
+                    //   voucher_no: voucher_no1,
+                    //   hotel_code,
+                    // },
+                    {
+                        acc_head_id: payable_head.head_id,
+                        created_by,
+                        debit: 0,
+                        credit: grand_total,
+                        description: `Payable for purchasing ${purchase_no}`,
+                        voucher_date: today,
+                        voucher_no: voucher_no1,
+                        hotel_code,
+                    },
+                ]);
                 if (paid_amount > 0) {
+                    const [acc] = yield accountModel.getSingleAccount({
+                        hotel_code,
+                        id: ac_tr_ac_id,
+                    });
+                    if (!acc)
+                        throw new Error("Invalid Account");
+                    let voucher_type = "CCV";
+                    if (acc.acc_type === "BANK") {
+                        voucher_type = "BCV";
+                    }
+                    const voucher_no = yield helper.generateVoucherNo(voucher_type, trx);
+                    yield accountModel.insertAccVoucher([
+                        {
+                            acc_head_id: acc.acc_head_id,
+                            created_by,
+                            debit: 0,
+                            credit: paid_amount,
+                            description: `Payment given for purchase ${purchase_no}`,
+                            voucher_date: today,
+                            voucher_no,
+                            hotel_code,
+                        },
+                    ]);
                     // insert supplier payment
                     const [supplierPaymentID] = yield supplierModel.insertSupplierPayment({
                         created_by: admin_id,
@@ -158,7 +224,7 @@ class PurchaseInvService extends abstract_service_1.default {
                         acc_id: ac_tr_ac_id,
                         supplier_id,
                         purchase_id: createdPurchase[0].id,
-                        voucher_no: p_voucher_no,
+                        voucher_no,
                         payment_date: new Date().toISOString(),
                     });
                 }

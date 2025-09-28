@@ -61,7 +61,7 @@ class PurchaseInventoryModel extends Schema {
       .withSchema(this.HOTEL_INVENTORY_SCHEMA)
       .select(
         "p.id",
-        "p.voucher_no",
+        "p.purchase_no",
         "p.supplier_id",
         "p.purchase_date",
         "s.name as supplier_name",
@@ -77,7 +77,7 @@ class PurchaseInventoryModel extends Schema {
       .leftJoin("suppliers as s", "p.supplier_id", "s.id")
       .andWhere(function () {
         if (key) {
-          this.andWhere("p.voucher_no", "like", `%${key}%`).orWhere(
+          this.andWhere("p.purchase_no", "like", `%${key}%`).orWhere(
             "s.name",
             "like",
             `%${key}%`
@@ -129,6 +129,7 @@ class PurchaseInventoryModel extends Schema {
       .select(
         "p.id",
         "p.hotel_code",
+        "p.purchase_no",
         "p.purchase_date",
         "p.voucher_no",
         "p.supplier_name",

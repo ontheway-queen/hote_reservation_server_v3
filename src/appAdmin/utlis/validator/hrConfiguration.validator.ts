@@ -66,7 +66,7 @@ class HRconfigurationValidator {
     inv_id: Joi.number().optional(),
     paid_amount: Joi.number().required(),
     receipt_type: Joi.string().allow("invoice", "overall").required(),
-    remarks: Joi.string().required(),
+    remarks: Joi.string().optional(),
     payment_date: Joi.string().required(),
   });
 }

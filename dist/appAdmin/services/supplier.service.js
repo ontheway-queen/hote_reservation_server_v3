@@ -13,6 +13,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const abstract_service_1 = __importDefault(require("../../abstarcts/abstract.service"));
+const helperFunction_1 = require("../utlis/library/helperFunction");
 class SupplierService extends abstract_service_1.default {
     constructor() {
         super();
@@ -140,93 +141,408 @@ class SupplierService extends abstract_service_1.default {
             }));
         });
     }
+    // public async supplierPayment(req: Request) {
+    //   return await this.db.transaction(async (trx) => {
+    //     const { hotel_code, id: admin_id } = req.hotel_admin;
+    //     const {
+    //       acc_id,
+    //       supplier_id,
+    //       paid_amount,
+    //       receipt_type,
+    //       inv_id,
+    //       remarks,
+    //       payment_date,
+    //     } = req.body as IsupplierPaymentReqBody;
+    //     const supplierModel = this.Model.supplierModel(trx);
+    //     const pInvModel = this.Model.purchaseInventoryModel(trx);
+    //     const [singleSupplier] = await supplierModel.getSingleSupplier(
+    //       supplier_id,
+    //       hotel_code
+    //     );
+    //     if (!singleSupplier) {
+    //       return {
+    //         success: false,
+    //         code: this.StatusCode.HTTP_NOT_FOUND,
+    //         message: "Supplier not found with this ID",
+    //       };
+    //     }
+    //     // const check account
+    //     const accountModel = this.Model.accountModel(trx);
+    //     const checkAccount = await accountModel.getSingleAccount({
+    //       hotel_code,
+    //       id: acc_id,
+    //     });
+    //     if (!checkAccount.length) {
+    //       return {
+    //         success: false,
+    //         code: this.StatusCode.HTTP_NOT_FOUND,
+    //         message: "Account not found",
+    //       };
+    //     }
+    //     const { acc_type } = checkAccount[0];
+    //     // check invoice
+    //     if (receipt_type === "invoice") {
+    //       const checkPurchase = await pInvModel.getSinglePurchase(
+    //         inv_id as number,
+    //         hotel_code
+    //       );
+    //       if (!checkPurchase) {
+    //         return {
+    //           success: false,
+    //           code: this.StatusCode.HTTP_NOT_FOUND,
+    //           message: "Invoice not found with this user",
+    //         };
+    //       }
+    //       const { due, grand_total, purchase_no } = checkPurchase;
+    //       if (due == 0) {
+    //         return {
+    //           success: false,
+    //           code: this.StatusCode.HTTP_BAD_REQUEST,
+    //           message: "Already paid this invoice",
+    //         };
+    //       }
+    //       const remainingBalance = due - paid_amount;
+    //       await pInvModel.updatePurchase(
+    //         {
+    //           due: remainingBalance,
+    //         },
+    //         { id: inv_id as number }
+    //       );
+    //       const helper = new HelperFunction();
+    //       const hotelModel = this.Model.HotelModel(trx);
+    //       const heads = await hotelModel.getHotelAccConfig(hotel_code, [
+    //         "ACCOUNT_PAYABLE_HEAD_ID",
+    //       ]);
+    //       const payable_head = heads.find(
+    //         (h) => h.config === "ACCOUNT_PAYABLE_HEAD_ID"
+    //       );
+    //       if (!payable_head) {
+    //         throw new Error(
+    //           "ACCOUNT_PAYABLE_HEAD_ID not configured for this hotel"
+    //         );
+    //       }
+    //       const accountModel = this.Model.accountModel(trx);
+    //       const voucher_no1 = await helper.generateVoucherNo("JV", trx);
+    //       const created_by = req.hotel_admin.id;
+    //       const today = new Date().toISOString();
+    //       await accountModel.insertAccVoucher([
+    //         {
+    //           acc_head_id: payable_head.head_id,
+    //           created_by,
+    //           debit: paid_amount,
+    //           credit: 0,
+    //           description: `Payable decreasing for payment ${purchase_no}`,
+    //           voucher_date: today,
+    //           voucher_no: voucher_no1,
+    //           hotel_code,
+    //         },
+    //       ]);
+    //       if (paid_amount > 0) {
+    //         const [acc] = await accountModel.getSingleAccount({
+    //           hotel_code,
+    //           id: acc_id,
+    //         });
+    //         if (!acc) throw new Error("Invalid Account");
+    //         let voucher_type: "CCV" | "BCV" = "CCV";
+    //         if (acc.acc_type === "BANK") {
+    //           voucher_type = "BCV";
+    //         }
+    //         const voucher_no = await helper.generateVoucherNo(voucher_type, trx);
+    //         await accountModel.insertAccVoucher([
+    //           {
+    //             acc_head_id: acc.acc_head_id,
+    //             created_by,
+    //             debit: 0,
+    //             credit: paid_amount,
+    //             description: `Payment given for due balance of purchase ${purchase_no}`,
+    //             voucher_date: today,
+    //             voucher_no,
+    //             hotel_code,
+    //           },
+    //         ]);
+    //         // insert supplier payment
+    //         const [supplierPaymentID] = await supplierModel.insertSupplierPayment(
+    //           {
+    //             created_by: admin_id,
+    //             hotel_code: hotel_code,
+    //             debit: paid_amount,
+    //             credit: 0,
+    //             acc_id,
+    //             supplier_id,
+    //             purchase_id: inv_id as number,
+    //             voucher_no,
+    //             payment_date: new Date().toISOString(),
+    //           }
+    //         );
+    //       }
+    //     } else {
+    //       // overall payment step
+    //       const { data: allInvoiceByUser } =
+    //         await supplierModel.getAllSupplierInvoiceBySupId({
+    //           hotel_code,
+    //           sup_id: supplier_id,
+    //           due: true,
+    //         });
+    //       const unpaidInvoice: {
+    //         invoice_id: number;
+    //         grand_total: number;
+    //         due: number;
+    //       }[] = [];
+    //       for (let i = 0; i < allInvoiceByUser?.length; i++) {
+    //         if (Number(allInvoiceByUser[i].due) !== 0) {
+    //           unpaidInvoice.push({
+    //             invoice_id: allInvoiceByUser[i].id,
+    //             grand_total: allInvoiceByUser[i].grand_total,
+    //             due: allInvoiceByUser[i].due,
+    //           });
+    //         }
+    //       }
+    //       if (!unpaidInvoice.length) {
+    //         return {
+    //           success: false,
+    //           code: this.StatusCode.HTTP_NOT_FOUND,
+    //           message: "No due invoice found",
+    //         };
+    //       }
+    //       // total due amount
+    //       let remainingPaidAmount = paid_amount;
+    //       const paidingInvoice: {
+    //         invoice_id: number;
+    //         due: number;
+    //       }[] = [];
+    //       for (let i = 0; i < unpaidInvoice.length; i++) {
+    //         if (remainingPaidAmount > 0) {
+    //           if (paid_amount >= unpaidInvoice[i].due) {
+    //             remainingPaidAmount = paid_amount - unpaidInvoice[i].due;
+    //             paidingInvoice.push({
+    //               invoice_id: unpaidInvoice[i].invoice_id,
+    //               due: unpaidInvoice[i].due - unpaidInvoice[i].due,
+    //             });
+    //           } else {
+    //             remainingPaidAmount = paid_amount - unpaidInvoice[i].due;
+    //             paidingInvoice.push({
+    //               invoice_id: unpaidInvoice[i].invoice_id,
+    //               due: unpaidInvoice[i].due - paid_amount,
+    //             });
+    //           }
+    //         }
+    //       }
+    //       // =============== update invoice ==============//
+    //       Promise.all(
+    //         paidingInvoice.map(async (item) => {
+    //           await pInvModel.updatePurchase(
+    //             { due: item.due },
+    //             { id: item.invoice_id }
+    //           );
+    //         })
+    //       );
+    //       //___________________ ACCOUNTING PART ___________________//
+    //       const helper = new HelperFunction();
+    //       const hotelModel = this.Model.HotelModel(trx);
+    //       const heads = await hotelModel.getHotelAccConfig(hotel_code, [
+    //         "ACCOUNT_PAYABLE_HEAD_ID",
+    //       ]);
+    //       const payable_head = heads.find(
+    //         (h) => h.config === "ACCOUNT_PAYABLE_HEAD_ID"
+    //       );
+    //       if (!payable_head) {
+    //         throw new Error(
+    //           "ACCOUNT_PAYABLE_HEAD_ID not configured for this hotel"
+    //         );
+    //       }
+    //       const accountModel = this.Model.accountModel(trx);
+    //       const voucher_no1 = await helper.generateVoucherNo("JV", trx);
+    //       const created_by = req.hotel_admin.id;
+    //       const today = new Date().toISOString();
+    //       await accountModel.insertAccVoucher([
+    //         {
+    //           acc_head_id: payable_head.head_id,
+    //           created_by,
+    //           debit: paid_amount,
+    //           credit: 0,
+    //           description: `Payable decreasing for payment`,
+    //           voucher_date: today,
+    //           voucher_no: voucher_no1,
+    //           hotel_code,
+    //         },
+    //       ]);
+    //       if (paid_amount > 0) {
+    //         const [acc] = await accountModel.getSingleAccount({
+    //           hotel_code,
+    //           id: acc_id,
+    //         });
+    //         if (!acc) throw new Error("Invalid Account");
+    //         let voucher_type: "CCV" | "BCV" = "CCV";
+    //         if (acc.acc_type === "BANK") {
+    //           voucher_type = "BCV";
+    //         }
+    //         const voucher_no = await helper.generateVoucherNo(voucher_type, trx);
+    //         await accountModel.insertAccVoucher([
+    //           {
+    //             acc_head_id: acc.acc_head_id,
+    //             created_by,
+    //             debit: 0,
+    //             credit: paid_amount,
+    //             description: `Payment given for due balance of supplier ${singleSupplier.name}`,
+    //             voucher_date: today,
+    //             voucher_no,
+    //             hotel_code,
+    //           },
+    //         ]);
+    //         // insert supplier payment
+    //         const [supplierPaymentID] = await supplierModel.insertSupplierPayment(
+    //           {
+    //             created_by: admin_id,
+    //             hotel_code: hotel_code,
+    //             debit: paid_amount,
+    //             credit: 0,
+    //             acc_id,
+    //             supplier_id,
+    //             voucher_no,
+    //             payment_date: new Date().toISOString(),
+    //           }
+    //         );
+    //         const paymentAllocatinPayload = paidingInvoice.map((item) => ({
+    //           invoice_id: item.invoice_id,
+    //           supplier_payment_id: supplierPaymentID.id,
+    //           paid_amount: item.due,
+    //         }));
+    //         // supplier payment allocation
+    //         await supplierModel.insertSupplierPaymentAllocation(
+    //           paymentAllocatinPayload
+    //         );
+    //       }
+    //     }
+    //     return {
+    //       success: true,
+    //       code: this.StatusCode.HTTP_SUCCESSFUL,
+    //       message: this.ResMsg.HTTP_SUCCESSFUL,
+    //     };
+    //   });
+    // }
     supplierPayment(req) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
                 const { hotel_code, id: admin_id } = req.hotel_admin;
                 const { acc_id, supplier_id, paid_amount, receipt_type, inv_id, remarks, payment_date, } = req.body;
-                //   checking user
-                const model = this.Model.supplierModel(trx);
+                const supplierModel = this.Model.supplierModel(trx);
                 const pInvModel = this.Model.purchaseInventoryModel(trx);
-                const [singleSupplier] = yield model.getSingleSupplier(supplier_id, hotel_code);
+                const accountModel = this.Model.accountModel(trx);
+                const hotelModel = this.Model.HotelModel(trx);
+                const helper = new helperFunction_1.HelperFunction();
+                // ---------- validate supplier ----------
+                const [singleSupplier] = yield supplierModel.getSingleSupplier(supplier_id, hotel_code);
                 if (!singleSupplier) {
                     return {
                         success: false,
                         code: this.StatusCode.HTTP_NOT_FOUND,
-                        message: "Supplier not found with this ID",
+                        message: "Supplier not found",
                     };
                 }
-                // get supplier last balance
-                const lastBalance = yield model.getSupplierLastBalance({
-                    supplier_id,
-                    hotel_code,
-                });
-                // const check account
-                const accountModel = this.Model.accountModel(trx);
-                const checkAccount = yield accountModel.getSingleAccount({
+                // ---------- validate account ----------
+                const [account] = yield accountModel.getSingleAccount({
                     hotel_code,
                     id: acc_id,
                 });
-                if (!checkAccount.length) {
+                if (!account) {
                     return {
                         success: false,
                         code: this.StatusCode.HTTP_NOT_FOUND,
                         message: "Account not found",
                     };
                 }
-                const { acc_type } = checkAccount[0];
-                // check invoice
+                // ---------- get payable head ----------
+                const heads = yield hotelModel.getHotelAccConfig(hotel_code, [
+                    "ACCOUNT_PAYABLE_HEAD_ID",
+                ]);
+                const payable_head = heads.find((h) => h.config === "ACCOUNT_PAYABLE_HEAD_ID");
+                if (!payable_head)
+                    throw new Error("ACCOUNT_PAYABLE_HEAD_ID not configured for this hotel");
+                const created_by = admin_id;
+                const today = new Date().toISOString();
+                // ================= Helper functions =================
+                const insertPayableVoucher = (amount, description) => __awaiter(this, void 0, void 0, function* () {
+                    const voucher_no = yield helper.generateVoucherNo("JV", trx);
+                    yield accountModel.insertAccVoucher([
+                        {
+                            acc_head_id: payable_head.head_id,
+                            created_by,
+                            debit: amount,
+                            credit: 0,
+                            description,
+                            voucher_date: today,
+                            voucher_no,
+                            hotel_code,
+                        },
+                    ]);
+                    return voucher_no;
+                });
+                const insertPaymentVoucher = (amount, description) => __awaiter(this, void 0, void 0, function* () {
+                    let voucher_type = account.acc_type === "BANK" ? "BCV" : "CCV";
+                    const voucher_no = yield helper.generateVoucherNo(voucher_type, trx);
+                    yield accountModel.insertAccVoucher([
+                        {
+                            acc_head_id: account.acc_head_id,
+                            created_by,
+                            debit: 0,
+                            credit: amount,
+                            description,
+                            voucher_date: today,
+                            voucher_no,
+                            hotel_code,
+                        },
+                    ]);
+                    return voucher_no;
+                });
+                const insertSupplierPayment = (amount, supplier_id, acc_id, voucher_no, purchase_id) => __awaiter(this, void 0, void 0, function* () {
+                    const [payment] = yield supplierModel.insertSupplierPayment({
+                        created_by,
+                        hotel_code,
+                        debit: amount,
+                        credit: 0,
+                        acc_id,
+                        supplier_id,
+                        purchase_id,
+                        voucher_no,
+                        payment_date: payment_date || today,
+                        remarks,
+                    });
+                    return payment.id;
+                });
+                // ================== CASE 1: Invoice-wise payment ==================
                 if (receipt_type === "invoice") {
                     const checkPurchase = yield pInvModel.getSinglePurchase(inv_id, hotel_code);
                     if (!checkPurchase) {
                         return {
                             success: false,
                             code: this.StatusCode.HTTP_NOT_FOUND,
-                            message: "Invoice not found with this user",
+                            message: "Invoice not found",
                         };
                     }
-                    const { due, grand_total, voucher_no } = checkPurchase;
-                    if (due == 0) {
+                    const { due, purchase_no } = checkPurchase;
+                    if (due <= 0) {
                         return {
                             success: false,
                             code: this.StatusCode.HTTP_BAD_REQUEST,
-                            message: "Already paid this invoice",
+                            message: "Already paid",
                         };
                     }
                     const remainingBalance = due - paid_amount;
-                    yield pInvModel.updatePurchase({
-                        due: remainingBalance,
-                    }, { id: inv_id });
-                    // insert supplier payment
-                    yield model.insertSupplierPayment({
-                        created_by: admin_id,
-                        hotel_code: hotel_code,
-                        debit: paid_amount,
-                        credit: 0,
-                        acc_id,
-                        supplier_id,
-                        purchase_id: inv_id,
-                        voucher_no,
-                        payment_date,
-                    });
+                    yield pInvModel.updatePurchase({ due: remainingBalance }, { id: inv_id });
+                    yield insertPayableVoucher(paid_amount, `Payable decreased for invoice ${purchase_no}`);
+                    const voucher_no = yield insertPaymentVoucher(paid_amount, `Payment for purchase ${purchase_no}`);
+                    yield insertSupplierPayment(paid_amount, supplier_id, acc_id, voucher_no, inv_id);
                 }
+                // ================== CASE 2: Overall payment ==================
                 else {
-                    // overall payment step
-                    const { data: allInvoiceByUser } = yield model.getAllSupplierInvoiceBySupId({
+                    const { data: allInvoice } = yield supplierModel.getAllSupplierInvoiceBySupId({
                         hotel_code,
                         sup_id: supplier_id,
                         due: true,
                     });
-                    const unpaidInvoice = [];
-                    for (let i = 0; i < (allInvoiceByUser === null || allInvoiceByUser === void 0 ? void 0 : allInvoiceByUser.length); i++) {
-                        if (Number(allInvoiceByUser[i].due) !== 0) {
-                            unpaidInvoice.push({
-                                invoice_id: allInvoiceByUser[i].id,
-                                grand_total: allInvoiceByUser[i].grand_total,
-                                due: allInvoiceByUser[i].due,
-                            });
-                        }
-                    }
+                    console.log({ allInvoice });
+                    const unpaidInvoice = allInvoice.filter((inv) => Number(inv.due) > 0);
+                    console.log({ unpaidInvoice });
                     if (!unpaidInvoice.length) {
                         return {
                             success: false,
@@ -234,43 +550,33 @@ class SupplierService extends abstract_service_1.default {
                             message: "No due invoice found",
                         };
                     }
-                    // total due amount
-                    let remainingPaidAmount = paid_amount;
+                    let remainingPaid = paid_amount;
                     const paidingInvoice = [];
-                    for (let i = 0; i < unpaidInvoice.length; i++) {
-                        if (remainingPaidAmount > 0) {
-                            if (paid_amount >= unpaidInvoice[i].due) {
-                                remainingPaidAmount = paid_amount - unpaidInvoice[i].due;
-                                paidingInvoice.push({
-                                    invoice_id: unpaidInvoice[i].invoice_id,
-                                    due: unpaidInvoice[i].due - unpaidInvoice[i].due,
-                                });
-                            }
-                            else {
-                                remainingPaidAmount = paid_amount - unpaidInvoice[i].due;
-                                paidingInvoice.push({
-                                    invoice_id: unpaidInvoice[i].invoice_id,
-                                    due: unpaidInvoice[i].due - paid_amount,
-                                });
-                            }
-                        }
+                    for (const inv of unpaidInvoice) {
+                        if (remainingPaid <= 0)
+                            break;
+                        const payAmount = Math.min(inv.due, remainingPaid);
+                        remainingPaid -= payAmount;
+                        paidingInvoice.push({
+                            invoice_id: inv.id,
+                            paid_amount: payAmount,
+                            new_due: inv.due - payAmount,
+                        });
                     }
-                    // =============== update invoice ==============//
-                    Promise.all(paidingInvoice.map((item) => __awaiter(this, void 0, void 0, function* () {
-                        yield pInvModel.updatePurchase({ due: item.due }, { id: item.invoice_id });
-                    })));
-                    // insert supplier payment
-                    yield model.insertSupplierPayment({
-                        created_by: admin_id,
-                        hotel_code: hotel_code,
-                        debit: paid_amount,
-                        credit: 0,
-                        acc_id,
-                        supplier_id,
-                        purchase_id: inv_id,
-                        voucher_no: "sdfhkj",
-                        payment_date,
-                    });
+                    // update invoices
+                    for (const item of paidingInvoice) {
+                        yield pInvModel.updatePurchase({ due: item.new_due }, { id: item.invoice_id });
+                    }
+                    yield insertPayableVoucher(paid_amount, `Payable decreased for supplier ${singleSupplier.name}`);
+                    const voucher_no = yield insertPaymentVoucher(paid_amount, `Supplier payment to ${singleSupplier.name}`);
+                    const supplierPaymentID = yield insertSupplierPayment(paid_amount, supplier_id, acc_id, voucher_no);
+                    // payment allocation
+                    const allocationPayload = paidingInvoice.map((item) => ({
+                        invoice_id: item.invoice_id,
+                        supplier_payment_id: supplierPaymentID,
+                        paid_amount: item.paid_amount,
+                    }));
+                    yield supplierModel.insertSupplierPaymentAllocation(allocationPayload);
                 }
                 return {
                     success: true,
