@@ -3,11 +3,15 @@ import {
 	IUpdateRestaurantPayload,
 } from "../../appAdmin/utlis/interfaces/restaurant.hotel.interface";
 import {
-	IGetIngredients,
-	IIngredientPayload,
-	IUpdateIngredientPayload,
-} from "../../appRestaurantAdmin/utils/interface/ingredient.interface";
-import { IMeasurementPayload } from "../../appRestaurantAdmin/utils/interface/measurement.interface";
+	IFoodPayload,
+	IGetFoods,
+} from "../../appRestaurantAdmin/utils/interface/food.interface";
+import {
+	IGetUnit,
+	IUnitPayload,
+	IUpdateUnitPayload,
+} from "../../appRestaurantAdmin/utils/interface/unit.interface";
+
 import {
 	IGetRestaurantMenuCategories,
 	IRestaurantMenuCategoryPayload,
@@ -301,22 +305,22 @@ class RestaurantModel extends Schema {
 			.where("mc.id", where.id);
 	}
 
-	// =================== Measurement  ======================//
-	public async createMeasurement(payload: IMeasurementPayload) {
-		return await this.db("measurements")
+	// =================== Unit  ======================//
+	public async createUnit(payload: IUnitPayload) {
+		return await this.db("units")
 			.withSchema(this.RESTAURANT_SCHEMA)
 			.insert(payload, "id");
 	}
 
-	public async getMeasurements(query: {
+	public async getUnits(query: {
 		hotel_code: number;
 		restaurant_id: number;
 		limit?: number;
 		skip?: number;
 		id?: number;
 		name?: string;
-	}): Promise<{ data: IGetRestaurantTables[]; total: number }> {
-		const baseQuery = this.db("measurements as rt")
+	}): Promise<{ data: IGetUnit[]; total: number }> {
+		const baseQuery = this.db("units as rt")
 			.withSchema(this.RESTAURANT_SCHEMA)
 			.where("rt.hotel_code", query.hotel_code)
 			.andWhere("rt.restaurant_id", query.restaurant_id)
@@ -352,104 +356,113 @@ class RestaurantModel extends Schema {
 		return { total, data };
 	}
 
-	public async updateMeasurement({
+	public async updateUnit({
 		id,
 		payload,
 	}: {
 		id: number;
-		payload: IUpdateRestaurantTablePayload;
+		payload: IUpdateUnitPayload;
 	}) {
-		return await this.db("measurements as rt")
+		return await this.db("units as rt")
 			.withSchema(this.RESTAURANT_SCHEMA)
 			.update(payload, "id")
 			.where("rt.id", id)
 			.andWhere("rt.is_deleted", false);
 	}
 
-	public async deleteMeasurement(where: { id: number }) {
-		return await this.db("measurements as rt")
+	public async deleteUnit(where: { id: number }) {
+		return await this.db("units as rt")
 			.withSchema(this.RESTAURANT_SCHEMA)
 			.update({ is_deleted: true })
 			.where("rt.id", where.id)
 			.andWhere("rt.is_deleted", false);
 	}
 
-	// =================== Ingredient  ======================//
-	public async createIngredient(payload: IIngredientPayload) {
-		return await this.db("ingredients")
+	// =================== Food  ======================//
+	public async createFood(payload: IFoodPayload) {
+		console.log({ payload });
+		return await this.db("foods")
 			.withSchema(this.RESTAURANT_SCHEMA)
 			.insert(payload, "id");
 	}
 
-	public async getIngredients(query: {
+	public async getFoods(query: {
 		hotel_code: number;
 		restaurant_id: number;
 		limit?: number;
 		skip?: number;
 		id?: number;
 		name?: string;
-	}): Promise<{ data: IGetIngredients[]; total: number }> {
-		const baseQuery = this.db("ingredients as i")
+		menu_category_id?: number;
+	}): Promise<{ data: IGetFoods[]; total: number }> {
+		const baseQuery = this.db("foods as f")
 			.withSchema(this.RESTAURANT_SCHEMA)
-			.leftJoin("measurements as m", "m.id", "i.measurement_id")
-			.leftJoin("user_admin as ua", "ua.id", "i.created_by")
-			.where("i.hotel_code", query.hotel_code)
-			.andWhere("i.restaurant_id", query.restaurant_id)
-			.andWhere("i.is_deleted", false);
+			.leftJoin("user_admin as ua", "ua.id", "f.created_by")
+			.leftJoin("menu_categories as mc", "mc.id", "f.menu_category_id")
+			.leftJoin("units as u", "u.id", "f.unit_id")
+			.where("f.hotel_code", query.hotel_code)
+			.andWhere("f.restaurant_id", query.restaurant_id)
+			.andWhere("f.is_deleted", false);
 
 		if (query.id) {
-			baseQuery.andWhere("i.id", query.id);
+			baseQuery.andWhere("f.id", query.id);
 		}
 		if (query.name) {
-			baseQuery.andWhereILike("i.name", `%${query.name}%`);
+			baseQuery.andWhereILike("f.name", `%${query.name}%`);
+		}
+		if (query.menu_category_id) {
+			baseQuery.andWhere("f.menu_category_id", query.menu_category_id);
 		}
 
 		const data = await baseQuery
 			.clone()
 			.select(
-				"i.id",
-				"i.hotel_code",
-				"i.restaurant_id",
-				"i.name",
-				"m.name as measurement_name",
-				"m.short_code as measurement_short_code",
+				"f.id",
+				"f.hotel_code",
+				"f.restaurant_id",
+				"f.photo",
+				"f.name",
+				"mc.name as menu_category_name",
 				"ua.id as created_by_id",
+				"u.name as unit_name",
+				"u.short_code as unit_short_code",
 				"ua.name as created_by_name",
-				"i.is_deleted"
+				"f.status",
+				"f.retail_price",
+				"f.is_deleted"
 			)
-			.orderBy("i.id", "desc")
+			.orderBy("f.id", "desc")
 			.limit(query.limit ?? 100)
 			.offset(query.skip ?? 0);
 
 		const countResult = await baseQuery
 			.clone()
-			.count<{ total: string }[]>("i.id as total");
+			.count<{ total: string }[]>("f.id as total");
 
 		const total = Number(countResult[0].total);
 
 		return { total, data };
 	}
 
-	public async updateIngredient({
-		id,
+	public async updateFood({
+		where: { id },
 		payload,
 	}: {
-		id: number;
-		payload: IUpdateIngredientPayload;
+		where: { id: number };
+		payload: Partial<IFoodPayload>;
 	}) {
-		return await this.db("ingredients as i")
+		return await this.db("foods as f")
 			.withSchema(this.RESTAURANT_SCHEMA)
 			.update(payload, "id")
-			.where("i.id", id)
-			.andWhere("i.is_deleted", false);
+			.where("f.id", id)
+			.andWhere("f.is_deleted", false);
 	}
 
-	public async deleteIngredient(where: { id: number }) {
-		return await this.db("ingredients as i")
+	public async deleteFood(where: { id: number }) {
+		return await this.db("foods")
 			.withSchema(this.RESTAURANT_SCHEMA)
 			.update({ is_deleted: true })
-			.where("i.id", where.id)
-			.andWhere("i.is_deleted", false);
+			.where("id", where.id);
 	}
 }
 export default RestaurantModel;

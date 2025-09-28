@@ -1,23 +1,23 @@
 import { Request } from "express";
 import AbstractServices from "../../abstarcts/abstract.service";
 import {
-	IMeasurementRequest,
-	IUpdateMeasurementRequest,
-} from "../utils/interface/measurement.interface";
+	IUnitRequest,
+	IUpdateUnitRequest,
+} from "../utils/interface/unit.interface";
 
-class RestaurantMeasurementService extends AbstractServices {
+class RestaurantUnitService extends AbstractServices {
 	constructor() {
 		super();
 	}
 
-	public async createMeasurement(req: Request) {
+	public async createUnit(req: Request) {
 		return await this.db.transaction(async (trx) => {
 			const { id, restaurant_id, hotel_code } = req.restaurant_admin;
-			const body = req.body as IMeasurementRequest;
+			const body = req.body as IUnitRequest;
 
 			const restaurantModel = this.Model.restaurantModel(trx);
 
-			await restaurantModel.createMeasurement({
+			await restaurantModel.createUnit({
 				...body,
 				hotel_code,
 				restaurant_id,
@@ -27,17 +27,17 @@ class RestaurantMeasurementService extends AbstractServices {
 			return {
 				success: true,
 				code: this.StatusCode.HTTP_SUCCESSFUL,
-				message: "Measurement created successfully.",
+				message: "Unit created successfully.",
 			};
 		});
 	}
 
-	public async getMeasurements(req: Request) {
+	public async getUnits(req: Request) {
 		const { restaurant_id, hotel_code } = req.restaurant_admin;
 
 		const { limit, skip, name } = req.query;
 
-		const data = await this.Model.restaurantModel().getMeasurements({
+		const data = await this.Model.restaurantModel().getUnits({
 			hotel_code,
 			restaurant_id,
 			limit: Number(limit),
@@ -52,89 +52,73 @@ class RestaurantMeasurementService extends AbstractServices {
 		};
 	}
 
-	public async updateMeasurement(req: Request) {
+	public async updateUnit(req: Request) {
 		return await this.db.transaction(async (trx) => {
 			const { id } = req.params;
 			const { restaurant_id, hotel_code } = req.restaurant_admin;
-			const body = req.body as IUpdateMeasurementRequest;
+			const body = req.body as IUpdateUnitRequest;
 
 			const restaurantModel = this.Model.restaurantModel(trx);
 
-			const isMeasurementExists = await restaurantModel.getMeasurements({
+			const isUnitExists = await restaurantModel.getUnits({
 				hotel_code,
 				restaurant_id,
 				id: parseInt(id),
 			});
 
-			if (isMeasurementExists.data.length === 0) {
+			if (isUnitExists.data.length === 0) {
 				return {
 					success: false,
 					code: this.StatusCode.HTTP_NOT_FOUND,
-					message: "Measurement not found.",
+					message: "Unit not found.",
 				};
 			}
 
-			const newMeasurement = await restaurantModel.updateMeasurement({
+			await restaurantModel.updateUnit({
 				id: parseInt(id),
 				payload: body,
 			});
 
-			if (!newMeasurement) {
-				return {
-					success: false,
-					code: this.StatusCode.HTTP_NOT_FOUND,
-					message: "Failed to update measurement.",
-				};
-			}
-
 			return {
 				success: true,
 				code: this.StatusCode.HTTP_SUCCESSFUL,
-				message: "Measurement updated successfully.",
+				message: "Unit updated successfully.",
 			};
 		});
 	}
 
-	public async deleteMeasurement(req: Request) {
+	public async deleteUnit(req: Request) {
 		return await this.db.transaction(async (trx) => {
 			const { id } = req.params;
 			const { restaurant_id, hotel_code } = req.restaurant_admin;
 
 			const restaurantModel = this.Model.restaurantModel(trx);
 
-			const isMeasurementExists = await restaurantModel.getMeasurements({
+			const isUnitExists = await restaurantModel.getUnits({
 				hotel_code,
 				restaurant_id,
 				id: parseInt(id),
 			});
 
-			if (isMeasurementExists.data.length === 0) {
+			if (isUnitExists.data.length === 0) {
 				return {
 					success: false,
 					code: this.StatusCode.HTTP_NOT_FOUND,
-					message: "Measurement not found.",
+					message: "Unit not found.",
 				};
 			}
 
-			const newMeasurement = await restaurantModel.deleteMeasurement({
+			await restaurantModel.deleteUnit({
 				id: parseInt(id),
 			});
-
-			if (!newMeasurement) {
-				return {
-					success: false,
-					code: this.StatusCode.HTTP_NOT_FOUND,
-					message: "Failed to delete measurement.",
-				};
-			}
 
 			return {
 				success: true,
 				code: this.StatusCode.HTTP_SUCCESSFUL,
-				message: "Measurement deleted successfully.",
+				message: "Unit deleted successfully.",
 			};
 		});
 	}
 }
 
-export default RestaurantMeasurementService;
+export default RestaurantUnitService;

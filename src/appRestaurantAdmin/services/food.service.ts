@@ -1,0 +1,199 @@
+import { Request } from "express";
+import AbstractServices from "../../abstarcts/abstract.service";
+import { IFoodRequest } from "../utils/interface/food.interface";
+
+class RestaurantFoodService extends AbstractServices {
+	constructor() {
+		super();
+	}
+
+	public async createFood(req: Request) {
+		return await this.db.transaction(async (trx) => {
+			const { id, restaurant_id, hotel_code } = req.restaurant_admin;
+
+			const food = (req.body as any).food as IFoodRequest;
+
+			const files = (req.files as Express.Multer.File[]) || [];
+			if (Array.isArray(files)) {
+				for (const file of files) {
+					food.photo = file.filename;
+				}
+			}
+
+			const restaurantModel = this.Model.restaurantModel(trx);
+
+			const isMenuCategoryExists =
+				await restaurantModel.getMenuCategories({
+					hotel_code,
+					restaurant_id,
+					id: food.menu_category_id,
+				});
+
+			if (isMenuCategoryExists.data.length === 0) {
+				return {
+					success: false,
+					code: this.StatusCode.HTTP_CONFLICT,
+					message: "Menu Category not found.",
+				};
+			}
+
+			const isUnitExists = await restaurantModel.getUnits({
+				hotel_code,
+				restaurant_id,
+				id: food.unit_id,
+			});
+
+			if (isUnitExists.data.length === 0) {
+				return {
+					success: false,
+					code: this.StatusCode.HTTP_CONFLICT,
+					message: "Unit not found.",
+				};
+			}
+
+			await restaurantModel.createFood({
+				...food,
+				hotel_code,
+				restaurant_id,
+				created_by: id,
+			});
+
+			return {
+				success: true,
+				code: this.StatusCode.HTTP_SUCCESSFUL,
+				message: "Food created successfully.",
+			};
+		});
+	}
+
+	public async getFoods(req: Request) {
+		const { restaurant_id, hotel_code } = req.restaurant_admin;
+
+		const { limit, skip, name, category_id } = req.query;
+
+		const data = await this.Model.restaurantModel().getFoods({
+			hotel_code,
+			restaurant_id,
+			limit: Number(limit),
+			skip: Number(skip),
+			name: name as string,
+			menu_category_id: Number(category_id),
+		});
+
+		return {
+			success: true,
+			code: this.StatusCode.HTTP_OK,
+			...data,
+		};
+	}
+
+	public async updateFood(req: Request) {
+		return await this.db.transaction(async (trx) => {
+			const { id } = req.params;
+			const { restaurant_id, hotel_code } = req.restaurant_admin;
+			const body = (req.body as any).food as Partial<IFoodRequest>;
+
+			const files = (req.files as Express.Multer.File[]) || [];
+			if (Array.isArray(files)) {
+				for (const file of files) {
+					body.photo = file.filename;
+				}
+			}
+
+			const restaurantModel = this.Model.restaurantModel(trx);
+
+			const isFoodExists = await restaurantModel.getFoods({
+				id: parseInt(id),
+				hotel_code,
+				restaurant_id,
+			});
+
+			if (isFoodExists.data.length === 0) {
+				return {
+					success: false,
+					code: this.StatusCode.HTTP_CONFLICT,
+					message: "Food not found.",
+				};
+			}
+
+			if (body.menu_category_id) {
+				const isMenuCategoryExists =
+					await restaurantModel.getMenuCategories({
+						hotel_code,
+						restaurant_id,
+						id: body.menu_category_id,
+					});
+
+				if (isMenuCategoryExists.data.length === 0) {
+					return {
+						success: false,
+						code: this.StatusCode.HTTP_CONFLICT,
+						message: "Menu Category not found.",
+					};
+				}
+			}
+
+			if (body.unit_id) {
+				const isUnitExists = await restaurantModel.getUnits({
+					hotel_code,
+					restaurant_id,
+					id: body.unit_id,
+				});
+
+				if (isUnitExists.data.length === 0) {
+					return {
+						success: false,
+						code: this.StatusCode.HTTP_CONFLICT,
+						message: "Unit not found.",
+					};
+				}
+			}
+
+			await restaurantModel.updateFood({
+				where: { id: parseInt(id) },
+				payload: body,
+			});
+
+			return {
+				success: true,
+				code: this.StatusCode.HTTP_SUCCESSFUL,
+				message: "Food updated successfully.",
+			};
+		});
+	}
+
+	public async deleteFood(req: Request) {
+		return await this.db.transaction(async (trx) => {
+			const { id } = req.params;
+			const { restaurant_id, hotel_code } = req.restaurant_admin;
+
+			const restaurantModel = this.Model.restaurantModel(trx);
+
+			const isFoodExists = await restaurantModel.getFoods({
+				id: parseInt(id),
+				hotel_code,
+				restaurant_id,
+			});
+
+			if (isFoodExists.data.length === 0) {
+				return {
+					success: false,
+					code: this.StatusCode.HTTP_CONFLICT,
+					message: "Food not found.",
+				};
+			}
+
+			await restaurantModel.deleteFood({
+				id: Number(id),
+			});
+
+			return {
+				success: true,
+				code: this.StatusCode.HTTP_SUCCESSFUL,
+				message: "Food deleted successfully.",
+			};
+		});
+	}
+}
+
+export default RestaurantFoodService;

@@ -192,18 +192,18 @@ class RestaurantModel extends schema_1.default {
                 .where("mc.id", where.id);
         });
     }
-    // =================== Measurement  ======================//
-    createMeasurement(payload) {
+    // =================== Unit  ======================//
+    createUnit(payload) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("measurements")
+            return yield this.db("units")
                 .withSchema(this.RESTAURANT_SCHEMA)
                 .insert(payload, "id");
         });
     }
-    getMeasurements(query) {
+    getUnits(query) {
         var _a, _b;
         return __awaiter(this, void 0, void 0, function* () {
-            const baseQuery = this.db("measurements as rt")
+            const baseQuery = this.db("units as rt")
                 .withSchema(this.RESTAURANT_SCHEMA)
                 .where("rt.hotel_code", query.hotel_code)
                 .andWhere("rt.restaurant_id", query.restaurant_id)
@@ -227,77 +227,81 @@ class RestaurantModel extends schema_1.default {
             return { total, data };
         });
     }
-    updateMeasurement({ id, payload, }) {
+    updateUnit({ id, payload, }) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("measurements as rt")
+            return yield this.db("units as rt")
                 .withSchema(this.RESTAURANT_SCHEMA)
                 .update(payload, "id")
                 .where("rt.id", id)
                 .andWhere("rt.is_deleted", false);
         });
     }
-    deleteMeasurement(where) {
+    deleteUnit(where) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("measurements as rt")
+            return yield this.db("units as rt")
                 .withSchema(this.RESTAURANT_SCHEMA)
                 .update({ is_deleted: true })
                 .where("rt.id", where.id)
                 .andWhere("rt.is_deleted", false);
         });
     }
-    // =================== Ingredient  ======================//
-    createIngredient(payload) {
+    // =================== Food  ======================//
+    createFood(payload) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("ingredients")
+            console.log({ payload });
+            return yield this.db("foods")
                 .withSchema(this.RESTAURANT_SCHEMA)
                 .insert(payload, "id");
         });
     }
-    getIngredients(query) {
+    getFoods(query) {
         var _a, _b;
         return __awaiter(this, void 0, void 0, function* () {
-            const baseQuery = this.db("ingredients as i")
+            const baseQuery = this.db("foods as f")
                 .withSchema(this.RESTAURANT_SCHEMA)
-                .leftJoin("measurements as m", "m.id", "i.measurement_id")
-                .leftJoin("user_admin as ua", "ua.id", "i.created_by")
-                .where("i.hotel_code", query.hotel_code)
-                .andWhere("i.restaurant_id", query.restaurant_id)
-                .andWhere("i.is_deleted", false);
+                .leftJoin("user_admin as ua", "ua.id", "f.created_by")
+                .leftJoin("menu_categories as mc", "mc.id", "f.menu_category_id")
+                .leftJoin("units as u", "u.id", "f.unit_id")
+                .where("f.hotel_code", query.hotel_code)
+                .andWhere("f.restaurant_id", query.restaurant_id)
+                .andWhere("f.is_deleted", false);
             if (query.id) {
-                baseQuery.andWhere("i.id", query.id);
+                baseQuery.andWhere("f.id", query.id);
             }
             if (query.name) {
-                baseQuery.andWhereILike("i.name", `%${query.name}%`);
+                baseQuery.andWhereILike("f.name", `%${query.name}%`);
+            }
+            if (query.menu_category_id) {
+                baseQuery.andWhere("f.menu_category_id", query.menu_category_id);
             }
             const data = yield baseQuery
                 .clone()
-                .select("i.id", "i.hotel_code", "i.restaurant_id", "i.name", "m.name as measurement_name", "m.short_code as measurement_short_code", "ua.id as created_by_id", "ua.name as created_by_name", "i.is_deleted")
-                .orderBy("i.id", "desc")
+                .select("f.id", "f.hotel_code", "f.restaurant_id", "f.photo", "f.name", "mc.name as menu_category_name", "ua.id as created_by_id", "u.name as unit_name", "u.short_code as unit_short_code", "ua.name as created_by_name", "f.status", "f.retail_price", "f.is_deleted")
+                .orderBy("f.id", "desc")
                 .limit((_a = query.limit) !== null && _a !== void 0 ? _a : 100)
                 .offset((_b = query.skip) !== null && _b !== void 0 ? _b : 0);
             const countResult = yield baseQuery
                 .clone()
-                .count("i.id as total");
+                .count("f.id as total");
             const total = Number(countResult[0].total);
             return { total, data };
         });
     }
-    updateIngredient({ id, payload, }) {
+    updateFood({ where: { id }, payload, }) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("ingredients as i")
+            return yield this.db("foods as f")
                 .withSchema(this.RESTAURANT_SCHEMA)
                 .update(payload, "id")
-                .where("i.id", id)
-                .andWhere("i.is_deleted", false);
+                .where("f.id", id)
+                .andWhere("f.is_deleted", false);
         });
     }
-    deleteIngredient(where) {
+    deleteFood(where) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("ingredients as i")
+            return yield this.db("foods")
                 .withSchema(this.RESTAURANT_SCHEMA)
                 .update({ is_deleted: true })
-                .where("i.id", where.id)
-                .andWhere("i.is_deleted", false);
+                .where("id", where.id);
         });
     }
 }

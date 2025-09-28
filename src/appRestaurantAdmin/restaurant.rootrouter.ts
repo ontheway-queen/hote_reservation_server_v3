@@ -1,9 +1,9 @@
 import { Router } from "express";
 import AuthChecker from "../common/middleware/authChecker/authChecker";
-import RestaurantIngredientRouter from "./routers/ingredient.router";
-import RestaurantMeasurementRouter from "./routers/measurement.router";
+import RestaurantFoodRouter from "./routers/food.router";
 import RestaurantMenuCategoryRouter from "./routers/menuCategory.router";
 import RestaurantTableRouter from "./routers/restaurantTable.router";
+import RestaurantUnitRouter from "./routers/unit.router";
 
 export class RestaurantRootRouter {
 	public router = Router();
@@ -27,15 +27,15 @@ export class RestaurantRootRouter {
 		);
 
 		this.router.use(
-			"/measurement",
+			"/unit",
 			this.authChecker.hotelRestaurantAuthChecker,
-			new RestaurantMeasurementRouter().router
+			new RestaurantUnitRouter().router
 		);
 
 		this.router.use(
-			"/ingredient",
+			"/food",
 			this.authChecker.hotelRestaurantAuthChecker,
-			new RestaurantIngredientRouter().router
+			new RestaurantFoodRouter().router
 		);
 	}
 }
