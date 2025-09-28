@@ -2,6 +2,11 @@ import {
 	IRestaurantPayload,
 	IUpdateRestaurantPayload,
 } from "../../appAdmin/utlis/interfaces/restaurant.hotel.interface";
+import {
+	IGetIngredients,
+	IIngredientPayload,
+	IUpdateIngredientPayload,
+} from "../../appRestaurantAdmin/utils/interface/ingredient.interface";
 import { IMeasurementPayload } from "../../appRestaurantAdmin/utils/interface/measurement.interface";
 import {
 	IGetRestaurantMenuCategories,
@@ -367,6 +372,84 @@ class RestaurantModel extends Schema {
 			.update({ is_deleted: true })
 			.where("rt.id", where.id)
 			.andWhere("rt.is_deleted", false);
+	}
+
+	// =================== Ingredient  ======================//
+	public async createIngredient(payload: IIngredientPayload) {
+		return await this.db("ingredients")
+			.withSchema(this.RESTAURANT_SCHEMA)
+			.insert(payload, "id");
+	}
+
+	public async getIngredients(query: {
+		hotel_code: number;
+		restaurant_id: number;
+		limit?: number;
+		skip?: number;
+		id?: number;
+		name?: string;
+	}): Promise<{ data: IGetIngredients[]; total: number }> {
+		const baseQuery = this.db("ingredients as i")
+			.withSchema(this.RESTAURANT_SCHEMA)
+			.leftJoin("measurements as m", "m.id", "i.measurement_id")
+			.leftJoin("user_admin as ua", "ua.id", "i.created_by")
+			.where("i.hotel_code", query.hotel_code)
+			.andWhere("i.restaurant_id", query.restaurant_id)
+			.andWhere("i.is_deleted", false);
+
+		if (query.id) {
+			baseQuery.andWhere("i.id", query.id);
+		}
+		if (query.name) {
+			baseQuery.andWhereILike("i.name", `%${query.name}%`);
+		}
+
+		const data = await baseQuery
+			.clone()
+			.select(
+				"i.id",
+				"i.hotel_code",
+				"i.restaurant_id",
+				"i.name",
+				"m.name as measurement_name",
+				"m.short_code as measurement_short_code",
+				"ua.id as created_by_id",
+				"ua.name as created_by_name",
+				"i.is_deleted"
+			)
+			.orderBy("i.id", "desc")
+			.limit(query.limit ?? 100)
+			.offset(query.skip ?? 0);
+
+		const countResult = await baseQuery
+			.clone()
+			.count<{ total: string }[]>("i.id as total");
+
+		const total = Number(countResult[0].total);
+
+		return { total, data };
+	}
+
+	public async updateIngredient({
+		id,
+		payload,
+	}: {
+		id: number;
+		payload: IUpdateIngredientPayload;
+	}) {
+		return await this.db("ingredients as i")
+			.withSchema(this.RESTAURANT_SCHEMA)
+			.update(payload, "id")
+			.where("i.id", id)
+			.andWhere("i.is_deleted", false);
+	}
+
+	public async deleteIngredient(where: { id: number }) {
+		return await this.db("ingredients as i")
+			.withSchema(this.RESTAURANT_SCHEMA)
+			.update({ is_deleted: true })
+			.where("i.id", where.id)
+			.andWhere("i.is_deleted", false);
 	}
 }
 export default RestaurantModel;

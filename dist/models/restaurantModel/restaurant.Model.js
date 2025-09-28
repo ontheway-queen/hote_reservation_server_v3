@@ -245,6 +245,61 @@ class RestaurantModel extends schema_1.default {
                 .andWhere("rt.is_deleted", false);
         });
     }
+    // =================== Ingredient  ======================//
+    createIngredient(payload) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("ingredients")
+                .withSchema(this.RESTAURANT_SCHEMA)
+                .insert(payload, "id");
+        });
+    }
+    getIngredients(query) {
+        var _a, _b;
+        return __awaiter(this, void 0, void 0, function* () {
+            const baseQuery = this.db("ingredients as i")
+                .withSchema(this.RESTAURANT_SCHEMA)
+                .leftJoin("measurements as m", "m.id", "i.measurement_id")
+                .leftJoin("user_admin as ua", "ua.id", "i.created_by")
+                .where("i.hotel_code", query.hotel_code)
+                .andWhere("i.restaurant_id", query.restaurant_id)
+                .andWhere("i.is_deleted", false);
+            if (query.id) {
+                baseQuery.andWhere("i.id", query.id);
+            }
+            if (query.name) {
+                baseQuery.andWhereILike("i.name", `%${query.name}%`);
+            }
+            const data = yield baseQuery
+                .clone()
+                .select("i.id", "i.hotel_code", "i.restaurant_id", "i.name", "m.name as measurement_name", "m.short_code as measurement_short_code", "ua.id as created_by_id", "ua.name as created_by_name", "i.is_deleted")
+                .orderBy("i.id", "desc")
+                .limit((_a = query.limit) !== null && _a !== void 0 ? _a : 100)
+                .offset((_b = query.skip) !== null && _b !== void 0 ? _b : 0);
+            const countResult = yield baseQuery
+                .clone()
+                .count("i.id as total");
+            const total = Number(countResult[0].total);
+            return { total, data };
+        });
+    }
+    updateIngredient({ id, payload, }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("ingredients as i")
+                .withSchema(this.RESTAURANT_SCHEMA)
+                .update(payload, "id")
+                .where("i.id", id)
+                .andWhere("i.is_deleted", false);
+        });
+    }
+    deleteIngredient(where) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("ingredients as i")
+                .withSchema(this.RESTAURANT_SCHEMA)
+                .update({ is_deleted: true })
+                .where("i.id", where.id)
+                .andWhere("i.is_deleted", false);
+        });
+    }
 }
 exports.default = RestaurantModel;
 //# sourceMappingURL=restaurant.Model.js.map
