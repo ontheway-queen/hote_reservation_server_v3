@@ -35,7 +35,7 @@ class SupplierModel extends schema_1.default {
             }
             const data = yield dtbs
                 .withSchema(this.HOTEL_INVENTORY_SCHEMA)
-                .select("s.id", "s.name", "s.phone", "s.status", "s.is_deleted", this.db.raw(`COALESCE((SELECT SUM(sp.credit) - SUM(sp.debit) FROM ${this.HOTEL_INVENTORY_SCHEMA}.supplier_payment AS sp WHERE sp.supplier_id = s.id), 0) as last_balance`))
+                .select("s.id", "s.name", "s.phone", "s.status", "s.is_deleted", this.db.raw(`COALESCE((SELECT SUM(st.credit) - SUM(st.debit) FROM ${this.HOTEL_INVENTORY_SCHEMA}.supplier_transaction AS st WHERE st.supplier_id = s.id), 0) as last_balance`))
                 .where("s.hotel_code", hotel_code)
                 .andWhere(function () {
                 if (key) {
@@ -186,6 +186,23 @@ class SupplierModel extends schema_1.default {
                 .withSchema(this.HOTEL_INVENTORY_SCHEMA)
                 .where({ id, hotel_code })
                 .update(payload);
+        });
+    }
+    insertSupplierTransaction(payload) {
+        return __awaiter(this, void 0, void 0, function* () {
+            console.log({ payload });
+            return yield this.db("supplier_transaction")
+                .withSchema(this.HOTEL_INVENTORY_SCHEMA)
+                .insert(payload, "id");
+        });
+    }
+    getLastTransactionByHotel(hotel_code) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return this.db("supplier_transaction")
+                .withSchema(this.HOTEL_INVENTORY_SCHEMA)
+                .where({ hotel_code })
+                .orderBy("id", "desc")
+                .first();
         });
     }
     insertSupplierPayment(payload) {

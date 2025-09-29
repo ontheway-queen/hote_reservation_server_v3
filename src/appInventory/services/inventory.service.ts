@@ -14,14 +14,13 @@ class InventoryService extends AbstractServices {
     const { hotel_code } = req.hotel_admin;
     const { limit, skip, key } = req.query;
 
-    const model = this.Model.inventoryModel();
-
-    const { data, total } = await model.getInventoryDetails({
-      key: key as string,
-      limit: Number(limit),
-      skip: Number(skip),
-      hotel_code,
-    });
+    const { data, total } =
+      await this.Model.inventoryModel().getInventoryDetails({
+        key: key as string,
+        limit: Number(limit),
+        skip: Number(skip),
+        hotel_code,
+      });
 
     return {
       success: true,

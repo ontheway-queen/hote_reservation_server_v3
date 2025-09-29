@@ -12,6 +12,7 @@ export interface ICreateInvPurchaseBody {
   grand_total: number;
   paid_amount: number;
   due: number;
+  trx_id: number;
 }
 
 export interface ICreateInvPurchasePayload {

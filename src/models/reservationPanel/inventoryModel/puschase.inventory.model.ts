@@ -253,31 +253,5 @@ class PurchaseInventoryModel extends Schema {
       });
     return { data };
   }
-
-  // ===================== purchase invoice ================//
-
-  //   insert purchase sub invoice
-  public async insertPurchaseSubInvoice(payload: {
-    full_paid: number;
-    inv_id: number;
-  }) {
-    return await this.db("purchase_sub_invoice")
-      .withSchema(this.HOTEL_INVENTORY_SCHEMA)
-      .insert(payload);
-  }
-
-  //   insert purchase sub invoice item
-  public async inserturchaseSubInvoicItem(
-    payload: {
-      pur_sub_inv_id: number;
-      name: string;
-      total_price: number;
-      quantity: number;
-    }[]
-  ) {
-    return await this.db("pur_sub_invoice_item")
-      .withSchema(this.HOTEL_INVENTORY_SCHEMA)
-      .insert(payload);
-  }
 }
 export default PurchaseInventoryModel;

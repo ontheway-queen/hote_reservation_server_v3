@@ -14,6 +14,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const abstract_service_1 = __importDefault(require("../../abstarcts/abstract.service"));
 const helperFunction_1 = require("../utlis/library/helperFunction");
+const helperLib_1 = __importDefault(require("../utlis/library/helperLib"));
 class SupplierService extends abstract_service_1.default {
     constructor() {
         super();
@@ -494,6 +495,15 @@ class SupplierService extends abstract_service_1.default {
                     ]);
                     return voucher_no;
                 });
+                const trx_no1 = yield new helperLib_1.default(trx).generateSupplierTransactionNo(hotel_code);
+                const [st] = yield supplierModel.insertSupplierTransaction({
+                    hotel_code,
+                    supplier_id,
+                    transaction_no: trx_no1,
+                    credit: paid_amount,
+                    debit: 0,
+                    remarks: `For supplier payment. Payment Type ${receipt_type}`,
+                });
                 const insertSupplierPayment = (amount, supplier_id, acc_id, voucher_no, purchase_id) => __awaiter(this, void 0, void 0, function* () {
                     const [payment] = yield supplierModel.insertSupplierPayment({
                         created_by,
@@ -506,6 +516,7 @@ class SupplierService extends abstract_service_1.default {
                         voucher_no,
                         payment_date: payment_date || today,
                         remarks,
+                        trx_id: st.id,
                     });
                     return payment.id;
                 });
@@ -540,9 +551,7 @@ class SupplierService extends abstract_service_1.default {
                         sup_id: supplier_id,
                         due: true,
                     });
-                    console.log({ allInvoice });
                     const unpaidInvoice = allInvoice.filter((inv) => Number(inv.due) > 0);
-                    console.log({ unpaidInvoice });
                     if (!unpaidInvoice.length) {
                         return {
                             success: false,

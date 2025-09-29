@@ -173,23 +173,6 @@ class PurchaseInventoryModel extends schema_1.default {
             return { data };
         });
     }
-    // ===================== purchase invoice ================//
-    //   insert purchase sub invoice
-    insertPurchaseSubInvoice(payload) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("purchase_sub_invoice")
-                .withSchema(this.HOTEL_INVENTORY_SCHEMA)
-                .insert(payload);
-        });
-    }
-    //   insert purchase sub invoice item
-    inserturchaseSubInvoicItem(payload) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("pur_sub_invoice_item")
-                .withSchema(this.HOTEL_INVENTORY_SCHEMA)
-                .insert(payload);
-        });
-    }
 }
 exports.default = PurchaseInventoryModel;
 //# sourceMappingURL=puschase.inventory.model.js.map
