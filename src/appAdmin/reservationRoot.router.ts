@@ -121,25 +121,17 @@ export class ReservationRootRouter {
 			new HotelInventoryRouter().router
 		);
 
-<<<<<<< HEAD
+		this.router.use(
+			"/supplier",
+			this.authChecker.hotelAdminAuthChecker,
+			new SupplierRouter().router
+		);
+
 		this.router.use(
 			"/btoc",
 			this.authChecker.hotelAdminAuthChecker,
 			new AdminBtocHandlerRouter().router
 		);
-=======
-    this.router.use(
-      "/supplier",
-      this.authChecker.hotelAdminAuthChecker,
-      new SupplierRouter().router
-    );
-
-    this.router.use(
-      "/btoc",
-      this.authChecker.hotelAdminAuthChecker,
-      new AdminBtocHandlerRouter().router
-    );
->>>>>>> 391ba10aaa710bae2c1aae7e32aa12b74d891bb5
 
 		this.router.use(
 			"/service-categories",
