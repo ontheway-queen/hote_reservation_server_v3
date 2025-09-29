@@ -2,6 +2,7 @@ export interface ICreateInvPurchaseBody {
   hotel_code: number;
   purchase_date: Date;
   voucher_no?: string;
+  purchase_no: string;
   supplier_id: number;
   invoice_id?: number;
   sub_total: number;
@@ -57,7 +58,8 @@ export interface PurchaseItem {
 export interface ISinglePurchase {
   id: number;
   hotel_code: number;
-  purchase_date: string; // ISO date string
+  purchase_no: string;
+  purchase_date: string;
   voucher_no: string;
   supplier_name: string | null;
   supplier_phone: string | null;

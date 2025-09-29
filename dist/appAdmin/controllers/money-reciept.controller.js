@@ -30,13 +30,19 @@ class MoneyRecieptController extends abstract_controller_1.default {
     constructor() {
         super();
         this.service = new money_reciept_service_1.default();
-        this.moneyRecieptValidator = new money_reciept_validator_1.default();
+        this.validator = new money_reciept_validator_1.default();
         this.getMoneyReceiptByFolio = this.asyncWrapper.wrap({}, (req, res) => __awaiter(this, void 0, void 0, function* () {
             const _a = yield this.service.getMoneyReceiptByFolio(req), { code } = _a, data = __rest(_a, ["code"]);
             res.status(code).json(data);
         }));
         this.getMoneyReceiptById = this.asyncWrapper.wrap({}, (req, res) => __awaiter(this, void 0, void 0, function* () {
             const _b = yield this.service.getMoneyReceiptById(req), { code } = _b, data = __rest(_b, ["code"]);
+            res.status(code).json(data);
+        }));
+        this.createMoneyReceipt = this.asyncWrapper.wrap({
+            bodySchema: this.validator.advanceReturnMoneyReciept,
+        }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _c = yield this.service.createMoneyReceipt(req), { code } = _c, data = __rest(_c, ["code"]);
             res.status(code).json(data);
         }));
     }

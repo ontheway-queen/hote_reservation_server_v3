@@ -5,6 +5,7 @@ import {
   ICreateInvPurchasePayload,
 } from "../utils/interfaces/purchase.interface";
 import HelperLib from "../../appAdmin/utlis/library/helperLib";
+import { HelperFunction } from "../../appAdmin/utlis/library/helperFunction";
 
 class PurchaseInvService extends AbstractServices {
   constructor() {
@@ -26,16 +27,16 @@ class PurchaseInvService extends AbstractServices {
       } = req.body as ICreateInvPurchasePayload;
 
       // Check supplier
-      const cmnInvModel = this.Model.CommonInventoryModel(trx);
+      const supplierModel = this.Model.supplierModel(trx);
 
       // Check account
       const accModel = this.Model.accountModel(trx);
 
       // Check purchase
       const pInvModel = this.Model.purchaseInventoryModel(trx);
-      const pdModel = this.Model.productInventoryModel(trx);
+      const pdModel = this.Model.inventoryModel(trx);
 
-      const checkSupplier = await cmnInvModel.getSingleSupplier(
+      const checkSupplier = await supplierModel.getSingleSupplier(
         supplier_id,
         hotel_code
       );
@@ -105,7 +106,7 @@ class PurchaseInvService extends AbstractServices {
         };
       }
 
-      const p_voucher_no = await new HelperLib(trx).generatePurchaseVoucher();
+      const purchase_no = await new HelperLib(trx).generatePurchaseVoucher();
 
       // Insert purchase
       const createdPurchase = await pInvModel.createPurchase({
@@ -119,7 +120,7 @@ class PurchaseInvService extends AbstractServices {
         vat,
         shipping_cost,
         due,
-        voucher_no: p_voucher_no,
+        purchase_no: purchase_no,
       });
 
       // Insert purchase item
@@ -201,71 +202,104 @@ class PurchaseInvService extends AbstractServices {
         );
       }
 
-      //   invoice and money receipt generate
-      const hotelInvoiceModel = this.Model.hotelInvoiceModel(trx);
+      //__________________ accounting __________________ //
 
-      const invoiceRes = await hotelInvoiceModel.insertInInvoice({
-        hotel_code,
-        invoice_date: new Date().toISOString(),
-        invoice_number: p_voucher_no,
-        total_amount: grand_total,
-        notes: `Purchase from ${checkSupplier[0].supplier_name}`,
-      });
+      const helper = new HelperFunction();
+      const hotelModel = this.Model.HotelModel(trx);
 
-      //   insert in invoice items
-      const invoiceItemPayload = purchaseItemsPayload.map((item) => ({
-        inv_id: invoiceRes[0].id,
-        name: item.product_name,
-        quantity: item.quantity,
-        total_price: item.price,
-      }));
+      const heads = await hotelModel.getHotelAccConfig(hotel_code, [
+        "ACCOUNT_PAYABLE_HEAD_ID",
+        // "FIXED_ASSET_HEAD_ID",
+      ]);
 
-      await hotelInvoiceModel.insertInInvoiceItems(invoiceItemPayload);
+      console.log({ heads, hotel_code });
 
-      // insert in purchase sub invoice
-      await hotelInvoiceModel.insertInPurchaseSubInvoice({
-        inv_id: invoiceRes[0].id,
-        purchase_id: createdPurchase[0].id,
-        sup_id: supplier_id,
-      });
+      const payable_head = heads.find(
+        (h) => h.config === "ACCOUNT_PAYABLE_HEAD_ID"
+      );
+
+      if (!payable_head) {
+        throw new Error(
+          "ACCOUNT_PAYABLE_HEAD_ID not configured for this hotel"
+        );
+      }
+
+      // const asset_head = heads.find((h) => h.config === "FIXED_ASSET_HEAD_ID");
+
+      // if (!asset_head) {
+      //   throw new Error("FIXED_ASSET_HEAD_ID not configured for this hotel");
+      // }
+
+      const accountModel = this.Model.accountModel(trx);
+
+      const voucher_no1 = await helper.generateVoucherNo("JV", trx);
+      const created_by = req.hotel_admin.id;
+      const today = new Date().toISOString();
+
+      await accountModel.insertAccVoucher([
+        // {
+        //   acc_head_id: asset_head.head_id,
+        //   created_by,
+        //   debit: 0,
+        //   credit: grand_total,
+        //   description: `Payable for purchasing ${p_voucher_no}`,
+        //   voucher_date: today,
+        //   voucher_no: voucher_no1,
+        //   hotel_code,
+        // },
+        {
+          acc_head_id: payable_head.head_id,
+          created_by,
+          debit: 0,
+          credit: grand_total,
+          description: `Payable for purchasing ${purchase_no}`,
+          voucher_date: today,
+          voucher_no: voucher_no1,
+          hotel_code,
+        },
+      ]);
 
       if (paid_amount > 0) {
-        const [mr] = await hotelInvoiceModel.insertMoneyReceipt({
+        const [acc] = await accountModel.getSingleAccount({
           hotel_code,
-          receipt_no: p_voucher_no,
-          receipt_date: new Date().toISOString(),
-          amount_paid: paid_amount,
-          acc_id: ac_tr_ac_id,
-          payment_method: checkAccount[0].acc_type,
-          received_by: admin_id,
-          notes: `Payment for purchase invoice no ${p_voucher_no}`,
-          voucher_no: p_voucher_no,
+          id: ac_tr_ac_id,
         });
 
-        await hotelInvoiceModel.insertMoneyReceiptItem({
-          money_receipt_id: mr.id,
-          invoice_id: invoiceRes[0].id,
-          paid_amount: paid_amount,
-        });
+        if (!acc) throw new Error("Invalid Account");
+
+        let voucher_type: "CCV" | "BCV" = "CCV";
+
+        if (acc.acc_type === "BANK") {
+          voucher_type = "BCV";
+        }
+
+        const voucher_no = await helper.generateVoucherNo(voucher_type, trx);
+
+        await accountModel.insertAccVoucher([
+          {
+            acc_head_id: acc.acc_head_id,
+            created_by,
+            debit: 0,
+            credit: paid_amount,
+            description: `Payment given for purchase ${purchase_no}`,
+            voucher_date: today,
+            voucher_no,
+            hotel_code,
+          },
+        ]);
 
         // insert supplier payment
-        const [supplierPaymentID] = await cmnInvModel.insertSupplierPayment({
+        const [supplierPaymentID] = await supplierModel.insertSupplierPayment({
           created_by: admin_id,
           hotel_code: hotel_code,
           debit: paid_amount,
           credit: 0,
           acc_id: ac_tr_ac_id,
           supplier_id,
+          purchase_id: createdPurchase[0].id,
+          voucher_no,
+          payment_date: new Date().toISOString(),
         });
-
-        // supplier payment allocation
-        await cmnInvModel.insertSupplierPaymentAllocation([
-          {
-            supplier_payment_id: supplierPaymentID.id,
-            invoice_id: invoiceRes[0].id,
-            paid_amount,
-          },
-        ]);
       }
 
       return {
@@ -316,12 +350,11 @@ class PurchaseInvService extends AbstractServices {
   public async getInvoiceByPurchaseId(req: Request) {
     const { id } = req.params;
     const { hotel_code } = req.hotel_admin;
-    console.log({ id });
-    const data =
-      await this.Model.purchaseInventoryModel().getInvoiceByPurchaseId(
-        parseInt(id),
-        hotel_code
-      );
+
+    const data = await this.Model.purchaseInventoryModel().getSinglePurchase(
+      parseInt(id),
+      hotel_code
+    );
 
     return {
       success: true,
@@ -330,9 +363,9 @@ class PurchaseInvService extends AbstractServices {
     };
   }
 
-  public async getMoneyReceiptById(req: Request) {
+  public async getMoneyReceiptByPurchaseId(req: Request) {
     const data =
-      await this.Model.hotelInvoiceModel().getPurchaseMoneyReceiptById({
+      await this.Model.hotelInvoiceModel().getMoneyReceiptByPurchaseId({
         id: Number(req.params.id),
         hotel_code: req.hotel_admin.hotel_code,
       });
@@ -342,242 +375,6 @@ class PurchaseInvService extends AbstractServices {
       code: this.StatusCode.HTTP_OK,
       data,
     };
-  }
-
-  public async createPurchaseMoneyReciept(req: Request) {
-    return await this.db.transaction(async (trx) => {
-      const { hotel_code, id: admin_id } = req.hotel_admin;
-
-      const {
-        ac_tr_ac_id,
-        supplier_id,
-        paid_amount,
-        reciept_type,
-        purchase_id,
-        remarks,
-      } = req.body;
-
-      //   checking supplier
-      const cmnInvModel = this.Model.CommonInventoryModel(trx);
-
-      // Check account
-      const accModel = this.Model.accountModel(trx);
-
-      // Check purchase
-      const pInvModel = this.Model.purchaseInventoryModel(trx);
-
-      const checkSupplier = await cmnInvModel.getSingleSupplier(
-        supplier_id,
-        hotel_code
-      );
-      if (!checkSupplier.length) {
-        return {
-          success: false,
-          code: this.StatusCode.HTTP_NOT_FOUND,
-          message: "User not found",
-        };
-      }
-
-      // const check account
-      const accountModel = this.Model.accountModel(trx);
-
-      const checkAccount = await accountModel.getSingleAccount({
-        hotel_code,
-        id: parseInt(ac_tr_ac_id),
-      });
-
-      if (!checkAccount.length) {
-        return {
-          success: false,
-          code: this.StatusCode.HTTP_NOT_FOUND,
-          message: "Account not found",
-        };
-      }
-
-      // check invoice
-      if (reciept_type === "invoice") {
-        const checkSinglePurchase = await pInvModel.getSinglePurchase(
-          purchase_id,
-          hotel_code
-        );
-
-        console.log({ checkSinglePurchase });
-
-        if (!checkSinglePurchase) {
-          return {
-            success: false,
-            code: this.StatusCode.HTTP_NOT_FOUND,
-            message: "Invoice not found with this user",
-          };
-        }
-
-        const { due, grand_total, voucher_no, supplier_id } =
-          checkSinglePurchase;
-        console.log({ checkSinglePurchase });
-
-        if (due == 0) {
-          return {
-            success: false,
-            code: this.StatusCode.HTTP_BAD_REQUEST,
-            message: "Already paid this invoice",
-          };
-        }
-
-        if (paid_amount != due) {
-          return {
-            success: false,
-            code: this.StatusCode.HTTP_BAD_REQUEST,
-            message: "Invoice due and paid amount are not same",
-          };
-        }
-
-        // get last account ledger
-        const lastAL = await accountModel.getLastAccountLedgerId(hotel_code);
-
-        const ledger_id = lastAL.length ? lastAL[0].ledger_id + 1 : 1;
-        const year = new Date().getFullYear();
-        // Insert account ledger
-        const ledgerRes = await accModel.insertAccountLedger({
-          ac_tr_ac_id,
-          hotel_code,
-          transaction_no: `TRX-${year - ledger_id}`,
-          ledger_debit_amount: paid_amount,
-          ledger_details: `Balance Debited by Purchase`,
-        });
-
-        // ================= update purchase ================ //
-
-        const remainingBalance = due - paid_amount;
-
-        await pInvModel.updatePurchase(
-          {
-            due: remainingBalance,
-          },
-          { id: purchase_id }
-        );
-
-        // insert in payment supplier
-        await cmnInvModel.insertSupplierPayment({
-          acc_id: ac_tr_ac_id,
-          created_by: admin_id,
-          hotel_code: hotel_code,
-          debit: paid_amount,
-          credit: 0,
-          // voucher_no: purchase_id,
-          supplier_id,
-        });
-      } else {
-        // overall payment step
-        const { data: allPurchaseInvoiceByUser } =
-          await pInvModel.getAllpurchase({
-            hotel_code,
-            by_supplier_id: supplier_id,
-          });
-
-        const unpaidInvoice: {
-          id: number;
-          grand_total: number;
-          due: number;
-          voucher_no: string;
-        }[] = [];
-
-        for (let i = 0; i < allPurchaseInvoiceByUser?.length; i++) {
-          if (parseFloat(allPurchaseInvoiceByUser[i].due) !== 0) {
-            unpaidInvoice.push({
-              id: allPurchaseInvoiceByUser[i].id,
-              grand_total: allPurchaseInvoiceByUser[i].grand_total,
-              due: allPurchaseInvoiceByUser[i].due,
-              voucher_no: allPurchaseInvoiceByUser[i].voucher_no,
-            });
-          }
-        }
-        if (!unpaidInvoice.length) {
-          return {
-            success: false,
-            code: this.StatusCode.HTTP_NOT_FOUND,
-            message: "No due invoice found",
-          };
-        }
-        // total due amount
-        let remainingPaidAmount = paid_amount;
-        const paidingInvoice: {
-          id: number;
-          due: number;
-          purchase_id: string;
-          total_paid_amount: number;
-        }[] = [];
-
-        console.log({ unpaidInvoice });
-
-        for (let i = 0; i < unpaidInvoice.length; i++) {
-          if (remainingPaidAmount > 0) {
-            if (paid_amount >= unpaidInvoice[i].due) {
-              remainingPaidAmount = paid_amount - unpaidInvoice[i].due;
-              paidingInvoice.push({
-                id: unpaidInvoice[i].id,
-                due: unpaidInvoice[i].due - unpaidInvoice[i].due,
-                purchase_id,
-                total_paid_amount: unpaidInvoice[i].due,
-              });
-            } else {
-              remainingPaidAmount = paid_amount - unpaidInvoice[i].due;
-              paidingInvoice.push({
-                id: unpaidInvoice[i].id,
-                due: unpaidInvoice[i].due - paid_amount,
-
-                purchase_id,
-                total_paid_amount: unpaidInvoice[i].due - paid_amount,
-              });
-            }
-          }
-        }
-
-        // =============== update purchase ==============//
-        await Promise.all(
-          paidingInvoice.map(async (item) => {
-            await pInvModel.updatePurchase({ due: item.due }, { id: item.id });
-          })
-        );
-
-        const year = new Date().getFullYear();
-        // get last account ledger
-        const lastAL = await accountModel.getLastAccountLedgerId(hotel_code);
-
-        const ledger_id = lastAL.length ? lastAL[0].ledger_id + 1 : 1;
-        // Insert account ledger
-        await accModel.insertAccountLedger({
-          ac_tr_ac_id,
-          hotel_code,
-          transaction_no: `TRX-${year - ledger_id}`,
-          ledger_debit_amount: paid_amount,
-          ledger_details: `Balance Debited by purchase Money Reciept`,
-        });
-
-        // money recipet item
-        await Promise.all(
-          paidingInvoice.map(async (item) => {
-            await cmnInvModel.insertSupplierPayment({
-              created_by: admin_id,
-              hotel_code,
-              //   purchase_id: purchase_id[0],
-              acc_id: ac_tr_ac_id,
-              debit: item.total_paid_amount,
-              credit: 0,
-              //   total_paid_amount: item.total_paid_amount,
-              //   ac_tr_ac_id,
-              // voucher_no: "",
-              supplier_id,
-            });
-          })
-        );
-      }
-
-      return {
-        success: true,
-        code: this.StatusCode.HTTP_SUCCESSFUL,
-        message: this.ResMsg.HTTP_SUCCESSFUL,
-      };
-    });
   }
 }
 export default PurchaseInvService;

@@ -31,18 +31,14 @@ class PurchaseInvController extends abstract_controller_1.default {
         super();
         this.service = new purchase_service_1.default();
         this.validator = new purchase_validator_1.default();
-        //=================== Purchase ======================//
-        // Create Purchase
         this.createPurchase = this.asyncWrapper.wrap({ bodySchema: this.validator.createPurchaseInvValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
             const _a = yield this.service.createPurchase(req), { code } = _a, data = __rest(_a, ["code"]);
             res.status(code).json(data);
         }));
-        // Get All Purchase
         this.getAllPurchase = this.asyncWrapper.wrap({ querySchema: this.validator.getAllPurchaseInvValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
             const _b = yield this.service.getAllPurchase(req), { code } = _b, data = __rest(_b, ["code"]);
             res.status(code).json(data);
         }));
-        // get single Purchase
         this.getSinglePurchase = this.asyncWrapper.wrap({ paramSchema: this.commonValidator.singleParamValidator() }, (req, res) => __awaiter(this, void 0, void 0, function* () {
             const _c = yield this.service.getSinglePurchase(req), { code } = _c, data = __rest(_c, ["code"]);
             res.status(code).json(data);
@@ -51,15 +47,8 @@ class PurchaseInvController extends abstract_controller_1.default {
             const _d = yield this.service.getInvoiceByPurchaseId(req), { code } = _d, data = __rest(_d, ["code"]);
             res.status(code).json(data);
         }));
-        this.getMoneyReceiptById = this.asyncWrapper.wrap({}, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _e = yield this.service.getMoneyReceiptById(req), { code } = _e, data = __rest(_e, ["code"]);
-            res.status(code).json(data);
-        }));
-        // Create Purchase Money reciept
-        this.createPurchaseMoneyReciept = this.asyncWrapper.wrap({
-        // bodySchema: this.validator.createPurchaseInvValidator,
-        }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _f = yield this.service.createPurchaseMoneyReciept(req), { code } = _f, data = __rest(_f, ["code"]);
+        this.getMoneyReceiptByPurchaseId = this.asyncWrapper.wrap({}, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _e = yield this.service.getMoneyReceiptByPurchaseId(req), { code } = _e, data = __rest(_e, ["code"]);
             res.status(code).json(data);
         }));
     }

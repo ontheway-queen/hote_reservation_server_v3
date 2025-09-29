@@ -36,5 +36,38 @@ class HRconfigurationValidator {
     type: Joi.string().allow("percentage", "fixed").optional(),
     value: Joi.number().optional(),
   });
+
+  // create Supplier validation
+  public createSupplierValidatorValidator = Joi.object({
+    name: Joi.string().uppercase().required(),
+    phone: Joi.number().allow("").required(),
+    last_balance: Joi.number().required(),
+  });
+
+  // get all Supplier query validator
+  public getAllSupplierQueryValidator = Joi.object({
+    limit: Joi.string().allow("").optional(),
+    skip: Joi.string().allow("").optional(),
+    name: Joi.string().allow("").optional(),
+    status: Joi.string().allow("").optional(),
+  });
+
+  // update Supplier validation
+  public UpdateSupplierValidator = Joi.object({
+    name: Joi.string().allow("").optional(),
+    phone: Joi.number().allow("").optional(),
+    status: Joi.boolean().optional(),
+    last_balance: Joi.number().optional(),
+  });
+
+  public supplierPayment = Joi.object({
+    acc_id: Joi.number().required(),
+    supplier_id: Joi.number().required(),
+    inv_id: Joi.number().optional(),
+    paid_amount: Joi.number().required(),
+    receipt_type: Joi.string().allow("invoice", "overall").required(),
+    remarks: Joi.string().optional(),
+    payment_date: Joi.string().required(),
+  });
 }
 export default HRconfigurationValidator;

@@ -5,7 +5,7 @@ import MoneyRecieptValidator from "../utlis/validator/money-reciept.validator";
 
 class MoneyRecieptController extends AbstractController {
   private service = new MoneyRecieptService();
-  private moneyRecieptValidator = new MoneyRecieptValidator();
+  private validator = new MoneyRecieptValidator();
   constructor() {
     super();
   }
@@ -22,6 +22,16 @@ class MoneyRecieptController extends AbstractController {
     {},
     async (req: Request, res: Response) => {
       const { code, ...data } = await this.service.getMoneyReceiptById(req);
+      res.status(code).json(data);
+    }
+  );
+
+  public createMoneyReceipt = this.asyncWrapper.wrap(
+    {
+      bodySchema: this.validator.advanceReturnMoneyReciept,
+    },
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.createMoneyReceipt(req);
       res.status(code).json(data);
     }
   );

@@ -21,7 +21,7 @@ class ProductInvService extends abstract_service_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             const { hotel_code, id: admin_id } = req.hotel_admin;
             const body = req.body;
-            const model = this.Model.productInventoryModel();
+            const model = this.Model.inventoryModel();
             const { data } = yield model.getAllProduct({
                 key: body.name,
                 hotel_code,
@@ -54,7 +54,7 @@ class ProductInvService extends abstract_service_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             const { hotel_code } = req.hotel_admin;
             const { limit, skip, key, in_stock, unit, category, brand } = req.query;
-            const { data, total } = yield this.Model.productInventoryModel().getAllProduct({
+            const { data, total } = yield this.Model.inventoryModel().getAllProduct({
                 key: key,
                 unit: unit,
                 brand: brand,
@@ -78,7 +78,7 @@ class ProductInvService extends abstract_service_1.default {
                 const id = Number(req.params.id);
                 const { hotel_code } = req.hotel_admin;
                 const body = req.body;
-                const model = this.Model.productInventoryModel(trx);
+                const model = this.Model.inventoryModel(trx);
                 const files = req.files || [];
                 if (files.length) {
                     body["image"] = files[0].filename;
@@ -110,7 +110,7 @@ class ProductInvService extends abstract_service_1.default {
                 console.log({ hotel_code, id });
                 const { date, damaged_items } = req.body;
                 // Check product
-                const model = this.Model.productInventoryModel(trx);
+                const model = this.Model.inventoryModel(trx);
                 // Check inventory
                 const PModel = this.Model.purchaseInventoryModel(trx);
                 // Insert purchase item
@@ -171,8 +171,7 @@ class ProductInvService extends abstract_service_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             const { hotel_code } = req.hotel_admin;
             const { limit, skip, key, date_from, date_to } = req.query;
-            const model = this.Model.productInventoryModel();
-            const { data, total } = yield model.getAllDamagedProduct({
+            const { data, total } = yield this.Model.inventoryModel().getAllDamagedProduct({
                 key: key,
                 limit: Number(limit),
                 skip: Number(skip),
@@ -192,7 +191,7 @@ class ProductInvService extends abstract_service_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             const { id } = req.params;
             const { hotel_code } = req.hotel_admin;
-            const data = yield this.Model.productInventoryModel().getSingleDamagedProduct(parseInt(id), hotel_code);
+            const data = yield this.Model.inventoryModel().getSingleDamagedProduct(parseInt(id), hotel_code);
             if (!data.length) {
                 return {
                     success: false,

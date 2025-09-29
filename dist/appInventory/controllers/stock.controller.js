@@ -31,7 +31,6 @@ class StockInvController extends abstract_controller_1.default {
         super();
         this.service = new stock_service_1.default();
         this.validator = new stock_validator_1.default();
-        //=================== Stock ======================//
         // Create Stock
         this.createStock = this.asyncWrapper.wrap({ bodySchema: this.validator.createstockInvValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
             const _a = yield this.service.createStock(req), { code } = _a, data = __rest(_a, ["code"]);

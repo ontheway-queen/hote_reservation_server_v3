@@ -24,7 +24,7 @@ class StockInvService extends abstract_service_1.default {
                 const { hotel_code, id: hotel_admin_id } = req.hotel_admin;
                 const { stock_in, stock_out, note, stock_items } = req.body;
                 // Check purchase
-                const PModel = this.Model.stockInventoryModel(trx);
+                const PModel = this.Model.inventoryModel(trx);
                 if (stock_in) {
                     // Check account
                     const Model = this.Model.accountModel(trx);
@@ -156,8 +156,7 @@ class StockInvService extends abstract_service_1.default {
                             modifyInventoryProduct.push({
                                 available_quantity: parseFloat(inventoryItem.available_quantity) -
                                     payloadItem.quantity,
-                                quantity_used: parseFloat(inventoryItem.quantity_used) +
-                                    payloadItem.quantity,
+                                quantity_used: parseFloat(inventoryItem.quantity_used) + payloadItem.quantity,
                                 id: inventoryItem.id,
                             });
                         }
@@ -189,8 +188,7 @@ class StockInvService extends abstract_service_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             const { hotel_code } = req.hotel_admin;
             const { limit, skip, key, status } = req.query;
-            const model = this.Model.stockInventoryModel();
-            const { data, total } = yield model.getAllStock({
+            const { data, total } = yield this.Model.inventoryModel().getAllStock({
                 key: key,
                 status: status,
                 limit: limit,
@@ -210,7 +208,7 @@ class StockInvService extends abstract_service_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             const { id } = req.params;
             const { hotel_code } = req.hotel_admin;
-            const data = yield this.Model.stockInventoryModel().getSingleStock(parseInt(id), hotel_code);
+            const data = yield this.Model.inventoryModel().getSingleStock(parseInt(id), hotel_code);
             return {
                 success: true,
                 code: this.StatusCode.HTTP_OK,
@@ -223,8 +221,7 @@ class StockInvService extends abstract_service_1.default {
             const { id } = req.params;
             const { hotel_code } = req.hotel_admin;
             const { product_id, type, quantity } = req.body;
-            const model = this.Model.stockInventoryModel();
-            const inventoryModel = this.Model.inventoryModel();
+            const model = this.Model.inventoryModel();
             const check = yield model.getSingleStock(parseInt(id), hotel_code);
             if (!check) {
                 return {
@@ -242,7 +239,7 @@ class StockInvService extends abstract_service_1.default {
                     message: "Product not found",
                 };
             }
-            const isInventoryExists = yield inventoryModel.getSingleInventoryDetails({
+            const isInventoryExists = yield model.getSingleInventoryDetails({
                 hotel_code,
                 product_id: findProduct.product_id,
             });

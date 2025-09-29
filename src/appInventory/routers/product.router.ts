@@ -10,8 +10,6 @@ class ProductInvRouter extends AbstractRouter {
   }
 
   private callRouter() {
-    //=================== Product ======================//
-
     this.router
       .route("/")
       .post(
@@ -26,8 +24,6 @@ class ProductInvRouter extends AbstractRouter {
         this.uploader.cloudUploadRaw(this.fileFolders.INVENTORY_FILES),
         this.controller.updateProduct
       );
-
-    //=================== Damaged Purchase ======================//
 
     // Damaged
     this.router

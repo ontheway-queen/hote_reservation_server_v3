@@ -20,6 +20,7 @@ import RoomRouter from "./routers/room.router";
 import ServiceRouter from "./routers/service.router";
 import ServiceCategoriesRouter from "./routers/serviceCategories.router";
 import SettingRouter from "./routers/setting.router";
+import SupplierRouter from "./routers/supplier.router";
 
 export class ReservationRootRouter {
 	public router = Router();
@@ -120,11 +121,25 @@ export class ReservationRootRouter {
 			new HotelInventoryRouter().router
 		);
 
+<<<<<<< HEAD
 		this.router.use(
 			"/btoc",
 			this.authChecker.hotelAdminAuthChecker,
 			new AdminBtocHandlerRouter().router
 		);
+=======
+    this.router.use(
+      "/supplier",
+      this.authChecker.hotelAdminAuthChecker,
+      new SupplierRouter().router
+    );
+
+    this.router.use(
+      "/btoc",
+      this.authChecker.hotelAdminAuthChecker,
+      new AdminBtocHandlerRouter().router
+    );
+>>>>>>> 391ba10aaa710bae2c1aae7e32aa12b74d891bb5
 
 		this.router.use(
 			"/service-categories",

@@ -16,7 +16,7 @@ class ProductInvService extends AbstractServices {
     const { hotel_code, id: admin_id } = req.hotel_admin;
     const body = req.body as ICreateProductPayload;
 
-    const model = this.Model.productInventoryModel();
+    const model = this.Model.inventoryModel();
 
     const { data } = await model.getAllProduct({
       key: body.name,
@@ -63,17 +63,16 @@ class ProductInvService extends AbstractServices {
     const { hotel_code } = req.hotel_admin;
     const { limit, skip, key, in_stock, unit, category, brand } = req.query;
 
-    const { data, total } =
-      await this.Model.productInventoryModel().getAllProduct({
-        key: key as string,
-        unit: unit as string,
-        brand: brand as string,
-        category: category as string,
-        in_stock: in_stock as "0" | "1",
-        limit: limit as string,
-        skip: skip as string,
-        hotel_code,
-      });
+    const { data, total } = await this.Model.inventoryModel().getAllProduct({
+      key: key as string,
+      unit: unit as string,
+      brand: brand as string,
+      category: category as string,
+      in_stock: in_stock as "0" | "1",
+      limit: limit as string,
+      skip: skip as string,
+      hotel_code,
+    });
 
     return {
       success: true,
@@ -89,7 +88,7 @@ class ProductInvService extends AbstractServices {
       const { hotel_code } = req.hotel_admin;
 
       const body = req.body as IupdateProductPayload;
-      const model = this.Model.productInventoryModel(trx);
+      const model = this.Model.inventoryModel(trx);
 
       const files = (req.files as Express.Multer.File[]) || [];
 
@@ -126,7 +125,7 @@ class ProductInvService extends AbstractServices {
       const { date, damaged_items } = req.body as ICreateDamagedProductBody;
 
       // Check product
-      const model = this.Model.productInventoryModel(trx);
+      const model = this.Model.inventoryModel(trx);
 
       // Check inventory
       const PModel = this.Model.purchaseInventoryModel(trx);
@@ -211,16 +210,15 @@ class ProductInvService extends AbstractServices {
     const { hotel_code } = req.hotel_admin;
     const { limit, skip, key, date_from, date_to } = req.query;
 
-    const model = this.Model.productInventoryModel();
-
-    const { data, total } = await model.getAllDamagedProduct({
-      key: key as string,
-      limit: Number(limit),
-      skip: Number(skip),
-      hotel_code,
-      date_from: date_from as string,
-      date_to: date_to as string,
-    });
+    const { data, total } =
+      await this.Model.inventoryModel().getAllDamagedProduct({
+        key: key as string,
+        limit: Number(limit),
+        skip: Number(skip),
+        hotel_code,
+        date_from: date_from as string,
+        date_to: date_to as string,
+      });
     return {
       success: true,
       code: this.StatusCode.HTTP_OK,
@@ -233,11 +231,10 @@ class ProductInvService extends AbstractServices {
     const { id } = req.params;
     const { hotel_code } = req.hotel_admin;
 
-    const data =
-      await this.Model.productInventoryModel().getSingleDamagedProduct(
-        parseInt(id),
-        hotel_code
-      );
+    const data = await this.Model.inventoryModel().getSingleDamagedProduct(
+      parseInt(id),
+      hotel_code
+    );
 
     if (!data.length) {
       return {

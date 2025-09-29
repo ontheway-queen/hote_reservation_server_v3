@@ -10,9 +10,6 @@ class PurchaseInvController extends AbstractController {
     super();
   }
 
-  //=================== Purchase ======================//
-
-  // Create Purchase
   public createPurchase = this.asyncWrapper.wrap(
     { bodySchema: this.validator.createPurchaseInvValidator },
     async (req: Request, res: Response) => {
@@ -22,7 +19,6 @@ class PurchaseInvController extends AbstractController {
     }
   );
 
-  // Get All Purchase
   public getAllPurchase = this.asyncWrapper.wrap(
     { querySchema: this.validator.getAllPurchaseInvValidator },
     async (req: Request, res: Response) => {
@@ -32,7 +28,6 @@ class PurchaseInvController extends AbstractController {
     }
   );
 
-  // get single Purchase
   public getSinglePurchase = this.asyncWrapper.wrap(
     { paramSchema: this.commonValidator.singleParamValidator() },
     async (req: Request, res: Response) => {
@@ -51,24 +46,12 @@ class PurchaseInvController extends AbstractController {
     }
   );
 
-  public getMoneyReceiptById = this.asyncWrapper.wrap(
+  public getMoneyReceiptByPurchaseId = this.asyncWrapper.wrap(
     {},
     async (req: Request, res: Response) => {
-      const { code, ...data } = await this.service.getMoneyReceiptById(req);
-      res.status(code).json(data);
-    }
-  );
-
-  // Create Purchase Money reciept
-  public createPurchaseMoneyReciept = this.asyncWrapper.wrap(
-    {
-      // bodySchema: this.validator.createPurchaseInvValidator,
-    },
-    async (req: Request, res: Response) => {
-      const { code, ...data } = await this.service.createPurchaseMoneyReciept(
+      const { code, ...data } = await this.service.getMoneyReceiptByPurchaseId(
         req
       );
-
       res.status(code).json(data);
     }
   );
