@@ -11,7 +11,6 @@ const dboModel_1 = __importDefault(require("./commonModel/dboModel"));
 const service_model_1 = __importDefault(require("./hotelServiceModel/service.model"));
 const serviceCategories_model_1 = __importDefault(require("./hotelServiceModel/serviceCategories.model"));
 const serviceImage_model_1 = __importDefault(require("./hotelServiceModel/serviceImage.model"));
-const servicePricing_model_1 = __importDefault(require("./hotelServiceModel/servicePricing.model"));
 const serviceSchedule_model_1 = __importDefault(require("./hotelServiceModel/serviceSchedule.model"));
 const mAdministration_model_1 = __importDefault(require("./managementsModel/mAdministrationModel/mAdministration.model"));
 const mConfigurationModel_1 = __importDefault(require("./managementsModel/mConfigurationModel/mConfigurationModel"));
@@ -34,12 +33,9 @@ const ReportModel_1 = __importDefault(require("./reservationPanel/ReportModel/Re
 const reservation_model_1 = require("./reservationPanel/reservation.model");
 const Room_Model_1 = __importDefault(require("./reservationPanel/Room.Model"));
 const Setting_Model_1 = __importDefault(require("./reservationPanel/Setting.Model"));
-<<<<<<< HEAD
+const supplierModel_1 = __importDefault(require("./reservationPanel/supplierModel"));
 const restaurant_admin_model_1 = __importDefault(require("./restaurantModel/restaurant.admin.model"));
 const restaurant_Model_1 = __importDefault(require("./restaurantModel/restaurant.Model"));
-=======
-const supplierModel_1 = __importDefault(require("./reservationPanel/supplierModel"));
->>>>>>> 391ba10aaa710bae2c1aae7e32aa12b74d891bb5
 class Models {
     constructor(db) {
         this.db = db;
@@ -143,17 +139,14 @@ class Models {
     serviceImageModel(trx) {
         return new serviceImage_model_1.default(trx || this.db);
     }
-    servicePricingModel(trx) {
-        return new servicePricing_model_1.default(trx || this.db);
-    }
-    serviceScheduleModel(trx) {
-        return new serviceSchedule_model_1.default(trx || this.db);
-    }
     restaurantModel(trx) {
         return new restaurant_Model_1.default(trx || this.db);
     }
     restaurantAdminModel(trx) {
         return new restaurant_admin_model_1.default(trx || this.db);
+    }
+    serviceScheduleModel(trx) {
+        return new serviceSchedule_model_1.default(trx || this.db);
     }
 }
 exports.default = Models;
