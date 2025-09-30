@@ -1,7 +1,10 @@
 import { Request } from "express";
 import AbstractServices from "../../abstarcts/abstract.service";
 import Lib from "../../utils/lib/lib";
-import { ICreateExpensebody } from "../utlis/interfaces/expense.interface";
+import {
+  ICreateExpensebody,
+  IUpdateExpenseReqBody,
+} from "../utlis/interfaces/expense.interface";
 import { HelperFunction } from "../utlis/library/helperFunction";
 
 export class ExpenseService extends AbstractServices {
@@ -45,7 +48,7 @@ export class ExpenseService extends AbstractServices {
       const accountModel = this.Model.accountModel(trx);
       const employeeModel = this.Model.employeeModel(trx);
       const model = this.Model.expenseModel(trx);
-      console.log(1);
+
       // account check
       const [acc] = await accountModel.getSingleAccount({
         hotel_code,
@@ -77,7 +80,7 @@ export class ExpenseService extends AbstractServices {
         (acc, cu) => acc + cu.amount,
         0
       );
-      console.log(3);
+
       // ___________________________________  Accounting _________________________________//
 
       // accounting
@@ -101,7 +104,7 @@ export class ExpenseService extends AbstractServices {
       let voucher_type: "CCV" | "BCV" | "DV" = "DV";
 
       const voucher_no = await helper.generateVoucherNo(voucher_type, trx);
-      console.log(4);
+
       // generate expense no
       const expenseNo = await Lib.generateExpenseNo(trx);
 
@@ -129,7 +132,7 @@ export class ExpenseService extends AbstractServices {
       ]);
 
       //_______________________________________ END _________________________________//
-      console.log(5);
+
       // Insert expense record
       const payload = {
         ...rest,
@@ -157,10 +160,9 @@ export class ExpenseService extends AbstractServices {
           };
         }
       );
-      console.log(5.5);
-      console.log({ expenseItemPayload });
+
       await model.createExpenseItem(expenseItemPayload);
-      console.log(6);
+
       return {
         success: true,
         code: this.StatusCode.HTTP_SUCCESSFUL,
@@ -217,7 +219,7 @@ export class ExpenseService extends AbstractServices {
     return await this.db.transaction(async (trx) => {
       const { id } = req.params;
       const { id: user_id, hotel_code } = req.hotel_admin;
-      const { expense_items, ...rest } = req.body;
+      const { expense_items, ...rest } = req.body as IUpdateExpenseReqBody;
       console.log({ expense_items, data: rest });
 
       const expenseModel = this.Model.expenseModel(trx);
@@ -242,9 +244,7 @@ export class ExpenseService extends AbstractServices {
           expenseId
         );
 
-        const existingMap = new Map(
-          existingItems.map((it: any) => [it.id, it])
-        );
+        const existingMap = new Map(existingItems.map((it) => [it.id, it]));
 
         await Promise.all(
           expense_items.map(async (item: any) => {
