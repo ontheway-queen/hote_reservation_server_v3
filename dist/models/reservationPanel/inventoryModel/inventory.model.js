@@ -254,6 +254,7 @@ class InventoryModel extends schema_1.default {
                 .leftJoin("inventory as i", function () {
                 this.on("i.product_id", "p.id").andOnVal("i.hotel_code", hotel_code);
             })
+                .andWhere("p.hotel_code", hotel_code)
                 .modify((qb) => {
                 if (key) {
                     qb.andWhere("p.name", "ilike", `%${key}%`);
@@ -273,6 +274,7 @@ class InventoryModel extends schema_1.default {
                 .leftJoin("inventory as i", function () {
                 this.on("i.product_id", "p.id").andOnVal("i.hotel_code", hotel_code);
             })
+                .andWhere("p.hotel_code", hotel_code)
                 .modify((qb) => {
                 if (key) {
                     qb.andWhere("p.name", "ilike", `%${key}%`);
