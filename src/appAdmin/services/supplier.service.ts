@@ -595,8 +595,8 @@ class SupplierService extends AbstractServices {
         const [payment] = await supplierModel.insertSupplierPayment({
           created_by,
           hotel_code,
-          debit: amount,
-          credit: 0,
+          debit: 0,
+          credit: amount,
           acc_id,
           supplier_id,
           purchase_id,

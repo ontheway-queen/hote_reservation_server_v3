@@ -308,7 +308,7 @@ export default class AgencyB2CConfigModel extends Schema {
 
   public async getSiteConfig(query: {
     hotel_code: number;
-  }): Promise<IGetAgencyB2CSiteConfigData | null> {
+  }): Promise<IGetAgencyB2CSiteConfigData> {
     return await this.db("site_config")
       .withSchema(this.BTOC_SCHEMA)
       .select("*")

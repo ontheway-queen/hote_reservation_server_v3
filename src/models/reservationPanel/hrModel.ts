@@ -555,7 +555,6 @@ class HrModel extends Schema {
     routing_no?: string;
     swift_code?: string;
     emp_id: number;
-    id: number;
   }) {
     console.log({ payload });
     return await this.db("emp_bank_info")

@@ -508,8 +508,8 @@ class SupplierService extends abstract_service_1.default {
                     const [payment] = yield supplierModel.insertSupplierPayment({
                         created_by,
                         hotel_code,
-                        debit: amount,
-                        credit: 0,
+                        debit: 0,
+                        credit: amount,
                         acc_id,
                         supplier_id,
                         purchase_id,
