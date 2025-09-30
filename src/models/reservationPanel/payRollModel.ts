@@ -66,12 +66,14 @@ class PayRollModel extends Schema {
   public async getAllPayRoll(payload: {
     from_date: string;
     to_date: string;
+    payroll_month: string;
     limit?: string;
     skip?: string;
     key?: string;
     hotel_code: number;
   }): Promise<{ data: IPayrollList[]; total: number }> {
-    const { key, hotel_code, limit, skip, from_date, to_date } = payload;
+    const { key, hotel_code, limit, skip, from_date, to_date, payroll_month } =
+      payload;
 
     const dtbs = this.db("payroll as p");
 
@@ -118,6 +120,12 @@ class PayRollModel extends Schema {
             "de.name",
             "like",
             `%${key}%`
+          );
+        }
+        if (payroll_month) {
+          this.andWhereRaw(
+            "TO_CHAR(p.payroll_month, 'YYYY-MM') = TO_CHAR(?::date, 'YYYY-MM')",
+            [payroll_month]
           );
         }
       })

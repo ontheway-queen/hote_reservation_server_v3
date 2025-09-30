@@ -575,6 +575,7 @@ class SupplierService extends AbstractServices {
       const trx_no1 = await new HelperLib(trx).generateSupplierTransactionNo(
         hotel_code
       );
+
       const [st] = await supplierModel.insertSupplierTransaction({
         hotel_code,
         supplier_id,

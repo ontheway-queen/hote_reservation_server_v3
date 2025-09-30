@@ -52,6 +52,7 @@ class SupplierModel extends Schema {
       )
 
       .where("s.hotel_code", hotel_code)
+      .andWhere("s.is_deleted", false)
       .andWhere(function () {
         if (key) {
           this.andWhere("s.name", "ilike", `%${key}%`);
@@ -72,6 +73,7 @@ class SupplierModel extends Schema {
       .withSchema(this.HOTEL_INVENTORY_SCHEMA)
       .count("s.id as total")
       .where("s.hotel_code", hotel_code)
+      .andWhere("s.is_deleted", false)
       .andWhere(function () {
         if (key) {
           this.andWhere("s.name", "ilike", `%${key}%`);

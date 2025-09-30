@@ -26,11 +26,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const abstract_controller_1 = __importDefault(require("../../abstarcts/abstract.controller"));
 const report_dashBoard_service_1 = __importDefault(require("../services/report.dashBoard.service"));
 const dashboard_validator_1 = __importDefault(require("../utlis/validator/dashboard.validator"));
+const reports_validator_1 = __importDefault(require("../utlis/validator/reports.validator"));
 class ReportController extends abstract_controller_1.default {
     constructor() {
         super();
         this.reportService = new report_dashBoard_service_1.default();
         this.dashBoardValidator = new dashboard_validator_1.default();
+        this.reportValidator = new reports_validator_1.default();
         this.getHotelStatistics = this.asyncWrapper.wrap(null, (req, res) => __awaiter(this, void 0, void 0, function* () {
             const _a = yield this.reportService.getHotelStatistics(req), { code } = _a, data = __rest(_a, ["code"]);
             res.status(code).json(data);
@@ -69,8 +71,12 @@ class ReportController extends abstract_controller_1.default {
             const _h = yield this.reportService.getAccountReport(req), { code } = _h, data = __rest(_h, ["code"]);
             res.status(code).json(data);
         }));
+        this.getAllReservationByRoom = this.asyncWrapper.wrap({ querySchema: this.reportValidator.getAllReservationByRoom }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _j = yield this.reportService.getAllReservationByRoom(req), { code } = _j, data = __rest(_j, ["code"]);
+            res.status(code).json(data);
+        }));
         this.getRoomReport = this.asyncWrapper.wrap({ querySchema: this.dashBoardValidator.getAllRoomsQueryValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _j = yield this.reportService.getRoomReport(req), { code } = _j, data = __rest(_j, ["code"]);
+            const _k = yield this.reportService.getRoomReport(req), { code } = _k, data = __rest(_k, ["code"]);
             res.status(code).json(data);
         }));
     }

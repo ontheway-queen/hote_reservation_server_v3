@@ -39,9 +39,8 @@ class HRconfigurationValidator {
 
   // create Supplier validation
   public createSupplierValidatorValidator = Joi.object({
-    name: Joi.string().uppercase().required(),
-    phone: Joi.number().allow("").required(),
-    last_balance: Joi.number().required(),
+    name: Joi.string().required(),
+    phone: Joi.number().allow("").optional(),
   });
 
   // get all Supplier query validator
@@ -57,7 +56,6 @@ class HRconfigurationValidator {
     name: Joi.string().allow("").optional(),
     phone: Joi.number().allow("").optional(),
     status: Joi.boolean().optional(),
-    last_balance: Joi.number().optional(),
   });
 
   public supplierPayment = Joi.object({

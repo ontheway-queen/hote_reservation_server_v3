@@ -54,8 +54,7 @@ class PayRollValidator {
     limit: Joi.string().allow("").optional(),
     skip: Joi.string().allow("").optional(),
     key: Joi.string().allow("").optional(),
-    from_date: Joi.string().allow("").optional(),
-    to_date: Joi.string().allow("").optional(),
+    payroll_month: Joi.string().allow("").optional(),
   });
 
   // Params id Validator

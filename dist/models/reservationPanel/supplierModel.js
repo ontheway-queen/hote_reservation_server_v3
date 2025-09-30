@@ -37,6 +37,7 @@ class SupplierModel extends schema_1.default {
                 .withSchema(this.HOTEL_INVENTORY_SCHEMA)
                 .select("s.id", "s.name", "s.phone", "s.status", "s.is_deleted", this.db.raw(`COALESCE((SELECT SUM(st.credit) - SUM(st.debit) FROM ${this.HOTEL_INVENTORY_SCHEMA}.supplier_transaction AS st WHERE st.supplier_id = s.id), 0) as last_balance`))
                 .where("s.hotel_code", hotel_code)
+                .andWhere("s.is_deleted", false)
                 .andWhere(function () {
                 if (key) {
                     this.andWhere("s.name", "ilike", `%${key}%`);
@@ -56,6 +57,7 @@ class SupplierModel extends schema_1.default {
                 .withSchema(this.HOTEL_INVENTORY_SCHEMA)
                 .count("s.id as total")
                 .where("s.hotel_code", hotel_code)
+                .andWhere("s.is_deleted", false)
                 .andWhere(function () {
                 if (key) {
                     this.andWhere("s.name", "ilike", `%${key}%`);
