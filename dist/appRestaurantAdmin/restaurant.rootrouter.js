@@ -8,6 +8,7 @@ const express_1 = require("express");
 const authChecker_1 = __importDefault(require("../common/middleware/authChecker/authChecker"));
 const food_router_1 = __importDefault(require("./routers/food.router"));
 const menuCategory_router_1 = __importDefault(require("./routers/menuCategory.router"));
+const order_router_1 = __importDefault(require("./routers/order.router"));
 const restaurantTable_router_1 = __importDefault(require("./routers/restaurantTable.router"));
 const unit_router_1 = __importDefault(require("./routers/unit.router"));
 class RestaurantRootRouter {
@@ -21,6 +22,7 @@ class RestaurantRootRouter {
         this.router.use("/menu-category", this.authChecker.hotelRestaurantAuthChecker, new menuCategory_router_1.default().router);
         this.router.use("/unit", this.authChecker.hotelRestaurantAuthChecker, new unit_router_1.default().router);
         this.router.use("/food", this.authChecker.hotelRestaurantAuthChecker, new food_router_1.default().router);
+        this.router.use("/order", this.authChecker.hotelRestaurantAuthChecker, new order_router_1.default().router);
     }
 }
 exports.RestaurantRootRouter = RestaurantRootRouter;

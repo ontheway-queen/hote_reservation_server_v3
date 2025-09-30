@@ -20,6 +20,7 @@ const config_1 = __importDefault(require("../../config/config"));
 const accountModel_1 = __importDefault(require("../../models/reservationPanel/accountModel/accountModel"));
 const expenseModel_1 = __importDefault(require("../../models/reservationPanel/expenseModel"));
 const hotel_model_1 = __importDefault(require("../../models/reservationPanel/hotel.model"));
+const restaurant_Model_1 = __importDefault(require("../../models/restaurantModel/restaurant.Model"));
 const chartOfAcc_1 = require("../miscellaneous/chartOfAcc");
 const constants_1 = require("../miscellaneous/constants");
 class Lib {
@@ -43,7 +44,10 @@ class Lib {
             (1000 * 60 * 60 * 24));
     }
     static generateBookingReferenceWithId(hotelPrefix, lastBookingId) {
-        const datePart = new Date().toISOString().slice(2, 10).replace(/-/g, "");
+        const datePart = new Date()
+            .toISOString()
+            .slice(2, 10)
+            .replace(/-/g, "");
         const idPart = String(lastBookingId + 1).padStart(6, "0");
         return `${hotelPrefix}-${datePart}-${idPart}`;
     }
@@ -170,7 +174,8 @@ class Lib {
             let nextSeq = 1;
             const lastRow = yield new expenseModel_1.default(trx).getLastExpenseNo();
             const lastExpenseNo = lastRow === null || lastRow === void 0 ? void 0 : lastRow.expense_no;
-            if (lastExpenseNo && lastExpenseNo.startsWith(`${prefix}-${datePart}`)) {
+            if (lastExpenseNo &&
+                lastExpenseNo.startsWith(`${prefix}-${datePart}`)) {
                 // Extract last sequence number
                 const lastSeq = parseInt(lastExpenseNo.split("-").pop() || "0", 10);
                 nextSeq = lastSeq + 1;
@@ -205,6 +210,40 @@ class Lib {
             const serial = String(newSerial).padStart(3, "0");
             return `${prefix}-${code}-${serial}`;
         });
+    }
+    static generateOrderNo(trx, hotel_code, restaurant_id) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const date = new Date();
+            const yyyy = date.getFullYear();
+            const mm = String(date.getMonth() + 1).padStart(2, "0");
+            const dd = String(date.getDate()).padStart(2, "0");
+            const datePart = `${yyyy}${mm}${dd}`;
+            let nextSeq = 1;
+            // Get the last order for today
+            const lastRow = yield new restaurant_Model_1.default(trx).getLastOrder({
+                hotel_code,
+                restaurant_id,
+            });
+            const lastOrderNo = lastRow === null || lastRow === void 0 ? void 0 : lastRow.order_no;
+            if (lastOrderNo && lastOrderNo.startsWith(datePart)) {
+                const lastSeq = parseInt(lastOrderNo.slice(-2), 10);
+                nextSeq = lastSeq + 1;
+            }
+            const seqPart = String(nextSeq).padStart(3, "0");
+            return `${datePart}${seqPart}`;
+        });
+    }
+    static adjustPercentageOrFixedAmount(baseAmount, value = 0, type, isSubtract = false) {
+        if (!value || value <= 0)
+            return baseAmount;
+        let adjustment = 0;
+        if (type === "percentage") {
+            adjustment = (baseAmount * value) / 100;
+        }
+        else if (type === "fixed") {
+            adjustment = value;
+        }
+        return isSubtract ? baseAmount - adjustment : baseAmount + adjustment;
     }
 }
 exports.default = Lib;
