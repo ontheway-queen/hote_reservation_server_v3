@@ -47,11 +47,12 @@ class SupplierModel extends Schema {
         "s.status",
         "s.is_deleted",
         this.db.raw(
-          `COALESCE((SELECT SUM(sp.credit) - SUM(sp.debit) FROM ${this.HOTEL_INVENTORY_SCHEMA}.supplier_payment AS sp WHERE sp.supplier_id = s.id), 0) as last_balance`
+          `COALESCE((SELECT SUM(st.credit) - SUM(st.debit) FROM ${this.HOTEL_INVENTORY_SCHEMA}.supplier_transaction AS st WHERE st.supplier_id = s.id), 0) as last_balance`
         )
       )
 
       .where("s.hotel_code", hotel_code)
+      .andWhere("s.is_deleted", false)
       .andWhere(function () {
         if (key) {
           this.andWhere("s.name", "ilike", `%${key}%`);
@@ -72,6 +73,7 @@ class SupplierModel extends Schema {
       .withSchema(this.HOTEL_INVENTORY_SCHEMA)
       .count("s.id as total")
       .where("s.hotel_code", hotel_code)
+      .andWhere("s.is_deleted", false)
       .andWhere(function () {
         if (key) {
           this.andWhere("s.name", "ilike", `%${key}%`);
@@ -282,8 +284,31 @@ class SupplierModel extends Schema {
       .update(payload);
   }
 
+  public async insertSupplierTransaction(payload: {
+    hotel_code: number;
+    supplier_id: number;
+    debit: number;
+    credit: number;
+    transaction_no: string;
+    remarks: string;
+  }): Promise<{ id: number }[]> {
+    console.log({ payload });
+    return await this.db("supplier_transaction")
+      .withSchema(this.HOTEL_INVENTORY_SCHEMA)
+      .insert(payload, "id");
+  }
+
+  public async getLastTransactionByHotel(hotel_code: number) {
+    return this.db("supplier_transaction")
+      .withSchema(this.HOTEL_INVENTORY_SCHEMA)
+      .where({ hotel_code })
+      .orderBy("id", "desc")
+      .first();
+  }
+
   public async insertSupplierPayment(payload: {
     hotel_code: number;
+    trx_id: number;
     acc_id: number;
     debit: number;
     credit: number;

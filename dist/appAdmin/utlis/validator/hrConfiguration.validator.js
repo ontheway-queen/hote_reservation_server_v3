@@ -40,9 +40,8 @@ class HRconfigurationValidator {
         });
         // create Supplier validation
         this.createSupplierValidatorValidator = joi_1.default.object({
-            name: joi_1.default.string().uppercase().required(),
-            phone: joi_1.default.number().allow("").required(),
-            last_balance: joi_1.default.number().required(),
+            name: joi_1.default.string().required(),
+            phone: joi_1.default.number().allow("").optional(),
         });
         // get all Supplier query validator
         this.getAllSupplierQueryValidator = joi_1.default.object({
@@ -56,7 +55,6 @@ class HRconfigurationValidator {
             name: joi_1.default.string().allow("").optional(),
             phone: joi_1.default.number().allow("").optional(),
             status: joi_1.default.boolean().optional(),
-            last_balance: joi_1.default.number().optional(),
         });
         this.supplierPayment = joi_1.default.object({
             acc_id: joi_1.default.number().required(),

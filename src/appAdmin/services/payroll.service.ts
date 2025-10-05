@@ -202,7 +202,7 @@ class PayRollService extends AbstractServices {
 
   public async getAllPayRoll(req: Request) {
     const { hotel_code } = req.hotel_admin;
-    const { limit, skip, key, from_date, to_date } = req.query;
+    const { limit, skip, key, from_date, to_date, payroll_month } = req.query;
 
     const { data, total } = await this.Model.payRollModel().getAllPayRoll({
       limit: limit as string,
@@ -211,6 +211,7 @@ class PayRollService extends AbstractServices {
       from_date: from_date as string,
       to_date: to_date as string,
       hotel_code,
+      payroll_month: payroll_month as string,
     });
     return {
       success: true,

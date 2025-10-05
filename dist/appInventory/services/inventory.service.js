@@ -21,8 +21,7 @@ class InventoryService extends abstract_service_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             const { hotel_code } = req.hotel_admin;
             const { limit, skip, key } = req.query;
-            const model = this.Model.inventoryModel();
-            const { data, total } = yield model.getInventoryDetails({
+            const { data, total } = yield this.Model.inventoryModel().getInventoryDetails({
                 key: key,
                 limit: Number(limit),
                 skip: Number(skip),

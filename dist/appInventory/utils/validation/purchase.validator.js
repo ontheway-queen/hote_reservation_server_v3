@@ -11,10 +11,10 @@ class PurchaseInvValidator {
             supplier_id: joi_1.default.number().required(),
             purchase_date: joi_1.default.date().required(),
             ac_tr_ac_id: joi_1.default.number().required(),
-            vat: joi_1.default.number().allow("").optional(),
-            shipping_cost: joi_1.default.number().allow("").optional(),
-            discount_amount: joi_1.default.number().allow("").optional(),
-            paid_amount: joi_1.default.number().allow("").optional(),
+            vat: joi_1.default.number().allow("").optional().default(0),
+            shipping_cost: joi_1.default.number().allow("").optional().default(0),
+            discount_amount: joi_1.default.number().allow("").optional().default(0),
+            paid_amount: joi_1.default.number().allow("").optional().default(0),
             purchase_items: joi_1.default.array()
                 .items(joi_1.default.object({
                 product_id: joi_1.default.number().required(),

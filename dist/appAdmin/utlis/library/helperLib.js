@@ -14,6 +14,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const accountModel_1 = __importDefault(require("../../../models/reservationPanel/accountModel/accountModel"));
 const puschase_inventory_model_1 = __importDefault(require("../../../models/reservationPanel/inventoryModel/puschase.inventory.model"));
+const supplierModel_1 = __importDefault(require("../../../models/reservationPanel/supplierModel"));
 class HelperLib {
     constructor(trx) {
         this.trx = trx;
@@ -87,6 +88,16 @@ class HelperLib {
             const purchaseData = yield pInvModel.getAllPurchaseForLastId();
             const purchase_no = purchaseData.length ? purchaseData[0].id + 1 : 1;
             return `PUR-${year}${purchase_no}`;
+        });
+    }
+    generateSupplierTransactionNo(hotel_code) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const trxModel = new supplierModel_1.default(this.trx);
+            const year = new Date().getFullYear();
+            // get last transaction id for this hotel
+            const lastData = yield trxModel.getLastTransactionByHotel(hotel_code);
+            const nextId = (lastData === null || lastData === void 0 ? void 0 : lastData.id) ? lastData.id + 1 : 1;
+            return `ST-${hotel_code}-${year}${nextId}`;
         });
     }
 }

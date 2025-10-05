@@ -5,6 +5,7 @@ import {
   IUpdateInvSupplierPayload,
 } from "../../appInventory/utils/interfaces/common.inv.interface";
 import { HelperFunction } from "../utlis/library/helperFunction";
+import HelperLib from "../utlis/library/helperLib";
 
 class SupplierService extends AbstractServices {
   constructor() {
@@ -571,6 +572,19 @@ class SupplierService extends AbstractServices {
         return voucher_no;
       };
 
+      const trx_no1 = await new HelperLib(trx).generateSupplierTransactionNo(
+        hotel_code
+      );
+
+      const [st] = await supplierModel.insertSupplierTransaction({
+        hotel_code,
+        supplier_id,
+        transaction_no: trx_no1,
+        credit: paid_amount,
+        debit: 0,
+        remarks: `For supplier payment. Payment Type ${receipt_type}`,
+      });
+
       const insertSupplierPayment = async (
         amount: number,
         supplier_id: number,
@@ -581,14 +595,15 @@ class SupplierService extends AbstractServices {
         const [payment] = await supplierModel.insertSupplierPayment({
           created_by,
           hotel_code,
-          debit: amount,
-          credit: 0,
+          debit: 0,
+          credit: amount,
           acc_id,
           supplier_id,
           purchase_id,
           voucher_no,
           payment_date: payment_date || today,
           remarks,
+          trx_id: st.id,
         });
         return payment.id;
       };
@@ -648,10 +663,8 @@ class SupplierService extends AbstractServices {
             due: true,
           });
 
-        console.log({ allInvoice });
         const unpaidInvoice = allInvoice.filter((inv) => Number(inv.due) > 0);
 
-        console.log({ unpaidInvoice });
         if (!unpaidInvoice.length) {
           return {
             success: false,

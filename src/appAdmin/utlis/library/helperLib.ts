@@ -1,6 +1,7 @@
 import { Knex } from "knex";
 import AccountModel from "../../../models/reservationPanel/accountModel/accountModel";
 import PurchaseInventoryModel from "../../../models/reservationPanel/inventoryModel/puschase.inventory.model";
+import SupplierModel from "../../../models/reservationPanel/supplierModel";
 
 export default class HelperLib {
   private trx: Knex.Transaction;
@@ -90,5 +91,17 @@ export default class HelperLib {
     const purchase_no = purchaseData.length ? purchaseData[0].id + 1 : 1;
 
     return `PUR-${year}${purchase_no}`;
+  }
+
+  public async generateSupplierTransactionNo(hotel_code: number) {
+    const trxModel = new SupplierModel(this.trx);
+
+    const year = new Date().getFullYear();
+
+    // get last transaction id for this hotel
+    const lastData = await trxModel.getLastTransactionByHotel(hotel_code);
+    const nextId = lastData?.id ? lastData.id + 1 : 1;
+
+    return `ST-${hotel_code}-${year}${nextId}`;
   }
 }

@@ -181,7 +181,7 @@ class PayRollService extends abstract_service_1.default {
     getAllPayRoll(req) {
         return __awaiter(this, void 0, void 0, function* () {
             const { hotel_code } = req.hotel_admin;
-            const { limit, skip, key, from_date, to_date } = req.query;
+            const { limit, skip, key, from_date, to_date, payroll_month } = req.query;
             const { data, total } = yield this.Model.payRollModel().getAllPayRoll({
                 limit: limit,
                 skip: skip,
@@ -189,6 +189,7 @@ class PayRollService extends abstract_service_1.default {
                 from_date: from_date,
                 to_date: to_date,
                 hotel_code,
+                payroll_month: payroll_month,
             });
             return {
                 success: true,

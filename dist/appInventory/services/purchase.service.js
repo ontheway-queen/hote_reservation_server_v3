@@ -81,6 +81,16 @@ class PurchaseInvService extends abstract_service_1.default {
                         message: "Discount amount cannot be greater than grand total",
                     };
                 }
+                // supplier transaction
+                const trx_no = yield new helperLib_1.default(trx).generateSupplierTransactionNo(hotel_code);
+                const [sup_transaction] = yield supplierModel.insertSupplierTransaction({
+                    hotel_code,
+                    supplier_id,
+                    transaction_no: trx_no,
+                    credit: 0,
+                    debit: grand_total,
+                    remarks: "For purchase product",
+                });
                 const purchase_no = yield new helperLib_1.default(trx).generatePurchaseVoucher();
                 // Insert purchase
                 const createdPurchase = yield pInvModel.createPurchase({
@@ -95,6 +105,7 @@ class PurchaseInvService extends abstract_service_1.default {
                     shipping_cost,
                     due,
                     purchase_no: purchase_no,
+                    trx_id: sup_transaction.id,
                 });
                 // Insert purchase item
                 const purchaseItemsPayload = [];
@@ -214,19 +225,47 @@ class PurchaseInvService extends abstract_service_1.default {
                             voucher_no,
                             hotel_code,
                         },
+                        {
+                            acc_head_id: payable_head.head_id,
+                            created_by,
+                            debit: grand_total - paid_amount,
+                            credit: 0,
+                            description: `Payable decreased for payment. purchasing ${purchase_no}`,
+                            voucher_date: today,
+                            voucher_no: voucher_no1,
+                            hotel_code,
+                        },
                     ]);
+                    const trx_no1 = yield new helperLib_1.default(trx).generateSupplierTransactionNo(hotel_code);
+                    const [st] = yield supplierModel.insertSupplierTransaction({
+                        hotel_code,
+                        supplier_id,
+                        transaction_no: trx_no1,
+                        credit: paid_amount,
+                        debit: 0,
+                        remarks: "For purchase product",
+                    });
                     // insert supplier payment
                     const [supplierPaymentID] = yield supplierModel.insertSupplierPayment({
                         created_by: admin_id,
                         hotel_code: hotel_code,
-                        debit: paid_amount,
-                        credit: 0,
+                        debit: 0,
+                        credit: paid_amount,
                         acc_id: ac_tr_ac_id,
                         supplier_id,
                         purchase_id: createdPurchase[0].id,
                         voucher_no,
                         payment_date: new Date().toISOString(),
+                        trx_id: st.id,
                     });
+                    // insert supplier payment allocation
+                    yield supplierModel.insertSupplierPaymentAllocation([
+                        {
+                            supplier_payment_id: supplierPaymentID.id,
+                            invoice_id: createdPurchase[0].id,
+                            paid_amount: paid_amount,
+                        },
+                    ]);
                 }
                 return {
                     success: true,

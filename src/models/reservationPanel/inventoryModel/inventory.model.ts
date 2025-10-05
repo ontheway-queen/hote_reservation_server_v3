@@ -269,6 +269,62 @@ class InventoryModel extends Schema {
       .andWhere("dv.hotel_code", hotel_code);
   }
 
+  // public async getInventoryDetails(payload: {
+  //   limit?: number;
+  //   skip?: number;
+  //   key?: string;
+  //   hotel_code: number;
+  // }): Promise<{
+  //   data: {
+  //     id: number;
+  //     product_code: string;
+  //     product_name: string;
+  //     category: string;
+  //     available_quantity: number;
+  //     quantity_used: number;
+  //     total_damaged: number;
+  //   }[];
+  //   total: number;
+  // }> {
+  //   const { limit, skip, key, hotel_code } = payload;
+
+  //   const baseQuery = this.db("inventory as i")
+  //     .withSchema(this.HOTEL_INVENTORY_SCHEMA)
+  //     .leftJoin("products as p", "p.id", "i.product_id")
+  //     .leftJoin("categories as c", "c.id", "p.category_id")
+  //     .where("i.hotel_code", hotel_code)
+  //     .modify((qb) => {
+  //       if (key) {
+  //         qb.andWhere("p.name", "ilike", `%${key}%`);
+  //       }
+  //     });
+
+  //   // get total count
+  //   const totalResult = await baseQuery
+  //     .clone()
+  //     .count<{ count: string }>("i.id as count")
+  //     .first();
+  //   const total = totalResult ? parseInt(totalResult.count, 10) : 0;
+
+  //   // get paginated data
+  //   if (limit) baseQuery.limit(limit);
+  //   if (skip) baseQuery.offset(skip);
+
+  //   const data = await baseQuery
+  //     .select(
+  //       "i.id",
+  //       "p.product_code",
+  //       "p.name as product_name",
+  //       "c.name as category",
+  //       "i.available_quantity",
+  //       "i.quantity_used",
+  //       "i.total_damaged"
+  //     )
+  //     .orderBy("i.id", "desc");
+
+  //   return { total, data };
+  // }
+
   public async getInventoryDetails(payload: {
     limit?: number;
     skip?: number;
@@ -276,7 +332,7 @@ class InventoryModel extends Schema {
     hotel_code: number;
   }): Promise<{
     data: {
-      id: number;
+      id: number | null;
       product_code: string;
       product_name: string;
       category: string;
@@ -288,39 +344,50 @@ class InventoryModel extends Schema {
   }> {
     const { limit, skip, key, hotel_code } = payload;
 
-    const baseQuery = this.db("inventory as i")
+    // --- data query ---
+    const dataQuery = this.db("products as p")
       .withSchema(this.HOTEL_INVENTORY_SCHEMA)
-      .leftJoin("products as p", "p.id", "i.product_id")
+      .select(
+        "i.id",
+        "p.product_code",
+        "p.name as product_name",
+        "c.name as category",
+        this.db.raw("COALESCE(i.available_quantity, 0) as available_quantity"),
+        this.db.raw("COALESCE(i.quantity_used, 0) as quantity_used"),
+        this.db.raw("COALESCE(i.total_damaged, 0) as total_damaged")
+      )
       .leftJoin("categories as c", "c.id", "p.category_id")
-      .where("i.hotel_code", hotel_code)
+      .leftJoin("inventory as i", function () {
+        this.on("i.product_id", "p.id").andOnVal("i.hotel_code", hotel_code);
+      })
+      .andWhere("p.hotel_code", hotel_code)
+      .modify((qb) => {
+        if (key) {
+          qb.andWhere("p.name", "ilike", `%${key}%`);
+        }
+        if (limit) qb.limit(limit);
+        if (skip) qb.offset(skip);
+      })
+      .orderBy("p.id", "desc");
+
+    const data = await dataQuery;
+
+    // --- total query ---
+    const totalQuery = await this.db("products as p")
+      .withSchema(this.HOTEL_INVENTORY_SCHEMA)
+      .count<{ total: string }>("p.id as total")
+      .leftJoin("categories as c", "c.id", "p.category_id")
+      .leftJoin("inventory as i", function () {
+        this.on("i.product_id", "p.id").andOnVal("i.hotel_code", hotel_code);
+      })
+      .andWhere("p.hotel_code", hotel_code)
       .modify((qb) => {
         if (key) {
           qb.andWhere("p.name", "ilike", `%${key}%`);
         }
       });
 
-    // get total count
-    const totalResult = await baseQuery
-      .clone()
-      .count<{ count: string }>("i.id as count")
-      .first();
-    const total = totalResult ? parseInt(totalResult.count, 10) : 0;
-
-    // get paginated data
-    if (limit) baseQuery.limit(limit);
-    if (skip) baseQuery.offset(skip);
-
-    const data = await baseQuery
-      .select(
-        "i.id",
-        "p.product_code",
-        "p.name as product_name",
-        "c.name as category",
-        "i.available_quantity",
-        "i.quantity_used",
-        "i.total_damaged"
-      )
-      .orderBy("i.id", "desc");
+    const total = Number(totalQuery[0]?.total | 0);
 
     return { total, data };
   }

@@ -58,7 +58,7 @@ class PayRollModel extends schema_1.default {
     // Get All Pay Roll
     getAllPayRoll(payload) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { key, hotel_code, limit, skip, from_date, to_date } = payload;
+            const { key, hotel_code, limit, skip, from_date, to_date, payroll_month } = payload;
             const dtbs = this.db("payroll as p");
             const endDatePlusOneDay = new Date(to_date);
             endDatePlusOneDay.setDate(endDatePlusOneDay.getDate() + 1);
@@ -83,6 +83,9 @@ class PayRollModel extends schema_1.default {
                 }
                 if (key) {
                     this.andWhere("e.name", "like", `%${key}%`).orWhere("de.name", "like", `%${key}%`);
+                }
+                if (payroll_month) {
+                    this.andWhereRaw("TO_CHAR(p.payroll_month, 'YYYY-MM') = TO_CHAR(?::date, 'YYYY-MM')", [payroll_month]);
                 }
             })
                 .orderBy("p.id", "desc");

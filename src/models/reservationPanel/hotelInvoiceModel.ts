@@ -142,16 +142,6 @@ class HotelInvoiceModel extends Schema {
       .insert(payload, "id");
   }
 
-  public async insertMoneyReceiptItem(payload: {
-    money_receipt_id: number;
-    invoice_id: number;
-    paid_amount: number;
-  }) {
-    return await this.db("money_receipt_item")
-      .withSchema(this.RESERVATION_SCHEMA)
-      .insert(payload, "id");
-  }
-
   public async insertFolioMoneyReceipt(payload: {
     money_receipt_id: number;
     amount: number;
