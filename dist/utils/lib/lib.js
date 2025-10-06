@@ -20,7 +20,7 @@ const config_1 = __importDefault(require("../../config/config"));
 const accountModel_1 = __importDefault(require("../../models/reservationPanel/accountModel/accountModel"));
 const expenseModel_1 = __importDefault(require("../../models/reservationPanel/expenseModel"));
 const hotel_model_1 = __importDefault(require("../../models/reservationPanel/hotel.model"));
-const restaurant_Model_1 = __importDefault(require("../../models/restaurantModel/restaurant.Model"));
+const restaurant_order_model_1 = __importDefault(require("../../models/restaurantModels/restaurant.order.model"));
 const chartOfAcc_1 = require("../miscellaneous/chartOfAcc");
 const constants_1 = require("../miscellaneous/constants");
 class Lib {
@@ -220,7 +220,7 @@ class Lib {
             const datePart = `${yyyy}${mm}${dd}`;
             let nextSeq = 1;
             // Get the last order for today
-            const lastRow = yield new restaurant_Model_1.default(trx).getLastOrder({
+            const lastRow = yield new restaurant_order_model_1.default(trx).getLastOrder({
                 hotel_code,
                 restaurant_id,
             });

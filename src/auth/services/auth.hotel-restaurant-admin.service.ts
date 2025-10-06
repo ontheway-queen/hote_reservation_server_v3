@@ -15,7 +15,7 @@ class AuthHotelRestaurantAdminService extends AbstractServices {
 			email: string;
 			password: string;
 		};
-		const model = this.Model.restaurantAdminModel();
+		const model = this.restaurantModel.restaurantAdminModel();
 		const user = await model.getRestaurantAdmin({ email });
 		if (!user) {
 			return {
@@ -73,7 +73,8 @@ class AuthHotelRestaurantAdminService extends AbstractServices {
 	public async getProfile(req: Request) {
 		const { id, hotel_code, restaurant_id } = req.restaurant_admin;
 
-		const restaurantAdminModel = this.Model.restaurantAdminModel();
+		const restaurantAdminModel =
+			this.restaurantModel.restaurantAdminModel();
 		const data = await restaurantAdminModel.getRestaurantAdminProfile({
 			id,
 			hotel_code,
@@ -99,7 +100,7 @@ class AuthHotelRestaurantAdminService extends AbstractServices {
 		const { id, hotel_code } = req.restaurant_admin;
 		const body = req.body as IUpdateRestaurantUserAdminPayload;
 		console.log({ body });
-		const model = this.Model.restaurantAdminModel();
+		const model = this.restaurantModel.restaurantAdminModel();
 
 		const checkAdmin = await model.getRestaurantAdmin({
 			id,
@@ -150,7 +151,7 @@ class AuthHotelRestaurantAdminService extends AbstractServices {
 			new_password: string;
 		};
 
-		const model = this.Model.restaurantAdminModel();
+		const model = this.restaurantModel.restaurantAdminModel();
 
 		const checkAdmin = await model.getRestaurantAdmin({
 			id,
@@ -220,7 +221,7 @@ class AuthHotelRestaurantAdminService extends AbstractServices {
 			type === OTP_TYPE_FORGET_RESTAURANT_ADMIN
 		) {
 			const hashPass = await Lib.hashPass(password);
-			const adminModel = this.Model.restaurantAdminModel();
+			const adminModel = this.restaurantModel.restaurantAdminModel();
 			await adminModel.updateRestaurantAdmin({
 				email,
 				payload: { password: hashPass },

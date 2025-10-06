@@ -12,9 +12,10 @@ class RestaurantTableService extends AbstractServices {
 			const { id, restaurant_id, hotel_code } = req.restaurant_admin;
 			const body = req.body as ICreateTableRequest;
 
-			const restaurantModel = this.Model.restaurantModel(trx);
+			const restaurantTableModel =
+				this.restaurantModel.restaurantTableModel(trx);
 
-			const isTableExists = await restaurantModel.getTables({
+			const isTableExists = await restaurantTableModel.getTables({
 				hotel_code,
 				restaurant_id,
 				name: body.name,
@@ -28,7 +29,7 @@ class RestaurantTableService extends AbstractServices {
 				};
 			}
 
-			await restaurantModel.createTable({
+			await restaurantTableModel.createTable({
 				...body,
 				hotel_code,
 				created_by: id,
@@ -48,15 +49,17 @@ class RestaurantTableService extends AbstractServices {
 
 		const { limit, skip, name, category, status } = req.query;
 
-		const data = await this.Model.restaurantModel().getTables({
-			hotel_code,
-			restaurant_id,
-			limit: Number(limit),
-			skip: Number(skip),
-			name: name as string,
-			category: category as string,
-			status: status as string,
-		});
+		const data = await this.restaurantModel
+			.restaurantTableModel()
+			.getTables({
+				hotel_code,
+				restaurant_id,
+				limit: Number(limit),
+				skip: Number(skip),
+				name: name as string,
+				category: category as string,
+				status: status as string,
+			});
 
 		return {
 			success: true,
@@ -75,7 +78,8 @@ class RestaurantTableService extends AbstractServices {
 			} = req.restaurant_admin;
 			const body = req.body as Partial<ICreateTableRequest>;
 
-			const restaurantModel = this.Model.restaurantModel(trx);
+			const restaurantModel =
+				this.restaurantModel.restaurantTableModel(trx);
 
 			const isTableExists = await restaurantModel.getTables({
 				hotel_code,
@@ -128,7 +132,8 @@ class RestaurantTableService extends AbstractServices {
 			const { id } = req.params;
 			const { restaurant_id, hotel_code } = req.restaurant_admin;
 
-			const restaurantModel = this.Model.restaurantModel(trx);
+			const restaurantModel =
+				this.restaurantModel.restaurantTableModel(trx);
 
 			const isTableExists = await restaurantModel.getTables({
 				hotel_code,
@@ -141,6 +146,16 @@ class RestaurantTableService extends AbstractServices {
 					success: false,
 					code: this.StatusCode.HTTP_NOT_FOUND,
 					message: "Table not found.",
+				};
+			}
+
+			const table = isTableExists.data[0];
+
+			if (table.status === "booked") {
+				return {
+					success: false,
+					code: this.StatusCode.HTTP_CONFLICT,
+					message: "Table is boooked.",
 				};
 			}
 

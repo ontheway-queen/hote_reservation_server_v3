@@ -15,9 +15,10 @@ class RestaurantUnitService extends AbstractServices {
 			const { id, restaurant_id, hotel_code } = req.restaurant_admin;
 			const body = req.body as IUnitRequest;
 
-			const restaurantModel = this.Model.restaurantModel(trx);
+			const restaurantUnitModel =
+				this.restaurantModel.restaurantUnitModel(trx);
 
-			await restaurantModel.createUnit({
+			await restaurantUnitModel.createUnit({
 				...body,
 				hotel_code,
 				restaurant_id,
@@ -37,7 +38,7 @@ class RestaurantUnitService extends AbstractServices {
 
 		const { limit, skip, name } = req.query;
 
-		const data = await this.Model.restaurantModel().getUnits({
+		const data = await this.restaurantModel.restaurantUnitModel().getUnits({
 			hotel_code,
 			restaurant_id,
 			limit: Number(limit),
@@ -58,9 +59,10 @@ class RestaurantUnitService extends AbstractServices {
 			const { restaurant_id, hotel_code } = req.restaurant_admin;
 			const body = req.body as IUpdateUnitRequest;
 
-			const restaurantModel = this.Model.restaurantModel(trx);
+			const restaurantUnitModel =
+				this.restaurantModel.restaurantUnitModel(trx);
 
-			const isUnitExists = await restaurantModel.getUnits({
+			const isUnitExists = await restaurantUnitModel.getUnits({
 				hotel_code,
 				restaurant_id,
 				id: parseInt(id),
@@ -74,7 +76,7 @@ class RestaurantUnitService extends AbstractServices {
 				};
 			}
 
-			await restaurantModel.updateUnit({
+			await restaurantUnitModel.updateUnit({
 				id: parseInt(id),
 				payload: body,
 			});
@@ -92,9 +94,10 @@ class RestaurantUnitService extends AbstractServices {
 			const { id } = req.params;
 			const { restaurant_id, hotel_code } = req.restaurant_admin;
 
-			const restaurantModel = this.Model.restaurantModel(trx);
+			const restaurantUnitModel =
+				this.restaurantModel.restaurantUnitModel(trx);
 
-			const isUnitExists = await restaurantModel.getUnits({
+			const isUnitExists = await restaurantUnitModel.getUnits({
 				hotel_code,
 				restaurant_id,
 				id: parseInt(id),
@@ -108,7 +111,7 @@ class RestaurantUnitService extends AbstractServices {
 				};
 			}
 
-			await restaurantModel.deleteUnit({
+			await restaurantUnitModel.deleteUnit({
 				id: parseInt(id),
 			});
 

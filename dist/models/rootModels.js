@@ -34,8 +34,6 @@ const reservation_model_1 = require("./reservationPanel/reservation.model");
 const Room_Model_1 = __importDefault(require("./reservationPanel/Room.Model"));
 const Setting_Model_1 = __importDefault(require("./reservationPanel/Setting.Model"));
 const supplierModel_1 = __importDefault(require("./reservationPanel/supplierModel"));
-const restaurant_admin_model_1 = __importDefault(require("./restaurantModel/restaurant.admin.model"));
-const restaurant_Model_1 = __importDefault(require("./restaurantModel/restaurant.Model"));
 class Models {
     constructor(db) {
         this.db = db;
@@ -138,12 +136,6 @@ class Models {
     }
     serviceImageModel(trx) {
         return new serviceImage_model_1.default(trx || this.db);
-    }
-    restaurantModel(trx) {
-        return new restaurant_Model_1.default(trx || this.db);
-    }
-    restaurantAdminModel(trx) {
-        return new restaurant_admin_model_1.default(trx || this.db);
     }
     serviceScheduleModel(trx) {
         return new serviceSchedule_model_1.default(trx || this.db);

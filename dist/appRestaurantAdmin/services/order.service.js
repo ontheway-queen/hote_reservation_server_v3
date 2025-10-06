@@ -35,8 +35,10 @@ class RestaurantOrderService extends abstract_service_1.default {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
                 const { id, restaurant_id, hotel_code } = req.restaurant_admin;
                 const _a = req.body, { order_items } = _a, rest = __rest(_a, ["order_items"]);
-                const restaurantModel = this.Model.restaurantModel(trx);
-                const { data } = yield restaurantModel.getTables({
+                const restaurantTableModel = this.restaurantModel.restaurantTableModel(trx);
+                const restaurantOrderModel = this.restaurantModel.restaurantOrderModel(trx);
+                const restaurantFoodModel = this.restaurantModel.restaurantFoodModel(trx);
+                const { data } = yield restaurantTableModel.getTables({
                     id: rest.table_id,
                     hotel_code,
                     restaurant_id,
@@ -48,12 +50,12 @@ class RestaurantOrderService extends abstract_service_1.default {
                     throw new customEror_1.default("Table not found", this.StatusCode.HTTP_NOT_FOUND);
                 }
                 const orderNo = yield lib_1.default.generateOrderNo(trx, hotel_code, restaurant_id);
-                let totalAmount = 0;
-                let grandTotal = 0;
-                let vat_amount = 0;
                 let sub_total = 0;
+                let grand_Total = 0;
+                let vat_amount = 0;
+                let net_total = 0;
                 for (const item of order_items) {
-                    const food = yield restaurantModel.getFoods({
+                    const food = yield restaurantFoodModel.getFoods({
                         id: item.food_id,
                         hotel_code,
                         restaurant_id,
@@ -61,37 +63,37 @@ class RestaurantOrderService extends abstract_service_1.default {
                     if (!food.data.length) {
                         throw new customEror_1.default("Food not found", this.StatusCode.HTTP_NOT_FOUND);
                     }
-                    totalAmount +=
+                    sub_total +=
                         Number(item.quantity) * Number(food.data[0].retail_price);
                 }
-                totalAmount = lib_1.default.adjustPercentageOrFixedAmount(totalAmount, rest.discount, rest.discount_type, true);
-                sub_total = lib_1.default.adjustPercentageOrFixedAmount(totalAmount, rest.service_charge, rest.service_charge_type);
+                net_total = lib_1.default.adjustPercentageOrFixedAmount(sub_total, rest.discount, rest.discount_type, true);
+                grand_Total = lib_1.default.adjustPercentageOrFixedAmount(net_total, rest.service_charge, rest.service_charge_type);
                 if ((rest === null || rest === void 0 ? void 0 : rest.vat_rate) > 0) {
-                    vat_amount = (sub_total * rest.vat_rate) / 100;
-                    grandTotal = sub_total + vat_amount;
+                    vat_amount = (net_total * rest.vat_rate) / 100;
+                    grand_Total = grand_Total + vat_amount;
                 }
-                const [newOrder] = yield restaurantModel.createOrder({
+                const [newOrder] = yield restaurantOrderModel.createOrder({
                     hotel_code,
                     restaurant_id,
                     order_no: orderNo,
                     created_by: id,
-                    total: totalAmount,
                     table_id: rest.table_id,
                     order_type: rest.order_type,
-                    customer: rest.customer,
+                    guest: rest.guest,
+                    sub_total: sub_total,
+                    discount: rest.discount,
+                    discount_type: rest.discount_type,
+                    net_total: net_total,
                     service_charge: rest.service_charge,
                     service_charge_type: rest.service_charge_type,
                     vat_rate: rest.vat_rate,
                     vat_amount: vat_amount,
-                    sub_total: sub_total,
-                    grand_total: grandTotal,
+                    grand_total: grand_Total,
                     staff_id: rest.staff_id,
                     room_no: rest.room_no,
-                    discount: rest.discount,
-                    discount_type: rest.discount_type,
                 });
                 yield Promise.all(order_items.map((item) => __awaiter(this, void 0, void 0, function* () {
-                    const food = yield restaurantModel.getFoods({
+                    const food = yield restaurantFoodModel.getFoods({
                         id: item.food_id,
                         hotel_code,
                         restaurant_id,
@@ -99,7 +101,7 @@ class RestaurantOrderService extends abstract_service_1.default {
                     if (!food.data.length) {
                         throw new customEror_1.default("Food not found", this.StatusCode.HTTP_NOT_FOUND);
                     }
-                    yield restaurantModel.createOrderItems({
+                    yield restaurantOrderModel.createOrderItems({
                         order_id: newOrder.id,
                         food_id: item.food_id,
                         name: food.data[0].name,
@@ -109,7 +111,7 @@ class RestaurantOrderService extends abstract_service_1.default {
                             Number(food.data[0].retail_price),
                     });
                 })));
-                yield restaurantModel.updateTable({
+                yield restaurantTableModel.updateTable({
                     id: rest.table_id,
                     payload: {
                         status: "booked",
@@ -128,7 +130,9 @@ class RestaurantOrderService extends abstract_service_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             const { restaurant_id, hotel_code } = req.restaurant_admin;
             const { limit, skip, table_id, from_date, to_date, order_type, kitchen_status, status, } = req.query;
-            const data = yield this.Model.restaurantModel().getOrders({
+            const data = yield this.restaurantModel
+                .restaurantOrderModel()
+                .getOrders({
                 limit: Number(limit),
                 skip: Number(skip),
                 hotel_code,
@@ -147,7 +151,9 @@ class RestaurantOrderService extends abstract_service_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             const { id } = req.params;
             const { restaurant_id, hotel_code } = req.restaurant_admin;
-            const data = yield this.Model.restaurantModel().getOrderById({
+            const data = yield this.restaurantModel
+                .restaurantOrderModel()
+                .getOrderById({
                 hotel_code,
                 restaurant_id,
                 id: Number(id),
@@ -170,7 +176,9 @@ class RestaurantOrderService extends abstract_service_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             const { table_id } = req.params;
             const { restaurant_id, hotel_code } = req.restaurant_admin;
-            const data = yield this.Model.restaurantModel().getOrderById({
+            const data = yield this.restaurantModel
+                .restaurantOrderModel()
+                .getOrderById({
                 hotel_code,
                 restaurant_id,
                 table_id: Number(table_id),
@@ -194,8 +202,9 @@ class RestaurantOrderService extends abstract_service_1.default {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
                 const { id } = req.params;
                 const { restaurant_id, hotel_code } = req.restaurant_admin;
-                const restaurantModel = this.Model.restaurantModel(trx);
-                const isOrderExists = yield restaurantModel.getOrderById({
+                const restaurantOrderModel = this.restaurantModel.restaurantOrderModel(trx);
+                const restaurantTableModel = this.restaurantModel.restaurantTableModel(trx);
+                const isOrderExists = yield restaurantOrderModel.getOrderById({
                     hotel_code,
                     restaurant_id,
                     id: parseInt(id),
@@ -207,10 +216,10 @@ class RestaurantOrderService extends abstract_service_1.default {
                         message: "Order not found.",
                     };
                 }
-                yield restaurantModel.cancelOrder({
+                yield restaurantOrderModel.cancelOrder({
                     id: parseInt(id),
                 });
-                yield restaurantModel.updateTable({
+                yield restaurantTableModel.updateTable({
                     id: isOrderExists.table_id,
                     payload: {
                         status: "available",
@@ -237,8 +246,9 @@ class RestaurantOrderService extends abstract_service_1.default {
                         message: "Invalid amount. Please provide a valid payment amount.",
                     };
                 }
-                const restaurantModel = this.Model.restaurantModel(trx);
-                const isOrderExists = yield restaurantModel.getOrderById({
+                const restaurantOrderModel = this.restaurantModel.restaurantOrderModel(trx);
+                const restaurantTableModel = this.restaurantModel.restaurantTableModel(trx);
+                const isOrderExists = yield restaurantOrderModel.getOrderById({
                     hotel_code,
                     restaurant_id,
                     id: parseInt(id),
@@ -250,7 +260,7 @@ class RestaurantOrderService extends abstract_service_1.default {
                         message: "Order not found.",
                     };
                 }
-                if (isOrderExists.is_paid) {
+                if (isOrderExists.is_paid === true) {
                     return {
                         success: false,
                         code: this.StatusCode.HTTP_CONFLICT,
@@ -265,7 +275,7 @@ class RestaurantOrderService extends abstract_service_1.default {
                     };
                 }
                 const changeable_amount = Number(body.payable_amount) - Number(isOrderExists.grand_total);
-                yield restaurantModel.completeOrderPayment({
+                yield restaurantOrderModel.completeOrderPayment({
                     id: parseInt(id),
                 }, {
                     payable_amount: body.payable_amount,
@@ -273,7 +283,7 @@ class RestaurantOrderService extends abstract_service_1.default {
                     is_paid: true,
                     status: "completed",
                 });
-                yield restaurantModel.updateTable({
+                yield restaurantTableModel.updateTable({
                     id: isOrderExists.table_id,
                     payload: {
                         status: "available",
@@ -291,7 +301,9 @@ class RestaurantOrderService extends abstract_service_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             const { restaurant_id, hotel_code } = req.restaurant_admin;
             const { limit, skip, order_no } = req.query;
-            const data = yield this.Model.restaurantModel().getKitchenOrders({
+            const data = yield this.restaurantModel
+                .restaurantOrderModel()
+                .getKitchenOrders({
                 limit: Number(limit),
                 skip: Number(skip),
                 hotel_code,
@@ -306,8 +318,8 @@ class RestaurantOrderService extends abstract_service_1.default {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
                 const { id } = req.params;
                 const { restaurant_id, hotel_code } = req.restaurant_admin;
-                const restaurantModel = this.Model.restaurantModel(trx);
-                const isOrderExists = yield restaurantModel.getOrderById({
+                const restaurantOrderModel = this.restaurantModel.restaurantOrderModel(trx);
+                const isOrderExists = yield restaurantOrderModel.getOrderById({
                     hotel_code,
                     restaurant_id,
                     id: parseInt(id),
@@ -326,7 +338,7 @@ class RestaurantOrderService extends abstract_service_1.default {
                         message: "Order already completed.",
                     };
                 }
-                yield restaurantModel.updateOrder({
+                yield restaurantOrderModel.updateOrder({
                     id: parseInt(id),
                     payload: { kitchen_status: "completed" },
                 });
@@ -345,8 +357,9 @@ class RestaurantOrderService extends abstract_service_1.default {
                 const { id, restaurant_id, hotel_code } = req.restaurant_admin;
                 const { id: order_id } = req.params;
                 const _l = req.body, { order_items } = _l, rest = __rest(_l, ["order_items"]);
-                const restaurantModel = this.Model.restaurantModel(trx);
-                const existingOrder = yield restaurantModel.getOrderById({
+                const restaurantOrderModel = this.restaurantModel.restaurantOrderModel(trx);
+                const restaurantFoodModel = this.restaurantModel.restaurantFoodModel(trx);
+                const existingOrder = yield restaurantOrderModel.getOrderById({
                     id: Number(order_id),
                     hotel_code,
                     restaurant_id,
@@ -354,13 +367,13 @@ class RestaurantOrderService extends abstract_service_1.default {
                 if (!existingOrder) {
                     throw new customEror_1.default("Order not found", this.StatusCode.HTTP_NOT_FOUND);
                 }
-                let totalAmount = 0;
-                let grandTotal = 0;
-                let vat_amount = 0;
                 let sub_total = 0;
+                let grand_Total = 0;
+                let vat_amount = 0;
+                let net_total = 0;
                 if (order_items === null || order_items === void 0 ? void 0 : order_items.length) {
                     for (const item of order_items) {
-                        const food = yield restaurantModel.getFoods({
+                        const food = yield restaurantFoodModel.getFoods({
                             id: item.food_id,
                             hotel_code,
                             restaurant_id,
@@ -368,28 +381,28 @@ class RestaurantOrderService extends abstract_service_1.default {
                         if (!food.data.length) {
                             throw new customEror_1.default(`Food with ID ${item.food_id} not found`, this.StatusCode.HTTP_NOT_FOUND);
                         }
-                        totalAmount +=
+                        sub_total +=
                             Number(item.quantity) *
                                 Number(food.data[0].retail_price);
                     }
-                    totalAmount = lib_1.default.adjustPercentageOrFixedAmount(totalAmount, rest.discount, rest.discount_type, true);
-                    sub_total = lib_1.default.adjustPercentageOrFixedAmount(totalAmount, rest.service_charge, rest.service_charge_type);
+                    net_total = lib_1.default.adjustPercentageOrFixedAmount(sub_total, rest.discount, rest.discount_type, true);
+                    grand_Total = lib_1.default.adjustPercentageOrFixedAmount(net_total, rest.service_charge, rest.service_charge_type);
                     if (rest.vat_rate && (rest === null || rest === void 0 ? void 0 : rest.vat_rate) > 0) {
-                        vat_amount = (sub_total * rest.vat_rate) / 100;
-                        grandTotal = sub_total + vat_amount;
+                        vat_amount = (net_total * rest.vat_rate) / 100;
+                        grand_Total = net_total + vat_amount;
                     }
                 }
                 else {
-                    totalAmount = Number(existingOrder.total);
+                    net_total = Number(existingOrder.net_total);
                     sub_total = Number(existingOrder.sub_total);
                     vat_amount = Number(existingOrder.vat_amount);
-                    grandTotal = Number(existingOrder.grand_total);
+                    grand_Total = Number(existingOrder.grand_total);
                 }
-                const updatedOrder = yield restaurantModel.updateOrder({
+                const updatedOrder = yield restaurantOrderModel.updateOrder({
                     id: Number(order_id),
                     payload: {
                         order_type: (_a = rest.order_type) !== null && _a !== void 0 ? _a : existingOrder.order_type,
-                        customer: (_b = rest.customer) !== null && _b !== void 0 ? _b : existingOrder.customer,
+                        guest: (_b = rest.guest) !== null && _b !== void 0 ? _b : existingOrder.guest,
                         table_id: (_c = rest.table_id) !== null && _c !== void 0 ? _c : existingOrder.table_id,
                         staff_id: (_d = rest.staff_id) !== null && _d !== void 0 ? _d : existingOrder.staff_id,
                         room_no: (_e = rest.room_no) !== null && _e !== void 0 ? _e : existingOrder.room_no,
@@ -399,18 +412,18 @@ class RestaurantOrderService extends abstract_service_1.default {
                         service_charge_type: (_j = rest.service_charge_type) !== null && _j !== void 0 ? _j : existingOrder.service_charge_type,
                         vat_rate: (_k = rest.vat_rate) !== null && _k !== void 0 ? _k : Number(existingOrder.vat_rate),
                         vat_amount,
-                        total: totalAmount,
+                        net_total: net_total,
                         sub_total,
-                        grand_total: grandTotal,
+                        grand_total: grand_Total,
                         updated_by: id,
                     },
                 });
                 if (order_items === null || order_items === void 0 ? void 0 : order_items.length) {
-                    yield restaurantModel.deleteOrderItems({
+                    yield restaurantOrderModel.deleteOrderItems({
                         order_id: Number(order_id),
                     });
                     yield Promise.all(order_items.map((item) => __awaiter(this, void 0, void 0, function* () {
-                        const food = yield restaurantModel.getFoods({
+                        const food = yield restaurantFoodModel.getFoods({
                             id: item.food_id,
                             hotel_code,
                             restaurant_id,
@@ -418,7 +431,7 @@ class RestaurantOrderService extends abstract_service_1.default {
                         if (!food.data.length) {
                             throw new customEror_1.default(`Food with ID ${item.food_id} not found`, this.StatusCode.HTTP_NOT_FOUND);
                         }
-                        yield restaurantModel.createOrderItems({
+                        yield restaurantOrderModel.createOrderItems({
                             order_id: Number(order_id),
                             food_id: item.food_id,
                             name: food.data[0].name,

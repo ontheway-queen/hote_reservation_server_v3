@@ -34,7 +34,7 @@ class AuthHotelRestaurantAdminService extends abstract_service_1.default {
     login(req) {
         return __awaiter(this, void 0, void 0, function* () {
             const { email, password } = req.body;
-            const model = this.Model.restaurantAdminModel();
+            const model = this.restaurantModel.restaurantAdminModel();
             const user = yield model.getRestaurantAdmin({ email });
             if (!user) {
                 return {
@@ -82,7 +82,7 @@ class AuthHotelRestaurantAdminService extends abstract_service_1.default {
     getProfile(req) {
         return __awaiter(this, void 0, void 0, function* () {
             const { id, hotel_code, restaurant_id } = req.restaurant_admin;
-            const restaurantAdminModel = this.Model.restaurantAdminModel();
+            const restaurantAdminModel = this.restaurantModel.restaurantAdminModel();
             const data = yield restaurantAdminModel.getRestaurantAdminProfile({
                 id,
                 hotel_code,
@@ -107,7 +107,7 @@ class AuthHotelRestaurantAdminService extends abstract_service_1.default {
             const { id, hotel_code } = req.restaurant_admin;
             const body = req.body;
             console.log({ body });
-            const model = this.Model.restaurantAdminModel();
+            const model = this.restaurantModel.restaurantAdminModel();
             const checkAdmin = yield model.getRestaurantAdmin({
                 id,
             });
@@ -147,7 +147,7 @@ class AuthHotelRestaurantAdminService extends abstract_service_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             const { id } = req.restaurant_admin;
             const { old_password, new_password } = req.body;
-            const model = this.Model.restaurantAdminModel();
+            const model = this.restaurantModel.restaurantAdminModel();
             const checkAdmin = yield model.getRestaurantAdmin({
                 id,
             });
@@ -192,7 +192,7 @@ class AuthHotelRestaurantAdminService extends abstract_service_1.default {
             if (email === verifyEmail &&
                 type === constants_1.OTP_TYPE_FORGET_RESTAURANT_ADMIN) {
                 const hashPass = yield lib_1.default.hashPass(password);
-                const adminModel = this.Model.restaurantAdminModel();
+                const adminModel = this.restaurantModel.restaurantAdminModel();
                 yield adminModel.updateRestaurantAdmin({
                     email,
                     payload: { password: hashPass },

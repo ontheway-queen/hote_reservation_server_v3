@@ -64,7 +64,7 @@ class CommonService extends abstract_service_1.default {
                         }
                         break;
                     case constants_1.OTP_TYPE_FORGET_RESTAURANT_ADMIN:
-                        const restaurantAdminModel = this.Model.restaurantAdminModel(trx);
+                        const restaurantAdminModel = this.restaurantModel.restaurantAdminModel(trx);
                         const checkRestaurantAdmin = yield restaurantAdminModel.getRestaurantAdmin({
                             email,
                         });

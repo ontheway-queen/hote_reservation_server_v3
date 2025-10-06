@@ -38,8 +38,8 @@ class HotelRestaurantService extends abstract_service_1.default {
                             break;
                     }
                 }
-                const restaurantModel = this.Model.restaurantModel(trx);
-                const restaurantAdminModel = this.Model.restaurantAdminModel(trx);
+                const restaurantModel = this.restaurantModel.restaurantModel(trx);
+                const restaurantAdminModel = this.restaurantModel.restaurantAdminModel(trx);
                 const checkRestaurant = yield restaurantModel.getAllRestaurant({
                     hotel_code,
                 });
@@ -103,7 +103,9 @@ class HotelRestaurantService extends abstract_service_1.default {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
                 const { hotel_code } = req.hotel_admin;
                 const { limit, skip, key } = req.query;
-                const { data, total } = yield this.Model.restaurantModel(trx).getAllRestaurant({
+                const { data, total } = yield this.restaurantModel
+                    .restaurantModel(trx)
+                    .getAllRestaurant({
                     key: key,
                     limit: limit,
                     skip: skip,
@@ -122,7 +124,9 @@ class HotelRestaurantService extends abstract_service_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             const { hotel_code } = req.hotel_admin;
             const { id } = req.params;
-            const data = yield this.Model.restaurantModel().getRestaurantWithAdmin({
+            const data = yield this.restaurantModel
+                .restaurantModel()
+                .getRestaurantWithAdmin({
                 restaurant_id: parseInt(id),
                 hotel_code,
             });
@@ -146,8 +150,8 @@ class HotelRestaurantService extends abstract_service_1.default {
                 const { hotel_code } = req.hotel_admin;
                 const { id } = req.params;
                 let { user = {}, restaurant = {}, } = req.body;
-                const restaurantModel = this.Model.restaurantModel(trx);
-                const restaurantAdminModel = this.Model.restaurantAdminModel(trx);
+                const restaurantModel = this.restaurantModel.restaurantModel(trx);
+                const restaurantAdminModel = this.restaurantModel.restaurantAdminModel(trx);
                 const files = req.files || [];
                 for (const { fieldname, filename } of files) {
                     if (fieldname === "restaurant_photo")

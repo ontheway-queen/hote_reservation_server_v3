@@ -8,7 +8,7 @@ import config from "../../config/config";
 import AccountModel from "../../models/reservationPanel/accountModel/accountModel";
 import ExpenseModel from "../../models/reservationPanel/expenseModel";
 import HotelModel from "../../models/reservationPanel/hotel.model";
-import RestaurantModel from "../../models/restaurantModel/restaurant.Model";
+import RestaurantOrderModel from "../../models/restaurantModels/restaurant.order.model";
 import {
 	defaultChartOfAcc,
 	IDefaultChartOfAcc,
@@ -271,7 +271,7 @@ class Lib {
 		let nextSeq = 1;
 
 		// Get the last order for today
-		const lastRow = await new RestaurantModel(trx).getLastOrder({
+		const lastRow = await new RestaurantOrderModel(trx).getLastOrder({
 			hotel_code,
 			restaurant_id,
 		});

@@ -3,6 +3,7 @@ import AuthChecker from "../common/middleware/authChecker/authChecker";
 import RestaurantFoodRouter from "./routers/food.router";
 import RestaurantMenuCategoryRouter from "./routers/menuCategory.router";
 import RestaurantOrderRouter from "./routers/order.router";
+import RestaurantReportRouter from "./routers/report.router";
 import RestaurantTableRouter from "./routers/restaurantTable.router";
 import RestaurantUnitRouter from "./routers/unit.router";
 
@@ -43,6 +44,12 @@ export class RestaurantRootRouter {
 			"/order",
 			this.authChecker.hotelRestaurantAuthChecker,
 			new RestaurantOrderRouter().router
+		);
+
+		this.router.use(
+			"/report",
+			this.authChecker.hotelRestaurantAuthChecker,
+			new RestaurantReportRouter().router
 		);
 	}
 }

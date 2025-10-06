@@ -11,8 +11,11 @@ class RestaurantMenuCategoryService extends AbstractServices {
 			const { id, restaurant_id, hotel_code } = req.restaurant_admin;
 			const body = req.body as { name: string };
 
+			const restaurantMenuCategoryModel =
+				this.restaurantModel.restaurantCategoryModel(trx);
+
 			const isCategoryExists =
-				await this.Model.restaurantModel().getMenuCategories({
+				await restaurantMenuCategoryModel.getMenuCategories({
 					hotel_code,
 					restaurant_id,
 					name: body.name as string,
@@ -26,9 +29,7 @@ class RestaurantMenuCategoryService extends AbstractServices {
 				};
 			}
 
-			const restaurantModel = this.Model.restaurantModel(trx);
-
-			await restaurantModel.createMenuCategory({
+			await restaurantMenuCategoryModel.createMenuCategory({
 				...body,
 				hotel_code,
 				created_by: id,
@@ -48,14 +49,16 @@ class RestaurantMenuCategoryService extends AbstractServices {
 
 		const { limit, skip, name, status } = req.query;
 
-		const data = await this.Model.restaurantModel().getMenuCategories({
-			hotel_code,
-			restaurant_id,
-			limit: Number(limit),
-			skip: Number(skip),
-			name: name as string,
-			status: status as string,
-		});
+		const data = await this.restaurantModel
+			.restaurantCategoryModel()
+			.getMenuCategories({
+				hotel_code,
+				restaurant_id,
+				limit: Number(limit),
+				skip: Number(skip),
+				name: name as string,
+				status: status as string,
+			});
 
 		return {
 			success: true,
@@ -73,13 +76,15 @@ class RestaurantMenuCategoryService extends AbstractServices {
 				status?: string;
 			};
 
-			const restaurantModel = this.Model.restaurantModel(trx);
+			const restaurantMenuCategoryModel =
+				this.restaurantModel.restaurantCategoryModel(trx);
 
-			const isCategoryExists = await restaurantModel.getMenuCategories({
-				id: parseInt(id),
-				hotel_code,
-				restaurant_id,
-			});
+			const isCategoryExists =
+				await restaurantMenuCategoryModel.getMenuCategories({
+					id: parseInt(id),
+					hotel_code,
+					restaurant_id,
+				});
 
 			if (isCategoryExists.data.length === 0) {
 				return {
@@ -89,10 +94,11 @@ class RestaurantMenuCategoryService extends AbstractServices {
 				};
 			}
 
-			const newCategory = await restaurantModel.updateMenuCategory({
-				id: parseInt(id),
-				payload: body,
-			});
+			const newCategory =
+				await restaurantMenuCategoryModel.updateMenuCategory({
+					id: parseInt(id),
+					payload: body,
+				});
 
 			if (!newCategory) {
 				return {
@@ -115,13 +121,15 @@ class RestaurantMenuCategoryService extends AbstractServices {
 			const { id } = req.params;
 			const { restaurant_id, hotel_code } = req.restaurant_admin;
 
-			const restaurantModel = this.Model.restaurantModel(trx);
+			const restaurantMenuCategoryModel =
+				this.restaurantModel.restaurantCategoryModel(trx);
 
-			const isCategoryExists = await restaurantModel.getMenuCategories({
-				id: parseInt(id),
-				hotel_code,
-				restaurant_id,
-			});
+			const isCategoryExists =
+				await restaurantMenuCategoryModel.getMenuCategories({
+					id: parseInt(id),
+					hotel_code,
+					restaurant_id,
+				});
 
 			if (isCategoryExists.data.length === 0) {
 				return {
@@ -131,9 +139,10 @@ class RestaurantMenuCategoryService extends AbstractServices {
 				};
 			}
 
-			const newCategory = await restaurantModel.deleteMenuCategory({
-				id: parseInt(id),
-			});
+			const newCategory =
+				await restaurantMenuCategoryModel.deleteMenuCategory({
+					id: parseInt(id),
+				});
 
 			if (!newCategory) {
 				return {

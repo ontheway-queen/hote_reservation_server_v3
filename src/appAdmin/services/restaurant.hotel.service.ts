@@ -34,8 +34,9 @@ class HotelRestaurantService extends AbstractServices {
 				}
 			}
 
-			const restaurantModel = this.Model.restaurantModel(trx);
-			const restaurantAdminModel = this.Model.restaurantAdminModel(trx);
+			const restaurantModel = this.restaurantModel.restaurantModel(trx);
+			const restaurantAdminModel =
+				this.restaurantModel.restaurantAdminModel(trx);
 
 			const checkRestaurant = await restaurantModel.getAllRestaurant({
 				hotel_code,
@@ -127,14 +128,14 @@ class HotelRestaurantService extends AbstractServices {
 			const { hotel_code } = req.hotel_admin;
 			const { limit, skip, key } = req.query;
 
-			const { data, total } = await this.Model.restaurantModel(
-				trx
-			).getAllRestaurant({
-				key: key as string,
-				limit: limit as string,
-				skip: skip as string,
-				hotel_code,
-			});
+			const { data, total } = await this.restaurantModel
+				.restaurantModel(trx)
+				.getAllRestaurant({
+					key: key as string,
+					limit: limit as string,
+					skip: skip as string,
+					hotel_code,
+				});
 
 			return {
 				success: true,
@@ -149,10 +150,12 @@ class HotelRestaurantService extends AbstractServices {
 		const { hotel_code } = req.hotel_admin;
 		const { id } = req.params;
 
-		const data = await this.Model.restaurantModel().getRestaurantWithAdmin({
-			restaurant_id: parseInt(id),
-			hotel_code,
-		});
+		const data = await this.restaurantModel
+			.restaurantModel()
+			.getRestaurantWithAdmin({
+				restaurant_id: parseInt(id),
+				hotel_code,
+			});
 
 		if (!data) {
 			return {
@@ -179,8 +182,9 @@ class HotelRestaurantService extends AbstractServices {
 				restaurant = {} as IUpdateRestaurantPayload,
 			} = req.body;
 
-			const restaurantModel = this.Model.restaurantModel(trx);
-			const restaurantAdminModel = this.Model.restaurantAdminModel(trx);
+			const restaurantModel = this.restaurantModel.restaurantModel(trx);
+			const restaurantAdminModel =
+				this.restaurantModel.restaurantAdminModel(trx);
 
 			const files = (req.files as Express.Multer.File[]) || [];
 			for (const { fieldname, filename } of files) {

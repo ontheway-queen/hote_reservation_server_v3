@@ -22,8 +22,8 @@ class RestaurantTableService extends abstract_service_1.default {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
                 const { id, restaurant_id, hotel_code } = req.restaurant_admin;
                 const body = req.body;
-                const restaurantModel = this.Model.restaurantModel(trx);
-                const isTableExists = yield restaurantModel.getTables({
+                const restaurantTableModel = this.restaurantModel.restaurantTableModel(trx);
+                const isTableExists = yield restaurantTableModel.getTables({
                     hotel_code,
                     restaurant_id,
                     name: body.name,
@@ -35,7 +35,7 @@ class RestaurantTableService extends abstract_service_1.default {
                         message: "Table already exists.",
                     };
                 }
-                yield restaurantModel.createTable(Object.assign(Object.assign({}, body), { hotel_code, created_by: id, restaurant_id }));
+                yield restaurantTableModel.createTable(Object.assign(Object.assign({}, body), { hotel_code, created_by: id, restaurant_id }));
                 return {
                     success: true,
                     code: this.StatusCode.HTTP_SUCCESSFUL,
@@ -48,7 +48,9 @@ class RestaurantTableService extends abstract_service_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             const { restaurant_id, hotel_code } = req.restaurant_admin;
             const { limit, skip, name, category, status } = req.query;
-            const data = yield this.Model.restaurantModel().getTables({
+            const data = yield this.restaurantModel
+                .restaurantTableModel()
+                .getTables({
                 hotel_code,
                 restaurant_id,
                 limit: Number(limit),
@@ -66,7 +68,7 @@ class RestaurantTableService extends abstract_service_1.default {
                 const { id } = req.params;
                 const { id: user_id, restaurant_id, hotel_code, } = req.restaurant_admin;
                 const body = req.body;
-                const restaurantModel = this.Model.restaurantModel(trx);
+                const restaurantModel = this.restaurantModel.restaurantTableModel(trx);
                 const isTableExists = yield restaurantModel.getTables({
                     hotel_code,
                     restaurant_id,
@@ -110,7 +112,7 @@ class RestaurantTableService extends abstract_service_1.default {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
                 const { id } = req.params;
                 const { restaurant_id, hotel_code } = req.restaurant_admin;
-                const restaurantModel = this.Model.restaurantModel(trx);
+                const restaurantModel = this.restaurantModel.restaurantTableModel(trx);
                 const isTableExists = yield restaurantModel.getTables({
                     hotel_code,
                     restaurant_id,
@@ -121,6 +123,14 @@ class RestaurantTableService extends abstract_service_1.default {
                         success: false,
                         code: this.StatusCode.HTTP_NOT_FOUND,
                         message: "Table not found.",
+                    };
+                }
+                const table = isTableExists.data[0];
+                if (table.status === "booked") {
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_CONFLICT,
+                        message: "Table is boooked.",
                     };
                 }
                 yield restaurantModel.deleteTable({

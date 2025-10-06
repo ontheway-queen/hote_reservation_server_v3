@@ -17,9 +17,14 @@ class RestaurantOrderService extends AbstractServices {
 			const { id, restaurant_id, hotel_code } = req.restaurant_admin;
 			const { order_items, ...rest } = req.body as IOrderRequest;
 
-			const restaurantModel = this.Model.restaurantModel(trx);
+			const restaurantTableModel =
+				this.restaurantModel.restaurantTableModel(trx);
+			const restaurantOrderModel =
+				this.restaurantModel.restaurantOrderModel(trx);
+			const restaurantFoodModel =
+				this.restaurantModel.restaurantFoodModel(trx);
 
-			const { data } = await restaurantModel.getTables({
+			const { data } = await restaurantTableModel.getTables({
 				id: rest.table_id,
 				hotel_code,
 				restaurant_id,
@@ -42,13 +47,13 @@ class RestaurantOrderService extends AbstractServices {
 				restaurant_id
 			);
 
-			let totalAmount = 0;
-			let grandTotal = 0;
-			let vat_amount = 0;
 			let sub_total = 0;
+			let grand_Total = 0;
+			let vat_amount = 0;
+			let net_total = 0;
 
 			for (const item of order_items) {
-				const food = await restaurantModel.getFoods({
+				const food = await restaurantFoodModel.getFoods({
 					id: item.food_id,
 					hotel_code,
 					restaurant_id,
@@ -61,52 +66,52 @@ class RestaurantOrderService extends AbstractServices {
 					);
 				}
 
-				totalAmount +=
+				sub_total +=
 					Number(item.quantity) * Number(food.data[0].retail_price);
 			}
 
-			totalAmount = Lib.adjustPercentageOrFixedAmount(
-				totalAmount,
+			net_total = Lib.adjustPercentageOrFixedAmount(
+				sub_total,
 				rest.discount,
 				rest.discount_type,
 				true
 			);
 
-			sub_total = Lib.adjustPercentageOrFixedAmount(
-				totalAmount,
+			grand_Total = Lib.adjustPercentageOrFixedAmount(
+				net_total,
 				rest.service_charge,
 				rest.service_charge_type
 			);
 
 			if (rest?.vat_rate > 0) {
-				vat_amount = (sub_total * rest.vat_rate) / 100;
-				grandTotal = sub_total + vat_amount;
+				vat_amount = (net_total * rest.vat_rate) / 100;
+				grand_Total = grand_Total + vat_amount;
 			}
 
-			const [newOrder] = await restaurantModel.createOrder({
+			const [newOrder] = await restaurantOrderModel.createOrder({
 				hotel_code,
 				restaurant_id,
 				order_no: orderNo,
 				created_by: id,
-				total: totalAmount,
 				table_id: rest.table_id,
 				order_type: rest.order_type,
-				customer: rest.customer,
+				guest: rest.guest,
+				sub_total: sub_total,
+				discount: rest.discount,
+				discount_type: rest.discount_type,
+				net_total: net_total,
 				service_charge: rest.service_charge,
 				service_charge_type: rest.service_charge_type,
 				vat_rate: rest.vat_rate,
 				vat_amount: vat_amount,
-				sub_total: sub_total,
-				grand_total: grandTotal,
+				grand_total: grand_Total,
 				staff_id: rest.staff_id,
 				room_no: rest.room_no,
-				discount: rest.discount,
-				discount_type: rest.discount_type,
 			});
 
 			await Promise.all(
 				order_items.map(async (item) => {
-					const food = await restaurantModel.getFoods({
+					const food = await restaurantFoodModel.getFoods({
 						id: item.food_id,
 						hotel_code,
 						restaurant_id,
@@ -118,7 +123,7 @@ class RestaurantOrderService extends AbstractServices {
 						);
 					}
 
-					await restaurantModel.createOrderItems({
+					await restaurantOrderModel.createOrderItems({
 						order_id: newOrder.id,
 						food_id: item.food_id,
 						name: food.data[0].name,
@@ -131,7 +136,7 @@ class RestaurantOrderService extends AbstractServices {
 				})
 			);
 
-			await restaurantModel.updateTable({
+			await restaurantTableModel.updateTable({
 				id: rest.table_id,
 				payload: {
 					status: "booked",
@@ -161,18 +166,20 @@ class RestaurantOrderService extends AbstractServices {
 			status,
 		} = req.query;
 
-		const data = await this.Model.restaurantModel().getOrders({
-			limit: Number(limit),
-			skip: Number(skip),
-			hotel_code,
-			restaurant_id,
-			table_id: Number(table_id),
-			from_date: from_date as string,
-			to_date: to_date as string,
-			order_type: order_type as string,
-			kitchen_status: kitchen_status as string,
-			status: status as string,
-		});
+		const data = await this.restaurantModel
+			.restaurantOrderModel()
+			.getOrders({
+				limit: Number(limit),
+				skip: Number(skip),
+				hotel_code,
+				restaurant_id,
+				table_id: Number(table_id),
+				from_date: from_date as string,
+				to_date: to_date as string,
+				order_type: order_type as string,
+				kitchen_status: kitchen_status as string,
+				status: status as string,
+			});
 
 		return {
 			success: true,
@@ -185,11 +192,13 @@ class RestaurantOrderService extends AbstractServices {
 		const { id } = req.params;
 		const { restaurant_id, hotel_code } = req.restaurant_admin;
 
-		const data = await this.Model.restaurantModel().getOrderById({
-			hotel_code,
-			restaurant_id,
-			id: Number(id),
-		});
+		const data = await this.restaurantModel
+			.restaurantOrderModel()
+			.getOrderById({
+				hotel_code,
+				restaurant_id,
+				id: Number(id),
+			});
 
 		if (!data) {
 			return {
@@ -210,11 +219,13 @@ class RestaurantOrderService extends AbstractServices {
 		const { table_id } = req.params;
 		const { restaurant_id, hotel_code } = req.restaurant_admin;
 
-		const data = await this.Model.restaurantModel().getOrderById({
-			hotel_code,
-			restaurant_id,
-			table_id: Number(table_id),
-		});
+		const data = await this.restaurantModel
+			.restaurantOrderModel()
+			.getOrderById({
+				hotel_code,
+				restaurant_id,
+				table_id: Number(table_id),
+			});
 
 		if (!data) {
 			return {
@@ -236,9 +247,13 @@ class RestaurantOrderService extends AbstractServices {
 			const { id } = req.params;
 			const { restaurant_id, hotel_code } = req.restaurant_admin;
 
-			const restaurantModel = this.Model.restaurantModel(trx);
+			const restaurantOrderModel =
+				this.restaurantModel.restaurantOrderModel(trx);
 
-			const isOrderExists = await restaurantModel.getOrderById({
+			const restaurantTableModel =
+				this.restaurantModel.restaurantTableModel(trx);
+
+			const isOrderExists = await restaurantOrderModel.getOrderById({
 				hotel_code,
 				restaurant_id,
 				id: parseInt(id),
@@ -252,11 +267,11 @@ class RestaurantOrderService extends AbstractServices {
 				};
 			}
 
-			await restaurantModel.cancelOrder({
+			await restaurantOrderModel.cancelOrder({
 				id: parseInt(id),
 			});
 
-			await restaurantModel.updateTable({
+			await restaurantTableModel.updateTable({
 				id: isOrderExists.table_id,
 				payload: {
 					status: "available",
@@ -286,9 +301,13 @@ class RestaurantOrderService extends AbstractServices {
 				};
 			}
 
-			const restaurantModel = this.Model.restaurantModel(trx);
+			const restaurantOrderModel =
+				this.restaurantModel.restaurantOrderModel(trx);
 
-			const isOrderExists = await restaurantModel.getOrderById({
+			const restaurantTableModel =
+				this.restaurantModel.restaurantTableModel(trx);
+
+			const isOrderExists = await restaurantOrderModel.getOrderById({
 				hotel_code,
 				restaurant_id,
 				id: parseInt(id),
@@ -302,7 +321,7 @@ class RestaurantOrderService extends AbstractServices {
 				};
 			}
 
-			if (isOrderExists.is_paid) {
+			if (isOrderExists.is_paid === true) {
 				return {
 					success: false,
 					code: this.StatusCode.HTTP_CONFLICT,
@@ -324,7 +343,7 @@ class RestaurantOrderService extends AbstractServices {
 			const changeable_amount =
 				Number(body.payable_amount) - Number(isOrderExists.grand_total);
 
-			await restaurantModel.completeOrderPayment(
+			await restaurantOrderModel.completeOrderPayment(
 				{
 					id: parseInt(id),
 				},
@@ -336,7 +355,7 @@ class RestaurantOrderService extends AbstractServices {
 				}
 			);
 
-			await restaurantModel.updateTable({
+			await restaurantTableModel.updateTable({
 				id: isOrderExists.table_id,
 				payload: {
 					status: "available",
@@ -355,13 +374,15 @@ class RestaurantOrderService extends AbstractServices {
 		const { restaurant_id, hotel_code } = req.restaurant_admin;
 		const { limit, skip, order_no } = req.query;
 
-		const data = await this.Model.restaurantModel().getKitchenOrders({
-			limit: Number(limit),
-			skip: Number(skip),
-			hotel_code,
-			restaurant_id,
-			order_no: order_no as string,
-		});
+		const data = await this.restaurantModel
+			.restaurantOrderModel()
+			.getKitchenOrders({
+				limit: Number(limit),
+				skip: Number(skip),
+				hotel_code,
+				restaurant_id,
+				order_no: order_no as string,
+			});
 
 		return {
 			success: true,
@@ -375,9 +396,10 @@ class RestaurantOrderService extends AbstractServices {
 			const { id } = req.params;
 			const { restaurant_id, hotel_code } = req.restaurant_admin;
 
-			const restaurantModel = this.Model.restaurantModel(trx);
+			const restaurantOrderModel =
+				this.restaurantModel.restaurantOrderModel(trx);
 
-			const isOrderExists = await restaurantModel.getOrderById({
+			const isOrderExists = await restaurantOrderModel.getOrderById({
 				hotel_code,
 				restaurant_id,
 				id: parseInt(id),
@@ -399,7 +421,7 @@ class RestaurantOrderService extends AbstractServices {
 				};
 			}
 
-			await restaurantModel.updateOrder({
+			await restaurantOrderModel.updateOrder({
 				id: parseInt(id),
 				payload: { kitchen_status: "completed" },
 			});
@@ -419,9 +441,13 @@ class RestaurantOrderService extends AbstractServices {
 			const { id: order_id } = req.params;
 			const { order_items, ...rest } = req.body as IUpdateOrderRequest;
 
-			const restaurantModel = this.Model.restaurantModel(trx);
+			const restaurantOrderModel =
+				this.restaurantModel.restaurantOrderModel(trx);
 
-			const existingOrder = await restaurantModel.getOrderById({
+			const restaurantFoodModel =
+				this.restaurantModel.restaurantFoodModel(trx);
+
+			const existingOrder = await restaurantOrderModel.getOrderById({
 				id: Number(order_id),
 				hotel_code,
 				restaurant_id,
@@ -433,14 +459,14 @@ class RestaurantOrderService extends AbstractServices {
 				);
 			}
 
-			let totalAmount = 0;
-			let grandTotal = 0;
-			let vat_amount = 0;
 			let sub_total = 0;
+			let grand_Total = 0;
+			let vat_amount = 0;
+			let net_total = 0;
 
 			if (order_items?.length) {
 				for (const item of order_items) {
-					const food = await restaurantModel.getFoods({
+					const food = await restaurantFoodModel.getFoods({
 						id: item.food_id,
 						hotel_code,
 						restaurant_id,
@@ -453,40 +479,40 @@ class RestaurantOrderService extends AbstractServices {
 						);
 					}
 
-					totalAmount +=
+					sub_total +=
 						Number(item.quantity) *
 						Number(food.data[0].retail_price);
 				}
 
-				totalAmount = Lib.adjustPercentageOrFixedAmount(
-					totalAmount,
+				net_total = Lib.adjustPercentageOrFixedAmount(
+					sub_total,
 					rest.discount,
 					rest.discount_type,
 					true
 				);
 
-				sub_total = Lib.adjustPercentageOrFixedAmount(
-					totalAmount,
+				grand_Total = Lib.adjustPercentageOrFixedAmount(
+					net_total,
 					rest.service_charge,
 					rest.service_charge_type
 				);
 
 				if (rest.vat_rate && rest?.vat_rate > 0) {
-					vat_amount = (sub_total * rest.vat_rate) / 100;
-					grandTotal = sub_total + vat_amount;
+					vat_amount = (net_total * rest.vat_rate) / 100;
+					grand_Total = net_total + vat_amount;
 				}
 			} else {
-				totalAmount = Number(existingOrder.total);
+				net_total = Number(existingOrder.net_total);
 				sub_total = Number(existingOrder.sub_total);
 				vat_amount = Number(existingOrder.vat_amount);
-				grandTotal = Number(existingOrder.grand_total);
+				grand_Total = Number(existingOrder.grand_total);
 			}
 
-			const updatedOrder = await restaurantModel.updateOrder({
+			const updatedOrder = await restaurantOrderModel.updateOrder({
 				id: Number(order_id),
 				payload: {
 					order_type: rest.order_type ?? existingOrder.order_type,
-					customer: rest.customer ?? existingOrder.customer,
+					guest: rest.guest ?? existingOrder.guest,
 					table_id: rest.table_id ?? existingOrder.table_id,
 					staff_id: rest.staff_id ?? existingOrder.staff_id,
 					room_no: rest.room_no ?? existingOrder.room_no,
@@ -501,21 +527,21 @@ class RestaurantOrderService extends AbstractServices {
 						existingOrder.service_charge_type,
 					vat_rate: rest.vat_rate ?? Number(existingOrder.vat_rate),
 					vat_amount,
-					total: totalAmount,
+					net_total: net_total,
 					sub_total,
-					grand_total: grandTotal,
+					grand_total: grand_Total,
 					updated_by: id,
 				},
 			});
 
 			if (order_items?.length) {
-				await restaurantModel.deleteOrderItems({
+				await restaurantOrderModel.deleteOrderItems({
 					order_id: Number(order_id),
 				});
 
 				await Promise.all(
 					order_items.map(async (item) => {
-						const food = await restaurantModel.getFoods({
+						const food = await restaurantFoodModel.getFoods({
 							id: item.food_id,
 							hotel_code,
 							restaurant_id,
@@ -527,7 +553,7 @@ class RestaurantOrderService extends AbstractServices {
 							);
 						}
 
-						await restaurantModel.createOrderItems({
+						await restaurantOrderModel.createOrderItems({
 							order_id: Number(order_id),
 							food_id: item.food_id,
 							name: food.data[0].name,
@@ -549,39 +575,6 @@ class RestaurantOrderService extends AbstractServices {
 			};
 		});
 	}
-
-	// public async deleteTable(req: Request) {
-	// 	return await this.db.transaction(async (trx) => {
-	// 		const { id } = req.params;
-	// 		const { restaurant_id, hotel_code } = req.restaurant_admin;
-
-	// 		const restaurantModel = this.Model.restaurantModel(trx);
-
-	// 		const isTableExists = await restaurantModel.getTables({
-	// 			hotel_code,
-	// 			restaurant_id,
-	// 			id: parseInt(id),
-	// 		});
-
-	// 		if (isTableExists.data.length === 0) {
-	// 			return {
-	// 				success: false,
-	// 				code: this.StatusCode.HTTP_NOT_FOUND,
-	// 				message: "Table not found.",
-	// 			};
-	// 		}
-
-	// 		await restaurantModel.deleteTable({
-	// 			id: Number(id),
-	// 		});
-
-	// 		return {
-	// 			success: true,
-	// 			code: this.StatusCode.HTTP_SUCCESSFUL,
-	// 			message: "Table deleted successfully.",
-	// 		};
-	// 	});
-	// }
 }
 
 export default RestaurantOrderService;

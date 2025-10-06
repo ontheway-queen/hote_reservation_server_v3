@@ -30,8 +30,6 @@ import { ReservationModel } from "./reservationPanel/reservation.model";
 import RoomModel from "./reservationPanel/Room.Model";
 import SettingModel from "./reservationPanel/Setting.Model";
 import SupplierModel from "./reservationPanel/supplierModel";
-import HotelRestaurantAdminModel from "./restaurantModel/restaurant.admin.model";
-import RestaurantModel from "./restaurantModel/restaurant.Model";
 
 class Models {
 	private db: Knex;
@@ -171,13 +169,6 @@ class Models {
 		return new ServicImageModel(trx || this.db);
 	}
 
-	public restaurantModel(trx?: Knex.Transaction) {
-		return new RestaurantModel(trx || this.db);
-	}
-
-	public restaurantAdminModel(trx?: Knex.Transaction) {
-		return new HotelRestaurantAdminModel(trx || this.db);
-	}
 	public serviceScheduleModel(trx?: Knex.Transaction) {
 		return new ServiceScheduleModel(trx || this.db);
 	}

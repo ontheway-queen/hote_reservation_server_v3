@@ -1,17 +1,17 @@
 export interface IOrderRequest {
 	staff_id?: number;
 	order_type: string;
-	customer: string;
+	guest: string;
+	room_no?: number;
 	table_id: number;
-	total: number;
-	service_charge: number;
-	service_charge_type: "percentage" | "fixed";
+	sub_total: number;
 	discount?: number;
 	discount_type?: "percentage" | "fixed";
+	net_total: number;
+	service_charge: number;
+	service_charge_type: "percentage" | "fixed";
 	vat_rate: number;
-	sub_total: number;
 	grand_total: number;
-	room_no?: number;
 	order_items: [
 		{
 			food_id: number;
@@ -28,17 +28,17 @@ export interface IOrderPayload {
 	order_no: string;
 	created_by: number;
 	order_type: string;
-	customer: string;
-	total: number;
-	service_charge: number;
-	service_charge_type: string;
-	discount?: number;
+	guest: string;
+	room_no?: number;
+	sub_total: number;
 	discount_type?: string;
+	discount?: number;
+	net_total: number;
+	service_charge_type: string;
+	service_charge: number;
 	vat_rate: number;
 	vat_amount: number;
-	sub_total: number;
 	grand_total: number;
-	room_no?: number;
 }
 
 export interface IOrderItemsPayload {
@@ -83,7 +83,7 @@ export interface IGetOrder {
 	status: string;
 	kitchen_status: string;
 	created_at: string;
-	total: string;
+	net_total: string;
 	discount: string;
 	service_charge: string;
 	service_charge_type: string;
@@ -95,7 +95,7 @@ export interface IGetOrder {
 	created_by_name: string;
 	is_paid: boolean;
 	room_no: number | null;
-	customer: string | null;
+	guest: string | null;
 	discount_type: string | null;
 	order_items: IGetOrderItem[];
 }
@@ -136,18 +136,18 @@ export interface IUpdateOrderRequest extends Partial<IOrderRequest> {
 
 export interface IUpdateOrderPayload {
 	order_type?: string;
-	customer?: string | null;
+	guest?: string | null;
 	table_id?: number;
 	staff_id?: number;
 	room_no?: any;
+	sub_total?: number;
 	discount?: number;
 	discount_type?: string | null;
+	net_total?: number;
 	service_charge?: number;
 	service_charge_type?: string;
 	vat_rate?: number;
 	vat_amount?: number;
-	total?: number;
-	sub_total?: number;
 	grand_total?: number;
 	updated_by?: number;
 	kitchen_status?: string;

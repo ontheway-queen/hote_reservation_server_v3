@@ -11,25 +11,20 @@ class RestaurantOrderValidator {
             order_type: joi_1.default.string()
                 .valid("in-dine", "takeout", "delivery")
                 .required(),
-            customer: joi_1.default.string()
-                .pattern(/^(?:\+8801|01)[3-9]\d{8}$/)
-                .required()
-                .messages({
-                "string.pattern.base": "Customer must be a valid Bangladeshi phone number",
-            }),
+            guest: joi_1.default.string().optional(),
             table_id: joi_1.default.number().integer().required(),
-            total: joi_1.default.number().precision(2).required(),
-            service_charge: joi_1.default.number().precision(2).required(),
-            service_charge_type: joi_1.default.string()
-                .valid("percentage", "fixed")
-                .required(),
-            discount: joi_1.default.number().precision(2).optional().default(null),
+            sub_total: joi_1.default.number().precision(2).required(),
+            discount: joi_1.default.number().precision(2).optional().default(0),
             discount_type: joi_1.default.string()
                 .valid("percentage", "fixed")
                 .optional()
                 .default(null),
+            net_total: joi_1.default.number().precision(2).required(),
+            service_charge: joi_1.default.number().precision(2).required(),
+            service_charge_type: joi_1.default.string()
+                .valid("percentage", "fixed")
+                .required(),
             vat_rate: joi_1.default.number().precision(2).required(),
-            sub_total: joi_1.default.number().precision(2).required(),
             grand_total: joi_1.default.number().precision(2).required(),
             room_no: joi_1.default.number().optional().default(null),
             order_items: joi_1.default.array()
@@ -42,12 +37,6 @@ class RestaurantOrderValidator {
         });
         this.completeOrderPaymentValidator = joi_1.default.object({
             payable_amount: joi_1.default.number().precision(2).required(),
-        });
-        this.updateKitchenOrdersValidator = joi_1.default.object({
-            id: joi_1.default.number().integer().required(),
-            kitchen_status: joi_1.default.string()
-                .valid("preparing", "completed", "canceled")
-                .required(),
         });
         this.updateOrderValidator = joi_1.default.object({
             staff_id: joi_1.default.number().integer().optional(),

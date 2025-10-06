@@ -71,7 +71,7 @@ class CommonService extends AbstractServices {
 
 				case OTP_TYPE_FORGET_RESTAURANT_ADMIN:
 					const restaurantAdminModel =
-						this.Model.restaurantAdminModel(trx);
+						this.restaurantModel.restaurantAdminModel(trx);
 					const checkRestaurantAdmin =
 						await restaurantAdminModel.getRestaurantAdmin({
 							email,

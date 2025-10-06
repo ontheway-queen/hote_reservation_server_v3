@@ -22,7 +22,8 @@ class RestaurantMenuCategoryService extends abstract_service_1.default {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
                 const { id, restaurant_id, hotel_code } = req.restaurant_admin;
                 const body = req.body;
-                const isCategoryExists = yield this.Model.restaurantModel().getMenuCategories({
+                const restaurantMenuCategoryModel = this.restaurantModel.restaurantCategoryModel(trx);
+                const isCategoryExists = yield restaurantMenuCategoryModel.getMenuCategories({
                     hotel_code,
                     restaurant_id,
                     name: body.name,
@@ -34,8 +35,7 @@ class RestaurantMenuCategoryService extends abstract_service_1.default {
                         message: "Menu Category already exists.",
                     };
                 }
-                const restaurantModel = this.Model.restaurantModel(trx);
-                yield restaurantModel.createMenuCategory(Object.assign(Object.assign({}, body), { hotel_code, created_by: id, restaurant_id }));
+                yield restaurantMenuCategoryModel.createMenuCategory(Object.assign(Object.assign({}, body), { hotel_code, created_by: id, restaurant_id }));
                 return {
                     success: true,
                     code: this.StatusCode.HTTP_SUCCESSFUL,
@@ -48,7 +48,9 @@ class RestaurantMenuCategoryService extends abstract_service_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             const { restaurant_id, hotel_code } = req.restaurant_admin;
             const { limit, skip, name, status } = req.query;
-            const data = yield this.Model.restaurantModel().getMenuCategories({
+            const data = yield this.restaurantModel
+                .restaurantCategoryModel()
+                .getMenuCategories({
                 hotel_code,
                 restaurant_id,
                 limit: Number(limit),
@@ -65,8 +67,8 @@ class RestaurantMenuCategoryService extends abstract_service_1.default {
                 const { id } = req.params;
                 const { restaurant_id, hotel_code } = req.restaurant_admin;
                 const body = req.body;
-                const restaurantModel = this.Model.restaurantModel(trx);
-                const isCategoryExists = yield restaurantModel.getMenuCategories({
+                const restaurantMenuCategoryModel = this.restaurantModel.restaurantCategoryModel(trx);
+                const isCategoryExists = yield restaurantMenuCategoryModel.getMenuCategories({
                     id: parseInt(id),
                     hotel_code,
                     restaurant_id,
@@ -78,7 +80,7 @@ class RestaurantMenuCategoryService extends abstract_service_1.default {
                         message: "Menu Category not found.",
                     };
                 }
-                const newCategory = yield restaurantModel.updateMenuCategory({
+                const newCategory = yield restaurantMenuCategoryModel.updateMenuCategory({
                     id: parseInt(id),
                     payload: body,
                 });
@@ -102,8 +104,8 @@ class RestaurantMenuCategoryService extends abstract_service_1.default {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
                 const { id } = req.params;
                 const { restaurant_id, hotel_code } = req.restaurant_admin;
-                const restaurantModel = this.Model.restaurantModel(trx);
-                const isCategoryExists = yield restaurantModel.getMenuCategories({
+                const restaurantMenuCategoryModel = this.restaurantModel.restaurantCategoryModel(trx);
+                const isCategoryExists = yield restaurantMenuCategoryModel.getMenuCategories({
                     id: parseInt(id),
                     hotel_code,
                     restaurant_id,
@@ -115,7 +117,7 @@ class RestaurantMenuCategoryService extends abstract_service_1.default {
                         message: "Menu Category not found.",
                     };
                 }
-                const newCategory = yield restaurantModel.deleteMenuCategory({
+                const newCategory = yield restaurantMenuCategoryModel.deleteMenuCategory({
                     id: parseInt(id),
                 });
                 if (!newCategory) {

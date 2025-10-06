@@ -22,8 +22,8 @@ class RestaurantUnitService extends abstract_service_1.default {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
                 const { id, restaurant_id, hotel_code } = req.restaurant_admin;
                 const body = req.body;
-                const restaurantModel = this.Model.restaurantModel(trx);
-                yield restaurantModel.createUnit(Object.assign(Object.assign({}, body), { hotel_code,
+                const restaurantUnitModel = this.restaurantModel.restaurantUnitModel(trx);
+                yield restaurantUnitModel.createUnit(Object.assign(Object.assign({}, body), { hotel_code,
                     restaurant_id, created_by: id }));
                 return {
                     success: true,
@@ -37,7 +37,7 @@ class RestaurantUnitService extends abstract_service_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             const { restaurant_id, hotel_code } = req.restaurant_admin;
             const { limit, skip, name } = req.query;
-            const data = yield this.Model.restaurantModel().getUnits({
+            const data = yield this.restaurantModel.restaurantUnitModel().getUnits({
                 hotel_code,
                 restaurant_id,
                 limit: Number(limit),
@@ -53,8 +53,8 @@ class RestaurantUnitService extends abstract_service_1.default {
                 const { id } = req.params;
                 const { restaurant_id, hotel_code } = req.restaurant_admin;
                 const body = req.body;
-                const restaurantModel = this.Model.restaurantModel(trx);
-                const isUnitExists = yield restaurantModel.getUnits({
+                const restaurantUnitModel = this.restaurantModel.restaurantUnitModel(trx);
+                const isUnitExists = yield restaurantUnitModel.getUnits({
                     hotel_code,
                     restaurant_id,
                     id: parseInt(id),
@@ -66,7 +66,7 @@ class RestaurantUnitService extends abstract_service_1.default {
                         message: "Unit not found.",
                     };
                 }
-                yield restaurantModel.updateUnit({
+                yield restaurantUnitModel.updateUnit({
                     id: parseInt(id),
                     payload: body,
                 });
@@ -83,8 +83,8 @@ class RestaurantUnitService extends abstract_service_1.default {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
                 const { id } = req.params;
                 const { restaurant_id, hotel_code } = req.restaurant_admin;
-                const restaurantModel = this.Model.restaurantModel(trx);
-                const isUnitExists = yield restaurantModel.getUnits({
+                const restaurantUnitModel = this.restaurantModel.restaurantUnitModel(trx);
+                const isUnitExists = yield restaurantUnitModel.getUnits({
                     hotel_code,
                     restaurant_id,
                     id: parseInt(id),
@@ -96,7 +96,7 @@ class RestaurantUnitService extends abstract_service_1.default {
                         message: "Unit not found.",
                     };
                 }
-                yield restaurantModel.deleteUnit({
+                yield restaurantUnitModel.deleteUnit({
                     id: parseInt(id),
                 });
                 return {

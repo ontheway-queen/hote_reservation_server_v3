@@ -28,8 +28,10 @@ class RestaurantFoodService extends abstract_service_1.default {
                         food.photo = file.filename;
                     }
                 }
-                const restaurantModel = this.Model.restaurantModel(trx);
-                const isMenuCategoryExists = yield restaurantModel.getMenuCategories({
+                const restaurantMenuCategoryModel = this.restaurantModel.restaurantCategoryModel(trx);
+                const restaurantUnitModel = this.restaurantModel.restaurantUnitModel(trx);
+                const restaurantFoodModel = this.restaurantModel.restaurantFoodModel(trx);
+                const isMenuCategoryExists = yield restaurantMenuCategoryModel.getMenuCategories({
                     hotel_code,
                     restaurant_id,
                     id: food.menu_category_id,
@@ -41,7 +43,7 @@ class RestaurantFoodService extends abstract_service_1.default {
                         message: "Menu Category not found.",
                     };
                 }
-                const isUnitExists = yield restaurantModel.getUnits({
+                const isUnitExists = yield restaurantUnitModel.getUnits({
                     hotel_code,
                     restaurant_id,
                     id: food.unit_id,
@@ -53,7 +55,7 @@ class RestaurantFoodService extends abstract_service_1.default {
                         message: "Unit not found.",
                     };
                 }
-                yield restaurantModel.createFood(Object.assign(Object.assign({}, food), { hotel_code,
+                yield restaurantFoodModel.createFood(Object.assign(Object.assign({}, food), { hotel_code,
                     restaurant_id, created_by: id }));
                 return {
                     success: true,
@@ -67,7 +69,7 @@ class RestaurantFoodService extends abstract_service_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             const { restaurant_id, hotel_code } = req.restaurant_admin;
             const { limit, skip, name, category_id } = req.query;
-            const data = yield this.Model.restaurantModel().getFoods({
+            const data = yield this.restaurantModel.restaurantFoodModel().getFoods({
                 hotel_code,
                 restaurant_id,
                 limit: Number(limit),
@@ -90,8 +92,10 @@ class RestaurantFoodService extends abstract_service_1.default {
                         body.photo = file.filename;
                     }
                 }
-                const restaurantModel = this.Model.restaurantModel(trx);
-                const isFoodExists = yield restaurantModel.getFoods({
+                const restaurantFoodModel = this.restaurantModel.restaurantFoodModel(trx);
+                const restaurantCategoryModel = this.restaurantModel.restaurantCategoryModel(trx);
+                const restaurantUnitModel = this.restaurantModel.restaurantUnitModel(trx);
+                const isFoodExists = yield restaurantFoodModel.getFoods({
                     id: parseInt(id),
                     hotel_code,
                     restaurant_id,
@@ -104,7 +108,7 @@ class RestaurantFoodService extends abstract_service_1.default {
                     };
                 }
                 if (body.menu_category_id) {
-                    const isMenuCategoryExists = yield restaurantModel.getMenuCategories({
+                    const isMenuCategoryExists = yield restaurantCategoryModel.getMenuCategories({
                         hotel_code,
                         restaurant_id,
                         id: body.menu_category_id,
@@ -118,7 +122,7 @@ class RestaurantFoodService extends abstract_service_1.default {
                     }
                 }
                 if (body.unit_id) {
-                    const isUnitExists = yield restaurantModel.getUnits({
+                    const isUnitExists = yield restaurantUnitModel.getUnits({
                         hotel_code,
                         restaurant_id,
                         id: body.unit_id,
@@ -131,7 +135,7 @@ class RestaurantFoodService extends abstract_service_1.default {
                         };
                     }
                 }
-                yield restaurantModel.updateFood({
+                yield restaurantFoodModel.updateFood({
                     where: { id: parseInt(id) },
                     payload: body,
                 });
@@ -148,8 +152,8 @@ class RestaurantFoodService extends abstract_service_1.default {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
                 const { id } = req.params;
                 const { restaurant_id, hotel_code } = req.restaurant_admin;
-                const restaurantModel = this.Model.restaurantModel(trx);
-                const isFoodExists = yield restaurantModel.getFoods({
+                const restaurantFoodModel = this.restaurantModel.restaurantFoodModel(trx);
+                const isFoodExists = yield restaurantFoodModel.getFoods({
                     id: parseInt(id),
                     hotel_code,
                     restaurant_id,
@@ -161,7 +165,7 @@ class RestaurantFoodService extends abstract_service_1.default {
                         message: "Food not found.",
                     };
                 }
-                yield restaurantModel.deleteFood({
+                yield restaurantFoodModel.deleteFood({
                     id: Number(id),
                 });
                 return {

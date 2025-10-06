@@ -20,10 +20,15 @@ class RestaurantFoodService extends AbstractServices {
 				}
 			}
 
-			const restaurantModel = this.Model.restaurantModel(trx);
+			const restaurantMenuCategoryModel =
+				this.restaurantModel.restaurantCategoryModel(trx);
+			const restaurantUnitModel =
+				this.restaurantModel.restaurantUnitModel(trx);
+			const restaurantFoodModel =
+				this.restaurantModel.restaurantFoodModel(trx);
 
 			const isMenuCategoryExists =
-				await restaurantModel.getMenuCategories({
+				await restaurantMenuCategoryModel.getMenuCategories({
 					hotel_code,
 					restaurant_id,
 					id: food.menu_category_id,
@@ -37,7 +42,7 @@ class RestaurantFoodService extends AbstractServices {
 				};
 			}
 
-			const isUnitExists = await restaurantModel.getUnits({
+			const isUnitExists = await restaurantUnitModel.getUnits({
 				hotel_code,
 				restaurant_id,
 				id: food.unit_id,
@@ -51,7 +56,7 @@ class RestaurantFoodService extends AbstractServices {
 				};
 			}
 
-			await restaurantModel.createFood({
+			await restaurantFoodModel.createFood({
 				...food,
 				hotel_code,
 				restaurant_id,
@@ -71,7 +76,7 @@ class RestaurantFoodService extends AbstractServices {
 
 		const { limit, skip, name, category_id } = req.query;
 
-		const data = await this.Model.restaurantModel().getFoods({
+		const data = await this.restaurantModel.restaurantFoodModel().getFoods({
 			hotel_code,
 			restaurant_id,
 			limit: Number(limit),
@@ -100,9 +105,14 @@ class RestaurantFoodService extends AbstractServices {
 				}
 			}
 
-			const restaurantModel = this.Model.restaurantModel(trx);
+			const restaurantFoodModel =
+				this.restaurantModel.restaurantFoodModel(trx);
+			const restaurantCategoryModel =
+				this.restaurantModel.restaurantCategoryModel(trx);
+			const restaurantUnitModel =
+				this.restaurantModel.restaurantUnitModel(trx);
 
-			const isFoodExists = await restaurantModel.getFoods({
+			const isFoodExists = await restaurantFoodModel.getFoods({
 				id: parseInt(id),
 				hotel_code,
 				restaurant_id,
@@ -118,7 +128,7 @@ class RestaurantFoodService extends AbstractServices {
 
 			if (body.menu_category_id) {
 				const isMenuCategoryExists =
-					await restaurantModel.getMenuCategories({
+					await restaurantCategoryModel.getMenuCategories({
 						hotel_code,
 						restaurant_id,
 						id: body.menu_category_id,
@@ -134,7 +144,7 @@ class RestaurantFoodService extends AbstractServices {
 			}
 
 			if (body.unit_id) {
-				const isUnitExists = await restaurantModel.getUnits({
+				const isUnitExists = await restaurantUnitModel.getUnits({
 					hotel_code,
 					restaurant_id,
 					id: body.unit_id,
@@ -149,7 +159,7 @@ class RestaurantFoodService extends AbstractServices {
 				}
 			}
 
-			await restaurantModel.updateFood({
+			await restaurantFoodModel.updateFood({
 				where: { id: parseInt(id) },
 				payload: body,
 			});
@@ -167,9 +177,10 @@ class RestaurantFoodService extends AbstractServices {
 			const { id } = req.params;
 			const { restaurant_id, hotel_code } = req.restaurant_admin;
 
-			const restaurantModel = this.Model.restaurantModel(trx);
+			const restaurantFoodModel =
+				this.restaurantModel.restaurantFoodModel(trx);
 
-			const isFoodExists = await restaurantModel.getFoods({
+			const isFoodExists = await restaurantFoodModel.getFoods({
 				id: parseInt(id),
 				hotel_code,
 				restaurant_id,
@@ -183,7 +194,7 @@ class RestaurantFoodService extends AbstractServices {
 				};
 			}
 
-			await restaurantModel.deleteFood({
+			await restaurantFoodModel.deleteFood({
 				id: Number(id),
 			});
 
