@@ -87,7 +87,7 @@ class HotelRestaurantService extends abstract_service_1.default {
                     role_id: user.role,
                     password: hashPass,
                     created_by: admin_id,
-                    owner: false,
+                    owner: true,
                 });
                 yield lib_1.default.sendEmail(user.email, constants_1.OTP_FOR_CREDENTIALS, (0, restaurantCredential_template_1.newResutaurantUserAccount)(user.email, user.password, user.name));
                 return {

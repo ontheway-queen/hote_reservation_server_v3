@@ -106,7 +106,7 @@ class HotelRestaurantService extends AbstractServices {
 				role_id: user.role,
 				password: hashPass,
 				created_by: admin_id,
-				owner: false,
+				owner: true,
 			});
 
 			await Lib.sendEmail(
