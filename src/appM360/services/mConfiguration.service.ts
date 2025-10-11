@@ -177,6 +177,45 @@ class MConfigurationService extends AbstractServices {
         await model.deleteHotelPermission(hotel_code, deleted);
       }
 
+      // updated permission will be assign for hotel user owner
+      const rAdmModel = this.Model.rAdministrationModel(trx);
+      const checkUser = await rAdmModel.getSingleAdmin({
+        owner: "true",
+        hotel_code,
+      });
+
+      if (checkUser) {
+        const role_id = Number(checkUser.role_id);
+
+        // Delete existing permissions
+        await rAdmModel.deleteRolePermissionByRoleID({
+          role_id,
+          hotel_code,
+        });
+
+        // Get all hotel permissions
+        const hotelPermissions = await model.getAllPermissionByHotel(
+          hotel_code
+        );
+
+        if (hotelPermissions?.permissions?.length) {
+          const rolePermissionPayload = hotelPermissions.permissions.map(
+            (perm: { h_permission_id: number }) => ({
+              hotel_code,
+              h_permission_id: perm.h_permission_id,
+              read: 1,
+              write: 1,
+              update: 1,
+              delete: 1,
+              role_id,
+            })
+          );
+
+          // Bulk insert role permissions
+          await rAdmModel.insertInRolePermission(rolePermissionPayload);
+        }
+      }
+
       return {
         success: true,
         code: this.StatusCode.HTTP_OK,
