@@ -48,7 +48,7 @@ class RestaurantFoodModel extends schema_1.default {
             }
             const data = yield baseQuery
                 .clone()
-                .select("f.id", "f.hotel_code", "f.restaurant_id", "f.photo", "f.name", "mc.name as menu_category_name", "ua.id as created_by_id", "u.name as unit_name", "u.short_code as unit_short_code", "ua.name as created_by_name", "f.status", "f.retail_price", "f.is_deleted")
+                .select("f.id", "f.hotel_code", "f.restaurant_id", "f.photo", "f.name", "mc.id as menu_category_id", "mc.name as menu_category_name", "ua.id as created_by_id", "u.id as unit_id", "u.name as unit_name", "u.short_code as unit_short_code", "ua.name as created_by_name", "f.measurement_per_unit", "f.status", "f.retail_price", "f.is_deleted")
                 .orderBy("f.id", "desc")
                 .limit((_a = query.limit) !== null && _a !== void 0 ? _a : 100)
                 .offset((_b = query.skip) !== null && _b !== void 0 ? _b : 0);

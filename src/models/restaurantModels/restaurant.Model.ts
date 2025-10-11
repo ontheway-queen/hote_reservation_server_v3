@@ -2,6 +2,10 @@ import {
 	IRestaurantPayload,
 	IUpdateRestaurantPayload,
 } from "../../appAdmin/utlis/interfaces/restaurant.hotel.interface";
+import {
+	IGetRestaurant,
+	IGetRestaurantWithAdmin,
+} from "../../appRestaurantAdmin/utils/interface/restaurant.interface";
 
 import { TDB } from "../../common/types/commontypes";
 import Schema from "../../utils/miscellaneous/schema";
@@ -28,7 +32,7 @@ class RestaurantModel extends Schema {
 		name?: string;
 		key?: string;
 		hotel_code: number;
-	}) {
+	}): Promise<{ data: IGetRestaurant[]; total: number }> {
 		const { key, limit, skip, hotel_code } = payload;
 
 		const dtbs = this.db("restaurant as r");
@@ -82,7 +86,7 @@ class RestaurantModel extends Schema {
 	public async getRestaurantWithAdmin(where: {
 		restaurant_id: number;
 		hotel_code: number;
-	}) {
+	}): Promise<IGetRestaurantWithAdmin> {
 		const { restaurant_id, hotel_code } = where;
 		return await this.db("restaurant as r")
 			.select(

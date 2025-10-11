@@ -32,6 +32,9 @@ export interface IGetFoods {
 	status: string;
 	retail_price: string;
 	is_deleted: boolean;
+	measurement_per_unit: number;
+	unit_id: number;
+	menu_category_id: number;
 }
 
 export interface IFoodUpdatePayload {}

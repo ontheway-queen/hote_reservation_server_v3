@@ -16,6 +16,7 @@ class HotelRestaurantValidator {
                             custom: "Invalid user, should be a JSON object",
                         });
                     }
+                    console.log({ user: parsed });
                     return parsed;
                 }
                 catch (err) {
@@ -33,6 +34,7 @@ class HotelRestaurantValidator {
                             custom: "Invalid restaurent, should be a JSON object",
                         });
                     }
+                    console.log({ restaurant: parsed });
                     return parsed;
                 }
                 catch (err) {
