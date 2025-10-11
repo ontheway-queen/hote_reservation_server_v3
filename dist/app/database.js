@@ -17,13 +17,11 @@ const createDbCon = () => {
                 user: config_1.default.DB_USER,
                 password: config_1.default.DB_PASS,
                 database: config_1.default.DB_NAME,
-                ssl: 
-                // process.env.NODE_ENV === "production"
-                //   ?
-                {
-                    rejectUnauthorized: false,
-                },
-                // : false,
+                ssl: process.env.NODE_ENV === "production"
+                    ? {
+                        rejectUnauthorized: false,
+                    }
+                    : false,
             },
             pool: {
                 min: 5,
