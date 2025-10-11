@@ -20,6 +20,7 @@ const invoice_router_1 = __importDefault(require("./routers/invoice.router"));
 const money_reciept_router_1 = __importDefault(require("./routers/money-reciept.router"));
 const reports_router_1 = __importDefault(require("./routers/reports.router"));
 const reservation_router_1 = require("./routers/reservation.router");
+const restaurant_hotel_router_1 = __importDefault(require("./routers/restaurant.hotel.router"));
 const room_guest_router_1 = __importDefault(require("./routers/room.guest.router"));
 const room_router_1 = __importDefault(require("./routers/room.router"));
 const service_router_1 = __importDefault(require("./routers/service.router"));
@@ -52,6 +53,7 @@ class ReservationRootRouter {
         this.router.use("/btoc", this.authChecker.hotelAdminAuthChecker, new adminBtocHandler_router_1.default().router);
         this.router.use("/service-categories", this.authChecker.hotelAdminAuthChecker, new serviceCategories_router_1.default().router);
         this.router.use("/services", this.authChecker.hotelAdminAuthChecker, new service_router_1.default().router);
+        this.router.use("/restaurant", this.authChecker.hotelAdminAuthChecker, new restaurant_hotel_router_1.default().router);
         this.router.use("/", this.authChecker.hotelAdminAuthChecker, new reservation_router_1.ReservationRouter().router);
     }
 }

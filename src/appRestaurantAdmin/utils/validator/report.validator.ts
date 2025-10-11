@@ -1,0 +1,69 @@
+import Joi from "joi";
+
+class RestaurantReportValidator {
+	public getDailyReportValidator = Joi.object({
+		from_date: Joi.string().required().label("From Date"),
+		to_date: Joi.string()
+			.required()
+			.label("To Date")
+			.custom((value, helpers) => {
+				const { from_date } = helpers.state.ancestors[0];
+				if (!from_date) return value;
+
+				const fromDateObj = new Date(from_date);
+				const toDateObj = new Date(value);
+
+				if (
+					isNaN(fromDateObj.getTime()) ||
+					isNaN(toDateObj.getTime())
+				) {
+					return helpers.error("any.invalid", {
+						message: "Invalid date format",
+					});
+				}
+
+				if (toDateObj <= fromDateObj) {
+					return helpers.error("any.invalid", {
+						message: "To Date must be greater than From Date",
+					});
+				}
+
+				return value;
+			}),
+	});
+
+	public getProductsReportValidator = Joi.object({
+		from_date: Joi.string().required().label("From Date"),
+		to_date: Joi.string()
+			.required()
+			.label("To Date")
+			.custom((value, helpers) => {
+				const { from_date } = helpers.state.ancestors[0];
+				if (!from_date) return value;
+
+				const fromDateObj = new Date(from_date);
+				const toDateObj = new Date(value);
+
+				if (
+					isNaN(fromDateObj.getTime()) ||
+					isNaN(toDateObj.getTime())
+				) {
+					return helpers.error("any.invalid", {
+						message: "Invalid date format",
+					});
+				}
+
+				if (toDateObj <= fromDateObj) {
+					return helpers.error("any.invalid", {
+						message: "To Date must be greater than From Date",
+					});
+				}
+
+				return value;
+			}),
+		name: Joi.string().optional(),
+		category: Joi.string().optional(),
+	});
+}
+
+export default RestaurantReportValidator;

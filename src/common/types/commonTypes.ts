@@ -5,146 +5,146 @@ export type TDB = Knex | Knex.Transaction;
 
 // user admin types
 export interface IAdmin {
-  id: number;
-  name: string;
-  email: string;
-  phone: string | null;
-  avatar: string | null;
-  status: 0 | 1;
-  type: string;
+	id: number;
+	name: string;
+	email: string;
+	phone: string | null;
+	avatar: string | null;
+	status: 0 | 1;
+	type: string;
 }
 
 // hotel admin types
 export interface IhAdmin {
-  hotel_code: number;
-  hotel_name: string;
-  id: number;
-  name: string;
-  email: string;
-  phone: string | null;
-  avatar: string | null;
-  status: 0 | 1;
-  type: string;
+	hotel_code: number;
+	hotel_name: string;
+	id: number;
+	name: string;
+	email: string;
+	phone: string | null;
+	avatar: string | null;
+	status: 0 | 1;
+	type: string;
 }
 
 export interface IGBtocUser {
-  id: number;
-  hotel_code: number;
-  first_name: string;
-  last_name: string;
-  email: string;
-  city_id: string;
-  country_id: string;
-  status: "active" | "blocked" | "expired";
-  type: string;
+	id: number;
+	hotel_code: number;
+	first_name: string;
+	last_name: string;
+	email: string;
+	city_id: string;
+	country_id: string;
+	status: "active" | "blocked" | "expired";
+	type: string;
 }
 
 // hotel user types
-export interface IrestUser {
-  id: number;
-  res_id: number;
-  hotel_code: number;
-  name: string;
-  email: string;
-  status: "active" | "blocked" | "inactive";
-  type: string;
+export interface IrestaurantUser {
+	id: number;
+	restaurant_id: number;
+	hotel_code: number;
+	name: string;
+	email: string;
+	status: "active" | "blocked" | "inactive";
+	type: string;
 }
 
 export interface IWebToken {
-  hotel_code: number;
-  hotel_name: string;
+	hotel_code: number;
+	hotel_name: string;
 }
 
 // user member types
 export interface IUser {
-  id: number;
-  agency_id: number;
-  applicationId: number;
-  companyId: number;
-  name: string;
-  email: string;
-  phone: string;
-  status: "active" | "blacklisted" | "disabled";
+	id: number;
+	agency_id: number;
+	applicationId: number;
+	companyId: number;
+	name: string;
+	email: string;
+	phone: string;
+	status: "active" | "blacklisted" | "disabled";
 }
 
 // forget password props interface
 export interface IForgetPassProps {
-  password: string;
-  table: string;
-  passField: string;
-  userEmailField: string;
-  userEmail: string;
+	password: string;
+	table: string;
+	passField: string;
+	userEmailField: string;
+	userEmail: string;
 }
 
 // user member registration types
 export interface IRegistration {
-  name: string;
-  email: string;
-  password: string;
-  mobileNumber: string;
-  companyName: string | null;
-  designation?: string;
-  status?: string;
+	name: string;
+	email: string;
+	password: string;
+	mobileNumber: string;
+	companyName: string | null;
+	designation?: string;
+	status?: string;
 }
 
 // login interface
 export interface ILogin {
-  email: string;
-  password: string;
+	email: string;
+	password: string;
 }
 
 export interface IPromiseRes<T> {
-  success: boolean;
-  message?: string;
-  code: number;
-  data?: T;
+	success: boolean;
+	message?: string;
+	code: number;
+	data?: T;
 }
 
 export interface IChangePassProps {
-  password: string;
-  passField: string;
-  table: string;
-  schema: string;
-  userIdField: string;
-  userId: number;
+	password: string;
+	passField: string;
+	table: string;
+	schema: string;
+	userIdField: string;
+	userId: number;
 }
 export interface IUpdateChangePassModelProps {
-  hashedPass: string;
-  passField: string;
-  table: string;
-  schema: string;
-  userIdField: string;
-  userId: number;
+	hashedPass: string;
+	passField: string;
+	table: string;
+	schema: string;
+	userIdField: string;
+	userId: number;
 }
 
 // verify password props interface
 export interface IVerifyPassProps {
-  oldPassword: string;
-  userId: number;
-  schema: string;
-  table: string;
-  passField: string;
-  userIdField: string;
+	oldPassword: string;
+	userId: number;
+	schema: string;
+	table: string;
+	passField: string;
+	userIdField: string;
 }
 
 export interface IVerifyModelPassProps {
-  schema: string;
-  userId: number;
-  table: string;
-  passField: string;
-  userIdField: string;
+	schema: string;
+	userId: number;
+	table: string;
+	passField: string;
+	userIdField: string;
 }
 
 //  JWT CARD INFO
 export interface ITokenCards {
-  user_username: string;
-  user_full_name: string;
-  user_role_id: number;
-  user_id: number;
-  user_agency_id: number;
+	user_username: string;
+	user_full_name: string;
+	user_role_id: number;
+	user_id: number;
+	user_agency_id: number;
 }
 
 export interface ILimitSkip {
-  limit: string;
-  skip: string;
+	limit: string;
+	skip: string;
 }

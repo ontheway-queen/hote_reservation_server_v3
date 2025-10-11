@@ -11,7 +11,6 @@ const dboModel_1 = __importDefault(require("./commonModel/dboModel"));
 const service_model_1 = __importDefault(require("./hotelServiceModel/service.model"));
 const serviceCategories_model_1 = __importDefault(require("./hotelServiceModel/serviceCategories.model"));
 const serviceImage_model_1 = __importDefault(require("./hotelServiceModel/serviceImage.model"));
-const servicePricing_model_1 = __importDefault(require("./hotelServiceModel/servicePricing.model"));
 const serviceSchedule_model_1 = __importDefault(require("./hotelServiceModel/serviceSchedule.model"));
 const mAdministration_model_1 = __importDefault(require("./managementsModel/mAdministrationModel/mAdministration.model"));
 const mConfigurationModel_1 = __importDefault(require("./managementsModel/mConfigurationModel/mConfigurationModel"));
@@ -137,9 +136,6 @@ class Models {
     }
     serviceImageModel(trx) {
         return new serviceImage_model_1.default(trx || this.db);
-    }
-    servicePricingModel(trx) {
-        return new servicePricing_model_1.default(trx || this.db);
     }
     serviceScheduleModel(trx) {
         return new serviceSchedule_model_1.default(trx || this.db);

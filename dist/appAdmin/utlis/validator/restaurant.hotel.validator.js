@@ -6,24 +6,82 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const joi_1 = __importDefault(require("joi"));
 class HotelRestaurantValidator {
     constructor() {
-        // create hotel Restaurant validation
         this.createRestaurantValidator = joi_1.default.object({
-            name: joi_1.default.string().required(),
-            res_email: joi_1.default.string().email().lowercase().trim().regex(/^\S/).required(),
-            phone: joi_1.default.number().optional(),
-            admin_name: joi_1.default.string().required(),
-            email: joi_1.default.string().email().lowercase().trim().regex(/^\S/).required(),
-            bin_no: joi_1.default.number().optional(),
-            address: joi_1.default.string().optional(),
-            password: joi_1.default.string().min(8).required(),
-            permission: joi_1.default.array().items(joi_1.default.number().required()).required(),
+            user: joi_1.default.string().custom((value, helpers) => {
+                try {
+                    const parsed = JSON.parse(value);
+                    const userType = typeof parsed;
+                    if (userType !== "object") {
+                        return helpers.message({
+                            custom: "Invalid user, should be a JSON object",
+                        });
+                    }
+                    return parsed;
+                }
+                catch (err) {
+                    return helpers.message({
+                        custom: "Invalid user, should be a valid JSON Object",
+                    });
+                }
+            }),
+            restaurant: joi_1.default.string().custom((value, helpers) => {
+                try {
+                    const parsed = JSON.parse(value);
+                    const restaurentType = typeof parsed;
+                    if (restaurentType !== "object") {
+                        return helpers.message({
+                            custom: "Invalid restaurent, should be a JSON object",
+                        });
+                    }
+                    return parsed;
+                }
+                catch (err) {
+                    return helpers.message({
+                        custom: "Invalid restaurent, should be a valid JSON Object",
+                    });
+                }
+            }),
         });
-        // update hotel restaurant validation
         this.updateHotelRestaurantValidator = joi_1.default.object({
-            name: joi_1.default.string().allow("").optional(),
-            status: joi_1.default.string().valid("0", "1"),
+            user: joi_1.default.string()
+                .custom((value, helpers) => {
+                try {
+                    const parsed = JSON.parse(value);
+                    const userType = typeof parsed;
+                    if (userType !== "object") {
+                        return helpers.message({
+                            custom: "Invalid user, should be a JSON object",
+                        });
+                    }
+                    return parsed;
+                }
+                catch (err) {
+                    return helpers.message({
+                        custom: "Invalid user, should be a valid JSON Object",
+                    });
+                }
+            })
+                .optional(),
+            restaurant: joi_1.default.string()
+                .custom((value, helpers) => {
+                try {
+                    const parsed = JSON.parse(value);
+                    const restaurentType = typeof parsed;
+                    if (restaurentType !== "object") {
+                        return helpers.message({
+                            custom: "Invalid restaurent, should be a JSON object",
+                        });
+                    }
+                    return parsed;
+                }
+                catch (err) {
+                    return helpers.message({
+                        custom: "Invalid restaurent, should be a valid JSON Object",
+                    });
+                }
+            })
+                .optional(),
         });
-        // get all Restaurant query validator
         this.getAllRestaurantQueryValidator = joi_1.default.object({
             limit: joi_1.default.string().allow("").optional(),
             skip: joi_1.default.string().allow("").optional(),

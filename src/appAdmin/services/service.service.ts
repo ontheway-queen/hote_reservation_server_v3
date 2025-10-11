@@ -54,7 +54,7 @@ export class ServiceService extends AbstractServices {
 			const serviceModel = this.Model.serviceModel(trx);
 			const serviceCategoryModel = this.Model.serviceCategoriesModel(trx);
 			const serviceImageModel = this.Model.serviceImageModel(trx);
-			const servicePricingModel = this.Model.servicePricingModel(trx);
+			// const servicePricingModel = this.Model.servicePricingModel(trx);
 			const serviceScheduleModel = this.Model.serviceScheduleModel(trx);
 
 			const isServiceExists =
@@ -158,20 +158,20 @@ export class ServiceService extends AbstractServices {
 									  (price.delivery_charge || 0),
 							discount_price,
 						});
-						return servicePricingModel.createServicePricing({
-							...price,
-							hotel_code,
-							service_id: newCategory.id,
-							total_price:
-								discount_price > 0
-									? (discount_price || 0) +
-									  (vatPrice || 0) +
-									  (price.delivery_charge || 0)
-									: mainPrice +
-									  (vatPrice || 0) +
-									  (price.delivery_charge || 0),
-							discount_price,
-						});
+						// return servicePricingModel.createServicePricing({
+						// 	...price,
+						// 	hotel_code,
+						// 	service_id: newCategory.id,
+						// 	total_price:
+						// 		discount_price > 0
+						// 			? (discount_price || 0) +
+						// 			  (vatPrice || 0) +
+						// 			  (price.delivery_charge || 0)
+						// 			: mainPrice +
+						// 			  (vatPrice || 0) +
+						// 			  (price.delivery_charge || 0),
+						// 	discount_price,
+						// });
 					})
 				);
 			}
@@ -294,7 +294,7 @@ export class ServiceService extends AbstractServices {
 			const categoryModel = this.Model.serviceCategoriesModel(trx);
 			const serviceScheduleModel = this.Model.serviceScheduleModel(trx);
 			const serviceImageModel = this.Model.serviceImageModel(trx);
-			const servicePricingModel = this.Model.servicePricingModel(trx);
+			// const servicePricingModel = this.Model.servicePricingModel(trx);
 
 			const isServiceExists = await serviceModel.getSingleService({
 				id: Number(id),
@@ -430,20 +430,20 @@ export class ServiceService extends AbstractServices {
 							vatPrice = (total * price.vat_percent) / 100;
 						}
 
-						return servicePricingModel.createServicePricing({
-							...price,
-							hotel_code,
-							service_id: id,
-							total_price:
-								discount_price > 0
-									? (discount_price || 0) +
-									  (vatPrice || 0) +
-									  (price.delivery_charge || 0)
-									: mainPrice +
-									  (vatPrice || 0) +
-									  (price.delivery_charge || 0),
-							discount_price,
-						});
+						// return servicePricingModel.createServicePricing({
+						// 	...price,
+						// 	hotel_code,
+						// 	service_id: id,
+						// 	total_price:
+						// 		discount_price > 0
+						// 			? (discount_price || 0) +
+						// 			  (vatPrice || 0) +
+						// 			  (price.delivery_charge || 0)
+						// 			: mainPrice +
+						// 			  (vatPrice || 0) +
+						// 			  (price.delivery_charge || 0),
+						// 	discount_price,
+						// });
 					})
 				);
 
@@ -451,28 +451,28 @@ export class ServiceService extends AbstractServices {
 					service_pricing
 						.filter((price: any) => price.id !== null)
 						.map((price: any) => {
-							return servicePricingModel.updateServicePricing({
-								where: {
-									id: Number(price.id),
-									hotel_code,
-								},
-								payload: price,
-							});
+							// return servicePricingModel.updateServicePricing({
+							// 	where: {
+							// 		id: Number(price.id),
+							// 		hotel_code,
+							// 	},
+							// 	payload: price,
+							// });
 						})
 				);
 			}
 
 			if (delete_service_pricing_id && delete_service_pricing_id.length) {
 				for (const id of delete_service_pricing_id) {
-					await servicePricingModel.updateServicePricing({
-						where: {
-							id,
-							hotel_code,
-						},
-						payload: {
-							is_deleted: true,
-						},
-					});
+					// await servicePricingModel.updateServicePricing({
+					// 	where: {
+					// 		id,
+					// 		hotel_code,
+					// 	},
+					// 	payload: {
+					// 		is_deleted: true,
+					// 	},
+					// });
 				}
 			}
 

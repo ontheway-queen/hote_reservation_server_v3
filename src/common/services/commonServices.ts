@@ -10,6 +10,7 @@ import {
 	OTP_TYPE_FORGET_HOTEL_ADMIN,
 	OTP_TYPE_FORGET_M_ADMIN,
 	OTP_TYPE_FORGET_RES_ADMIN,
+	OTP_TYPE_FORGET_RESTAURANT_ADMIN,
 } from "../../utils/miscellaneous/constants";
 import { IGetOTPPayload } from "../interfaces/commonInterface";
 import { IChangePassProps, IVerifyPassProps } from "../types/commontypes";
@@ -68,17 +69,33 @@ class CommonService extends AbstractServices {
 					}
 					break;
 
+				case OTP_TYPE_FORGET_RESTAURANT_ADMIN:
+					const restaurantAdminModel =
+						this.restaurantModel.restaurantAdminModel(trx);
+					const checkRestaurantAdmin =
+						await restaurantAdminModel.getRestaurantAdmin({
+							email,
+						});
+					if (!checkRestaurantAdmin) {
+						return {
+							success: false,
+							code: this.StatusCode.HTTP_NOT_FOUND,
+							message: this.ResMsg.NOT_FOUND_USER_WITH_EMAIL,
+						};
+					}
+					break;
+
 				default:
 					break;
 			}
-
+			console.log(1);
 			const commonModel = this.Model.commonModel(trx);
-
+			console.log(2);
 			const checkOtp = await commonModel.getOTP({
 				email: email,
 				type: type,
 			});
-
+			console.log(3);
 			if (checkOtp.length) {
 				return {
 					success: false,
@@ -177,6 +194,10 @@ class CommonService extends AbstractServices {
 
 					case OTP_TYPE_FORGET_BTOC_USER:
 						secret = config.JWT_SECRET_H_USER;
+						break;
+
+					case OTP_TYPE_FORGET_RESTAURANT_ADMIN:
+						secret = config.JWT_SECRET_H_RESTURANT;
 						break;
 
 					default:

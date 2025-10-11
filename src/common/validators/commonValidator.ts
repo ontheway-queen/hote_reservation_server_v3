@@ -47,7 +47,8 @@ class CommonValidator {
 				"forget_m_admin",
 				"forget_h_user",
 				"forget_r_admin",
-				"forget_btoc_user"
+				"forget_btoc_user",
+				"forget_restaurant_admin"
 			)
 			.required(),
 	});
@@ -62,7 +63,8 @@ class CommonValidator {
 				"forget_m_admin",
 				"forget_h_user",
 				"forget_r_admin",
-				"forget_btoc_user"
+				"forget_btoc_user",
+				"forget_restaurant_admin"
 			)
 			.required(),
 	});

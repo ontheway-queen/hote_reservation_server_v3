@@ -180,8 +180,7 @@ class ExpenseValidator {
                                 custom: "Each expense item must have a numeric amount",
                             });
                         }
-                        if (item.is_deleted &&
-                            typeof item.is_deleted !== "number") {
+                        if (item.is_deleted && typeof item.is_deleted !== "number") {
                             return helpers.message({
                                 custom: "Each expense item must have 0 or 1",
                             });
@@ -200,44 +199,4 @@ class ExpenseValidator {
     }
 }
 exports.default = ExpenseValidator;
-/*
-
-CREATE TYPE hotel_reservation.pay_method_enum AS ENUM ('CASH', 'BANK', 'MOBILE_BANKING', 'CHEQUE');
-
-CREATE TABLE hotel_reservation.expense (
-    id SERIAL PRIMARY KEY,
-    hotel_code INT NOT NULL REFERENCES hotel_reservation.hotels(hotel_code),
-    voucher_no VARCHAR(20) NOT NULL,
-    expense_date DATE NOT NULL,
-    expense_by INT NOT NULL REFERENCES hr.employee(id),
-    expense_no VARCHAR(50) NOT NULL,
-    pay_method pay_method_enum NOT NULL,
-    transaction_no VARCHAE(50),
-    expense_cheque_id INT,
-    bank_name VARCHAR(255),
-    branch_name VARCHAR(255),
-    cheque_no VARCHAR(50),
-    cheque_date DATE,
-    deposit_date DATE,
-    account_id INT,
-    expense_amount NUMERIC(10,2) NOT NULL,
-    expense_note VARCHAR(255),
-    acc_voucher_id INT NOT NULL,
-    expense_voucher_url_1 VARCHAR(255),
-    expense_voucher_url_2 VARCHAR(255),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    created_by INT NOT NULL,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_by INT,
-    is_deleted SMALLINT DEFAULT 0,
-    deleted_by INT
-);
-*/
-/* CREATE TABLE hotel_reservation.expense_items (
-    id SERIAL PRIMARY KEY,
-    expense_id INT NOT NULL REFERENCES hotel_reservation.expense(id),
-    expense_head_id INT NOT NULL REFERENCES hotel_reservation.expense_head(id),
-    amount NUMERIC(10,2) NOT NULL,
-    remarks VARCHAR(455) NOT NULL
-); */
 //# sourceMappingURL=expense.validator.js.map

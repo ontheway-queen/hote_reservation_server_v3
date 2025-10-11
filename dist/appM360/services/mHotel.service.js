@@ -349,6 +349,7 @@ class MHotelService extends abstract_service_1.default {
                 owner: "true",
                 hotel_code: data.hotel_code,
             });
+            console.log({ checkUser });
             if (!checkUser) {
                 return {
                     success: false,

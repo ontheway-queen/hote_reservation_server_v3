@@ -63,14 +63,30 @@ class CommonService extends abstract_service_1.default {
                             };
                         }
                         break;
+                    case constants_1.OTP_TYPE_FORGET_RESTAURANT_ADMIN:
+                        const restaurantAdminModel = this.restaurantModel.restaurantAdminModel(trx);
+                        const checkRestaurantAdmin = yield restaurantAdminModel.getRestaurantAdmin({
+                            email,
+                        });
+                        if (!checkRestaurantAdmin) {
+                            return {
+                                success: false,
+                                code: this.StatusCode.HTTP_NOT_FOUND,
+                                message: this.ResMsg.NOT_FOUND_USER_WITH_EMAIL,
+                            };
+                        }
+                        break;
                     default:
                         break;
                 }
+                console.log(1);
                 const commonModel = this.Model.commonModel(trx);
+                console.log(2);
                 const checkOtp = yield commonModel.getOTP({
                     email: email,
                     type: type,
                 });
+                console.log(3);
                 if (checkOtp.length) {
                     return {
                         success: false,
@@ -153,6 +169,9 @@ class CommonService extends abstract_service_1.default {
                             break;
                         case constants_1.OTP_TYPE_FORGET_BTOC_USER:
                             secret = config_1.default.JWT_SECRET_H_USER;
+                            break;
+                        case constants_1.OTP_TYPE_FORGET_RESTAURANT_ADMIN:
+                            secret = config_1.default.JWT_SECRET_H_RESTURANT;
                             break;
                         default:
                             break;

@@ -59,7 +59,7 @@ class ServiceService extends abstract_service_1.default {
                 const serviceModel = this.Model.serviceModel(trx);
                 const serviceCategoryModel = this.Model.serviceCategoriesModel(trx);
                 const serviceImageModel = this.Model.serviceImageModel(trx);
-                const servicePricingModel = this.Model.servicePricingModel(trx);
+                // const servicePricingModel = this.Model.servicePricingModel(trx);
                 const serviceScheduleModel = this.Model.serviceScheduleModel(trx);
                 const isServiceExists = yield serviceCategoryModel.getServiceCategory({
                     hotel_code,
@@ -124,13 +124,20 @@ class ServiceService extends abstract_service_1.default {
                                 : mainPrice +
                                     (vatPrice || 0) +
                                     (price.delivery_charge || 0), discount_price }));
-                        return servicePricingModel.createServicePricing(Object.assign(Object.assign({}, price), { hotel_code, service_id: newCategory.id, total_price: discount_price > 0
-                                ? (discount_price || 0) +
-                                    (vatPrice || 0) +
-                                    (price.delivery_charge || 0)
-                                : mainPrice +
-                                    (vatPrice || 0) +
-                                    (price.delivery_charge || 0), discount_price }));
+                        // return servicePricingModel.createServicePricing({
+                        // 	...price,
+                        // 	hotel_code,
+                        // 	service_id: newCategory.id,
+                        // 	total_price:
+                        // 		discount_price > 0
+                        // 			? (discount_price || 0) +
+                        // 			  (vatPrice || 0) +
+                        // 			  (price.delivery_charge || 0)
+                        // 			: mainPrice +
+                        // 			  (vatPrice || 0) +
+                        // 			  (price.delivery_charge || 0),
+                        // 	discount_price,
+                        // });
                     }));
                 }
                 if (service_schedule && service_schedule.length > 0) {
@@ -226,7 +233,7 @@ class ServiceService extends abstract_service_1.default {
                 const categoryModel = this.Model.serviceCategoriesModel(trx);
                 const serviceScheduleModel = this.Model.serviceScheduleModel(trx);
                 const serviceImageModel = this.Model.serviceImageModel(trx);
-                const servicePricingModel = this.Model.servicePricingModel(trx);
+                // const servicePricingModel = this.Model.servicePricingModel(trx);
                 const isServiceExists = yield serviceModel.getSingleService({
                     id: Number(id),
                     hotel_code,
@@ -334,37 +341,44 @@ class ServiceService extends abstract_service_1.default {
                         if (price.vat_percent && price.vat_percent > 0) {
                             vatPrice = (total * price.vat_percent) / 100;
                         }
-                        return servicePricingModel.createServicePricing(Object.assign(Object.assign({}, price), { hotel_code, service_id: id, total_price: discount_price > 0
-                                ? (discount_price || 0) +
-                                    (vatPrice || 0) +
-                                    (price.delivery_charge || 0)
-                                : mainPrice +
-                                    (vatPrice || 0) +
-                                    (price.delivery_charge || 0), discount_price }));
+                        // return servicePricingModel.createServicePricing({
+                        // 	...price,
+                        // 	hotel_code,
+                        // 	service_id: id,
+                        // 	total_price:
+                        // 		discount_price > 0
+                        // 			? (discount_price || 0) +
+                        // 			  (vatPrice || 0) +
+                        // 			  (price.delivery_charge || 0)
+                        // 			: mainPrice +
+                        // 			  (vatPrice || 0) +
+                        // 			  (price.delivery_charge || 0),
+                        // 	discount_price,
+                        // });
                     }));
                     yield Promise.all(service_pricing
                         .filter((price) => price.id !== null)
                         .map((price) => {
-                        return servicePricingModel.updateServicePricing({
-                            where: {
-                                id: Number(price.id),
-                                hotel_code,
-                            },
-                            payload: price,
-                        });
+                        // return servicePricingModel.updateServicePricing({
+                        // 	where: {
+                        // 		id: Number(price.id),
+                        // 		hotel_code,
+                        // 	},
+                        // 	payload: price,
+                        // });
                     }));
                 }
                 if (delete_service_pricing_id && delete_service_pricing_id.length) {
                     for (const id of delete_service_pricing_id) {
-                        yield servicePricingModel.updateServicePricing({
-                            where: {
-                                id,
-                                hotel_code,
-                            },
-                            payload: {
-                                is_deleted: true,
-                            },
-                        });
+                        // await servicePricingModel.updateServicePricing({
+                        // 	where: {
+                        // 		id,
+                        // 		hotel_code,
+                        // 	},
+                        // 	payload: {
+                        // 		is_deleted: true,
+                        // 	},
+                        // });
                     }
                 }
                 if (delete_service_schedule_id &&

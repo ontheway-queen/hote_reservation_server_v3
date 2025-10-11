@@ -66,7 +66,6 @@ class ExpenseService extends abstract_service_1.default {
                 const accountModel = this.Model.accountModel(trx);
                 const employeeModel = this.Model.employeeModel(trx);
                 const model = this.Model.expenseModel(trx);
-                console.log(1);
                 // account check
                 const [acc] = yield accountModel.getSingleAccount({
                     hotel_code,
@@ -89,7 +88,6 @@ class ExpenseService extends abstract_service_1.default {
                     };
                 }
                 const total_amount = expense_items.reduce((acc, cu) => acc + cu.amount, 0);
-                console.log(3);
                 // ___________________________________  Accounting _________________________________//
                 // accounting
                 const helper = new helperFunction_1.HelperFunction();
@@ -105,7 +103,6 @@ class ExpenseService extends abstract_service_1.default {
                     throw new Error("Invalid Account");
                 let voucher_type = "DV";
                 const voucher_no = yield helper.generateVoucherNo(voucher_type, trx);
-                console.log(4);
                 // generate expense no
                 const expenseNo = yield lib_1.default.generateExpenseNo(trx);
                 const vourcherRes = yield accountModel.insertAccVoucher([
@@ -131,7 +128,6 @@ class ExpenseService extends abstract_service_1.default {
                     },
                 ]);
                 //_______________________________________ END _________________________________//
-                console.log(5);
                 // Insert expense record
                 const payload = Object.assign(Object.assign({}, rest), { expense_no: expenseNo, hotel_code,
                     created_by, expense_amount: total_amount, acc_voucher_id: vourcherRes[1].id });
@@ -145,10 +141,7 @@ class ExpenseService extends abstract_service_1.default {
                         ex_voucher_id: vourcherRes[0].id,
                     };
                 });
-                console.log(5.5);
-                console.log({ expenseItemPayload });
                 yield model.createExpenseItem(expenseItemPayload);
-                console.log(6);
                 return {
                     success: true,
                     code: this.StatusCode.HTTP_SUCCESSFUL,

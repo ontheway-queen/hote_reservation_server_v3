@@ -13,28 +13,41 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const abstract_service_1 = __importDefault(require("../../abstarcts/abstract.service"));
+const restaurantCredential_template_1 = require("../../templates/restaurantCredential.template");
 const lib_1 = __importDefault(require("../../utils/lib/lib"));
 const constants_1 = require("../../utils/miscellaneous/constants");
-const restaurantCredential_template_1 = require("../../templates/restaurantCredential.template");
-class hotelRestaurantService extends abstract_service_1.default {
+class HotelRestaurantService extends abstract_service_1.default {
     constructor() {
         super();
     }
-    //=================== Restaurant service ======================//
-    // Create Restaurant
     createRestaurant(req) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
                 const { hotel_code, id: admin_id } = req.hotel_admin;
-                const { name, res_email, phone, admin_name, email, password, permission, } = req.body;
-                const model = this.Model.restaurantModel(trx);
-                // Check restaurant email and name
-                const checkRestaurant = yield model.getAllRestaurant({ hotel_code });
+                const { user, restaurant } = req.body;
+                const files = req.files;
+                for (const { fieldname, filename } of files) {
+                    switch (fieldname) {
+                        case "restaurant_photo":
+                            restaurant.photo = filename;
+                            break;
+                        case "user_photo":
+                            user.photo = filename;
+                            break;
+                        default:
+                            break;
+                    }
+                }
+                const restaurantModel = this.restaurantModel.restaurantModel(trx);
+                const restaurantAdminModel = this.restaurantModel.restaurantAdminModel(trx);
+                const checkRestaurant = yield restaurantModel.getAllRestaurant({
+                    hotel_code,
+                });
                 let emailExists = false;
                 let nameExists = false;
                 if (checkRestaurant && checkRestaurant.data) {
-                    emailExists = checkRestaurant.data.some((restaurant) => restaurant.res_email === res_email);
-                    nameExists = checkRestaurant.data.some((restaurant) => restaurant.name === name);
+                    emailExists = checkRestaurant.data.some((res) => res.email === restaurant.email);
+                    nameExists = checkRestaurant.data.some((res) => res.name === restaurant.name);
                     if (emailExists) {
                         return {
                             success: false,
@@ -50,9 +63,8 @@ class hotelRestaurantService extends abstract_service_1.default {
                         };
                     }
                 }
-                // Check admin email
-                const adminEmailExists = yield model.getAllResAdminEmail({
-                    email,
+                const adminEmailExists = yield restaurantAdminModel.getAllRestaurantAdminEmail({
+                    email: user.email,
                     hotel_code,
                 });
                 if (adminEmailExists) {
@@ -62,64 +74,22 @@ class hotelRestaurantService extends abstract_service_1.default {
                         message: "Restaurant Admin's email already exists with this hotel.",
                     };
                 }
-                const hashPass = yield lib_1.default.hashPass(password);
-                const resCreate = yield model.createRestaurant({
-                    name,
-                    email: res_email,
-                    phone,
+                const hashPass = yield lib_1.default.hashPass(user.password);
+                const [newRestaurant] = yield restaurantModel.createRestaurant(Object.assign(Object.assign({}, restaurant), { hotel_code, created_by: admin_id }));
+                //! Need to check the role and permission before creating the admin user & restaurant.
+                yield restaurantAdminModel.createRestaurantAdmin({
+                    restaurant_id: newRestaurant.id,
                     hotel_code,
-                    created_by: admin_id,
-                });
-                // ============ create hotel admin step ==============//
-                // check all permission
-                const checkAllPermission = yield model.getPermissionGroup({
-                    ids: permission,
-                });
-                if (checkAllPermission.length != permission.length) {
-                    return {
-                        success: false,
-                        code: this.StatusCode.HTTP_NOT_FOUND,
-                        message: "Invalid Permissions",
-                    };
-                }
-                const res_permission_payload = permission.map((item) => {
-                    return {
-                        permission_grp_id: item,
-                        res_id: resCreate[0],
-                    };
-                });
-                // insert hotel permission
-                const permissionRes = yield model.addedResPermission(res_permission_payload);
-                // insert Role
-                const roleRes = yield model.createRole({
-                    name: "super-admin",
-                    res_id: resCreate[0],
-                });
-                const rolePermissionPayload = [];
-                for (let i = 0; i < permission.length; i++) {
-                    for (let j = 0; j < 4; j++) {
-                        rolePermissionPayload.push({
-                            res_id: resCreate[0],
-                            r_permission_id: permissionRes[0] + i,
-                            permission_type: j == 0 ? "read" : j == 1 ? "write" : j == 2 ? "update" : "delete",
-                            role_id: roleRes[0],
-                        });
-                    }
-                }
-                // insert role permission
-                yield model.createRolePermission(rolePermissionPayload);
-                // Restaurant Admin creation
-                yield model.createResAdmin({
-                    hotel_code,
-                    email,
-                    name: admin_name,
-                    role: roleRes[0],
-                    res_id: resCreate[0],
+                    email: user.email,
+                    name: user.name,
+                    photo: user.photo,
+                    phone: user.phone,
+                    role_id: user.role,
                     password: hashPass,
                     created_by: admin_id,
+                    owner: true,
                 });
-                // send email with password
-                yield lib_1.default.sendEmail(res_email, constants_1.OTP_FOR_CREDENTIALS, (0, restaurantCredential_template_1.newResutaurantUserAccount)(email, password, name));
+                yield lib_1.default.sendEmail(user.email, constants_1.OTP_FOR_CREDENTIALS, (0, restaurantCredential_template_1.newResutaurantUserAccount)(user.email, user.password, user.name));
                 return {
                     success: true,
                     code: this.StatusCode.HTTP_SUCCESSFUL,
@@ -128,47 +98,125 @@ class hotelRestaurantService extends abstract_service_1.default {
             }));
         });
     }
-    // Get all Restaurant
     getAllRestaurant(req) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { hotel_code } = req.hotel_admin;
-            const { limit, skip, key } = req.query;
-            const model = this.Model.restaurantModel();
-            const { data, total } = yield model.getAllRestaurant({
-                key: key,
-                limit: limit,
-                skip: skip,
-                hotel_code,
-            });
-            return {
-                success: true,
-                code: this.StatusCode.HTTP_OK,
-                total,
-                data,
-            };
-        });
-    }
-    // udate hotel restaurant
-    updateHotelRestaurant(req) {
-        return __awaiter(this, void 0, void 0, function* () {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
-                const { id: admin_id, hotel_code } = req.hotel_admin;
-                const { id } = req.params;
-                const updatePayload = req.body;
-                const model = this.Model.restaurantModel(trx);
-                yield model.updateRestaurant(parseInt(id), {
-                    name: updatePayload.name,
-                    status: updatePayload.status,
-                    updated_by: admin_id,
+                const { hotel_code } = req.hotel_admin;
+                const { limit, skip, key } = req.query;
+                const { data, total } = yield this.restaurantModel
+                    .restaurantModel(trx)
+                    .getAllRestaurant({
+                    key: key,
+                    limit: limit,
+                    skip: skip,
+                    hotel_code,
                 });
                 return {
                     success: true,
                     code: this.StatusCode.HTTP_OK,
-                    message: "Restaurant status updated successfully",
+                    total,
+                    data,
+                };
+            }));
+        });
+    }
+    getRestaurantWithAdmin(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { hotel_code } = req.hotel_admin;
+            const { id } = req.params;
+            const data = yield this.restaurantModel
+                .restaurantModel()
+                .getRestaurantWithAdmin({
+                restaurant_id: parseInt(id),
+                hotel_code,
+            });
+            if (!data) {
+                return {
+                    success: false,
+                    code: this.StatusCode.HTTP_NOT_FOUND,
+                    message: "Restaurant not found",
+                };
+            }
+            return {
+                success: true,
+                code: this.StatusCode.HTTP_OK,
+                data,
+            };
+        });
+    }
+    updateHotelRestaurantAndAdmin(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
+                const { hotel_code } = req.hotel_admin;
+                const { id } = req.params;
+                let { user = {}, restaurant = {}, } = req.body;
+                const restaurantModel = this.restaurantModel.restaurantModel(trx);
+                const restaurantAdminModel = this.restaurantModel.restaurantAdminModel(trx);
+                const files = req.files || [];
+                for (const { fieldname, filename } of files) {
+                    if (fieldname === "restaurant_photo")
+                        restaurant.photo = filename;
+                    if (fieldname === "user_photo")
+                        user.photo = filename;
+                }
+                const checkRestaurant = yield restaurantModel.getRestaurantWithAdmin({
+                    restaurant_id: Number(id),
+                    hotel_code,
+                });
+                if (!checkRestaurant) {
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_NOT_FOUND,
+                        message: "Restaurant not found",
+                    };
+                }
+                if ((user === null || user === void 0 ? void 0 : user.email) && user.email !== checkRestaurant.admin_email) {
+                    const emailExists = yield restaurantAdminModel.getAllRestaurantAdminEmail({
+                        email: user.email,
+                        hotel_code,
+                    });
+                    if (emailExists) {
+                        return {
+                            success: false,
+                            code: this.StatusCode.HTTP_CONFLICT,
+                            message: "Restaurant Admin's email already exists with this hotel.",
+                        };
+                    }
+                }
+                const keep = (val, fallback) => val !== null && val !== void 0 ? val : fallback;
+                const updatedRestaurant = {
+                    name: keep(restaurant === null || restaurant === void 0 ? void 0 : restaurant.name, checkRestaurant.name),
+                    email: keep(restaurant === null || restaurant === void 0 ? void 0 : restaurant.email, checkRestaurant.email),
+                    phone: keep(restaurant === null || restaurant === void 0 ? void 0 : restaurant.phone, checkRestaurant.phone),
+                    photo: keep(restaurant === null || restaurant === void 0 ? void 0 : restaurant.photo, checkRestaurant.photo),
+                    address: keep(restaurant === null || restaurant === void 0 ? void 0 : restaurant.address, checkRestaurant.address),
+                    city: keep(restaurant === null || restaurant === void 0 ? void 0 : restaurant.city, checkRestaurant.city),
+                    country: keep(restaurant === null || restaurant === void 0 ? void 0 : restaurant.country, checkRestaurant.country),
+                    bin_no: keep(restaurant === null || restaurant === void 0 ? void 0 : restaurant.bin_no, checkRestaurant.bin_no),
+                    status: keep(restaurant === null || restaurant === void 0 ? void 0 : restaurant.status, checkRestaurant.status),
+                };
+                const updatedAdmin = {
+                    name: keep(user === null || user === void 0 ? void 0 : user.name, checkRestaurant.name),
+                    email: keep(user === null || user === void 0 ? void 0 : user.email, checkRestaurant.email),
+                    phone: keep(user === null || user === void 0 ? void 0 : user.phone, checkRestaurant.phone),
+                    photo: keep(user === null || user === void 0 ? void 0 : user.photo, checkRestaurant.photo),
+                };
+                yield restaurantModel.updateRestaurant({
+                    id: Number(id),
+                    payload: updatedRestaurant,
+                });
+                yield restaurantAdminModel.updateRestaurantAdmin({
+                    id: checkRestaurant.admin_id,
+                    payload: updatedAdmin,
+                });
+                return {
+                    success: true,
+                    code: this.StatusCode.HTTP_OK,
+                    message: "Restaurant updated successfully",
                 };
             }));
         });
     }
 }
-exports.default = hotelRestaurantService;
+exports.default = HotelRestaurantService;
 //# sourceMappingURL=restaurant.hotel.service.js.map

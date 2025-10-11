@@ -462,6 +462,8 @@ class MHotelService extends AbstractServices {
       hotel_code: data.hotel_code,
     });
 
+    console.log({ checkUser });
+
     if (!checkUser) {
       return {
         success: false,

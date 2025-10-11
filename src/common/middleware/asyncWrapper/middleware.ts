@@ -49,6 +49,11 @@ class Wrapper {
 						success: false,
 						message: err.message,
 					});
+				} else if (err?.code === "23505") {
+					res.status(StatusCode.HTTP_CONFLICT).json({
+						success: false,
+						message: err.detail,
+					});
 				} else {
 					next(new CustomError(err.message, err.status));
 				}

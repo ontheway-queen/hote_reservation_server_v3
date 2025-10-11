@@ -124,7 +124,7 @@ class AuthChecker extends abstract_service_1.default {
             }
         });
         // hotel user auth checker
-        this.hotelRestAuthChecker = (req, res, next) => __awaiter(this, void 0, void 0, function* () {
+        this.hotelRestaurantAuthChecker = (req, res, next) => __awaiter(this, void 0, void 0, function* () {
             const { authorization } = req.headers;
             if (!authorization) {
                 return res
@@ -152,7 +152,7 @@ class AuthChecker extends abstract_service_1.default {
                     });
                 }
                 else {
-                    req.rest_user = verify;
+                    req.restaurant_admin = verify;
                     next();
                 }
             }

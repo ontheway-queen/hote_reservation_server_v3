@@ -1,9 +1,10 @@
 import { Router } from "express";
 import { ReservationRootRouter } from "../appAdmin/reservationRoot.router";
 import ManagementRouter from "../appM360/routers/managementRoot.router";
+import { RestaurantRootRouter } from "../appRestaurantAdmin/restaurant.rootrouter";
 import AuthRouter from "../auth/auth.router";
-import CommonRouter from "../common/router/common.router";
 import { BtocRootRouter } from "../btoc/btoc.rootRouter";
+import CommonRouter from "../common/router/common.router";
 import PaymentRouter from "../common/router/paymentRouter";
 
 class RootRouter {
@@ -25,6 +26,8 @@ class RootRouter {
     this.v1Router.use("/btoc", new BtocRootRouter().router);
 
     this.v1Router.use("/management", new ManagementRouter().managementRouter);
+
+    this.v1Router.use("/restaurant", new RestaurantRootRouter().router);
   }
 }
 export default RootRouter;
