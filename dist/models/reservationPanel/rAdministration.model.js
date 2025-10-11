@@ -291,6 +291,16 @@ class RAdministrationModel extends schema_1.default {
             });
         });
     }
+    // delete all permission
+    deleteRolePermissionByRoleID({ hotel_code, role_id, }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("role_permissions")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .del()
+                .where({ role_id })
+                .andWhere({ hotel_code });
+        });
+    }
 }
 exports.default = RAdministrationModel;
 //# sourceMappingURL=rAdministration.model.js.map

@@ -438,5 +438,20 @@ class RAdministrationModel extends Schema {
         }
       });
   }
+
+  // delete all permission
+  public async deleteRolePermissionByRoleID({
+    hotel_code,
+    role_id,
+  }: {
+    hotel_code: number;
+    role_id: number;
+  }) {
+    return await this.db("role_permissions")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .del()
+      .where({ role_id })
+      .andWhere({ hotel_code });
+  }
 }
 export default RAdministrationModel;

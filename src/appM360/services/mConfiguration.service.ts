@@ -5,7 +5,6 @@ import {
   IhotelPermissions,
   UpdateHotelPermissionReqBody,
 } from "../utlis/interfaces/mConfiguration.interfaces.";
-import CustomError from "../../utils/lib/customEror";
 
 class MConfigurationService extends AbstractServices {
   constructor() {
