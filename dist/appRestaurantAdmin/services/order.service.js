@@ -63,8 +63,7 @@ class RestaurantOrderService extends abstract_service_1.default {
                     if (!food.data.length) {
                         throw new customEror_1.default("Food not found", this.StatusCode.HTTP_NOT_FOUND);
                     }
-                    sub_total +=
-                        Number(item.quantity) * Number(food.data[0].retail_price);
+                    sub_total += Number(item.quantity) * Number(food.data[0].retail_price);
                 }
                 net_total = lib_1.default.adjustPercentageOrFixedAmount(sub_total, rest.discount, rest.discount_type, true);
                 grand_Total = lib_1.default.adjustPercentageOrFixedAmount(net_total, rest.service_charge, rest.service_charge_type);
@@ -107,8 +106,7 @@ class RestaurantOrderService extends abstract_service_1.default {
                         name: food.data[0].name,
                         rate: Number(food.data[0].retail_price),
                         quantity: Number(item.quantity),
-                        total: Number(item.quantity) *
-                            Number(food.data[0].retail_price),
+                        total: Number(item.quantity) * Number(food.data[0].retail_price),
                     });
                 })));
                 yield restaurantTableModel.updateTable({
@@ -130,9 +128,7 @@ class RestaurantOrderService extends abstract_service_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             const { restaurant_id, hotel_code } = req.restaurant_admin;
             const { limit, skip, table_id, from_date, to_date, order_type, kitchen_status, status, } = req.query;
-            const data = yield this.restaurantModel
-                .restaurantOrderModel()
-                .getOrders({
+            const data = yield this.restaurantModel.restaurantOrderModel().getOrders({
                 limit: Number(limit),
                 skip: Number(skip),
                 hotel_code,
@@ -186,8 +182,8 @@ class RestaurantOrderService extends abstract_service_1.default {
             if (!data) {
                 return {
                     success: false,
-                    code: this.StatusCode.HTTP_NOT_FOUND,
-                    message: "Order not found.",
+                    code: this.StatusCode.HTTP_OK,
+                    data: {},
                 };
             }
             return {
@@ -382,8 +378,7 @@ class RestaurantOrderService extends abstract_service_1.default {
                             throw new customEror_1.default(`Food with ID ${item.food_id} not found`, this.StatusCode.HTTP_NOT_FOUND);
                         }
                         sub_total +=
-                            Number(item.quantity) *
-                                Number(food.data[0].retail_price);
+                            Number(item.quantity) * Number(food.data[0].retail_price);
                     }
                     net_total = lib_1.default.adjustPercentageOrFixedAmount(sub_total, rest.discount, rest.discount_type, true);
                     grand_Total = lib_1.default.adjustPercentageOrFixedAmount(net_total, rest.service_charge, rest.service_charge_type);
@@ -437,8 +432,7 @@ class RestaurantOrderService extends abstract_service_1.default {
                             name: food.data[0].name,
                             rate: Number(food.data[0].retail_price),
                             quantity: Number(item.quantity),
-                            total: Number(item.quantity) *
-                                Number(food.data[0].retail_price),
+                            total: Number(item.quantity) * Number(food.data[0].retail_price),
                         });
                     })));
                 }

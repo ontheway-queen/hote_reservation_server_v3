@@ -12,9 +12,7 @@ class RestaurantOrderRouter extends abstract_router_1.default {
         this.callV1Router();
     }
     callV1Router() {
-        this.router
-            .route("/kitchen-orders")
-            .get(this.controller.getKitchenOrders);
+        this.router.route("/kitchen-orders").get(this.controller.getKitchenOrders);
         this.router
             .route("/kitchen-order/update-status/:id")
             .patch(this.controller.updateKitchenOrders);
@@ -33,9 +31,7 @@ class RestaurantOrderRouter extends abstract_router_1.default {
         this.router
             .route("/complete-order/:id")
             .patch(this.controller.completeOrderPayment);
-        this.router
-            .route("/cancel-order/:id")
-            .delete(this.controller.cancelOrder);
+        this.router.route("/cancel-order/:id").delete(this.controller.cancelOrder);
     }
 }
 exports.default = RestaurantOrderRouter;

@@ -56,7 +56,7 @@ class AuthHotelRestaurantAdminService extends abstract_service_1.default {
                 return {
                     success: false,
                     code: this.StatusCode.HTTP_UNAUTHORIZED,
-                    message: "Wrong password.",
+                    message: this.ResMsg.WRONG_CREDENTIALS,
                 };
             }
             const tokenPayload = {
@@ -189,8 +189,7 @@ class AuthHotelRestaurantAdminService extends abstract_service_1.default {
                 };
             }
             const { email: verifyEmail, type } = tokenVerify;
-            if (email === verifyEmail &&
-                type === constants_1.OTP_TYPE_FORGET_RESTAURANT_ADMIN) {
+            if (email === verifyEmail && type === constants_1.OTP_TYPE_FORGET_RESTAURANT_ADMIN) {
                 const hashPass = yield lib_1.default.hashPass(password);
                 const adminModel = this.restaurantModel.restaurantAdminModel();
                 yield adminModel.updateRestaurantAdmin({

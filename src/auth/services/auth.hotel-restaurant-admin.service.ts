@@ -6,240 +6,235 @@ import Lib from "../../utils/lib/lib";
 import { OTP_TYPE_FORGET_RESTAURANT_ADMIN } from "../../utils/miscellaneous/constants";
 
 class AuthHotelRestaurantAdminService extends AbstractServices {
-	constructor() {
-		super();
-	}
+  constructor() {
+    super();
+  }
 
-	public async login(req: Request) {
-		const { email, password } = req.body as unknown as {
-			email: string;
-			password: string;
-		};
-		const model = this.restaurantModel.restaurantAdminModel();
-		const user = await model.getRestaurantAdmin({ email });
-		if (!user) {
-			return {
-				success: false,
-				code: this.StatusCode.HTTP_UNAUTHORIZED,
-				message: this.ResMsg.HTTP_UNAUTHORIZED,
-			};
-		}
+  public async login(req: Request) {
+    const { email, password } = req.body as unknown as {
+      email: string;
+      password: string;
+    };
+    const model = this.restaurantModel.restaurantAdminModel();
+    const user = await model.getRestaurantAdmin({ email });
+    if (!user) {
+      return {
+        success: false,
+        code: this.StatusCode.HTTP_UNAUTHORIZED,
+        message: this.ResMsg.HTTP_UNAUTHORIZED,
+      };
+    }
 
-		if (user.status !== "active") {
-			return {
-				success: false,
-				code: this.StatusCode.HTTP_FORBIDDEN,
-				message: `Your account is ${user.status}. Please contact support.`,
-			};
-		}
+    if (user.status !== "active") {
+      return {
+        success: false,
+        code: this.StatusCode.HTTP_FORBIDDEN,
+        message: `Your account is ${user.status}. Please contact support.`,
+      };
+    }
 
-		const { password: hashPass, is_deleted, ...rest } = user;
+    const { password: hashPass, is_deleted, ...rest } = user;
 
-		const isPasswordValid = await Lib.compare(password, hashPass);
-		if (!isPasswordValid) {
-			return {
-				success: false,
-				code: this.StatusCode.HTTP_UNAUTHORIZED,
-				message: "Wrong password.",
-			};
-		}
+    const isPasswordValid = await Lib.compare(password, hashPass);
+    if (!isPasswordValid) {
+      return {
+        success: false,
+        code: this.StatusCode.HTTP_UNAUTHORIZED,
+        message: this.ResMsg.WRONG_CREDENTIALS,
+      };
+    }
 
-		const tokenPayload = {
-			id: user.id,
-			hotel_code: user.hotel_code,
-			restaurant_id: user.restaurant_id,
-			name: user.name,
-			email: user.email,
-			phone: user.phone,
-			status: user.status,
-			type: "admin",
-		};
+    const tokenPayload = {
+      id: user.id,
+      hotel_code: user.hotel_code,
+      restaurant_id: user.restaurant_id,
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
+      status: user.status,
+      type: "admin",
+    };
 
-		const token = Lib.createToken(
-			tokenPayload,
-			config.JWT_SECRET_H_RESTURANT,
-			"24h"
-		);
+    const token = Lib.createToken(
+      tokenPayload,
+      config.JWT_SECRET_H_RESTURANT,
+      "24h"
+    );
 
-		return {
-			success: true,
-			code: this.StatusCode.HTTP_OK,
-			message: "Successfully Logged In",
-			data: rest,
-			token,
-		};
-	}
+    return {
+      success: true,
+      code: this.StatusCode.HTTP_OK,
+      message: "Successfully Logged In",
+      data: rest,
+      token,
+    };
+  }
 
-	public async getProfile(req: Request) {
-		const { id, hotel_code, restaurant_id } = req.restaurant_admin;
+  public async getProfile(req: Request) {
+    const { id, hotel_code, restaurant_id } = req.restaurant_admin;
 
-		const restaurantAdminModel =
-			this.restaurantModel.restaurantAdminModel();
-		const data = await restaurantAdminModel.getRestaurantAdminProfile({
-			id,
-			hotel_code,
-			restaurant_id,
-		});
+    const restaurantAdminModel = this.restaurantModel.restaurantAdminModel();
+    const data = await restaurantAdminModel.getRestaurantAdminProfile({
+      id,
+      hotel_code,
+      restaurant_id,
+    });
 
-		if (!data) {
-			return {
-				success: false,
-				code: this.StatusCode.HTTP_NOT_FOUND,
-				message: this.ResMsg.HTTP_NOT_FOUND,
-			};
-		}
+    if (!data) {
+      return {
+        success: false,
+        code: this.StatusCode.HTTP_NOT_FOUND,
+        message: this.ResMsg.HTTP_NOT_FOUND,
+      };
+    }
 
-		return {
-			success: true,
-			code: this.StatusCode.HTTP_OK,
-			data,
-		};
-	}
+    return {
+      success: true,
+      code: this.StatusCode.HTTP_OK,
+      data,
+    };
+  }
 
-	public async updateProfile(req: Request) {
-		const { id, hotel_code } = req.restaurant_admin;
-		const body = req.body as IUpdateRestaurantUserAdminPayload;
-		console.log({ body });
-		const model = this.restaurantModel.restaurantAdminModel();
+  public async updateProfile(req: Request) {
+    const { id, hotel_code } = req.restaurant_admin;
+    const body = req.body as IUpdateRestaurantUserAdminPayload;
+    console.log({ body });
+    const model = this.restaurantModel.restaurantAdminModel();
 
-		const checkAdmin = await model.getRestaurantAdmin({
-			id,
-		});
+    const checkAdmin = await model.getRestaurantAdmin({
+      id,
+    });
 
-		if (!checkAdmin) {
-			return {
-				success: true,
-				code: this.StatusCode.HTTP_NOT_FOUND,
-				message: this.ResMsg.HTTP_NOT_FOUND,
-			};
-		}
+    if (!checkAdmin) {
+      return {
+        success: true,
+        code: this.StatusCode.HTTP_NOT_FOUND,
+        message: this.ResMsg.HTTP_NOT_FOUND,
+      };
+    }
 
-		const files = (req.files as Express.Multer.File[]) || [];
+    const files = (req.files as Express.Multer.File[]) || [];
 
-		if (files.length) {
-			req.body[files[0].fieldname] = files[0].filename;
-		}
+    if (files.length) {
+      req.body[files[0].fieldname] = files[0].filename;
+    }
 
-		if (body?.email) {
-			const emailExists = await model.getAllRestaurantAdminEmail({
-				email: body.email,
-				hotel_code,
-			});
-			if (emailExists) {
-				return {
-					success: false,
-					code: this.StatusCode.HTTP_CONFLICT,
-					message:
-						"Restaurant Admin's email already exists with this hotel.",
-				};
-			}
-		}
+    if (body?.email) {
+      const emailExists = await model.getAllRestaurantAdminEmail({
+        email: body.email,
+        hotel_code,
+      });
+      if (emailExists) {
+        return {
+          success: false,
+          code: this.StatusCode.HTTP_CONFLICT,
+          message: "Restaurant Admin's email already exists with this hotel.",
+        };
+      }
+    }
 
-		await model.updateRestaurantAdmin({ id, payload: body });
+    await model.updateRestaurantAdmin({ id, payload: body });
 
-		return {
-			success: true,
-			code: this.StatusCode.HTTP_OK,
-			message: this.ResMsg.HTTP_OK,
-		};
-	}
+    return {
+      success: true,
+      code: this.StatusCode.HTTP_OK,
+      message: this.ResMsg.HTTP_OK,
+    };
+  }
 
-	public async changeAdminPassword(req: Request) {
-		const { id } = req.restaurant_admin;
-		const { old_password, new_password } = req.body as {
-			old_password: string;
-			new_password: string;
-		};
+  public async changeAdminPassword(req: Request) {
+    const { id } = req.restaurant_admin;
+    const { old_password, new_password } = req.body as {
+      old_password: string;
+      new_password: string;
+    };
 
-		const model = this.restaurantModel.restaurantAdminModel();
+    const model = this.restaurantModel.restaurantAdminModel();
 
-		const checkAdmin = await model.getRestaurantAdmin({
-			id,
-		});
+    const checkAdmin = await model.getRestaurantAdmin({
+      id,
+    });
 
-		if (!checkAdmin) {
-			return {
-				success: true,
-				code: this.StatusCode.HTTP_NOT_FOUND,
-				message: this.ResMsg.HTTP_NOT_FOUND,
-			};
-		}
+    if (!checkAdmin) {
+      return {
+        success: true,
+        code: this.StatusCode.HTTP_NOT_FOUND,
+        message: this.ResMsg.HTTP_NOT_FOUND,
+      };
+    }
 
-		const comparePassword = await Lib.compare(
-			old_password,
-			checkAdmin.password
-		);
+    const comparePassword = await Lib.compare(
+      old_password,
+      checkAdmin.password
+    );
 
-		if (!comparePassword) {
-			return {
-				success: false,
-				code: this.StatusCode.HTTP_UNAUTHORIZED,
-				message: "Old password is not correct!",
-			};
-		}
+    if (!comparePassword) {
+      return {
+        success: false,
+        code: this.StatusCode.HTTP_UNAUTHORIZED,
+        message: "Old password is not correct!",
+      };
+    }
 
-		const hashPass = await Lib.hashPass(new_password);
+    const hashPass = await Lib.hashPass(new_password);
 
-		await model.updateRestaurantAdmin({
-			id,
-			payload: { password: hashPass },
-		});
+    await model.updateRestaurantAdmin({
+      id,
+      payload: { password: hashPass },
+    });
 
-		return {
-			success: true,
-			code: this.StatusCode.HTTP_OK,
-			message: this.ResMsg.HTTP_OK,
-		};
-	}
+    return {
+      success: true,
+      code: this.StatusCode.HTTP_OK,
+      message: this.ResMsg.HTTP_OK,
+    };
+  }
 
-	public async resetForgetPassword({
-		token,
-		email,
-		password,
-	}: {
-		token: string;
-		email: string;
-		password: string;
-	}) {
-		const tokenVerify: any = Lib.verifyToken(
-			token,
-			config.JWT_SECRET_H_RESTURANT
-		);
+  public async resetForgetPassword({
+    token,
+    email,
+    password,
+  }: {
+    token: string;
+    email: string;
+    password: string;
+  }) {
+    const tokenVerify: any = Lib.verifyToken(
+      token,
+      config.JWT_SECRET_H_RESTURANT
+    );
 
-		if (!tokenVerify) {
-			return {
-				success: false,
-				code: this.StatusCode.HTTP_UNAUTHORIZED,
-				message: this.ResMsg.HTTP_UNAUTHORIZED,
-			};
-		}
+    if (!tokenVerify) {
+      return {
+        success: false,
+        code: this.StatusCode.HTTP_UNAUTHORIZED,
+        message: this.ResMsg.HTTP_UNAUTHORIZED,
+      };
+    }
 
-		const { email: verifyEmail, type } = tokenVerify;
+    const { email: verifyEmail, type } = tokenVerify;
 
-		if (
-			email === verifyEmail &&
-			type === OTP_TYPE_FORGET_RESTAURANT_ADMIN
-		) {
-			const hashPass = await Lib.hashPass(password);
-			const adminModel = this.restaurantModel.restaurantAdminModel();
-			await adminModel.updateRestaurantAdmin({
-				email,
-				payload: { password: hashPass },
-			});
+    if (email === verifyEmail && type === OTP_TYPE_FORGET_RESTAURANT_ADMIN) {
+      const hashPass = await Lib.hashPass(password);
+      const adminModel = this.restaurantModel.restaurantAdminModel();
+      await adminModel.updateRestaurantAdmin({
+        email,
+        payload: { password: hashPass },
+      });
 
-			return {
-				success: true,
-				code: this.StatusCode.HTTP_OK,
-				message: this.ResMsg.HTTP_FULFILLED,
-			};
-		} else {
-			return {
-				success: false,
-				code: this.StatusCode.HTTP_BAD_REQUEST,
-				message: this.ResMsg.HTTP_BAD_REQUEST,
-			};
-		}
-	}
+      return {
+        success: true,
+        code: this.StatusCode.HTTP_OK,
+        message: this.ResMsg.HTTP_FULFILLED,
+      };
+    } else {
+      return {
+        success: false,
+        code: this.StatusCode.HTTP_BAD_REQUEST,
+        message: this.ResMsg.HTTP_BAD_REQUEST,
+      };
+    }
+  }
 }
 
 export default AuthHotelRestaurantAdminService;

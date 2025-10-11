@@ -370,11 +370,16 @@ class ReservationModel extends schema_1.default {
                             .orWhere("g.email", "ilike", `%${search}%`);
                     });
                 }
-                if (status) {
-                    this.andWhere("b.status", status);
-                }
                 if (booking_type) {
                     this.andWhere("b.booking_type", booking_type);
+                }
+            })
+                .andWhere(function () {
+                if (status && Array.isArray(status)) {
+                    this.whereIn("b.status", status);
+                }
+                else {
+                    this.where("b.status", status);
                 }
             })
                 .orderBy("b.id", "desc")
@@ -401,11 +406,16 @@ class ReservationModel extends schema_1.default {
                         .orWhere("g.first_name", "ilike", `%${search}%`)
                         .orWhere("g.email", "ilike", `%${search}%`);
                 }
-                if (status) {
-                    this.andWhere("b.status", status);
-                }
                 if (booking_type) {
                     this.andWhere("b.booking_type", booking_type);
+                }
+            })
+                .andWhere(function () {
+                if (status && Array.isArray(status)) {
+                    this.whereIn("b.status", status);
+                }
+                else {
+                    this.where("b.status", status);
                 }
             });
             return {

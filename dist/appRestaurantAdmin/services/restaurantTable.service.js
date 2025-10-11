@@ -48,9 +48,7 @@ class RestaurantTableService extends abstract_service_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             const { restaurant_id, hotel_code } = req.restaurant_admin;
             const { limit, skip, name, category, status } = req.query;
-            const data = yield this.restaurantModel
-                .restaurantTableModel()
-                .getTables({
+            const data = yield this.restaurantModel.restaurantTableModel().getTables({
                 hotel_code,
                 restaurant_id,
                 limit: Number(limit),
@@ -66,7 +64,7 @@ class RestaurantTableService extends abstract_service_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
                 const { id } = req.params;
-                const { id: user_id, restaurant_id, hotel_code, } = req.restaurant_admin;
+                const { id: user_id, restaurant_id, hotel_code } = req.restaurant_admin;
                 const body = req.body;
                 const restaurantModel = this.restaurantModel.restaurantTableModel(trx);
                 const isTableExists = yield restaurantModel.getTables({

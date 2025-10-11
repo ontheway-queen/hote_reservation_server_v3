@@ -441,7 +441,7 @@ export class ReservationService extends AbstractServices {
       skip,
       status,
     } = req.query;
-
+    console.log({ status });
     const { data, total } = await this.Model.reservationModel().getAllBooking({
       hotel_code: req.hotel_admin.hotel_code,
       search: search as string,
@@ -454,7 +454,7 @@ export class ReservationService extends AbstractServices {
       checkout_to: checkout_to as string,
       limit: limit as string,
       skip: skip as string,
-      status: status as string,
+      status: status as string[],
     });
 
     return {
