@@ -44,33 +44,54 @@ class RestaurantOrderService extends abstract_service_1.default {
                     restaurant_id,
                 });
                 if (data.length > 0 && data[0].status === "booked") {
-                    throw new customEror_1.default("Table is already booked", this.StatusCode.HTTP_CONFLICT);
+                    // throw new CustomError(
+                    //   "Table is already booked",
+                    //   this.StatusCode.HTTP_CONFLICT
+                    // );
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_CONFLICT,
+                        message: "Table is already booked",
+                    };
                 }
                 else if (data.length === 0) {
-                    throw new customEror_1.default("Table not found", this.StatusCode.HTTP_NOT_FOUND);
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_NOT_FOUND,
+                        message: "Table not found",
+                    };
                 }
                 const orderNo = yield lib_1.default.generateOrderNo(trx, hotel_code, restaurant_id);
                 let sub_total = 0;
-                let grand_Total = 0;
-                let vat_amount = 0;
-                let net_total = 0;
-                for (const item of order_items) {
-                    const food = yield restaurantFoodModel.getFoods({
-                        id: item.food_id,
-                        hotel_code,
-                        restaurant_id,
-                    });
-                    if (!food.data.length) {
-                        throw new customEror_1.default("Food not found", this.StatusCode.HTTP_NOT_FOUND);
+                // food validation
+                const foodIds = order_items.map((item) => item.food_id);
+                const uniqueFoodIds = Array.from(new Set(foodIds));
+                if (uniqueFoodIds.length !== order_items.length) {
+                    throw new customEror_1.default("Duplicate food items found in the order.", this.StatusCode.HTTP_BAD_REQUEST);
+                }
+                // get food and calculate sub_total
+                const foodItems = yield restaurantFoodModel.getFoods({
+                    hotel_code,
+                    restaurant_id,
+                    food_ids: uniqueFoodIds,
+                });
+                if (foodItems.data.length !== uniqueFoodIds.length) {
+                    throw new customEror_1.default("One or more food items not found.", this.StatusCode.HTTP_NOT_FOUND);
+                }
+                // calculate sub_total and grand total
+                foodItems.data.forEach((food) => {
+                    const item = order_items.find((i) => i.food_id === food.id);
+                    if (item) {
+                        sub_total += Number(item.quantity) * Number(food.retail_price);
                     }
-                    sub_total += Number(item.quantity) * Number(food.data[0].retail_price);
-                }
-                net_total = lib_1.default.adjustPercentageOrFixedAmount(sub_total, rest.discount, rest.discount_type, true);
-                grand_Total = lib_1.default.adjustPercentageOrFixedAmount(net_total, rest.service_charge, rest.service_charge_type);
-                if ((rest === null || rest === void 0 ? void 0 : rest.vat_rate) > 0) {
-                    vat_amount = (net_total * rest.vat_rate) / 100;
-                    grand_Total = grand_Total + vat_amount;
-                }
+                });
+                const discountAmount = lib_1.default.calculatePercentageToAmount(sub_total, rest.discount, rest.discount_type);
+                let gross_amount = sub_total - discountAmount;
+                const serviceChargeAmount = lib_1.default.calculatePercentageToAmount(gross_amount, rest.service_charge, rest.service_charge_type);
+                gross_amount += serviceChargeAmount;
+                const vatAmount = lib_1.default.calculatePercentageToAmount(gross_amount, rest.vat, rest.vat_type);
+                gross_amount += vatAmount;
+                const grand_total = gross_amount - discountAmount;
                 const [newOrder] = yield restaurantOrderModel.createOrder({
                     hotel_code,
                     restaurant_id,
@@ -78,16 +99,15 @@ class RestaurantOrderService extends abstract_service_1.default {
                     created_by: id,
                     table_id: rest.table_id,
                     order_type: rest.order_type,
-                    guest: rest.guest,
+                    guest_name: rest.guest_name,
                     sub_total: sub_total,
                     discount: rest.discount,
                     discount_type: rest.discount_type,
-                    net_total: net_total,
                     service_charge: rest.service_charge,
                     service_charge_type: rest.service_charge_type,
-                    vat_rate: rest.vat_rate,
-                    vat_amount: vat_amount,
-                    grand_total: grand_Total,
+                    vat: rest.vat,
+                    vat_type: rest.vat_type,
+                    grand_total: grand_total,
                     staff_id: rest.staff_id,
                     room_no: rest.room_no,
                 });
@@ -349,10 +369,10 @@ class RestaurantOrderService extends abstract_service_1.default {
     updateOrder(req) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
-                var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
+                var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m;
                 const { id, restaurant_id, hotel_code } = req.restaurant_admin;
                 const { id: order_id } = req.params;
-                const _l = req.body, { order_items } = _l, rest = __rest(_l, ["order_items"]);
+                const _o = req.body, { order_items } = _o, rest = __rest(_o, ["order_items"]);
                 const restaurantOrderModel = this.restaurantModel.restaurantOrderModel(trx);
                 const restaurantFoodModel = this.restaurantModel.restaurantFoodModel(trx);
                 const existingOrder = yield restaurantOrderModel.getOrderById({
@@ -361,86 +381,108 @@ class RestaurantOrderService extends abstract_service_1.default {
                     restaurant_id,
                 });
                 if (!existingOrder) {
-                    throw new customEror_1.default("Order not found", this.StatusCode.HTTP_NOT_FOUND);
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_NOT_FOUND,
+                        message: "Order not found",
+                    };
                 }
+                // again caluculate sub_total, grand_total
                 let sub_total = 0;
-                let grand_Total = 0;
-                let vat_amount = 0;
-                let net_total = 0;
-                if (order_items === null || order_items === void 0 ? void 0 : order_items.length) {
-                    for (const item of order_items) {
-                        const food = yield restaurantFoodModel.getFoods({
-                            id: item.food_id,
-                            hotel_code,
-                            restaurant_id,
-                        });
-                        if (!food.data.length) {
-                            throw new customEror_1.default(`Food with ID ${item.food_id} not found`, this.StatusCode.HTTP_NOT_FOUND);
+                let foodItemsCopy = [];
+                if (order_items && order_items.length > 0) {
+                    const foodIds = order_items.map((item) => item.food_id);
+                    const uniqueFoodIds = Array.from(new Set(foodIds));
+                    if (uniqueFoodIds.length !== order_items.length) {
+                        throw new customEror_1.default("Duplicate food items found in the order.", this.StatusCode.HTTP_BAD_REQUEST);
+                    }
+                    // get food and calculate sub_total
+                    const foodItems = yield restaurantFoodModel.getFoods({
+                        hotel_code,
+                        restaurant_id,
+                        food_ids: uniqueFoodIds,
+                    });
+                    if (foodItems.data.length !== uniqueFoodIds.length) {
+                        throw new customEror_1.default("One or more food items not found.", this.StatusCode.HTTP_NOT_FOUND);
+                    }
+                    foodItemsCopy = foodItems.data;
+                    // calculate sub_total and grand total
+                    foodItems.data.forEach((food) => {
+                        const item = order_items.find((i) => i.food_id === food.id);
+                        if (item) {
+                            sub_total += Number(item.quantity) * Number(food.retail_price);
                         }
-                        sub_total +=
-                            Number(item.quantity) * Number(food.data[0].retail_price);
-                    }
-                    net_total = lib_1.default.adjustPercentageOrFixedAmount(sub_total, rest.discount, rest.discount_type, true);
-                    grand_Total = lib_1.default.adjustPercentageOrFixedAmount(net_total, rest.service_charge, rest.service_charge_type);
-                    if (rest.vat_rate && (rest === null || rest === void 0 ? void 0 : rest.vat_rate) > 0) {
-                        vat_amount = (net_total * rest.vat_rate) / 100;
-                        grand_Total = net_total + vat_amount;
-                    }
+                    });
                 }
-                else {
-                    net_total = Number(existingOrder.net_total);
-                    sub_total = Number(existingOrder.sub_total);
-                    vat_amount = Number(existingOrder.vat_amount);
-                    grand_Total = Number(existingOrder.grand_total);
-                }
-                const updatedOrder = yield restaurantOrderModel.updateOrder({
+                const discountAmount = lib_1.default.calculatePercentageToAmount(sub_total, (_a = rest.discount) !== null && _a !== void 0 ? _a : Number(existingOrder.discount), (_b = rest.discount_type) !== null && _b !== void 0 ? _b : existingOrder.discount_type);
+                let gross_amount = sub_total - discountAmount;
+                const serviceChargeAmount = lib_1.default.calculatePercentageToAmount(gross_amount, (_c = rest.service_charge) !== null && _c !== void 0 ? _c : Number(existingOrder.service_charge), (_d = rest.service_charge_type) !== null && _d !== void 0 ? _d : existingOrder.service_charge_type);
+                gross_amount += serviceChargeAmount;
+                const vatAmount = lib_1.default.calculatePercentageToAmount(gross_amount, (_e = rest.vat) !== null && _e !== void 0 ? _e : Number(existingOrder.vat), (_f = rest.vat_type) !== null && _f !== void 0 ? _f : existingOrder.vat_type);
+                gross_amount += vatAmount;
+                const grand_total = gross_amount - discountAmount;
+                // delete order items\
+                yield restaurantOrderModel.deleteOrderItems({
+                    order_id: Number(order_id),
+                });
+                yield restaurantOrderModel.updateOrder({
                     id: Number(order_id),
                     payload: {
-                        order_type: (_a = rest.order_type) !== null && _a !== void 0 ? _a : existingOrder.order_type,
-                        guest: (_b = rest.guest) !== null && _b !== void 0 ? _b : existingOrder.guest,
-                        table_id: (_c = rest.table_id) !== null && _c !== void 0 ? _c : existingOrder.table_id,
-                        staff_id: (_d = rest.staff_id) !== null && _d !== void 0 ? _d : existingOrder.staff_id,
-                        room_no: (_e = rest.room_no) !== null && _e !== void 0 ? _e : existingOrder.room_no,
-                        discount: (_f = rest.discount) !== null && _f !== void 0 ? _f : Number(existingOrder.discount),
-                        discount_type: (_g = rest.discount_type) !== null && _g !== void 0 ? _g : existingOrder.discount_type,
-                        service_charge: (_h = rest.service_charge) !== null && _h !== void 0 ? _h : Number(existingOrder.service_charge),
-                        service_charge_type: (_j = rest.service_charge_type) !== null && _j !== void 0 ? _j : existingOrder.service_charge_type,
-                        vat_rate: (_k = rest.vat_rate) !== null && _k !== void 0 ? _k : Number(existingOrder.vat_rate),
-                        vat_amount,
-                        net_total: net_total,
-                        sub_total,
-                        grand_total: grand_Total,
+                        staff_id: rest.staff_id,
+                        order_type: rest.order_type,
+                        guest_name: rest.guest_name,
+                        table_id: rest.table_id,
+                        sub_total: sub_total,
+                        discount: (_g = rest.discount) !== null && _g !== void 0 ? _g : Number(existingOrder.discount),
+                        discount_type: (_h = rest.discount_type) !== null && _h !== void 0 ? _h : existingOrder.discount_type,
+                        service_charge: (_j = rest.service_charge) !== null && _j !== void 0 ? _j : Number(existingOrder.service_charge),
+                        grand_total: grand_total,
+                        service_charge_type: (_k = rest.service_charge_type) !== null && _k !== void 0 ? _k : existingOrder.service_charge_type,
+                        vat: (_l = rest.vat) !== null && _l !== void 0 ? _l : Number(existingOrder.vat),
+                        vat_type: (_m = rest.vat_type) !== null && _m !== void 0 ? _m : existingOrder.vat_type,
+                        room_no: rest.room_no,
+                        kitchen_status: rest.kitchen_status,
                         updated_by: id,
                     },
                 });
-                if (order_items === null || order_items === void 0 ? void 0 : order_items.length) {
-                    yield restaurantOrderModel.deleteOrderItems({
-                        order_id: Number(order_id),
-                    });
-                    yield Promise.all(order_items.map((item) => __awaiter(this, void 0, void 0, function* () {
-                        const food = yield restaurantFoodModel.getFoods({
-                            id: item.food_id,
-                            hotel_code,
-                            restaurant_id,
-                        });
-                        if (!food.data.length) {
-                            throw new customEror_1.default(`Food with ID ${item.food_id} not found`, this.StatusCode.HTTP_NOT_FOUND);
-                        }
-                        yield restaurantOrderModel.createOrderItems({
+                // delete existing order items
+                if (order_items && order_items.length > 0) {
+                    //  await Promise.all(
+                    //    order_items.map(async (item) => {
+                    //      const food = await restaurantFoodModel.getFoods({
+                    //        id: item.food_id,
+                    //        hotel_code,
+                    //        restaurant_id,
+                    //      });
+                    //      await restaurantOrderModel.createOrderItems({
+                    //        order_id: Number(order_id),
+                    //        food_id: item.food_id,
+                    //        name: food.data[0].name,
+                    //        rate: Number(food.data[0].retail_price),
+                    //        quantity: Number(item.quantity),
+                    //        total:
+                    //          Number(item.quantity) * Number(food.data[0].retail_price),
+                    //      });
+                    //    })
+                    //  );
+                    // order items payload then insert
+                    const order_items_payload = order_items.map((item) => {
+                        const food = foodItemsCopy.find((f) => f.id === item.food_id);
+                        return {
                             order_id: Number(order_id),
                             food_id: item.food_id,
-                            name: food.data[0].name,
-                            rate: Number(food.data[0].retail_price),
+                            name: food === null || food === void 0 ? void 0 : food.name,
+                            rate: Number(food === null || food === void 0 ? void 0 : food.retail_price) || 0,
                             quantity: Number(item.quantity),
-                            total: Number(item.quantity) * Number(food.data[0].retail_price),
-                        });
-                    })));
+                            total: Number(item.quantity) * (Number(food === null || food === void 0 ? void 0 : food.retail_price) || 0),
+                        };
+                    });
+                    yield restaurantOrderModel.createOrderItems(order_items_payload);
                 }
                 return {
                     success: true,
                     code: this.StatusCode.HTTP_SUCCESSFUL,
                     message: "Order updated successfully.",
-                    data: { id: updatedOrder[0].id },
                 };
             }));
         });

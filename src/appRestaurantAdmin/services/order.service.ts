@@ -6,6 +6,8 @@ import {
   IOrderRequest,
   IUpdateOrderRequest,
 } from "../utils/interface/order.interface";
+import { body } from "express-validator";
+import { IGetFoods } from "../utils/interface/food.interface";
 
 class RestaurantOrderService extends AbstractServices {
   constructor() {
@@ -28,59 +30,89 @@ class RestaurantOrderService extends AbstractServices {
         hotel_code,
         restaurant_id,
       });
+
       if (data.length > 0 && data[0].status === "booked") {
-        throw new CustomError(
-          "Table is already booked",
-          this.StatusCode.HTTP_CONFLICT
-        );
+        // throw new CustomError(
+        //   "Table is already booked",
+        //   this.StatusCode.HTTP_CONFLICT
+        // );
+
+        return {
+          success: false,
+          code: this.StatusCode.HTTP_CONFLICT,
+          message: "Table is already booked",
+        };
       } else if (data.length === 0) {
-        throw new CustomError(
-          "Table not found",
-          this.StatusCode.HTTP_NOT_FOUND
-        );
+        return {
+          success: false,
+          code: this.StatusCode.HTTP_NOT_FOUND,
+          message: "Table not found",
+        };
       }
 
       const orderNo = await Lib.generateOrderNo(trx, hotel_code, restaurant_id);
 
       let sub_total = 0;
-      let grand_Total = 0;
-      let vat_amount = 0;
-      let net_total = 0;
 
-      for (const item of order_items) {
-        const food = await restaurantFoodModel.getFoods({
-          id: item.food_id,
-          hotel_code,
-          restaurant_id,
-        });
+      // food validation
 
-        if (!food.data.length) {
-          throw new CustomError(
-            "Food not found",
-            this.StatusCode.HTTP_NOT_FOUND
-          );
-        }
+      const foodIds = order_items.map((item) => item.food_id);
+      const uniqueFoodIds = Array.from(new Set(foodIds));
 
-        sub_total += Number(item.quantity) * Number(food.data[0].retail_price);
+      if (uniqueFoodIds.length !== order_items.length) {
+        throw new CustomError(
+          "Duplicate food items found in the order.",
+          this.StatusCode.HTTP_BAD_REQUEST
+        );
       }
 
-      net_total = Lib.adjustPercentageOrFixedAmount(
+      // get food and calculate sub_total
+      const foodItems = await restaurantFoodModel.getFoods({
+        hotel_code,
+        restaurant_id,
+        food_ids: uniqueFoodIds,
+      });
+
+      if (foodItems.data.length !== uniqueFoodIds.length) {
+        throw new CustomError(
+          "One or more food items not found.",
+          this.StatusCode.HTTP_NOT_FOUND
+        );
+      }
+
+      // calculate sub_total and grand total
+      foodItems.data.forEach((food) => {
+        const item = order_items.find((i) => i.food_id === food.id);
+        if (item) {
+          sub_total += Number(item.quantity) * Number(food.retail_price);
+        }
+      });
+
+      const discountAmount = Lib.calculatePercentageToAmount(
         sub_total,
         rest.discount,
-        rest.discount_type,
-        true
+        rest.discount_type
       );
 
-      grand_Total = Lib.adjustPercentageOrFixedAmount(
-        net_total,
+      let gross_amount = sub_total - discountAmount;
+
+      const serviceChargeAmount = Lib.calculatePercentageToAmount(
+        gross_amount,
         rest.service_charge,
         rest.service_charge_type
       );
 
-      if (rest?.vat_rate > 0) {
-        vat_amount = (net_total * rest.vat_rate) / 100;
-        grand_Total = grand_Total + vat_amount;
-      }
+      gross_amount += serviceChargeAmount;
+
+      const vatAmount = Lib.calculatePercentageToAmount(
+        gross_amount,
+        rest.vat,
+        rest.vat_type
+      );
+
+      gross_amount += vatAmount;
+
+      const grand_total = gross_amount - discountAmount;
 
       const [newOrder] = await restaurantOrderModel.createOrder({
         hotel_code,
@@ -89,16 +121,15 @@ class RestaurantOrderService extends AbstractServices {
         created_by: id,
         table_id: rest.table_id,
         order_type: rest.order_type,
-        guest: rest.guest,
+        guest_name: rest.guest_name,
         sub_total: sub_total,
         discount: rest.discount,
         discount_type: rest.discount_type,
-        net_total: net_total,
         service_charge: rest.service_charge,
         service_charge_type: rest.service_charge_type,
-        vat_rate: rest.vat_rate,
-        vat_amount: vat_amount,
-        grand_total: grand_Total,
+        vat: rest.vat,
+        vat_type: rest.vat_type,
+        grand_total: grand_total,
         staff_id: rest.staff_id,
         room_no: rest.room_no,
       });
@@ -437,119 +468,147 @@ class RestaurantOrderService extends AbstractServices {
         restaurant_id,
       });
       if (!existingOrder) {
-        throw new CustomError(
-          "Order not found",
-          this.StatusCode.HTTP_NOT_FOUND
-        );
+        return {
+          success: false,
+          code: this.StatusCode.HTTP_NOT_FOUND,
+          message: "Order not found",
+        };
       }
 
+      // again caluculate sub_total, grand_total
       let sub_total = 0;
-      let grand_Total = 0;
-      let vat_amount = 0;
-      let net_total = 0;
 
-      if (order_items?.length) {
-        for (const item of order_items) {
-          const food = await restaurantFoodModel.getFoods({
-            id: item.food_id,
-            hotel_code,
-            restaurant_id,
-          });
+      let foodItemsCopy: IGetFoods[] = [];
+      if (order_items && order_items.length > 0) {
+        const foodIds = order_items.map((item) => item.food_id);
+        const uniqueFoodIds = Array.from(new Set(foodIds));
+        if (uniqueFoodIds.length !== order_items.length) {
+          throw new CustomError(
+            "Duplicate food items found in the order.",
+            this.StatusCode.HTTP_BAD_REQUEST
+          );
+        }
 
-          if (!food.data.length) {
-            throw new CustomError(
-              `Food with ID ${item.food_id} not found`,
-              this.StatusCode.HTTP_NOT_FOUND
-            );
+        // get food and calculate sub_total
+        const foodItems = await restaurantFoodModel.getFoods({
+          hotel_code,
+          restaurant_id,
+          food_ids: uniqueFoodIds,
+        });
+
+        if (foodItems.data.length !== uniqueFoodIds.length) {
+          throw new CustomError(
+            "One or more food items not found.",
+            this.StatusCode.HTTP_NOT_FOUND
+          );
+        }
+        foodItemsCopy = foodItems.data;
+        // calculate sub_total and grand total
+        foodItems.data.forEach((food) => {
+          const item = order_items.find((i) => i.food_id === food.id);
+          if (item) {
+            sub_total += Number(item.quantity) * Number(food.retail_price);
           }
-
-          sub_total +=
-            Number(item.quantity) * Number(food.data[0].retail_price);
-        }
-
-        net_total = Lib.adjustPercentageOrFixedAmount(
-          sub_total,
-          rest.discount,
-          rest.discount_type,
-          true
-        );
-
-        grand_Total = Lib.adjustPercentageOrFixedAmount(
-          net_total,
-          rest.service_charge,
-          rest.service_charge_type
-        );
-
-        if (rest.vat_rate && rest?.vat_rate > 0) {
-          vat_amount = (net_total * rest.vat_rate) / 100;
-          grand_Total = net_total + vat_amount;
-        }
-      } else {
-        net_total = Number(existingOrder.net_total);
-        sub_total = Number(existingOrder.sub_total);
-        vat_amount = Number(existingOrder.vat_amount);
-        grand_Total = Number(existingOrder.grand_total);
+        });
       }
+      const discountAmount = Lib.calculatePercentageToAmount(
+        sub_total,
+        rest.discount ?? Number(existingOrder.discount),
+        rest.discount_type ??
+          (existingOrder.discount_type as "percentage" | "fixed")
+      );
+      let gross_amount = sub_total - discountAmount;
 
-      const updatedOrder = await restaurantOrderModel.updateOrder({
+      const serviceChargeAmount = Lib.calculatePercentageToAmount(
+        gross_amount,
+        rest.service_charge ?? Number(existingOrder.service_charge),
+        rest.service_charge_type ??
+          (existingOrder.service_charge_type as "percentage" | "fixed")
+      );
+      gross_amount += serviceChargeAmount;
+
+      const vatAmount = Lib.calculatePercentageToAmount(
+        gross_amount,
+        rest.vat ?? Number(existingOrder.vat),
+        rest.vat_type ?? (existingOrder.vat_type as "percentage" | "fixed")
+      );
+      gross_amount += vatAmount;
+      const grand_total = gross_amount - discountAmount;
+
+      // delete order items\
+      await restaurantOrderModel.deleteOrderItems({
+        order_id: Number(order_id),
+      });
+
+      await restaurantOrderModel.updateOrder({
         id: Number(order_id),
         payload: {
-          order_type: rest.order_type ?? existingOrder.order_type,
-          guest: rest.guest ?? existingOrder.guest,
-          table_id: rest.table_id ?? existingOrder.table_id,
-          staff_id: rest.staff_id ?? existingOrder.staff_id,
-          room_no: rest.room_no ?? existingOrder.room_no,
+          staff_id: rest.staff_id,
+          order_type: rest.order_type,
+          guest_name: rest.guest_name,
+          table_id: rest.table_id,
+          sub_total: sub_total,
           discount: rest.discount ?? Number(existingOrder.discount),
-          discount_type: rest.discount_type ?? existingOrder.discount_type,
+          discount_type:
+            rest.discount_type ??
+            (existingOrder.discount_type as "percentage" | "fixed"),
           service_charge:
             rest.service_charge ?? Number(existingOrder.service_charge),
+          grand_total: grand_total,
           service_charge_type:
-            rest.service_charge_type ?? existingOrder.service_charge_type,
-          vat_rate: rest.vat_rate ?? Number(existingOrder.vat_rate),
-          vat_amount,
-          net_total: net_total,
-          sub_total,
-          grand_total: grand_Total,
+            rest.service_charge_type ??
+            (existingOrder.service_charge_type as "percentage" | "fixed"),
+          vat: rest.vat ?? Number(existingOrder.vat),
+          vat_type:
+            rest.vat_type ?? (existingOrder.vat_type as "percentage" | "fixed"),
+          room_no: rest.room_no,
+          kitchen_status: rest.kitchen_status,
           updated_by: id,
         },
       });
 
-      if (order_items?.length) {
-        await restaurantOrderModel.deleteOrderItems({
-          order_id: Number(order_id),
+      // delete existing order items
+      if (order_items && order_items.length > 0) {
+        //  await Promise.all(
+        //    order_items.map(async (item) => {
+        //      const food = await restaurantFoodModel.getFoods({
+        //        id: item.food_id,
+        //        hotel_code,
+        //        restaurant_id,
+        //      });
+
+        //      await restaurantOrderModel.createOrderItems({
+        //        order_id: Number(order_id),
+        //        food_id: item.food_id,
+        //        name: food.data[0].name,
+        //        rate: Number(food.data[0].retail_price),
+        //        quantity: Number(item.quantity),
+        //        total:
+        //          Number(item.quantity) * Number(food.data[0].retail_price),
+        //      });
+        //    })
+        //  );
+
+        // order items payload then insert
+        const order_items_payload = order_items.map((item) => {
+          const food = foodItemsCopy.find((f) => f.id === item.food_id);
+          return {
+            order_id: Number(order_id),
+            food_id: item.food_id,
+            name: food?.name as string,
+            rate: Number(food?.retail_price) || 0,
+            quantity: Number(item.quantity),
+            total: Number(item.quantity) * (Number(food?.retail_price) || 0),
+          };
         });
 
-        await Promise.all(
-          order_items.map(async (item) => {
-            const food = await restaurantFoodModel.getFoods({
-              id: item.food_id,
-              hotel_code,
-              restaurant_id,
-            });
-            if (!food.data.length) {
-              throw new CustomError(
-                `Food with ID ${item.food_id} not found`,
-                this.StatusCode.HTTP_NOT_FOUND
-              );
-            }
-
-            await restaurantOrderModel.createOrderItems({
-              order_id: Number(order_id),
-              food_id: item.food_id,
-              name: food.data[0].name,
-              rate: Number(food.data[0].retail_price),
-              quantity: Number(item.quantity),
-              total: Number(item.quantity) * Number(food.data[0].retail_price),
-            });
-          })
-        );
+        await restaurantOrderModel.createOrderItems(order_items_payload);
       }
 
       return {
         success: true,
         code: this.StatusCode.HTTP_SUCCESSFUL,
         message: "Order updated successfully.",
-        data: { id: updatedOrder[0].id },
       };
     });
   }

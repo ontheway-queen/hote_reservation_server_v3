@@ -1,4 +1,7 @@
-import IguestInterface from "../../appAdmin/utlis/interfaces/guest.interface";
+import {
+  IgetSingleGuest,
+  IguestInterface,
+} from "../../appAdmin/utlis/interfaces/guest.interface";
 import { IUpdateUser } from "../../appM360/utlis/interfaces/hotel-user.interface";
 import { TDB } from "../../common/types/commontypes";
 import Schema from "../../utils/miscellaneous/schema";
@@ -171,7 +174,7 @@ class GuestModel extends Schema {
     user_type?: string;
     id?: number;
     hotel_code: number;
-  }) {
+  }): Promise<IgetSingleGuest[]> {
     const { email, id, hotel_code } = where;
     return await this.db("guests")
       .select("*")

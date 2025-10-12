@@ -46,6 +46,9 @@ class RestaurantFoodModel extends schema_1.default {
             if (query.menu_category_id) {
                 baseQuery.andWhere("f.menu_category_id", query.menu_category_id);
             }
+            if (query.food_ids) {
+                baseQuery.whereIn("f.id", query.food_ids);
+            }
             const data = yield baseQuery
                 .clone()
                 .select("f.id", "f.hotel_code", "f.restaurant_id", "f.photo", "f.name", "mc.name as menu_category_name", "ua.id as created_by_id", "u.name as unit_name", "u.short_code as unit_short_code", "ua.name as created_by_name", "f.status", "f.retail_price", "f.is_deleted")

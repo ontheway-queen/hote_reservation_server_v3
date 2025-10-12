@@ -44,10 +44,7 @@ class Lib {
             (1000 * 60 * 60 * 24));
     }
     static generateBookingReferenceWithId(hotelPrefix, lastBookingId) {
-        const datePart = new Date()
-            .toISOString()
-            .slice(2, 10)
-            .replace(/-/g, "");
+        const datePart = new Date().toISOString().slice(2, 10).replace(/-/g, "");
         const idPart = String(lastBookingId + 1).padStart(6, "0");
         return `${hotelPrefix}-${datePart}-${idPart}`;
     }
@@ -174,8 +171,7 @@ class Lib {
             let nextSeq = 1;
             const lastRow = yield new expenseModel_1.default(trx).getLastExpenseNo();
             const lastExpenseNo = lastRow === null || lastRow === void 0 ? void 0 : lastRow.expense_no;
-            if (lastExpenseNo &&
-                lastExpenseNo.startsWith(`${prefix}-${datePart}`)) {
+            if (lastExpenseNo && lastExpenseNo.startsWith(`${prefix}-${datePart}`)) {
                 // Extract last sequence number
                 const lastSeq = parseInt(lastExpenseNo.split("-").pop() || "0", 10);
                 nextSeq = lastSeq + 1;
@@ -244,6 +240,14 @@ class Lib {
             adjustment = value;
         }
         return isSubtract ? baseAmount - adjustment : baseAmount + adjustment;
+    }
+    static calculatePercentageToAmount(totalAmount, percentage, type) {
+        if (!percentage || percentage <= 0)
+            return 0;
+        if (type === "fixed")
+            return percentage;
+        const amount = (totalAmount * percentage) / 100;
+        return parseFloat(amount.toFixed(2));
     }
 }
 exports.default = Lib;
