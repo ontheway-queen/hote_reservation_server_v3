@@ -534,6 +534,7 @@ export class ReservationModel extends Schema {
     status?: string[] | string;
     booking_type?: string;
   }) {
+    console.log({ status });
     const endCheckInDate = checkin_to ? new Date(checkin_to) : null;
 
     const endCheckOutDate = checkout_to ? new Date(checkout_to) : null;
@@ -629,7 +630,7 @@ export class ReservationModel extends Schema {
       .andWhere(function () {
         if (status && Array.isArray(status)) {
           this.whereIn("b.status", status);
-        } else {
+        } else if (status) {
           this.where("b.status", status);
         }
       })
@@ -668,7 +669,7 @@ export class ReservationModel extends Schema {
       .andWhere(function () {
         if (status && Array.isArray(status)) {
           this.whereIn("b.status", status);
-        } else {
+        } else if (status) {
           this.where("b.status", status);
         }
       });

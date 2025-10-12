@@ -32,9 +32,9 @@ export interface IInsertVoucherPayload {
   hotel_code: number;
 }
 export interface IUpdateVoucherPayload {
-  voucher_no: string;
-  voucher_date: string;
-  debit: number;
+  voucher_no?: string;
+  voucher_date?: string;
+  debit?: number;
   credit: number;
   description: string;
 }

@@ -112,7 +112,7 @@ class RestaurantOrderService extends AbstractServices {
 
       gross_amount += vatAmount;
 
-      const grand_total = gross_amount - discountAmount;
+      const grand_total = gross_amount;
 
       const [newOrder] = await restaurantOrderModel.createOrder({
         hotel_code,
@@ -517,6 +517,8 @@ class RestaurantOrderService extends AbstractServices {
         rest.discount_type ??
           (existingOrder.discount_type as "percentage" | "fixed")
       );
+
+      console.log({ sub_total, discountAmount });
       let gross_amount = sub_total - discountAmount;
 
       const serviceChargeAmount = Lib.calculatePercentageToAmount(
@@ -525,6 +527,7 @@ class RestaurantOrderService extends AbstractServices {
         rest.service_charge_type ??
           (existingOrder.service_charge_type as "percentage" | "fixed")
       );
+
       gross_amount += serviceChargeAmount;
 
       const vatAmount = Lib.calculatePercentageToAmount(
@@ -532,8 +535,9 @@ class RestaurantOrderService extends AbstractServices {
         rest.vat ?? Number(existingOrder.vat),
         rest.vat_type ?? (existingOrder.vat_type as "percentage" | "fixed")
       );
+
       gross_amount += vatAmount;
-      const grand_total = gross_amount - discountAmount;
+      const grand_total = gross_amount;
 
       // delete order items\
       await restaurantOrderModel.deleteOrderItems({

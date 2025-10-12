@@ -241,18 +241,43 @@ class AccountModel extends Schema {
     payload: IUpdateVoucherPayload,
     { hotel_code, id }: { hotel_code: number; id: number }
   ) {
-    return await this.db("acc_voucher")
+    return await this.db("acc_vouchers")
+      .withSchema(this.ACC_SCHEMA)
       .update(payload)
       .andWhere("id", id)
       .andWhere("hotel_code", hotel_code);
   }
 
   public async deleteAccVoucherById(id: idType) {
-    return await this.db("acc_voucher").del().where("id", id);
+    return await this.db("acc_vouchers")
+      .withSchema(this.ACC_SCHEMA)
+      .del()
+      .where("id", id);
+  }
+
+  public async deleteAccVoucherByIds(ids: idType[]) {
+    return await this.db("acc_vouchers")
+      .withSchema(this.ACC_SCHEMA)
+      .del()
+      .whereIn("id", ids);
+  }
+
+  public async getSingleAccVoucherById(id: number): Promise<{
+    id: number;
+    acc_head_id: number;
+    voucher_no: string;
+    debit: string;
+    credit: string;
+  }> {
+    return await this.db("acc_vouchers")
+      .select("id", "acc_head_id", "voucher_no", "debit", "credit")
+      .withSchema(this.ACC_SCHEMA)
+      .where("id", id)
+      .first();
   }
 
   public async deleteAccVoucherByVoucherNo(voucherNo: string) {
-    await this.db("acc_voucher").where("voucher_no", voucherNo).del();
+    await this.db("acc_vouchers").where("voucher_no", voucherNo).del();
   }
 
   // get account group

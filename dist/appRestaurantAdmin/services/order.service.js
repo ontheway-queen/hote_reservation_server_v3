@@ -91,7 +91,7 @@ class RestaurantOrderService extends abstract_service_1.default {
                 gross_amount += serviceChargeAmount;
                 const vatAmount = lib_1.default.calculatePercentageToAmount(gross_amount, rest.vat, rest.vat_type);
                 gross_amount += vatAmount;
-                const grand_total = gross_amount - discountAmount;
+                const grand_total = gross_amount;
                 const [newOrder] = yield restaurantOrderModel.createOrder({
                     hotel_code,
                     restaurant_id,
@@ -415,12 +415,13 @@ class RestaurantOrderService extends abstract_service_1.default {
                     });
                 }
                 const discountAmount = lib_1.default.calculatePercentageToAmount(sub_total, (_a = rest.discount) !== null && _a !== void 0 ? _a : Number(existingOrder.discount), (_b = rest.discount_type) !== null && _b !== void 0 ? _b : existingOrder.discount_type);
+                console.log({ sub_total, discountAmount });
                 let gross_amount = sub_total - discountAmount;
                 const serviceChargeAmount = lib_1.default.calculatePercentageToAmount(gross_amount, (_c = rest.service_charge) !== null && _c !== void 0 ? _c : Number(existingOrder.service_charge), (_d = rest.service_charge_type) !== null && _d !== void 0 ? _d : existingOrder.service_charge_type);
                 gross_amount += serviceChargeAmount;
                 const vatAmount = lib_1.default.calculatePercentageToAmount(gross_amount, (_e = rest.vat) !== null && _e !== void 0 ? _e : Number(existingOrder.vat), (_f = rest.vat_type) !== null && _f !== void 0 ? _f : existingOrder.vat_type);
                 gross_amount += vatAmount;
-                const grand_total = gross_amount - discountAmount;
+                const grand_total = gross_amount;
                 // delete order items\
                 yield restaurantOrderModel.deleteOrderItems({
                     order_id: Number(order_id),

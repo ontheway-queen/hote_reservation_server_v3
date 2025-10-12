@@ -1,6 +1,7 @@
 import {
   ICreateExpensePayload,
-  IExpenseWithItems,
+  IgetAllExpenseWithItems,
+  IgetSingleExpenseWithItems,
 } from "../../appAdmin/utlis/interfaces/expense.interface";
 import { TDB } from "../../common/types/commontypes";
 import { EXPENSE_GROUP } from "../../utils/miscellaneous/constants";
@@ -77,7 +78,7 @@ class ExpenseModel extends Schema {
     skip?: string;
     key?: string;
     hotel_code: number;
-  }): Promise<{ data: IExpenseWithItems[]; total: number }> {
+  }): Promise<{ data: IgetAllExpenseWithItems[]; total: number }> {
     const { limit, skip, hotel_code, from_date, to_date, key } = payload;
 
     const endDate = to_date ? new Date(to_date) : undefined;
@@ -121,7 +122,10 @@ class ExpenseModel extends Schema {
               'id', ei.id,
               'head_name', ah.name,
               'remarks', ei.remarks,
-              'amount', ei.amount
+              'amount', ei.amount,
+              'ex_voucher_id',ei.ex_voucher_id,
+              'expense_head_id',ei.expense_head_id,
+              'expense_id',ei.expense_id
             )
           ) FILTER (WHERE ei.id IS NOT NULL AND ei.is_deleted = false), '[]'
         ) as expense_items
@@ -194,7 +198,7 @@ class ExpenseModel extends Schema {
   public async getSingleExpense(
     id: number,
     hotel_code: number
-  ): Promise<IExpenseWithItems[]> {
+  ): Promise<IgetSingleExpenseWithItems[]> {
     const dtbs = this.db("expense as ev").withSchema(this.ACC_SCHEMA);
 
     const data = await dtbs
@@ -204,6 +208,7 @@ class ExpenseModel extends Schema {
         "ev.expense_no",
         "h.name as hotel_name",
         "h.address as hotel_address",
+        "ev.acc_voucher_id",
         "acc.id as account_id",
         "acc_head.name as account_name",
         "acc.acc_type as account_type",
@@ -231,7 +236,8 @@ class ExpenseModel extends Schema {
               'expense_head_id', ei.expense_head_id,
               'head_name', ah.name,
               'remarks', ei.remarks,
-              'amount', ei.amount
+              'amount', ei.amount,
+              'ex_voucher_id',ei.ex_voucher_id
             )
           ) FILTER (WHERE ei.id IS NOT NULL), '[]'
         ) as expense_items

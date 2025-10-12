@@ -205,7 +205,8 @@ class AccountModel extends schema_1.default {
     }
     updateAccVoucher(payload, { hotel_code, id }) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("acc_voucher")
+            return yield this.db("acc_vouchers")
+                .withSchema(this.ACC_SCHEMA)
                 .update(payload)
                 .andWhere("id", id)
                 .andWhere("hotel_code", hotel_code);
@@ -213,12 +214,32 @@ class AccountModel extends schema_1.default {
     }
     deleteAccVoucherById(id) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("acc_voucher").del().where("id", id);
+            return yield this.db("acc_vouchers")
+                .withSchema(this.ACC_SCHEMA)
+                .del()
+                .where("id", id);
+        });
+    }
+    deleteAccVoucherByIds(ids) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("acc_vouchers")
+                .withSchema(this.ACC_SCHEMA)
+                .del()
+                .whereIn("id", ids);
+        });
+    }
+    getSingleAccVoucherById(id) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("acc_vouchers")
+                .select("id", "acc_head_id", "voucher_no", "debit", "credit")
+                .withSchema(this.ACC_SCHEMA)
+                .where("id", id)
+                .first();
         });
     }
     deleteAccVoucherByVoucherNo(voucherNo) {
         return __awaiter(this, void 0, void 0, function* () {
-            yield this.db("acc_voucher").where("voucher_no", voucherNo).del();
+            yield this.db("acc_vouchers").where("voucher_no", voucherNo).del();
         });
     }
     // get account group

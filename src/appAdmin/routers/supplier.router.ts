@@ -20,6 +20,10 @@ class SupplierRouter extends AbstractRouter {
       .post(this.controller.supplierPayment)
       .get(this.controller.getAllSupplierPayment);
 
+    this.router
+      .route("/transaction")
+      .get(this.controller.getAllSupplierPayment);
+
     // Supplier
     this.router
       .route("/payment/by-sup-id/:id")

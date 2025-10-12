@@ -58,10 +58,34 @@ export interface ICreateExpensePayload {
   created_by: number;
 }
 
-export interface IExpenseWithItems {
+export interface IgetAllExpenseWithItems {
   id: number;
   expense_no: string;
   account_id: number;
+  acc_voucher_id: number;
+  expense_date: string;
+  expense_name: string;
+  account_name: string;
+  account_type: string;
+  expense_amount: string;
+  created_at: string;
+  hotel_code?: number;
+  account_number?: string;
+  hotel_name?: string;
+  bank_name?: string;
+  branch?: string;
+  hotel_address?: string;
+  expense_by_id: number;
+  expense_by_name: string;
+  file_1?: string;
+  file_2?: string;
+  expense_items: ExpenseItem[];
+}
+export interface IgetSingleExpenseWithItems {
+  id: number;
+  expense_no: string;
+  account_id: number;
+  acc_voucher_id: number;
   expense_date: string;
   expense_name: string;
   account_name: string;
@@ -85,11 +109,15 @@ export interface ExpenseItem {
   id: number;
   item_name: string;
   amount: number;
+  ex_voucher_id: number;
+  expense_head_id: number;
+  expense_id: number;
 }
 
 interface updateExpenseItem {
   id?: number;
-  remarks?: string;
+  expense_head_id: number;
+  remarks: string;
   amount: number;
   is_deleted?: number; // 0 or 1
 }
