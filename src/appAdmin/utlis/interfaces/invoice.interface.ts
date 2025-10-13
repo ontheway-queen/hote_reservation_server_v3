@@ -29,7 +29,8 @@ export type IfolioEntriesPostingType =
   | "Discount"
   | "VAT"
   | "Deposit"
-  | "SERVICE_CHARGE";
+  | "SERVICE_CHARGE"
+  | "RESTAURANT_CHARGE";
 
 export interface IinsertFolioEntriesPayload {
   folio_id: number;

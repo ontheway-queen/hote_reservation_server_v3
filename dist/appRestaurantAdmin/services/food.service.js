@@ -55,8 +55,6 @@ class RestaurantFoodService extends abstract_service_1.default {
                         message: "Unit not found.",
                     };
                 }
-                yield restaurantFoodModel.createFood(Object.assign(Object.assign({}, food), { hotel_code,
-                    restaurant_id, created_by: id }));
                 return {
                     success: true,
                     code: this.StatusCode.HTTP_SUCCESSFUL,

@@ -14,7 +14,9 @@ class HotelInvoiceModel extends Schema {
     this.db = db;
   }
 
-  public async insertInFolio(payload: IinsertFolioPayload) {
+  public async insertInFolio(
+    payload: IinsertFolioPayload
+  ): Promise<{ id: number }[]> {
     return await this.db("folios")
       .withSchema(this.RESERVATION_SCHEMA)
       .insert(payload, "id");

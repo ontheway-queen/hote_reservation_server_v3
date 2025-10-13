@@ -115,8 +115,8 @@ class Lib {
             function insetFunc(payload, parent_head) {
                 return __awaiter(this, void 0, void 0, function* () {
                     const promises = payload.map((item) => __awaiter(this, void 0, void 0, function* () {
-                        // insert head
                         var _a;
+                        // insert head
                         const accPayload = {
                             code: item.code,
                             hotel_code,
@@ -143,6 +143,81 @@ class Lib {
                 });
             }
             yield insetFunc(chartOfAcc_1.defaultChartOfAcc);
+        });
+    }
+    static createAccountHeads({ trx, payload, }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const accModel = new accountModel_1.default(trx);
+            const { group_code, hotel_code, parent_id, name } = payload;
+            const insertedHeadIds = [];
+            for (const head of name) {
+                let newHeadCode = "";
+                if (parent_id) {
+                    //Get parent head
+                    const parentHead = yield accModel.getAccountHead({
+                        hotel_code,
+                        group_code,
+                        id: parent_id,
+                    });
+                    if (!parentHead.length) {
+                        throw new Error("Parent head not found!");
+                    }
+                    const { code: parent_head_code } = parentHead[0];
+                    //Find last child head under this parent
+                    const heads = yield accModel.getAccountHead({
+                        hotel_code,
+                        group_code,
+                        parent_id,
+                        order_by: "ah.code",
+                        order_to: "desc",
+                    });
+                    console.log({ heads });
+                    if (heads.length) {
+                        const { code: child_code } = heads[0];
+                        const lastHeadCodeNum = child_code.split(".");
+                        const newNum = Number(lastHeadCodeNum.pop()) + 1;
+                        newHeadCode = lastHeadCodeNum.join(".");
+                        if (newNum < 10) {
+                            newHeadCode += `.00${newNum}`;
+                        }
+                        else if (newNum < 100) {
+                            newHeadCode += `.0${newNum}`;
+                        }
+                        else {
+                            newHeadCode += `.${newNum}`;
+                        }
+                    }
+                    else {
+                        newHeadCode = `${parent_head_code}.001`;
+                    }
+                }
+                else {
+                    // Root level head
+                    const checkHead = yield accModel.getAccountHead({
+                        hotel_code,
+                        group_code,
+                        parent_id: null,
+                        order_by: "ah.id",
+                        order_to: "desc",
+                    });
+                    if (checkHead.length) {
+                        newHeadCode = (Number(checkHead[0].code) + 1).toString();
+                    }
+                    else {
+                        newHeadCode = (Number(group_code) + 1).toString();
+                    }
+                }
+                // Insert new head
+                const insertAhRes = yield accModel.insertAccHead({
+                    code: newHeadCode,
+                    group_code,
+                    hotel_code,
+                    name: head,
+                    parent_id,
+                });
+                insertedHeadIds.push(insertAhRes[0].id);
+            }
+            return insertedHeadIds;
         });
     }
     //get adjusted amount from the payment gateways

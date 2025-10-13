@@ -26,7 +26,9 @@ class AccountModel extends Schema {
       .select("code", "name", "description");
   }
 
-  public async insertAccHead(payload: IAccHeadDb | IAccHeadDb[]) {
+  public async insertAccHead(
+    payload: IAccHeadDb | IAccHeadDb[]
+  ): Promise<{ id: number }[]> {
     return await this.db("acc_heads")
       .withSchema(this.ACC_SCHEMA)
       .insert(payload, "id");
@@ -314,6 +316,14 @@ class AccountModel extends Schema {
     id?: number;
     id_greater?: number;
   }) {
+    console.log({
+      hotel_code,
+      code,
+      group_code,
+      parent_id,
+      order_by,
+      order_to,
+    });
     return await this.db("acc_heads AS ah")
       .select(
         "ah.id",

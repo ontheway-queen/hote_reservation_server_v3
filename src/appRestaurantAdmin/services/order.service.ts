@@ -8,6 +8,7 @@ import {
 } from "../utils/interface/order.interface";
 import { body } from "express-validator";
 import { IGetFoods } from "../utils/interface/food.interface";
+import { HelperFunction } from "../../appAdmin/utlis/library/helperFunction";
 
 class RestaurantOrderService extends AbstractServices {
   constructor() {
@@ -32,11 +33,6 @@ class RestaurantOrderService extends AbstractServices {
       });
 
       if (data.length > 0 && data[0].status === "booked") {
-        // throw new CustomError(
-        //   "Table is already booked",
-        //   this.StatusCode.HTTP_CONFLICT
-        // );
-
         return {
           success: false,
           code: this.StatusCode.HTTP_CONFLICT,
@@ -114,6 +110,62 @@ class RestaurantOrderService extends AbstractServices {
 
       const grand_total = gross_amount;
 
+      // -------------- Double Entry Accounting -----------------
+
+      const helper = new HelperFunction();
+      const hotelModel = this.Model.HotelModel(trx);
+      const accountModel = this.Model.accountModel(trx);
+      const today = new Date().toISOString();
+
+      const heads = await hotelModel.getHotelAccConfig(hotel_code, [
+        "RECEIVABLE_HEAD_ID",
+        "RESTAURANT_REVENUE_HEAD_ID",
+      ]);
+
+      console.log({ heads, hotel_code });
+
+      const receivable_head = heads.find(
+        (h) => h.config === "RECEIVABLE_HEAD_ID"
+      );
+
+      if (!receivable_head) {
+        throw new Error("RECEIVABLE_HEAD_ID not configured for this hotel");
+      }
+
+      const sales_head = heads.find(
+        (h) => h.config === "RESTAURANT_REVENUE_HEAD_ID"
+      );
+      if (!sales_head) {
+        throw new Error(
+          "RESTAURANT_REVENUE_HEAD_ID not configured for this hotel"
+        );
+      }
+      const voucher_no1 = await helper.generateVoucherNo("JV", trx);
+
+      const voucherRes = await accountModel.insertAccVoucher([
+        {
+          acc_head_id: receivable_head.head_id,
+          created_by: id,
+          debit: grand_total,
+          credit: 0,
+          description: `Receivable for order ${orderNo}`,
+          voucher_date: today,
+          voucher_no: voucher_no1,
+          hotel_code,
+        },
+        {
+          acc_head_id: sales_head.head_id,
+          created_by: id,
+          debit: 0,
+          credit: grand_total,
+          description: `Sales for order ${orderNo}`,
+          voucher_date: today,
+          voucher_no: voucher_no1,
+          hotel_code,
+        },
+      ]);
+      // ------------------ End ---------------------//
+
       const [newOrder] = await restaurantOrderModel.createOrder({
         hotel_code,
         restaurant_id,
@@ -132,6 +184,10 @@ class RestaurantOrderService extends AbstractServices {
         grand_total: grand_total,
         staff_id: rest.staff_id,
         room_no: rest.room_no,
+        discount_amount: discountAmount,
+        service_charge_amount: serviceChargeAmount,
+        vat_amount: vatAmount,
+        credit_voucher_id: voucherRes[0].id + 1,
       });
 
       await Promise.all(
@@ -155,6 +211,7 @@ class RestaurantOrderService extends AbstractServices {
             rate: Number(food.data[0].retail_price),
             quantity: Number(item.quantity),
             total: Number(item.quantity) * Number(food.data[0].retail_price),
+            debit_voucher_id: voucherRes[0].id,
           });
         })
       );
@@ -311,9 +368,16 @@ class RestaurantOrderService extends AbstractServices {
     return await this.db.transaction(async (trx) => {
       const { id } = req.params;
       const { restaurant_id, hotel_code } = req.restaurant_admin;
-      const body = req.body as unknown as { payable_amount: number };
+      const { payable_amount, acc_id, room_id, pay_with, booking_id } =
+        req.body as unknown as {
+          payable_amount: number;
+          acc_id?: number;
+          booking_id?: number;
+          room_id?: number;
+          pay_with: "by_booking" | "by_room" | "instant";
+        };
 
-      if (body.payable_amount <= 0) {
+      if (payable_amount <= 0) {
         return {
           success: false,
           code: this.StatusCode.HTTP_BAD_REQUEST,
@@ -326,6 +390,11 @@ class RestaurantOrderService extends AbstractServices {
 
       const restaurantTableModel =
         this.restaurantModel.restaurantTableModel(trx);
+
+      const accModel = this.Model.accountModel(trx);
+      const reservationModel = this.Model.reservationModel(trx);
+
+      const hotelInvModel = this.Model.hotelInvoiceModel(trx);
 
       const isOrderExists = await restaurantOrderModel.getOrderById({
         hotel_code,
@@ -349,40 +418,139 @@ class RestaurantOrderService extends AbstractServices {
         };
       }
 
-      if (Number(isOrderExists.grand_total) > Number(body.payable_amount)) {
+      if (Number(isOrderExists.grand_total) > Number(payable_amount)) {
         return {
           success: false,
           code: this.StatusCode.HTTP_BAD_REQUEST,
           message: "Insufficient payment. Please provide the full amount.",
         };
       }
-
+      const { order_no } = isOrderExists;
       const changeable_amount =
-        Number(body.payable_amount) - Number(isOrderExists.grand_total);
+        Number(payable_amount) - Number(isOrderExists.grand_total);
 
-      await restaurantOrderModel.completeOrderPayment(
-        {
-          id: parseInt(id),
-        },
-        {
-          payable_amount: body.payable_amount,
-          changeable_amount,
-          is_paid: true,
-          status: "completed",
+      if (pay_with === "instant") {
+        if (!acc_id) {
+          return {
+            success: false,
+            code: this.StatusCode.HTTP_BAD_REQUEST,
+            message: "You have not give account",
+          };
         }
-      );
+        //check single account
+        const [acc] = await accModel.getSingleAccount({
+          hotel_code,
+          id: acc_id as number,
+        });
 
-      await restaurantTableModel.updateTable({
-        id: isOrderExists.table_id,
-        payload: {
-          status: "available",
-        },
-      });
+        if (!acc) {
+          return {
+            success: false,
+            code: this.StatusCode.HTTP_NOT_FOUND,
+            message: "Invalid Account",
+          };
+        }
+
+        await restaurantOrderModel.completeOrderPayment(
+          {
+            id: parseInt(id),
+          },
+          {
+            payable_amount,
+            changeable_amount,
+            is_paid: true,
+            ac_tr_ac_id: acc_id as number,
+            status: "completed",
+          }
+        );
+
+        await restaurantTableModel.updateTable({
+          id: isOrderExists.table_id,
+          payload: {
+            status: "available",
+          },
+        });
+      } else if (pay_with === "by_booking") {
+        if (!booking_id) {
+          return {
+            success: false,
+            code: this.StatusCode.HTTP_BAD_REQUEST,
+            message: "Please give booking ID",
+          };
+        }
+
+        const getSingleBooking = await reservationModel.getSingleBooking(
+          hotel_code,
+          booking_id
+        );
+
+        if (!getSingleBooking) {
+          return {
+            success: false,
+            code: this.StatusCode.HTTP_NOT_FOUND,
+            message: "Invalid booking",
+          };
+        }
+
+        const { status: booking_status, guest_id } = getSingleBooking;
+
+        if (booking_status !== "checked_in") {
+          return {
+            success: false,
+            code: this.StatusCode.HTTP_NOT_FOUND,
+            message:
+              "You cannot pay with the booking ID because the guest has not checked in yet.",
+          };
+        }
+
+        // create new folio
+        const folioNo = `FR-${order_no}`;
+
+        const [folio] = await hotelInvModel.insertInFolio({
+          booking_id,
+          folio_number: folioNo,
+          guest_id,
+          hotel_code,
+          name: `Folio-${order_no}`,
+          status: "open",
+          type: "Primary",
+        });
+
+        await hotelInvModel.insertInFolioEntries([
+          {
+            folio_id: folio.id,
+            posting_type: "RESTAURANT_CHARGE",
+            debit: payable_amount,
+            description: "Charged for restaurant order",
+          },
+        ]);
+
+        await restaurantOrderModel.completeOrderPayment(
+          {
+            id: parseInt(id),
+          },
+          {
+            payable_amount,
+            changeable_amount,
+            is_paid: true,
+            ac_tr_ac_id: acc_id as number,
+            status: "completed",
+          }
+        );
+
+        await restaurantTableModel.updateTable({
+          id: isOrderExists.table_id,
+          payload: {
+            status: "available",
+          },
+        });
+      }
 
       return {
         success: true,
         code: this.StatusCode.HTTP_SUCCESSFUL,
         message: "Order paid successfully.",
+        // changeable_amount,
       };
     });
   }
@@ -539,11 +707,67 @@ class RestaurantOrderService extends AbstractServices {
       gross_amount += vatAmount;
       const grand_total = gross_amount;
 
-      // delete order items\
+      //_____________________ delete order items _______________________
       await restaurantOrderModel.deleteOrderItems({
         order_id: Number(order_id),
       });
 
+      // ________________________ Accounting ___________________________
+
+      const helper = new HelperFunction();
+      const hotelModel = this.Model.HotelModel(trx);
+      const accountModel = this.Model.accountModel(trx);
+      const today = new Date().toISOString();
+
+      const heads = await hotelModel.getHotelAccConfig(hotel_code, [
+        "RECEIVABLE_HEAD_ID",
+        "RESTAURANT_REVENUE_HEAD_ID",
+      ]);
+
+      console.log({ heads, hotel_code });
+
+      const receivable_head = heads.find(
+        (h) => h.config === "RECEIVABLE_HEAD_ID"
+      );
+
+      if (!receivable_head) {
+        throw new Error("RECEIVABLE_HEAD_ID not configured for this hotel");
+      }
+
+      const sales_head = heads.find(
+        (h) => h.config === "RESTAURANT_REVENUE_HEAD_ID"
+      );
+      if (!sales_head) {
+        throw new Error(
+          "RESTAURANT_REVENUE_HEAD_ID not configured for this hotel"
+        );
+      }
+      const voucher_no1 = await helper.generateVoucherNo("JV", trx);
+
+      const voucherRes = await accountModel.insertAccVoucher([
+        {
+          acc_head_id: receivable_head.head_id,
+          created_by: id,
+          debit: grand_total,
+          credit: 0,
+          description: `Receivable for order ${existingOrder.order_no}`,
+          voucher_date: today,
+          voucher_no: voucher_no1,
+          hotel_code,
+        },
+        {
+          acc_head_id: sales_head.head_id,
+          created_by: id,
+          debit: 0,
+          credit: grand_total,
+          description: `Sales for order ${existingOrder.order_no}`,
+          voucher_date: today,
+          voucher_no: voucher_no1,
+          hotel_code,
+        },
+      ]);
+
+      // ________________________ Accounting END ___________________________
       await restaurantOrderModel.updateOrder({
         id: Number(order_id),
         payload: {
@@ -568,31 +792,15 @@ class RestaurantOrderService extends AbstractServices {
           room_no: rest.room_no,
           kitchen_status: rest.kitchen_status,
           updated_by: id,
+          discount_amount: discountAmount,
+          service_charge_amount: serviceChargeAmount,
+          vat_amount: vatAmount,
+          credit_voucher_id: voucherRes[0].id,
         },
       });
 
       // delete existing order items
       if (order_items && order_items.length > 0) {
-        //  await Promise.all(
-        //    order_items.map(async (item) => {
-        //      const food = await restaurantFoodModel.getFoods({
-        //        id: item.food_id,
-        //        hotel_code,
-        //        restaurant_id,
-        //      });
-
-        //      await restaurantOrderModel.createOrderItems({
-        //        order_id: Number(order_id),
-        //        food_id: item.food_id,
-        //        name: food.data[0].name,
-        //        rate: Number(food.data[0].retail_price),
-        //        quantity: Number(item.quantity),
-        //        total:
-        //          Number(item.quantity) * Number(food.data[0].retail_price),
-        //      });
-        //    })
-        //  );
-
         // order items payload then insert
         const order_items_payload = order_items.map((item) => {
           const food = foodItemsCopy.find((f) => f.id === item.food_id);
@@ -603,11 +811,14 @@ class RestaurantOrderService extends AbstractServices {
             rate: Number(food?.retail_price) || 0,
             quantity: Number(item.quantity),
             total: Number(item.quantity) * (Number(food?.retail_price) || 0),
+            debit_voucher_id: voucherRes[1].id,
           };
         });
 
         await restaurantOrderModel.createOrderItems(order_items_payload);
       }
+
+      // update accounts voucher
 
       return {
         success: true,

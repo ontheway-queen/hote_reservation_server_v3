@@ -258,6 +258,14 @@ class AccountModel extends schema_1.default {
     // Get account head
     getAccountHead({ hotel_code, code, group_code, parent_id, name, order_by, order_to, id, id_greater, }) {
         return __awaiter(this, void 0, void 0, function* () {
+            console.log({
+                hotel_code,
+                code,
+                group_code,
+                parent_id,
+                order_by,
+                order_to,
+            });
             return yield this.db("acc_heads AS ah")
                 .select("ah.id", "ah.code", "ah.group_code", "ah.parent_id", "ah.name", "ag.name AS group_name")
                 .withSchema(this.ACC_SCHEMA)

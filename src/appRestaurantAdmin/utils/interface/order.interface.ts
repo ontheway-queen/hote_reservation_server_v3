@@ -37,6 +37,10 @@ export interface IOrderPayload {
   vat_type: string;
   vat: number;
   grand_total: number;
+  discount_amount: number;
+  service_charge_amount: number;
+  vat_amount: number;
+  credit_voucher_id: number;
 }
 
 export interface IOrderItemsPayload {
@@ -46,6 +50,7 @@ export interface IOrderItemsPayload {
   rate: number;
   quantity: number;
   total: number;
+  debit_voucher_id: number;
 }
 
 export interface IGetOrders {
@@ -89,6 +94,8 @@ export interface IGetOrder {
   vat: string;
   grand_total: string;
   created_by_id: number;
+  debit_voucher_id: number;
+  credit_voucher_id: number;
   created_by_name: string;
   is_paid: boolean;
   room_no: number | null;
@@ -145,10 +152,13 @@ export interface IUpdateOrderPayload {
   service_charge_type?: string;
   vat_type?: string;
   vat?: number;
-
   grand_total?: number;
   updated_by?: number;
   kitchen_status?: string;
+  discount_amount?: number;
+  service_charge_amount?: number;
+  vat_amount?: number;
+  credit_voucher_id?: number;
 }
 
 export interface IUpdateOrderItemsPayload {

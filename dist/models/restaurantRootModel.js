@@ -12,12 +12,16 @@ const restaurant_order_model_1 = __importDefault(require("./restaurantModels/res
 const restaurant_report_model_1 = __importDefault(require("./restaurantModels/restaurant.report.model"));
 const restaurant_table_model_1 = __importDefault(require("./restaurantModels/restaurant.table.model"));
 const restaurant_unit_model_1 = __importDefault(require("./restaurantModels/restaurant.unit.model"));
+const restaurant_hotel_model_1 = __importDefault(require("./restaurantModels/restaurant.hotel.model"));
 class RestaurantModels {
     constructor(db) {
         this.db = db;
     }
     restaurantModel(trx) {
         return new restaurant_Model_1.default(trx || this.db);
+    }
+    restaurantHotelModel(trx) {
+        return new restaurant_hotel_model_1.default(trx || this.db);
     }
     restaurantAdminModel(trx) {
         return new restaurant_admin_model_1.default(trx || this.db);

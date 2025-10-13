@@ -2,7 +2,10 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
 import { db } from "../../app/database";
-import { IAccHeadDb } from "../../appAdmin/utlis/interfaces/doubleEntry.interface";
+import {
+  IAccHeadDb,
+  IinsertAccHeadReqBodyForMpanel,
+} from "../../appAdmin/utlis/interfaces/doubleEntry.interface";
 import { TDB } from "../../common/types/commontypes";
 import config from "../../config/config";
 import AccountModel from "../../models/reservationPanel/accountModel/accountModel";
@@ -14,6 +17,7 @@ import {
   IDefaultChartOfAcc,
 } from "../miscellaneous/chartOfAcc";
 import { allStrings } from "../miscellaneous/constants";
+import { Knex } from "knex";
 
 class Lib {
   // make hashed password
@@ -132,7 +136,6 @@ class Lib {
     ) {
       const promises = payload.map(async (item) => {
         // insert head
-
         const accPayload: IAccHeadDb = {
           code: item.code,
           hotel_code,
@@ -163,6 +166,93 @@ class Lib {
     }
 
     await insetFunc(defaultChartOfAcc);
+  }
+
+  public static async createAccountHeads({
+    trx,
+    payload,
+  }: {
+    trx: Knex.Transaction;
+    payload: IinsertAccHeadReqBodyForMpanel;
+  }): Promise<number[]> {
+    const accModel = new AccountModel(trx);
+    const { group_code, hotel_code, parent_id, name } = payload;
+
+    const insertedHeadIds: number[] = [];
+
+    for (const head of name) {
+      let newHeadCode = "";
+
+      if (parent_id) {
+        //Get parent head
+        const parentHead = await accModel.getAccountHead({
+          hotel_code,
+          group_code,
+          id: parent_id,
+        });
+
+        if (!parentHead.length) {
+          throw new Error("Parent head not found!");
+        }
+
+        const { code: parent_head_code } = parentHead[0];
+
+        //Find last child head under this parent
+        const heads = await accModel.getAccountHead({
+          hotel_code,
+          group_code,
+          parent_id,
+          order_by: "ah.code",
+          order_to: "desc",
+        });
+
+        console.log({ heads });
+        if (heads.length) {
+          const { code: child_code } = heads[0];
+          const lastHeadCodeNum = child_code.split(".");
+          const newNum = Number(lastHeadCodeNum.pop()) + 1;
+
+          newHeadCode = lastHeadCodeNum.join(".");
+          if (newNum < 10) {
+            newHeadCode += `.00${newNum}`;
+          } else if (newNum < 100) {
+            newHeadCode += `.0${newNum}`;
+          } else {
+            newHeadCode += `.${newNum}`;
+          }
+        } else {
+          newHeadCode = `${parent_head_code}.001`;
+        }
+      } else {
+        // Root level head
+        const checkHead = await accModel.getAccountHead({
+          hotel_code,
+          group_code,
+          parent_id: null,
+          order_by: "ah.id",
+          order_to: "desc",
+        });
+
+        if (checkHead.length) {
+          newHeadCode = (Number(checkHead[0].code) + 1).toString();
+        } else {
+          newHeadCode = (Number(group_code) + 1).toString();
+        }
+      }
+
+      // Insert new head
+      const insertAhRes = await accModel.insertAccHead({
+        code: newHeadCode,
+        group_code,
+        hotel_code,
+        name: head,
+        parent_id,
+      });
+
+      insertedHeadIds.push(insertAhRes[0].id);
+    }
+
+    return insertedHeadIds;
   }
 
   //get adjusted amount from the payment gateways

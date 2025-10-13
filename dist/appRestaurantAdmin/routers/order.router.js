@@ -25,7 +25,7 @@ class RestaurantOrderRouter extends abstract_router_1.default {
             .get(this.controller.getOrdersByTableId);
         this.router
             .route("/complete-order/:id")
-            .patch(this.controller.completeOrderPayment);
+            .post(this.controller.completeOrderPayment);
         this.router.route("/cancel-order/:id").delete(this.controller.cancelOrder);
         this.router
             .route("/:id")

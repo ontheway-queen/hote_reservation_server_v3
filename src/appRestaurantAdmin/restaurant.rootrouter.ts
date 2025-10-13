@@ -6,6 +6,7 @@ import RestaurantOrderRouter from "./routers/order.router";
 import RestaurantReportRouter from "./routers/report.router";
 import RestaurantTableRouter from "./routers/restaurantTable.router";
 import RestaurantUnitRouter from "./routers/unit.router";
+import HotelRouter from "./routers/res.hotel.router";
 
 export class RestaurantRootRouter {
   public router = Router();
@@ -26,6 +27,12 @@ export class RestaurantRootRouter {
       "/menu-category",
       this.authChecker.hotelRestaurantAuthChecker,
       new RestaurantMenuCategoryRouter().router
+    );
+
+    this.router.use(
+      "/hotel",
+      this.authChecker.hotelRestaurantAuthChecker,
+      new HotelRouter().router
     );
 
     this.router.use(

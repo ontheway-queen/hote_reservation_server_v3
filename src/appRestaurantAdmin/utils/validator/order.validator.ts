@@ -29,6 +29,10 @@ class RestaurantOrderValidator {
 
   public completeOrderPaymentValidator = Joi.object({
     payable_amount: Joi.number().precision(2).required(),
+    acc_id: Joi.number().optional(),
+    booking_id: Joi.number().optional(),
+    room_id: Joi.number().optional(),
+    pay_with: Joi.string().valid("by_booking", "by_room", "instant").required(),
   });
 
   public updateOrderValidator = Joi.object({

@@ -31,6 +31,10 @@ class RestaurantOrderValidator {
         });
         this.completeOrderPaymentValidator = joi_1.default.object({
             payable_amount: joi_1.default.number().precision(2).required(),
+            acc_id: joi_1.default.number().optional(),
+            booking_id: joi_1.default.number().optional(),
+            room_id: joi_1.default.number().optional(),
+            pay_with: joi_1.default.string().valid("by_booking", "by_room", "instant").required(),
         });
         this.updateOrderValidator = joi_1.default.object({
             staff_id: joi_1.default.number().integer().optional(),

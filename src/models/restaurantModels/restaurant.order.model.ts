@@ -90,10 +90,15 @@ class RestaurantOrderModel extends Schema {
         "o.status",
         "o.kitchen_status",
         "o.created_at",
-        "o.net_total",
         "o.discount",
+        "o.discount_amount",
+        "o.discount_type",
+        "o.service_charge_amount",
         "o.service_charge",
+        "o.service_charge_type",
         "o.sub_total",
+        "o.vat_type",
+        "o.vat",
         "o.vat_amount",
         "o.grand_total",
         "ua.id as created_by_id",
@@ -135,15 +140,19 @@ class RestaurantOrderModel extends Schema {
         "o.created_at",
         "o.discount_type",
         "o.discount",
+        "o.discount_amount",
+        "o.service_charge_amount",
         "o.service_charge",
         "o.service_charge_type",
         "o.sub_total",
         "o.vat_type",
         "o.vat",
+        "o.vat_amount",
         "o.grand_total",
         "o.is_paid",
         "ua.id as created_by_id",
         "ua.name as created_by_name",
+        "o.credit_voucher_id",
         this.db.raw(`
 				COALESCE(
 					json_agg(
@@ -153,7 +162,8 @@ class RestaurantOrderModel extends Schema {
 							'food_name', f.name,
 							'quantity', oi.quantity,
 							'rate', oi.rate,
-							'total', oi.total
+							'total', oi.total,
+              'debit_voucher_id',oi.debit_voucher_id
 						)
 					) FILTER (WHERE oi.id IS NOT NULL AND oi.is_deleted = false), '[]'
 				) as order_items
@@ -207,6 +217,7 @@ class RestaurantOrderModel extends Schema {
     payload: {
       payable_amount: number;
       changeable_amount: number;
+      ac_tr_ac_id: number;
       is_paid: boolean;
       status: string;
     }
