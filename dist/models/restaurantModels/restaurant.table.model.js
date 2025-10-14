@@ -28,34 +28,54 @@ class RestaurantTableModel extends schema_1.default {
     getTables(query) {
         var _a, _b;
         return __awaiter(this, void 0, void 0, function* () {
-            const baseQuery = this.db("restaurant_tables as rt")
+            const data = yield this.db("restaurant_tables as rt")
                 .withSchema(this.RESTAURANT_SCHEMA)
+                .select("rt.id", "rt.hotel_code", "rt.restaurant_id", "rt.name", "f.floor_no", "rt.floor_id", "rt.status", "rt.is_deleted", "rt.capacity", this.db.raw(`
+      (
+        SELECT 
+          rt.capacity - COALESCE(SUM(o.id), 0)
+        FROM hotel_restaurant.orders AS o
+        WHERE 
+          o.table_id = rt.id 
+      
+      ) AS available_capacity
+    `))
+                .joinRaw("left join hotel_reservation.floors as f on rt.floor_id = f.id and rt.hotel_code = f.hotel_code")
                 .where("rt.hotel_code", query.hotel_code)
                 .andWhere("rt.restaurant_id", query.restaurant_id)
-                .andWhere("rt.is_deleted", false);
-            if (query.id) {
-                baseQuery.andWhere("rt.id", query.id);
-            }
-            if (query.name) {
-                baseQuery.andWhereILike("rt.name", `%${query.name}%`);
-            }
-            if (query.category) {
-                baseQuery.andWhere("rt.category", query.category);
-            }
-            if (query.status) {
-                baseQuery.andWhere("rt.status", query.status);
-            }
-            const data = yield baseQuery
-                .clone()
-                .select("rt.id", "rt.hotel_code", "rt.restaurant_id", "rt.name", "rt.category", "rt.status", "rt.is_deleted")
+                .andWhere("rt.is_deleted", false)
+                .andWhere(function () {
+                if (query.id) {
+                    this.andWhere("rt.id", query.id);
+                }
+                if (query.name) {
+                    this.andWhereILike("rt.name", `%${query.name}%`);
+                }
+                if (query.status) {
+                    this.andWhere("rt.status", query.status);
+                }
+            })
                 .orderBy("rt.id", "desc")
                 .limit((_a = query.limit) !== null && _a !== void 0 ? _a : 100)
                 .offset((_b = query.skip) !== null && _b !== void 0 ? _b : 0);
-            const countResult = yield baseQuery
-                .clone()
-                .count("rt.id as total");
-            const total = Number(countResult[0].total);
-            return { total, data };
+            const total = yield this.db("restaurant_tables as rt")
+                .withSchema(this.RESTAURANT_SCHEMA)
+                .count("rt.id as total")
+                .where("rt.hotel_code", query.hotel_code)
+                .andWhere("rt.restaurant_id", query.restaurant_id)
+                .andWhere("rt.is_deleted", false)
+                .andWhere(function () {
+                if (query.id) {
+                    this.andWhere("rt.id", query.id);
+                }
+                if (query.name) {
+                    this.andWhereILike("rt.name", `%${query.name}%`);
+                }
+                if (query.status) {
+                    this.andWhere("rt.status", query.status);
+                }
+            });
+            return { total: total[0].total, data };
         });
     }
     updateTable({ id, payload, }) {

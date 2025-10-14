@@ -16,6 +16,7 @@ export interface IinsertFolioPayload {
     | "room_primary"
     | "company_pay"
     | "guest_pay"
+    | "restaurant"
     | "incidentals";
   status: "open" | "closed";
 }

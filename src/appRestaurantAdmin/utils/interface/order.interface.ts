@@ -1,9 +1,11 @@
 export interface IOrderRequest {
   staff_id?: number;
   order_type: string;
-  guest_name: string;
   room_no?: number;
   table_id: number;
+  customer_name: string;
+  customer_phone: string;
+  customer_id: number;
   discount_type?: "percentage" | "fixed";
   discount: number;
   net_total: number;

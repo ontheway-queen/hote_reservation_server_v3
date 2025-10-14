@@ -35,7 +35,7 @@ class RestaurantOrderService extends abstract_service_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
                 const { id, restaurant_id, hotel_code } = req.restaurant_admin;
-                const _a = req.body, { order_items } = _a, rest = __rest(_a, ["order_items"]);
+                const _a = req.body, { order_items, customer_id, customer_name, customer_phone, order_type } = _a, rest = __rest(_a, ["order_items", "customer_id", "customer_name", "customer_phone", "order_type"]);
                 const restaurantTableModel = this.restaurantModel.restaurantTableModel(trx);
                 const restaurantOrderModel = this.restaurantModel.restaurantOrderModel(trx);
                 const restaurantFoodModel = this.restaurantModel.restaurantFoodModel(trx);
@@ -131,14 +131,31 @@ class RestaurantOrderService extends abstract_service_1.default {
                     },
                 ]);
                 // ------------------ End ---------------------//
+                if ((!customer_id && customer_name) || customer_phone) {
+                    if (customer_name && customer_phone) {
+                        const { data: checkCusomer } = yield this.restaurantModel
+                            .restaurantModel()
+                            .getAllCustomer({
+                            contact_no: customer_phone,
+                            hotel_code,
+                        });
+                        if (checkCusomer.length === 0) {
+                            yield this.restaurantModel.restaurantModel(trx).createCustomer({
+                                name: customer_name,
+                                contact_no: customer_phone,
+                                hotel_code,
+                            });
+                        }
+                    }
+                }
                 const [newOrder] = yield restaurantOrderModel.createOrder({
                     hotel_code,
                     restaurant_id,
                     order_no: orderNo,
                     created_by: id,
                     table_id: rest.table_id,
-                    order_type: rest.order_type,
-                    guest_name: rest.guest_name,
+                    order_type: order_type,
+                    guest_name: customer_name,
                     sub_total: sub_total,
                     discount: rest.discount,
                     discount_type: rest.discount_type,
@@ -339,43 +356,7 @@ class RestaurantOrderService extends abstract_service_1.default {
                 }
                 const { order_no } = isOrderExists;
                 const changeable_amount = Number(payable_amount) - Number(isOrderExists.grand_total);
-                if (pay_with === "instant") {
-                    if (!acc_id) {
-                        return {
-                            success: false,
-                            code: this.StatusCode.HTTP_BAD_REQUEST,
-                            message: "You have not give account",
-                        };
-                    }
-                    //check single account
-                    const [acc] = yield accModel.getSingleAccount({
-                        hotel_code,
-                        id: acc_id,
-                    });
-                    if (!acc) {
-                        return {
-                            success: false,
-                            code: this.StatusCode.HTTP_NOT_FOUND,
-                            message: "Invalid Account",
-                        };
-                    }
-                    yield restaurantOrderModel.completeOrderPayment({
-                        id: parseInt(id),
-                    }, {
-                        payable_amount,
-                        changeable_amount,
-                        is_paid: true,
-                        ac_tr_ac_id: acc_id,
-                        status: "completed",
-                    });
-                    yield restaurantTableModel.updateTable({
-                        id: isOrderExists.table_id,
-                        payload: {
-                            status: "available",
-                        },
-                    });
-                }
-                else if (pay_with === "by_booking") {
+                if (pay_with === "by_booking") {
                     if (!booking_id) {
                         return {
                             success: false,
@@ -406,16 +387,16 @@ class RestaurantOrderService extends abstract_service_1.default {
                         folio_number: folioNo,
                         guest_id,
                         hotel_code,
-                        name: `Folio-${order_no}`,
+                        name: `Restaurant-${order_no}`,
                         status: "open",
-                        type: "Primary",
+                        type: "restaurant",
                     });
                     yield hotelInvModel.insertInFolioEntries([
                         {
                             folio_id: folio.id,
                             posting_type: "RESTAURANT_CHARGE",
                             debit: payable_amount,
-                            description: "Charged for restaurant order",
+                            description: "Charges for restaurant orders",
                         },
                     ]);
                     yield restaurantOrderModel.completeOrderPayment({
@@ -426,14 +407,137 @@ class RestaurantOrderService extends abstract_service_1.default {
                         is_paid: true,
                         ac_tr_ac_id: acc_id,
                         status: "completed",
-                    });
-                    yield restaurantTableModel.updateTable({
-                        id: isOrderExists.table_id,
-                        payload: {
-                            status: "available",
-                        },
+                        include_with_hotel_booking: true,
+                        booking_id: booking_id,
+                        room_id: room_id,
+                        booking_ref: getSingleBooking.booking_reference,
                     });
                 }
+                else if (pay_with == "by_room") {
+                    if (!booking_id) {
+                        return {
+                            success: false,
+                            code: this.StatusCode.HTTP_BAD_REQUEST,
+                            message: "Please give booking ID",
+                        };
+                    }
+                    const getSingleBooking = yield reservationModel.getSingleBooking(hotel_code, booking_id);
+                    if (!getSingleBooking) {
+                        return {
+                            success: false,
+                            code: this.StatusCode.HTTP_NOT_FOUND,
+                            message: "Invalid booking",
+                        };
+                    }
+                    const { status: booking_status, guest_id, is_individual_booking, } = getSingleBooking;
+                    if (booking_status !== "checked_in") {
+                        return {
+                            success: false,
+                            code: this.StatusCode.HTTP_NOT_FOUND,
+                            message: "You cannot pay with the booking ID because the guest has not checked in yet.",
+                        };
+                    }
+                    if (!room_id) {
+                        return {
+                            success: false,
+                            code: this.StatusCode.HTTP_BAD_REQUEST,
+                            message: "Please give room ID",
+                        };
+                    }
+                    const [singleRoom] = yield this.Model.RoomModel().getSingleRoom(hotel_code, room_id);
+                    if (!singleRoom) {
+                        return {
+                            success: false,
+                            code: this.StatusCode.HTTP_NOT_FOUND,
+                            message: "Room ID is invalid",
+                        };
+                    }
+                    if (!is_individual_booking) {
+                        const roomFolio = yield hotelInvModel.getFolioWithEntriesbySingleBookingAndRoomID({
+                            booking_id: booking_id,
+                            hotel_code,
+                            room_ids: [room_id],
+                        });
+                        if (!roomFolio.length) {
+                            return {
+                                success: false,
+                                code: 404,
+                                message: "Rooms folio not found.",
+                            };
+                        }
+                        yield hotelInvModel.insertInFolioEntries([
+                            {
+                                folio_id: roomFolio[0].id,
+                                posting_type: "RESTAURANT_CHARGE",
+                                debit: payable_amount,
+                                description: "Charges for restaurant orders",
+                            },
+                        ]);
+                    }
+                    else {
+                        const primaryFolio = yield hotelInvModel.getFoliosbySingleBooking({
+                            booking_id,
+                            hotel_code,
+                            type: "Primary",
+                        });
+                        if (!primaryFolio.length) {
+                            return {
+                                success: false,
+                                code: this.StatusCode.HTTP_NOT_FOUND,
+                                message: "Primary folio not found.",
+                            };
+                        }
+                        yield hotelInvModel.insertInFolioEntries([
+                            {
+                                folio_id: primaryFolio[0].id,
+                                posting_type: "RESTAURANT_CHARGE",
+                                debit: payable_amount,
+                                description: "Charges for restaurant orders",
+                            },
+                        ]);
+                    }
+                    yield restaurantOrderModel.completeOrderPayment({
+                        id: parseInt(id),
+                    }, {
+                        payable_amount,
+                        changeable_amount,
+                        is_paid: true,
+                        ac_tr_ac_id: acc_id,
+                        status: "completed",
+                        include_with_hotel_booking: true,
+                        booking_id: booking_id,
+                        room_id: room_id,
+                        booking_ref: getSingleBooking.booking_reference,
+                        room_no: singleRoom.room_name,
+                    });
+                }
+                else {
+                    if (!acc_id) {
+                        return {
+                            success: false,
+                            code: this.StatusCode.HTTP_BAD_REQUEST,
+                            message: "You have not give account",
+                        };
+                    }
+                    //check single account
+                    const [acc] = yield accModel.getSingleAccount({
+                        hotel_code,
+                        id: acc_id,
+                    });
+                    if (!acc) {
+                        return {
+                            success: false,
+                            code: this.StatusCode.HTTP_NOT_FOUND,
+                            message: "Invalid Account",
+                        };
+                    }
+                }
+                yield restaurantTableModel.updateTable({
+                    id: isOrderExists.table_id,
+                    payload: {
+                        status: "available",
+                    },
+                });
                 return {
                     success: true,
                     code: this.StatusCode.HTTP_SUCCESSFUL,
@@ -603,7 +707,7 @@ class RestaurantOrderService extends abstract_service_1.default {
                     payload: {
                         staff_id: rest.staff_id,
                         order_type: rest.order_type,
-                        guest_name: rest.guest_name,
+                        guest_name: rest.customer_name,
                         table_id: rest.table_id,
                         sub_total: sub_total,
                         discount: (_g = rest.discount) !== null && _g !== void 0 ? _g : Number(existingOrder.discount),

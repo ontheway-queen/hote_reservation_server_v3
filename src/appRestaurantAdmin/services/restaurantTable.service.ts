@@ -47,7 +47,7 @@ class RestaurantTableService extends AbstractServices {
   public async getTables(req: Request) {
     const { restaurant_id, hotel_code } = req.restaurant_admin;
 
-    const { limit, skip, name, category, status } = req.query;
+    const { limit, skip, name, status } = req.query;
 
     const data = await this.restaurantModel.restaurantTableModel().getTables({
       hotel_code,
@@ -55,7 +55,6 @@ class RestaurantTableService extends AbstractServices {
       limit: Number(limit),
       skip: Number(skip),
       name: name as string,
-      category: category as string,
       status: status as string,
     });
 

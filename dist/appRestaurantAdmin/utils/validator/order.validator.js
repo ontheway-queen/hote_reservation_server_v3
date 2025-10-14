@@ -8,8 +8,12 @@ class RestaurantOrderValidator {
     constructor() {
         this.createOrderValidator = joi_1.default.object({
             staff_id: joi_1.default.number().integer().optional(),
-            order_type: joi_1.default.string().valid("in-dine", "takeout", "delivery").required(),
-            guest: joi_1.default.string().optional(),
+            customer_name: joi_1.default.string().optional(),
+            customer_phone: joi_1.default.string().optional(),
+            customer_id: joi_1.default.number().optional(),
+            order_type: joi_1.default.string()
+                .valid("walk-in", "reservation-guest", "takeout", "delivery")
+                .required(),
             table_id: joi_1.default.number().integer().required(),
             discount: joi_1.default.number().precision(2).optional().default(0),
             discount_type: joi_1.default.string()
@@ -38,8 +42,13 @@ class RestaurantOrderValidator {
         });
         this.updateOrderValidator = joi_1.default.object({
             staff_id: joi_1.default.number().integer().optional(),
-            order_type: joi_1.default.string().valid("in-dine", "takeout", "delivery").required(),
+            order_type: joi_1.default.string()
+                .valid("walk-in", "reservation-guest", "takeout", "delivery")
+                .required(),
             guest: joi_1.default.string().optional(),
+            customer_name: joi_1.default.string().optional(),
+            customer_phone: joi_1.default.string().optional(),
+            customer_id: joi_1.default.number().optional(),
             table_id: joi_1.default.number().integer().required(),
             discount: joi_1.default.number().precision(2).optional().default(0),
             discount_type: joi_1.default.string()

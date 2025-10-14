@@ -48,6 +48,22 @@ class RestaurantHotelService extends AbstractServices {
       data,
     };
   }
+
+  public async getAllFloors(req: Request) {
+    const { hotel_code } = req.restaurant_admin;
+
+    const { data } = await this.Model.settingModel().getAllFloors({
+      hotel_code,
+      status: "true",
+    });
+
+    return {
+      success: true,
+      code: this.StatusCode.HTTP_OK,
+
+      data,
+    };
+  }
 }
 
 export default RestaurantHotelService;

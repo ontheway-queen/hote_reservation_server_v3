@@ -3,8 +3,13 @@ import Joi from "joi";
 class RestaurantOrderValidator {
   public createOrderValidator = Joi.object({
     staff_id: Joi.number().integer().optional(),
-    order_type: Joi.string().valid("in-dine", "takeout", "delivery").required(),
-    guest: Joi.string().optional(),
+    customer_name: Joi.string().optional(),
+    customer_phone: Joi.string().optional(),
+    customer_id: Joi.number().optional(),
+    order_type: Joi.string()
+      .valid("walk-in", "reservation-guest", "takeout", "delivery")
+      .required(),
+
     table_id: Joi.number().integer().required(),
     discount: Joi.number().precision(2).optional().default(0),
     discount_type: Joi.string()
@@ -37,8 +42,14 @@ class RestaurantOrderValidator {
 
   public updateOrderValidator = Joi.object({
     staff_id: Joi.number().integer().optional(),
-    order_type: Joi.string().valid("in-dine", "takeout", "delivery").required(),
+    order_type: Joi.string()
+      .valid("walk-in", "reservation-guest", "takeout", "delivery")
+      .required(),
     guest: Joi.string().optional(),
+    customer_name: Joi.string().optional(),
+    customer_phone: Joi.string().optional(),
+    customer_id: Joi.number().optional(),
+
     table_id: Joi.number().integer().required(),
     discount: Joi.number().precision(2).optional().default(0),
     discount_type: Joi.string()

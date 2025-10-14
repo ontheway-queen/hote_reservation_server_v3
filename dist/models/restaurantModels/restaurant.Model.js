@@ -76,6 +76,30 @@ class RestaurantModel extends schema_1.default {
                 .update(payload);
         });
     }
+    getAllCustomer(queries) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { contact_no, hotel_code } = queries;
+            const data = yield this.db("res_customer")
+                .withSchema(this.RESTAURANT_SCHEMA)
+                .select("*")
+                .where(function () {
+                if (contact_no) {
+                    this.andWhere({ contact_no });
+                }
+                if (hotel_code) {
+                    this.andWhere({ hotel_code });
+                }
+            });
+            return { data };
+        });
+    }
+    createCustomer(payload) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("res_customer")
+                .withSchema(this.RESTAURANT_SCHEMA)
+                .insert(payload, "id");
+        });
+    }
 }
 exports.default = RestaurantModel;
 //# sourceMappingURL=restaurant.Model.js.map

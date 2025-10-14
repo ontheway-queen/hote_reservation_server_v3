@@ -14,6 +14,7 @@ class HotelRouter extends abstract_router_1.default {
     callV1Router() {
         this.router.route("/bookings").get(this.controller.geAllBookings);
         this.router.route("/account").get(this.controller.getAllAccount);
+        this.router.route("/floors").get(this.controller.getAllFloors);
     }
 }
 exports.default = HotelRouter;

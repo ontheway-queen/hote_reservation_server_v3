@@ -49,6 +49,7 @@ export class SubReservationService extends AbstractServices {
       phone: guest.phone,
       hotel_code,
     });
+
     if (checkGuest.length) {
       return checkGuest[0].id;
     }

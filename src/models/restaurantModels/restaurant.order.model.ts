@@ -99,6 +99,9 @@ class RestaurantOrderModel extends Schema {
         "o.sub_total",
         "o.vat_type",
         "o.vat",
+        "o.booking_ref",
+        "o.include_with_hotel_booking",
+        "o.room_no",
         "o.vat_amount",
         "o.grand_total",
         "ua.id as created_by_id",
@@ -131,10 +134,12 @@ class RestaurantOrderModel extends Schema {
         "o.restaurant_id",
         "o.table_id",
         "rt.name as table_name",
+        "o.guest_name",
+        "o.order_type",
         "o.order_no",
         "o.staff_id",
         "eu.name as staff_name",
-        "o.order_type",
+
         "o.status",
         "o.kitchen_status",
         "o.created_at",
@@ -147,6 +152,9 @@ class RestaurantOrderModel extends Schema {
         "o.sub_total",
         "o.vat_type",
         "o.vat",
+        "o.booking_ref",
+        "o.include_with_hotel_booking",
+        "o.room_no",
         "o.vat_amount",
         "o.grand_total",
         "o.is_paid",
@@ -220,6 +228,11 @@ class RestaurantOrderModel extends Schema {
       ac_tr_ac_id: number;
       is_paid: boolean;
       status: string;
+      booking_id?: number;
+      include_with_hotel_booking?: boolean;
+      room_id?: number;
+      booking_ref?: string;
+      room_no?: string;
     }
   ) {
     return await this.db("orders as o")

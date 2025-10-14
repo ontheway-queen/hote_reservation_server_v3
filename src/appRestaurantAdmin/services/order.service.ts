@@ -18,7 +18,14 @@ class RestaurantOrderService extends AbstractServices {
   public async createOrder(req: Request) {
     return await this.db.transaction(async (trx) => {
       const { id, restaurant_id, hotel_code } = req.restaurant_admin;
-      const { order_items, ...rest } = req.body as IOrderRequest;
+      const {
+        order_items,
+        customer_id,
+        customer_name,
+        customer_phone,
+        order_type,
+        ...rest
+      } = req.body as IOrderRequest;
 
       const restaurantTableModel =
         this.restaurantModel.restaurantTableModel(trx);
@@ -166,14 +173,32 @@ class RestaurantOrderService extends AbstractServices {
       ]);
       // ------------------ End ---------------------//
 
+      if ((!customer_id && customer_name) || customer_phone) {
+        if (customer_name && customer_phone) {
+          const { data: checkCusomer } = await this.restaurantModel
+            .restaurantModel()
+            .getAllCustomer({
+              contact_no: customer_phone,
+              hotel_code,
+            });
+          if (checkCusomer.length === 0) {
+            await this.restaurantModel.restaurantModel(trx).createCustomer({
+              name: customer_name,
+              contact_no: customer_phone,
+              hotel_code,
+            });
+          }
+        }
+      }
+
       const [newOrder] = await restaurantOrderModel.createOrder({
         hotel_code,
         restaurant_id,
         order_no: orderNo,
         created_by: id,
         table_id: rest.table_id,
-        order_type: rest.order_type,
-        guest_name: rest.guest_name,
+        order_type: order_type,
+        guest_name: customer_name,
         sub_total: sub_total,
         discount: rest.discount,
         discount_type: rest.discount_type,
@@ -429,48 +454,7 @@ class RestaurantOrderService extends AbstractServices {
       const changeable_amount =
         Number(payable_amount) - Number(isOrderExists.grand_total);
 
-      if (pay_with === "instant") {
-        if (!acc_id) {
-          return {
-            success: false,
-            code: this.StatusCode.HTTP_BAD_REQUEST,
-            message: "You have not give account",
-          };
-        }
-        //check single account
-        const [acc] = await accModel.getSingleAccount({
-          hotel_code,
-          id: acc_id as number,
-        });
-
-        if (!acc) {
-          return {
-            success: false,
-            code: this.StatusCode.HTTP_NOT_FOUND,
-            message: "Invalid Account",
-          };
-        }
-
-        await restaurantOrderModel.completeOrderPayment(
-          {
-            id: parseInt(id),
-          },
-          {
-            payable_amount,
-            changeable_amount,
-            is_paid: true,
-            ac_tr_ac_id: acc_id as number,
-            status: "completed",
-          }
-        );
-
-        await restaurantTableModel.updateTable({
-          id: isOrderExists.table_id,
-          payload: {
-            status: "available",
-          },
-        });
-      } else if (pay_with === "by_booking") {
+      if (pay_with === "by_booking") {
         if (!booking_id) {
           return {
             success: false,
@@ -511,9 +495,9 @@ class RestaurantOrderService extends AbstractServices {
           folio_number: folioNo,
           guest_id,
           hotel_code,
-          name: `Folio-${order_no}`,
+          name: `Restaurant-${order_no}`,
           status: "open",
-          type: "Primary",
+          type: "restaurant",
         });
 
         await hotelInvModel.insertInFolioEntries([
@@ -521,7 +505,7 @@ class RestaurantOrderService extends AbstractServices {
             folio_id: folio.id,
             posting_type: "RESTAURANT_CHARGE",
             debit: payable_amount,
-            description: "Charged for restaurant order",
+            description: "Charges for restaurant orders",
           },
         ]);
 
@@ -535,16 +519,164 @@ class RestaurantOrderService extends AbstractServices {
             is_paid: true,
             ac_tr_ac_id: acc_id as number,
             status: "completed",
+            include_with_hotel_booking: true,
+            booking_id: booking_id as number,
+            room_id: room_id as number,
+            booking_ref: getSingleBooking.booking_reference,
           }
         );
+      } else if (pay_with == "by_room") {
+        if (!booking_id) {
+          return {
+            success: false,
+            code: this.StatusCode.HTTP_BAD_REQUEST,
+            message: "Please give booking ID",
+          };
+        }
 
-        await restaurantTableModel.updateTable({
-          id: isOrderExists.table_id,
-          payload: {
-            status: "available",
+        const getSingleBooking = await reservationModel.getSingleBooking(
+          hotel_code,
+          booking_id
+        );
+
+        if (!getSingleBooking) {
+          return {
+            success: false,
+            code: this.StatusCode.HTTP_NOT_FOUND,
+            message: "Invalid booking",
+          };
+        }
+
+        const {
+          status: booking_status,
+          guest_id,
+          is_individual_booking,
+        } = getSingleBooking;
+
+        if (booking_status !== "checked_in") {
+          return {
+            success: false,
+            code: this.StatusCode.HTTP_NOT_FOUND,
+            message:
+              "You cannot pay with the booking ID because the guest has not checked in yet.",
+          };
+        }
+        if (!room_id) {
+          return {
+            success: false,
+            code: this.StatusCode.HTTP_BAD_REQUEST,
+            message: "Please give room ID",
+          };
+        }
+
+        const [singleRoom] = await this.Model.RoomModel().getSingleRoom(
+          hotel_code,
+          room_id
+        );
+
+        if (!singleRoom) {
+          return {
+            success: false,
+            code: this.StatusCode.HTTP_NOT_FOUND,
+            message: "Room ID is invalid",
+          };
+        }
+
+        if (!is_individual_booking) {
+          const roomFolio =
+            await hotelInvModel.getFolioWithEntriesbySingleBookingAndRoomID({
+              booking_id: booking_id as number,
+              hotel_code,
+              room_ids: [room_id as number],
+            });
+
+          if (!roomFolio.length) {
+            return {
+              success: false,
+              code: 404,
+              message: "Rooms folio not found.",
+            };
+          }
+
+          await hotelInvModel.insertInFolioEntries([
+            {
+              folio_id: roomFolio[0].id,
+              posting_type: "RESTAURANT_CHARGE",
+              debit: payable_amount,
+              description: "Charges for restaurant orders",
+            },
+          ]);
+        } else {
+          const primaryFolio = await hotelInvModel.getFoliosbySingleBooking({
+            booking_id,
+            hotel_code,
+            type: "Primary",
+          });
+
+          if (!primaryFolio.length) {
+            return {
+              success: false,
+              code: this.StatusCode.HTTP_NOT_FOUND,
+              message: "Primary folio not found.",
+            };
+          }
+
+          await hotelInvModel.insertInFolioEntries([
+            {
+              folio_id: primaryFolio[0].id,
+              posting_type: "RESTAURANT_CHARGE",
+              debit: payable_amount,
+              description: "Charges for restaurant orders",
+            },
+          ]);
+        }
+
+        await restaurantOrderModel.completeOrderPayment(
+          {
+            id: parseInt(id),
           },
+          {
+            payable_amount,
+            changeable_amount,
+            is_paid: true,
+            ac_tr_ac_id: acc_id as number,
+            status: "completed",
+            include_with_hotel_booking: true,
+            booking_id: booking_id as number,
+            room_id: room_id as number,
+            booking_ref: getSingleBooking.booking_reference,
+            room_no: singleRoom.room_name,
+          }
+        );
+      } else {
+        if (!acc_id) {
+          return {
+            success: false,
+            code: this.StatusCode.HTTP_BAD_REQUEST,
+            message: "You have not give account",
+          };
+        }
+        //check single account
+        const [acc] = await accModel.getSingleAccount({
+          hotel_code,
+          id: acc_id as number,
         });
+
+        if (!acc) {
+          return {
+            success: false,
+            code: this.StatusCode.HTTP_NOT_FOUND,
+            message: "Invalid Account",
+          };
+        }
       }
+
+      await restaurantTableModel.updateTable({
+        id: isOrderExists.table_id,
+        payload: {
+          status: "available",
+        },
+      });
 
       return {
         success: true,
@@ -773,7 +905,7 @@ class RestaurantOrderService extends AbstractServices {
         payload: {
           staff_id: rest.staff_id,
           order_type: rest.order_type,
-          guest_name: rest.guest_name,
+          guest_name: rest.customer_name,
           table_id: rest.table_id,
           sub_total: sub_total,
           discount: rest.discount ?? Number(existingOrder.discount),

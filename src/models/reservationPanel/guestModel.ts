@@ -175,7 +175,8 @@ class GuestModel extends Schema {
     id?: number;
     hotel_code: number;
   }): Promise<IgetSingleGuest[]> {
-    const { email, id, hotel_code } = where;
+    const { email, id, hotel_code, phone } = where;
+
     return await this.db("guests")
       .select("*")
       .withSchema(this.RESERVATION_SCHEMA)
@@ -186,6 +187,9 @@ class GuestModel extends Schema {
         }
         if (email) {
           this.where("email", email);
+        }
+        if (phone) {
+          this.andWhere("phone", phone);
         }
       });
   }

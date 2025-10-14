@@ -52,6 +52,20 @@ class RestaurantHotelService extends abstract_service_1.default {
             };
         });
     }
+    getAllFloors(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { hotel_code } = req.restaurant_admin;
+            const { data } = yield this.Model.settingModel().getAllFloors({
+                hotel_code,
+                status: "true",
+            });
+            return {
+                success: true,
+                code: this.StatusCode.HTTP_OK,
+                data,
+            };
+        });
+    }
 }
 exports.default = RestaurantHotelService;
 //# sourceMappingURL=res.hotel.service.js.map

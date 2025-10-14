@@ -128,7 +128,7 @@ class GuestModel extends schema_1.default {
     }
     getSingleGuest(where) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { email, id, hotel_code } = where;
+            const { email, id, hotel_code, phone } = where;
             return yield this.db("guests")
                 .select("*")
                 .withSchema(this.RESERVATION_SCHEMA)
@@ -139,6 +139,9 @@ class GuestModel extends schema_1.default {
                 }
                 if (email) {
                     this.where("email", email);
+                }
+                if (phone) {
+                    this.andWhere("phone", phone);
                 }
             });
         });

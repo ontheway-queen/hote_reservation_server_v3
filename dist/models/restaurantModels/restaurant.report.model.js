@@ -195,22 +195,16 @@ class RestaurantReportModel extends schema_1.default {
                 .where("o.status", "completed")
                 .andWhere("o.hotel_code", hotel_code)
                 .andWhere("o.restaurant_id", restaurant_id)
-                .andWhereRaw("DATE(o.created_at) BETWEEN ? AND ?", [
-                from_date,
-                to_date,
-            ])
+                .andWhereRaw("DATE(o.created_at) BETWEEN ? AND ?", [from_date, to_date])
                 .first();
             const typeWiseSales = yield this.db
                 .withSchema(this.RESTAURANT_SCHEMA)
-                .select("o.order_type", this.db.raw("SUM(o.net_total) as net_total_amount"))
+                .select("o.order_type", this.db.raw("SUM(o.grand_total) as net_total_amount"))
                 .from("orders as o")
                 .where("o.status", "completed")
                 .andWhere("o.hotel_code", hotel_code)
                 .andWhere("o.restaurant_id", restaurant_id)
-                .andWhereRaw("DATE(o.created_at) BETWEEN ? AND ?", [
-                from_date,
-                to_date,
-            ])
+                .andWhereRaw("DATE(o.created_at) BETWEEN ? AND ?", [from_date, to_date])
                 .groupBy("o.order_type");
             return {
                 salesOverview,
@@ -220,7 +214,7 @@ class RestaurantReportModel extends schema_1.default {
     }
     getProductsReport(query) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { from_date, to_date, hotel_code, restaurant_id, name, category, } = query;
+            const { from_date, to_date, hotel_code, restaurant_id, name, category } = query;
             return yield this.db
                 .withSchema(this.RESTAURANT_SCHEMA)
                 .select("oi.food_id", "f.name as name", "fc.name as category", "oi.rate as price", this.db.raw("COALESCE(SUM(oi.quantity), 0) as total_quantity"), this.db.raw("COALESCE(SUM(oi.quantity * oi.rate), 0) as total_sales"))
@@ -231,10 +225,7 @@ class RestaurantReportModel extends schema_1.default {
                 .where("o.status", "completed")
                 .andWhere("o.hotel_code", hotel_code)
                 .andWhere("o.restaurant_id", restaurant_id)
-                .andWhereRaw("DATE(o.created_at) BETWEEN ? AND ?", [
-                from_date,
-                to_date,
-            ])
+                .andWhereRaw("DATE(o.created_at) BETWEEN ? AND ?", [from_date, to_date])
                 .modify((queryBuilder) => {
                 if (name) {
                     queryBuilder.andWhere("f.name", "ilike", `%${name}%`);
@@ -271,10 +262,7 @@ class RestaurantReportModel extends schema_1.default {
                 .andWhere("o.hotel_code", hotel_code)
                 .andWhere("o.restaurant_id", restaurant_id)
                 .andWhere("o.created_by", user_id)
-                .andWhereRaw("DATE(o.created_at) BETWEEN ? AND ?", [
-                from_date,
-                to_date,
-            ])
+                .andWhereRaw("DATE(o.created_at) BETWEEN ? AND ?", [from_date, to_date])
                 .orderBy("o.created_at", "asc");
         });
     }

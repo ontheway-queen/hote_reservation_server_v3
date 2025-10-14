@@ -124,5 +124,39 @@ class RestaurantModel extends Schema {
       .where("r.id", id)
       .update(payload);
   }
+
+  public async getAllCustomer(queries: {
+    contact_no: string;
+    hotel_code: number;
+  }) {
+    const { contact_no, hotel_code } = queries;
+
+    const data = await this.db("res_customer")
+      .withSchema(this.RESTAURANT_SCHEMA)
+      .select("*")
+      .where(function () {
+        if (contact_no) {
+          this.andWhere({ contact_no });
+        }
+        if (hotel_code) {
+          this.andWhere({ hotel_code });
+        }
+      });
+
+    return { data };
+  }
+
+  public async createCustomer(payload: {
+    name: string;
+    contact_no: string;
+    email?: string;
+    address?: string;
+    hotel_code: number;
+  }) {
+    return await this.db("res_customer")
+      .withSchema(this.RESTAURANT_SCHEMA)
+      .insert(payload, "id");
+  }
 }
+
 export default RestaurantModel;

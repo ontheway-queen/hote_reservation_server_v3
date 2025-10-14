@@ -26,6 +26,14 @@ class RestaurantHotelController extends AbstractController {
       res.status(code).json(data);
     }
   );
+
+  public getAllFloors = this.asyncWrapper.wrap(
+    {},
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.getAllFloors(req);
+      res.status(code).json(data);
+    }
+  );
 }
 
 export default RestaurantHotelController;

@@ -47,14 +47,13 @@ class RestaurantTableService extends abstract_service_1.default {
     getTables(req) {
         return __awaiter(this, void 0, void 0, function* () {
             const { restaurant_id, hotel_code } = req.restaurant_admin;
-            const { limit, skip, name, category, status } = req.query;
+            const { limit, skip, name, status } = req.query;
             const data = yield this.restaurantModel.restaurantTableModel().getTables({
                 hotel_code,
                 restaurant_id,
                 limit: Number(limit),
                 skip: Number(skip),
                 name: name,
-                category: category,
                 status: status,
             });
             return Object.assign({ success: true, code: this.StatusCode.HTTP_SUCCESSFUL }, data);
