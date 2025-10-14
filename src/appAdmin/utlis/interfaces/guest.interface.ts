@@ -32,4 +32,15 @@ export interface IuserPayload {
   user_type: "guest" | "user" | "room-guest" | "hall-guest" | "res-guest";
 }
 
-export default IguestInterface;
+export interface IgetSingleGuest {
+  id: number;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string;
+  address: string;
+  passport_no: string;
+  country_code: number;
+  country_id: number;
+  is_active: boolean;
+}

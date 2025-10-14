@@ -65,6 +65,10 @@ class SupplierController extends abstract_controller_1.default {
             const _h = yield this.service.getAllSupplierPayment(req), { code } = _h, data = __rest(_h, ["code"]);
             res.status(code).json(data);
         }));
+        this.getAllSupplierTransaction = this.asyncWrapper.wrap({}, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _j = yield this.service.getAllSupplierPayment(req), { code } = _j, data = __rest(_j, ["code"]);
+            res.status(code).json(data);
+        }));
     }
 }
 exports.default = SupplierController;

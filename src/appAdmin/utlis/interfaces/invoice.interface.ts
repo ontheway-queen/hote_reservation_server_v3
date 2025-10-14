@@ -16,6 +16,7 @@ export interface IinsertFolioPayload {
     | "room_primary"
     | "company_pay"
     | "guest_pay"
+    | "restaurant"
     | "incidentals";
   status: "open" | "closed";
 }
@@ -29,7 +30,8 @@ export type IfolioEntriesPostingType =
   | "Discount"
   | "VAT"
   | "Deposit"
-  | "SERVICE_CHARGE";
+  | "SERVICE_CHARGE"
+  | "RESTAURANT_CHARGE";
 
 export interface IinsertFolioEntriesPayload {
   folio_id: number;

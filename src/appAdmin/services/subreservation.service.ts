@@ -44,6 +44,16 @@ export class SubReservationService extends AbstractServices {
     hotel_code: number
   ): Promise<number> {
     const guestModel = this.Model.guestModel(this.trx);
+
+    const checkGuest = await guestModel.getSingleGuest({
+      phone: guest.phone,
+      hotel_code,
+    });
+
+    if (checkGuest.length) {
+      return checkGuest[0].id;
+    }
+
     const [insertedGuest] = await guestModel.createGuest({
       hotel_code,
       first_name: guest.first_name,

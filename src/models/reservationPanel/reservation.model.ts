@@ -531,9 +531,10 @@ export class ReservationModel extends Schema {
     booked_from?: string;
     booked_to?: string;
     search?: string;
-    status?: string;
+    status?: string[] | string;
     booking_type?: string;
   }) {
+    console.log({ status });
     const endCheckInDate = checkin_to ? new Date(checkin_to) : null;
 
     const endCheckOutDate = checkout_to ? new Date(checkout_to) : null;
@@ -621,11 +622,16 @@ export class ReservationModel extends Schema {
               .orWhere("g.email", "ilike", `%${search}%`);
           });
         }
-        if (status) {
-          this.andWhere("b.status", status);
-        }
+
         if (booking_type) {
           this.andWhere("b.booking_type", booking_type);
+        }
+      })
+      .andWhere(function () {
+        if (status && Array.isArray(status)) {
+          this.whereIn("b.status", status);
+        } else if (status) {
+          this.where("b.status", status);
         }
       })
       .orderBy("b.id", "desc")
@@ -656,12 +662,15 @@ export class ReservationModel extends Schema {
             .orWhere("g.email", "ilike", `%${search}%`);
         }
 
-        if (status) {
-          this.andWhere("b.status", status);
-        }
-
         if (booking_type) {
           this.andWhere("b.booking_type", booking_type);
+        }
+      })
+      .andWhere(function () {
+        if (status && Array.isArray(status)) {
+          this.whereIn("b.status", status);
+        } else if (status) {
+          this.where("b.status", status);
         }
       });
 

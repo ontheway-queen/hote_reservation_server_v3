@@ -322,6 +322,7 @@ class ReservationModel extends schema_1.default {
     getAllBooking({ hotel_code, checkin_from, checkin_to, checkout_from, checkout_to, booked_from, booked_to, limit, search, skip, booking_type, status, }) {
         var _a, _b;
         return __awaiter(this, void 0, void 0, function* () {
+            console.log({ status });
             const endCheckInDate = checkin_to ? new Date(checkin_to) : null;
             const endCheckOutDate = checkout_to ? new Date(checkout_to) : null;
             const endBookedDate = booked_to ? new Date(booked_to) : null;
@@ -370,11 +371,16 @@ class ReservationModel extends schema_1.default {
                             .orWhere("g.email", "ilike", `%${search}%`);
                     });
                 }
-                if (status) {
-                    this.andWhere("b.status", status);
-                }
                 if (booking_type) {
                     this.andWhere("b.booking_type", booking_type);
+                }
+            })
+                .andWhere(function () {
+                if (status && Array.isArray(status)) {
+                    this.whereIn("b.status", status);
+                }
+                else if (status) {
+                    this.where("b.status", status);
                 }
             })
                 .orderBy("b.id", "desc")
@@ -401,11 +407,16 @@ class ReservationModel extends schema_1.default {
                         .orWhere("g.first_name", "ilike", `%${search}%`)
                         .orWhere("g.email", "ilike", `%${search}%`);
                 }
-                if (status) {
-                    this.andWhere("b.status", status);
-                }
                 if (booking_type) {
                     this.andWhere("b.booking_type", booking_type);
+                }
+            })
+                .andWhere(function () {
+                if (status && Array.isArray(status)) {
+                    this.whereIn("b.status", status);
+                }
+                else if (status) {
+                    this.where("b.status", status);
                 }
             });
             return {

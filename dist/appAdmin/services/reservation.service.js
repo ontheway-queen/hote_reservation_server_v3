@@ -320,6 +320,7 @@ class ReservationService extends abstract_service_1.default {
     getAllBooking(req) {
         return __awaiter(this, void 0, void 0, function* () {
             const { search, booked_from, booked_to, booking_type, checkin_from, checkin_to, checkout_from, checkout_to, limit, skip, status, } = req.query;
+            console.log({ status });
             const { data, total } = yield this.Model.reservationModel().getAllBooking({
                 hotel_code: req.hotel_admin.hotel_code,
                 search: search,

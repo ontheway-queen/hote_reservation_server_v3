@@ -205,7 +205,8 @@ class AccountModel extends schema_1.default {
     }
     updateAccVoucher(payload, { hotel_code, id }) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("acc_voucher")
+            return yield this.db("acc_vouchers")
+                .withSchema(this.ACC_SCHEMA)
                 .update(payload)
                 .andWhere("id", id)
                 .andWhere("hotel_code", hotel_code);
@@ -213,12 +214,32 @@ class AccountModel extends schema_1.default {
     }
     deleteAccVoucherById(id) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db("acc_voucher").del().where("id", id);
+            return yield this.db("acc_vouchers")
+                .withSchema(this.ACC_SCHEMA)
+                .del()
+                .where("id", id);
+        });
+    }
+    deleteAccVoucherByIds(ids) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("acc_vouchers")
+                .withSchema(this.ACC_SCHEMA)
+                .del()
+                .whereIn("id", ids);
+        });
+    }
+    getSingleAccVoucherById(id) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("acc_vouchers")
+                .select("id", "acc_head_id", "voucher_no", "debit", "credit")
+                .withSchema(this.ACC_SCHEMA)
+                .where("id", id)
+                .first();
         });
     }
     deleteAccVoucherByVoucherNo(voucherNo) {
         return __awaiter(this, void 0, void 0, function* () {
-            yield this.db("acc_voucher").where("voucher_no", voucherNo).del();
+            yield this.db("acc_vouchers").where("voucher_no", voucherNo).del();
         });
     }
     // get account group
@@ -237,6 +258,14 @@ class AccountModel extends schema_1.default {
     // Get account head
     getAccountHead({ hotel_code, code, group_code, parent_id, name, order_by, order_to, id, id_greater, }) {
         return __awaiter(this, void 0, void 0, function* () {
+            console.log({
+                hotel_code,
+                code,
+                group_code,
+                parent_id,
+                order_by,
+                order_to,
+            });
             return yield this.db("acc_heads AS ah")
                 .select("ah.id", "ah.code", "ah.group_code", "ah.parent_id", "ah.name", "ag.name AS group_name")
                 .withSchema(this.ACC_SCHEMA)

@@ -8,26 +8,18 @@ class RestaurantTableValidator {
     constructor() {
         this.createTableValidator = joi_1.default.object({
             name: joi_1.default.string().required(),
-            category: joi_1.default.string()
-                .valid("in-dine", "takeout", "delivery")
-                .required(),
+            capacity: joi_1.default.number().required(),
+            floor_id: joi_1.default.number().required(),
         });
         this.getTablesValidator = joi_1.default.object({
             limit: joi_1.default.number().optional(),
             skip: joi_1.default.number().optional(),
             name: joi_1.default.string().optional(),
-            category: joi_1.default.string()
-                .valid("in-dine", "takeout", "delivery")
-                .optional(),
-            status: joi_1.default.string()
-                .valid("available", "booked", "maintenance")
-                .optional(),
+            status: joi_1.default.string().valid("available", "booked", "maintenance").optional(),
         });
         this.updateTableValidator = joi_1.default.object({
             name: joi_1.default.string().optional(),
-            category: joi_1.default.string()
-                .valid("in-dine", "takeout", "delivery")
-                .optional(),
+            category: joi_1.default.string().valid("in-dine", "takeout", "delivery").optional(),
         });
     }
 }

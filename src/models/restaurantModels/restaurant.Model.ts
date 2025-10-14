@@ -2,10 +2,6 @@ import {
 	IRestaurantPayload,
 	IUpdateRestaurantPayload,
 } from "../../appAdmin/utlis/interfaces/restaurant.hotel.interface";
-import {
-	IGetRestaurant,
-	IGetRestaurantWithAdmin,
-} from "../../appRestaurantAdmin/utils/interface/restaurant.interface";
 
 import { TDB } from "../../common/types/commontypes";
 import Schema from "../../utils/miscellaneous/schema";
@@ -32,7 +28,7 @@ class RestaurantModel extends Schema {
 		name?: string;
 		key?: string;
 		hotel_code: number;
-	}): Promise<{ data: IGetRestaurant[]; total: number }> {
+	}) {
 		const { key, limit, skip, hotel_code } = payload;
 
 		const dtbs = this.db("restaurant as r");
@@ -86,7 +82,7 @@ class RestaurantModel extends Schema {
 	public async getRestaurantWithAdmin(where: {
 		restaurant_id: number;
 		hotel_code: number;
-	}): Promise<IGetRestaurantWithAdmin> {
+	}) {
 		const { restaurant_id, hotel_code } = where;
 		return await this.db("restaurant as r")
 			.select(
@@ -128,5 +124,39 @@ class RestaurantModel extends Schema {
 			.where("r.id", id)
 			.update(payload);
 	}
+
+	public async getAllCustomer(queries: {
+		contact_no: string;
+		hotel_code: number;
+	}) {
+		const { contact_no, hotel_code } = queries;
+
+		const data = await this.db("res_customer")
+			.withSchema(this.RESTAURANT_SCHEMA)
+			.select("*")
+			.where(function () {
+				if (contact_no) {
+					this.andWhere({ contact_no });
+				}
+				if (hotel_code) {
+					this.andWhere({ hotel_code });
+				}
+			});
+
+		return { data };
+	}
+
+	public async createCustomer(payload: {
+		name: string;
+		contact_no: string;
+		email?: string;
+		address?: string;
+		hotel_code: number;
+	}) {
+		return await this.db("res_customer")
+			.withSchema(this.RESTAURANT_SCHEMA)
+			.insert(payload, "id");
+	}
 }
+
 export default RestaurantModel;

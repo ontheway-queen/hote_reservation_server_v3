@@ -27,6 +27,7 @@ class RestaurantFoodModel extends Schema {
 		limit?: number;
 		skip?: number;
 		id?: number;
+		food_ids?: number[];
 		name?: string;
 		menu_category_id?: number;
 	}): Promise<{ data: IGetFoods[]; total: number }> {
@@ -48,6 +49,9 @@ class RestaurantFoodModel extends Schema {
 		if (query.menu_category_id) {
 			baseQuery.andWhere("f.menu_category_id", query.menu_category_id);
 		}
+		if (query.food_ids) {
+			baseQuery.whereIn("f.id", query.food_ids);
+		}
 
 		const data = await baseQuery
 			.clone()
@@ -57,14 +61,11 @@ class RestaurantFoodModel extends Schema {
 				"f.restaurant_id",
 				"f.photo",
 				"f.name",
-				"mc.id as menu_category_id",
 				"mc.name as menu_category_name",
 				"ua.id as created_by_id",
-				"u.id as unit_id",
 				"u.name as unit_name",
 				"u.short_code as unit_short_code",
 				"ua.name as created_by_name",
-				"f.measurement_per_unit",
 				"f.status",
 				"f.retail_price",
 				"f.is_deleted"

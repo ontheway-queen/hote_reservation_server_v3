@@ -100,7 +100,10 @@ class ExpenseModel extends schema_1.default {
               'id', ei.id,
               'head_name', ah.name,
               'remarks', ei.remarks,
-              'amount', ei.amount
+              'amount', ei.amount,
+              'ex_voucher_id',ei.ex_voucher_id,
+              'expense_head_id',ei.expense_head_id,
+              'expense_id',ei.expense_id
             )
           ) FILTER (WHERE ei.id IS NOT NULL AND ei.is_deleted = false), '[]'
         ) as expense_items
@@ -167,7 +170,7 @@ class ExpenseModel extends schema_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             const dtbs = this.db("expense as ev").withSchema(this.ACC_SCHEMA);
             const data = yield dtbs
-                .select("ev.id", "ev.hotel_code", "ev.expense_no", "h.name as hotel_name", "h.address as hotel_address", "acc.id as account_id", "acc_head.name as account_name", "acc.acc_type as account_type", "ev.pay_method", this.db.raw(`to_char(ev.expense_date, 'YYYY-MM-DD') as expense_date`), this.db.raw(`to_char(ev.created_at, 'YYYY-MM-DD') as expense_created_at`), "ev.transaction_no", "ev.cheque_no", "ev.cheque_date", "ev.bank_name", "ev.branch_name", "ev.expense_amount", "ev.expense_note", "ev.expense_by as expense_by_id", "emp.name as expense_by_name", "ev.expense_voucher_url_1 as file_1", "ev.expense_voucher_url_2 as file_2", this.db.raw(`
+                .select("ev.id", "ev.hotel_code", "ev.expense_no", "h.name as hotel_name", "h.address as hotel_address", "ev.acc_voucher_id", "acc.id as account_id", "acc_head.name as account_name", "acc.acc_type as account_type", "ev.pay_method", this.db.raw(`to_char(ev.expense_date, 'YYYY-MM-DD') as expense_date`), this.db.raw(`to_char(ev.created_at, 'YYYY-MM-DD') as expense_created_at`), "ev.transaction_no", "ev.cheque_no", "ev.cheque_date", "ev.bank_name", "ev.branch_name", "ev.expense_amount", "ev.expense_note", "ev.expense_by as expense_by_id", "emp.name as expense_by_name", "ev.expense_voucher_url_1 as file_1", "ev.expense_voucher_url_2 as file_2", this.db.raw(`
         COALESCE(
           json_agg(
             json_build_object(
@@ -175,7 +178,8 @@ class ExpenseModel extends schema_1.default {
               'expense_head_id', ei.expense_head_id,
               'head_name', ah.name,
               'remarks', ei.remarks,
-              'amount', ei.amount
+              'amount', ei.amount,
+              'ex_voucher_id',ei.ex_voucher_id
             )
           ) FILTER (WHERE ei.id IS NOT NULL), '[]'
         ) as expense_items

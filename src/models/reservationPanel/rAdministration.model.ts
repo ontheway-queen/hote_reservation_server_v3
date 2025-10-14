@@ -10,6 +10,10 @@ import {
 import { TDB } from "../../common/types/commontypes";
 
 import Schema from "../../utils/miscellaneous/schema";
+import {
+  ICreateAuditTrailPayload,
+  IGetAuditTrailQuery,
+} from "../../common/interfaces/commonInterface";
 
 class RAdministrationModel extends Schema {
   private db: TDB;
@@ -437,6 +441,82 @@ class RAdministrationModel extends Schema {
           this.andWhere({ id });
         }
       });
+  }
+
+  // delete all permission
+  public async deleteRolePermissionByRoleID({
+    hotel_code,
+    role_id,
+  }: {
+    hotel_code: number;
+    role_id: number;
+  }) {
+    return await this.db("role_permissions")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .del()
+      .where({ role_id })
+      .andWhere({ hotel_code });
+  }
+
+  //create audit
+  public async createAudit(payload: ICreateAuditTrailPayload) {
+    return await this.db("audit_trail")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .insert(payload);
+  }
+
+  //get audit
+  public async getAudit(payload: IGetAuditTrailQuery) {
+    const data = await this.db("audit_trail as at")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .select(
+        "at.id",
+        "ua.name as created_by",
+        "at.type",
+        "at.details",
+        "at.created_at"
+      )
+      .leftJoin("user_admin as ua", "ua.id", "at.created_by")
+      .andWhere((qb) => {
+        if (payload.created_by) {
+          qb.andWhere("at.created_by", payload.created_by);
+        }
+        if (payload.type) {
+          qb.andWhere("at.type", payload.type);
+        }
+        if (payload.from_date && payload.to_date) {
+          qb.andWhereBetween("at.created_at", [
+            payload.from_date,
+            payload.to_date,
+          ]);
+        }
+      })
+      .limit(payload.limit || 100)
+      .offset(payload.skip || 0)
+      .orderBy("at.id", "desc");
+
+    const total = await this.db("audit_trail as at")
+      .count("at.id as total")
+      .withSchema(this.RESERVATION_SCHEMA)
+      .andWhere((qb) => {
+        if (payload.created_by) {
+          qb.andWhere("at.created_by", payload.created_by);
+        }
+        if (payload.type) {
+          qb.andWhere("at.type", payload.type);
+        }
+        if (payload.from_date && payload.to_date) {
+          qb.andWhereBetween("at.created_at", [
+            payload.from_date,
+            payload.to_date,
+          ]);
+        }
+      });
+
+    return {
+      data,
+      total: total[0]?.total,
+    };
   }
 }
 export default RAdministrationModel;

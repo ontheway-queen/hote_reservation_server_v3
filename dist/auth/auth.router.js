@@ -16,7 +16,6 @@ class AuthRouter {
         this.callRouter();
     }
     callRouter() {
-        // admin auth for hotel
         this.AuthRouter.use("/reservation", new auth_hotel_admin_router_1.default().router);
         this.AuthRouter.use("/btoc", this.authChecker.whiteLabelTokenVerfiy, new btoc_auth_router_1.default().router);
         this.AuthRouter.use("/m-admin", new mAuth_admin_router_1.default().router);

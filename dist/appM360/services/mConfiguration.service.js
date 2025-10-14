@@ -114,6 +114,7 @@ class MConfigurationService extends abstract_service_1.default {
     updateSingleHotelPermission(req) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
+                var _a;
                 const hotel_code = parseInt(req.params.hotel_code);
                 const { added = [], deleted = [] } = req.body;
                 const model = this.Model.mConfigurationModel(trx);
@@ -139,6 +140,35 @@ class MConfigurationService extends abstract_service_1.default {
                         yield model.deleteHotelRolePermission(hotel_code, hPermissionIdsToDelete);
                     }
                     yield model.deleteHotelPermission(hotel_code, deleted);
+                }
+                // updated permission will be assign for hotel user owner
+                const rAdmModel = this.Model.rAdministrationModel(trx);
+                const checkUser = yield rAdmModel.getSingleAdmin({
+                    owner: "true",
+                    hotel_code,
+                });
+                if (checkUser) {
+                    const role_id = Number(checkUser.role_id);
+                    // Delete existing permissions
+                    yield rAdmModel.deleteRolePermissionByRoleID({
+                        role_id,
+                        hotel_code,
+                    });
+                    // Get all hotel permissions
+                    const hotelPermissions = yield model.getAllPermissionByHotel(hotel_code);
+                    if ((_a = hotelPermissions === null || hotelPermissions === void 0 ? void 0 : hotelPermissions.permissions) === null || _a === void 0 ? void 0 : _a.length) {
+                        const rolePermissionPayload = hotelPermissions.permissions.map((perm) => ({
+                            hotel_code,
+                            h_permission_id: perm.h_permission_id,
+                            read: 1,
+                            write: 1,
+                            update: 1,
+                            delete: 1,
+                            role_id,
+                        }));
+                        // Bulk insert role permissions
+                        yield rAdmModel.insertInRolePermission(rolePermissionPayload);
+                    }
                 }
                 return {
                     success: true,

@@ -85,5 +85,12 @@ class SupplierController extends AbstractController {
       res.status(code).json(data);
     }
   );
+  public getAllSupplierTransaction = this.asyncWrapper.wrap(
+    {},
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.getAllSupplierPayment(req);
+      res.status(code).json(data);
+    }
+  );
 }
 export default SupplierController;

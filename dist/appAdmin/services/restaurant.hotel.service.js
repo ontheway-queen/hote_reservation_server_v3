@@ -75,8 +75,32 @@ class HotelRestaurantService extends abstract_service_1.default {
                     };
                 }
                 const hashPass = yield lib_1.default.hashPass(user.password);
+                // get account heads parentID
+                const hotelModel = this.Model.HotelModel(trx);
+                const heads = yield hotelModel.getHotelAccConfig(hotel_code, [
+                    "FIXED_ASSET_HEAD_ID",
+                ]);
+                console.log({ heads, hotel_code });
+                const asset_head = heads.find((h) => h.config === "FIXED_ASSET_HEAD_ID");
+                if (!asset_head) {
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_NOT_FOUND,
+                        message: "Group head is not found",
+                    };
+                }
+                //   insert account head
+                const accIds = yield lib_1.default.createAccountHeads({
+                    trx,
+                    payload: {
+                        group_code: constants_1.ASSET_GROUP,
+                        hotel_code,
+                        name: [restaurant.name],
+                        parent_id: asset_head.head_id,
+                    },
+                });
                 const [newRestaurant] = yield restaurantModel.createRestaurant(Object.assign(Object.assign({}, restaurant), { hotel_code, created_by: admin_id }));
-                //! Need to check the role and permission before creating the admin user & restaurant.
+                // Need to check the role and permission before creating the admin user & restaurant.
                 yield restaurantAdminModel.createRestaurantAdmin({
                     restaurant_id: newRestaurant.id,
                     hotel_code,

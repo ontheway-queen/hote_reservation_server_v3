@@ -26,6 +26,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const abstract_service_1 = __importDefault(require("../../abstarcts/abstract.service"));
 const customEror_1 = __importDefault(require("../../utils/lib/customEror"));
 const lib_1 = __importDefault(require("../../utils/lib/lib"));
+const helperFunction_1 = require("../../appAdmin/utlis/library/helperFunction");
 class RestaurantOrderService extends abstract_service_1.default {
     constructor() {
         super();
@@ -34,7 +35,7 @@ class RestaurantOrderService extends abstract_service_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
                 const { id, restaurant_id, hotel_code } = req.restaurant_admin;
-                const _a = req.body, { order_items } = _a, rest = __rest(_a, ["order_items"]);
+                const _a = req.body, { order_items, customer_id, customer_name, customer_phone, order_type } = _a, rest = __rest(_a, ["order_items", "customer_id", "customer_name", "customer_phone", "order_type"]);
                 const restaurantTableModel = this.restaurantModel.restaurantTableModel(trx);
                 const restaurantOrderModel = this.restaurantModel.restaurantOrderModel(trx);
                 const restaurantFoodModel = this.restaurantModel.restaurantFoodModel(trx);
@@ -44,33 +45,108 @@ class RestaurantOrderService extends abstract_service_1.default {
                     restaurant_id,
                 });
                 if (data.length > 0 && data[0].status === "booked") {
-                    throw new customEror_1.default("Table is already booked", this.StatusCode.HTTP_CONFLICT);
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_CONFLICT,
+                        message: "Table is already booked",
+                    };
                 }
                 else if (data.length === 0) {
-                    throw new customEror_1.default("Table not found", this.StatusCode.HTTP_NOT_FOUND);
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_NOT_FOUND,
+                        message: "Table not found",
+                    };
                 }
                 const orderNo = yield lib_1.default.generateOrderNo(trx, hotel_code, restaurant_id);
                 let sub_total = 0;
-                let grand_Total = 0;
-                let vat_amount = 0;
-                let net_total = 0;
-                for (const item of order_items) {
-                    const food = yield restaurantFoodModel.getFoods({
-                        id: item.food_id,
-                        hotel_code,
-                        restaurant_id,
-                    });
-                    if (!food.data.length) {
-                        throw new customEror_1.default("Food not found", this.StatusCode.HTTP_NOT_FOUND);
-                    }
-                    sub_total +=
-                        Number(item.quantity) * Number(food.data[0].retail_price);
+                // food validation
+                const foodIds = order_items.map((item) => item.food_id);
+                const uniqueFoodIds = Array.from(new Set(foodIds));
+                if (uniqueFoodIds.length !== order_items.length) {
+                    throw new customEror_1.default("Duplicate food items found in the order.", this.StatusCode.HTTP_BAD_REQUEST);
                 }
-                net_total = lib_1.default.adjustPercentageOrFixedAmount(sub_total, rest.discount, rest.discount_type, true);
-                grand_Total = lib_1.default.adjustPercentageOrFixedAmount(net_total, rest.service_charge, rest.service_charge_type);
-                if ((rest === null || rest === void 0 ? void 0 : rest.vat_rate) > 0) {
-                    vat_amount = (net_total * rest.vat_rate) / 100;
-                    grand_Total = grand_Total + vat_amount;
+                // get food and calculate sub_total
+                const foodItems = yield restaurantFoodModel.getFoods({
+                    hotel_code,
+                    restaurant_id,
+                    food_ids: uniqueFoodIds,
+                });
+                if (foodItems.data.length !== uniqueFoodIds.length) {
+                    throw new customEror_1.default("One or more food items not found.", this.StatusCode.HTTP_NOT_FOUND);
+                }
+                // calculate sub_total and grand total
+                foodItems.data.forEach((food) => {
+                    const item = order_items.find((i) => i.food_id === food.id);
+                    if (item) {
+                        sub_total += Number(item.quantity) * Number(food.retail_price);
+                    }
+                });
+                const discountAmount = lib_1.default.calculatePercentageToAmount(sub_total, rest.discount, rest.discount_type);
+                let gross_amount = sub_total - discountAmount;
+                const serviceChargeAmount = lib_1.default.calculatePercentageToAmount(gross_amount, rest.service_charge, rest.service_charge_type);
+                gross_amount += serviceChargeAmount;
+                const vatAmount = lib_1.default.calculatePercentageToAmount(gross_amount, rest.vat, rest.vat_type);
+                gross_amount += vatAmount;
+                const grand_total = gross_amount;
+                // -------------- Double Entry Accounting -----------------
+                const helper = new helperFunction_1.HelperFunction();
+                const hotelModel = this.Model.HotelModel(trx);
+                const accountModel = this.Model.accountModel(trx);
+                const today = new Date().toISOString();
+                const heads = yield hotelModel.getHotelAccConfig(hotel_code, [
+                    "RECEIVABLE_HEAD_ID",
+                    "RESTAURANT_REVENUE_HEAD_ID",
+                ]);
+                console.log({ heads, hotel_code });
+                const receivable_head = heads.find((h) => h.config === "RECEIVABLE_HEAD_ID");
+                if (!receivable_head) {
+                    throw new Error("RECEIVABLE_HEAD_ID not configured for this hotel");
+                }
+                const sales_head = heads.find((h) => h.config === "RESTAURANT_REVENUE_HEAD_ID");
+                if (!sales_head) {
+                    throw new Error("RESTAURANT_REVENUE_HEAD_ID not configured for this hotel");
+                }
+                const voucher_no1 = yield helper.generateVoucherNo("JV", trx);
+                const voucherRes = yield accountModel.insertAccVoucher([
+                    {
+                        acc_head_id: receivable_head.head_id,
+                        created_by: id,
+                        debit: grand_total,
+                        credit: 0,
+                        description: `Receivable for order ${orderNo}`,
+                        voucher_date: today,
+                        voucher_no: voucher_no1,
+                        hotel_code,
+                    },
+                    {
+                        acc_head_id: sales_head.head_id,
+                        created_by: id,
+                        debit: 0,
+                        credit: grand_total,
+                        description: `Sales for order ${orderNo}`,
+                        voucher_date: today,
+                        voucher_no: voucher_no1,
+                        hotel_code,
+                    },
+                ]);
+                // ------------------ End ---------------------//
+                if ((!customer_id && customer_name) || customer_phone) {
+                    if (customer_name && customer_phone) {
+                        const { data: checkCusomer } = yield this.restaurantModel
+                            .restaurantModel()
+                            .getAllCustomer({
+                            contact_no: customer_phone,
+                            hotel_code,
+                        });
+                        if (checkCusomer.length === 0) {
+                            yield this.restaurantModel.restaurantModel(trx).createCustomer({
+                                name: customer_name,
+                                contact_no: customer_phone,
+                                hotel_code,
+                            });
+                        }
+                    }
                 }
                 const [newOrder] = yield restaurantOrderModel.createOrder({
                     hotel_code,
@@ -78,19 +154,22 @@ class RestaurantOrderService extends abstract_service_1.default {
                     order_no: orderNo,
                     created_by: id,
                     table_id: rest.table_id,
-                    order_type: rest.order_type,
-                    guest: rest.guest,
+                    order_type: order_type,
+                    guest_name: customer_name,
                     sub_total: sub_total,
                     discount: rest.discount,
                     discount_type: rest.discount_type,
-                    net_total: net_total,
                     service_charge: rest.service_charge,
                     service_charge_type: rest.service_charge_type,
-                    vat_rate: rest.vat_rate,
-                    vat_amount: vat_amount,
-                    grand_total: grand_Total,
+                    vat: rest.vat,
+                    vat_type: rest.vat_type,
+                    grand_total: grand_total,
                     staff_id: rest.staff_id,
                     room_no: rest.room_no,
+                    discount_amount: discountAmount,
+                    service_charge_amount: serviceChargeAmount,
+                    vat_amount: vatAmount,
+                    credit_voucher_id: voucherRes[0].id + 1,
                 });
                 yield Promise.all(order_items.map((item) => __awaiter(this, void 0, void 0, function* () {
                     const food = yield restaurantFoodModel.getFoods({
@@ -107,8 +186,8 @@ class RestaurantOrderService extends abstract_service_1.default {
                         name: food.data[0].name,
                         rate: Number(food.data[0].retail_price),
                         quantity: Number(item.quantity),
-                        total: Number(item.quantity) *
-                            Number(food.data[0].retail_price),
+                        total: Number(item.quantity) * Number(food.data[0].retail_price),
+                        debit_voucher_id: voucherRes[0].id,
                     });
                 })));
                 yield restaurantTableModel.updateTable({
@@ -130,9 +209,7 @@ class RestaurantOrderService extends abstract_service_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             const { restaurant_id, hotel_code } = req.restaurant_admin;
             const { limit, skip, table_id, from_date, to_date, order_type, kitchen_status, status, } = req.query;
-            const data = yield this.restaurantModel
-                .restaurantOrderModel()
-                .getOrders({
+            const data = yield this.restaurantModel.restaurantOrderModel().getOrders({
                 limit: Number(limit),
                 skip: Number(skip),
                 hotel_code,
@@ -186,8 +263,8 @@ class RestaurantOrderService extends abstract_service_1.default {
             if (!data) {
                 return {
                     success: false,
-                    code: this.StatusCode.HTTP_NOT_FOUND,
-                    message: "Order not found.",
+                    code: this.StatusCode.HTTP_OK,
+                    data: {},
                 };
             }
             return {
@@ -238,8 +315,8 @@ class RestaurantOrderService extends abstract_service_1.default {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
                 const { id } = req.params;
                 const { restaurant_id, hotel_code } = req.restaurant_admin;
-                const body = req.body;
-                if (body.payable_amount <= 0) {
+                const { payable_amount, acc_id, room_id, pay_with, booking_id } = req.body;
+                if (payable_amount <= 0) {
                     return {
                         success: false,
                         code: this.StatusCode.HTTP_BAD_REQUEST,
@@ -248,6 +325,9 @@ class RestaurantOrderService extends abstract_service_1.default {
                 }
                 const restaurantOrderModel = this.restaurantModel.restaurantOrderModel(trx);
                 const restaurantTableModel = this.restaurantModel.restaurantTableModel(trx);
+                const accModel = this.Model.accountModel(trx);
+                const reservationModel = this.Model.reservationModel(trx);
+                const hotelInvModel = this.Model.hotelInvoiceModel(trx);
                 const isOrderExists = yield restaurantOrderModel.getOrderById({
                     hotel_code,
                     restaurant_id,
@@ -267,22 +347,191 @@ class RestaurantOrderService extends abstract_service_1.default {
                         message: "Order already paid.",
                     };
                 }
-                if (Number(isOrderExists.grand_total) > Number(body.payable_amount)) {
+                if (Number(isOrderExists.grand_total) > Number(payable_amount)) {
                     return {
                         success: false,
                         code: this.StatusCode.HTTP_BAD_REQUEST,
                         message: "Insufficient payment. Please provide the full amount.",
                     };
                 }
-                const changeable_amount = Number(body.payable_amount) - Number(isOrderExists.grand_total);
-                yield restaurantOrderModel.completeOrderPayment({
-                    id: parseInt(id),
-                }, {
-                    payable_amount: body.payable_amount,
-                    changeable_amount,
-                    is_paid: true,
-                    status: "completed",
-                });
+                const { order_no } = isOrderExists;
+                const changeable_amount = Number(payable_amount) - Number(isOrderExists.grand_total);
+                if (pay_with === "by_booking") {
+                    if (!booking_id) {
+                        return {
+                            success: false,
+                            code: this.StatusCode.HTTP_BAD_REQUEST,
+                            message: "Please give booking ID",
+                        };
+                    }
+                    const getSingleBooking = yield reservationModel.getSingleBooking(hotel_code, booking_id);
+                    if (!getSingleBooking) {
+                        return {
+                            success: false,
+                            code: this.StatusCode.HTTP_NOT_FOUND,
+                            message: "Invalid booking",
+                        };
+                    }
+                    const { status: booking_status, guest_id } = getSingleBooking;
+                    if (booking_status !== "checked_in") {
+                        return {
+                            success: false,
+                            code: this.StatusCode.HTTP_NOT_FOUND,
+                            message: "You cannot pay with the booking ID because the guest has not checked in yet.",
+                        };
+                    }
+                    // create new folio
+                    const folioNo = `FR-${order_no}`;
+                    const [folio] = yield hotelInvModel.insertInFolio({
+                        booking_id,
+                        folio_number: folioNo,
+                        guest_id,
+                        hotel_code,
+                        name: `Restaurant-${order_no}`,
+                        status: "open",
+                        type: "restaurant",
+                    });
+                    yield hotelInvModel.insertInFolioEntries([
+                        {
+                            folio_id: folio.id,
+                            posting_type: "RESTAURANT_CHARGE",
+                            debit: payable_amount,
+                            description: "Charges for restaurant orders",
+                        },
+                    ]);
+                    yield restaurantOrderModel.completeOrderPayment({
+                        id: parseInt(id),
+                    }, {
+                        payable_amount,
+                        changeable_amount,
+                        is_paid: true,
+                        ac_tr_ac_id: acc_id,
+                        status: "completed",
+                        include_with_hotel_booking: true,
+                        booking_id: booking_id,
+                        room_id: room_id,
+                        booking_ref: getSingleBooking.booking_reference,
+                    });
+                }
+                else if (pay_with == "by_room") {
+                    if (!booking_id) {
+                        return {
+                            success: false,
+                            code: this.StatusCode.HTTP_BAD_REQUEST,
+                            message: "Please give booking ID",
+                        };
+                    }
+                    const getSingleBooking = yield reservationModel.getSingleBooking(hotel_code, booking_id);
+                    if (!getSingleBooking) {
+                        return {
+                            success: false,
+                            code: this.StatusCode.HTTP_NOT_FOUND,
+                            message: "Invalid booking",
+                        };
+                    }
+                    const { status: booking_status, guest_id, is_individual_booking, } = getSingleBooking;
+                    if (booking_status !== "checked_in") {
+                        return {
+                            success: false,
+                            code: this.StatusCode.HTTP_NOT_FOUND,
+                            message: "You cannot pay with the booking ID because the guest has not checked in yet.",
+                        };
+                    }
+                    if (!room_id) {
+                        return {
+                            success: false,
+                            code: this.StatusCode.HTTP_BAD_REQUEST,
+                            message: "Please give room ID",
+                        };
+                    }
+                    const [singleRoom] = yield this.Model.RoomModel().getSingleRoom(hotel_code, room_id);
+                    if (!singleRoom) {
+                        return {
+                            success: false,
+                            code: this.StatusCode.HTTP_NOT_FOUND,
+                            message: "Room ID is invalid",
+                        };
+                    }
+                    if (!is_individual_booking) {
+                        const roomFolio = yield hotelInvModel.getFolioWithEntriesbySingleBookingAndRoomID({
+                            booking_id: booking_id,
+                            hotel_code,
+                            room_ids: [room_id],
+                        });
+                        if (!roomFolio.length) {
+                            return {
+                                success: false,
+                                code: 404,
+                                message: "Rooms folio not found.",
+                            };
+                        }
+                        yield hotelInvModel.insertInFolioEntries([
+                            {
+                                folio_id: roomFolio[0].id,
+                                posting_type: "RESTAURANT_CHARGE",
+                                debit: payable_amount,
+                                description: "Charges for restaurant orders",
+                            },
+                        ]);
+                    }
+                    else {
+                        const primaryFolio = yield hotelInvModel.getFoliosbySingleBooking({
+                            booking_id,
+                            hotel_code,
+                            type: "Primary",
+                        });
+                        if (!primaryFolio.length) {
+                            return {
+                                success: false,
+                                code: this.StatusCode.HTTP_NOT_FOUND,
+                                message: "Primary folio not found.",
+                            };
+                        }
+                        yield hotelInvModel.insertInFolioEntries([
+                            {
+                                folio_id: primaryFolio[0].id,
+                                posting_type: "RESTAURANT_CHARGE",
+                                debit: payable_amount,
+                                description: "Charges for restaurant orders",
+                            },
+                        ]);
+                    }
+                    yield restaurantOrderModel.completeOrderPayment({
+                        id: parseInt(id),
+                    }, {
+                        payable_amount,
+                        changeable_amount,
+                        is_paid: true,
+                        ac_tr_ac_id: acc_id,
+                        status: "completed",
+                        include_with_hotel_booking: true,
+                        booking_id: booking_id,
+                        room_id: room_id,
+                        booking_ref: getSingleBooking.booking_reference,
+                        room_no: singleRoom.room_name,
+                    });
+                }
+                else {
+                    if (!acc_id) {
+                        return {
+                            success: false,
+                            code: this.StatusCode.HTTP_BAD_REQUEST,
+                            message: "You have not give account",
+                        };
+                    }
+                    //check single account
+                    const [acc] = yield accModel.getSingleAccount({
+                        hotel_code,
+                        id: acc_id,
+                    });
+                    if (!acc) {
+                        return {
+                            success: false,
+                            code: this.StatusCode.HTTP_NOT_FOUND,
+                            message: "Invalid Account",
+                        };
+                    }
+                }
                 yield restaurantTableModel.updateTable({
                     id: isOrderExists.table_id,
                     payload: {
@@ -293,6 +542,7 @@ class RestaurantOrderService extends abstract_service_1.default {
                     success: true,
                     code: this.StatusCode.HTTP_SUCCESSFUL,
                     message: "Order paid successfully.",
+                    // changeable_amount,
                 };
             }));
         });
@@ -353,10 +603,10 @@ class RestaurantOrderService extends abstract_service_1.default {
     updateOrder(req) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
-                var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
+                var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m;
                 const { id, restaurant_id, hotel_code } = req.restaurant_admin;
                 const { id: order_id } = req.params;
-                const _l = req.body, { order_items } = _l, rest = __rest(_l, ["order_items"]);
+                const _o = req.body, { order_items } = _o, rest = __rest(_o, ["order_items"]);
                 const restaurantOrderModel = this.restaurantModel.restaurantOrderModel(trx);
                 const restaurantFoodModel = this.restaurantModel.restaurantFoodModel(trx);
                 const existingOrder = yield restaurantOrderModel.getOrderById({
@@ -365,88 +615,139 @@ class RestaurantOrderService extends abstract_service_1.default {
                     restaurant_id,
                 });
                 if (!existingOrder) {
-                    throw new customEror_1.default("Order not found", this.StatusCode.HTTP_NOT_FOUND);
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_NOT_FOUND,
+                        message: "Order not found",
+                    };
                 }
+                // again caluculate sub_total, grand_total
                 let sub_total = 0;
-                let grand_Total = 0;
-                let vat_amount = 0;
-                let net_total = 0;
-                if (order_items === null || order_items === void 0 ? void 0 : order_items.length) {
-                    for (const item of order_items) {
-                        const food = yield restaurantFoodModel.getFoods({
-                            id: item.food_id,
-                            hotel_code,
-                            restaurant_id,
-                        });
-                        if (!food.data.length) {
-                            throw new customEror_1.default(`Food with ID ${item.food_id} not found`, this.StatusCode.HTTP_NOT_FOUND);
+                let foodItemsCopy = [];
+                if (order_items && order_items.length > 0) {
+                    const foodIds = order_items.map((item) => item.food_id);
+                    const uniqueFoodIds = Array.from(new Set(foodIds));
+                    if (uniqueFoodIds.length !== order_items.length) {
+                        throw new customEror_1.default("Duplicate food items found in the order.", this.StatusCode.HTTP_BAD_REQUEST);
+                    }
+                    // get food and calculate sub_total
+                    const foodItems = yield restaurantFoodModel.getFoods({
+                        hotel_code,
+                        restaurant_id,
+                        food_ids: uniqueFoodIds,
+                    });
+                    if (foodItems.data.length !== uniqueFoodIds.length) {
+                        throw new customEror_1.default("One or more food items not found.", this.StatusCode.HTTP_NOT_FOUND);
+                    }
+                    foodItemsCopy = foodItems.data;
+                    // calculate sub_total and grand total
+                    foodItems.data.forEach((food) => {
+                        const item = order_items.find((i) => i.food_id === food.id);
+                        if (item) {
+                            sub_total += Number(item.quantity) * Number(food.retail_price);
                         }
-                        sub_total +=
-                            Number(item.quantity) *
-                                Number(food.data[0].retail_price);
-                    }
-                    net_total = lib_1.default.adjustPercentageOrFixedAmount(sub_total, rest.discount, rest.discount_type, true);
-                    grand_Total = lib_1.default.adjustPercentageOrFixedAmount(net_total, rest.service_charge, rest.service_charge_type);
-                    if (rest.vat_rate && (rest === null || rest === void 0 ? void 0 : rest.vat_rate) > 0) {
-                        vat_amount = (net_total * rest.vat_rate) / 100;
-                        grand_Total = net_total + vat_amount;
-                    }
+                    });
                 }
-                else {
-                    net_total = Number(existingOrder.net_total);
-                    sub_total = Number(existingOrder.sub_total);
-                    vat_amount = Number(existingOrder.vat_amount);
-                    grand_Total = Number(existingOrder.grand_total);
+                const discountAmount = lib_1.default.calculatePercentageToAmount(sub_total, (_a = rest.discount) !== null && _a !== void 0 ? _a : Number(existingOrder.discount), (_b = rest.discount_type) !== null && _b !== void 0 ? _b : existingOrder.discount_type);
+                console.log({ sub_total, discountAmount });
+                let gross_amount = sub_total - discountAmount;
+                const serviceChargeAmount = lib_1.default.calculatePercentageToAmount(gross_amount, (_c = rest.service_charge) !== null && _c !== void 0 ? _c : Number(existingOrder.service_charge), (_d = rest.service_charge_type) !== null && _d !== void 0 ? _d : existingOrder.service_charge_type);
+                gross_amount += serviceChargeAmount;
+                const vatAmount = lib_1.default.calculatePercentageToAmount(gross_amount, (_e = rest.vat) !== null && _e !== void 0 ? _e : Number(existingOrder.vat), (_f = rest.vat_type) !== null && _f !== void 0 ? _f : existingOrder.vat_type);
+                gross_amount += vatAmount;
+                const grand_total = gross_amount;
+                //_____________________ delete order items _______________________
+                yield restaurantOrderModel.deleteOrderItems({
+                    order_id: Number(order_id),
+                });
+                // ________________________ Accounting ___________________________
+                const helper = new helperFunction_1.HelperFunction();
+                const hotelModel = this.Model.HotelModel(trx);
+                const accountModel = this.Model.accountModel(trx);
+                const today = new Date().toISOString();
+                const heads = yield hotelModel.getHotelAccConfig(hotel_code, [
+                    "RECEIVABLE_HEAD_ID",
+                    "RESTAURANT_REVENUE_HEAD_ID",
+                ]);
+                console.log({ heads, hotel_code });
+                const receivable_head = heads.find((h) => h.config === "RECEIVABLE_HEAD_ID");
+                if (!receivable_head) {
+                    throw new Error("RECEIVABLE_HEAD_ID not configured for this hotel");
                 }
-                const updatedOrder = yield restaurantOrderModel.updateOrder({
+                const sales_head = heads.find((h) => h.config === "RESTAURANT_REVENUE_HEAD_ID");
+                if (!sales_head) {
+                    throw new Error("RESTAURANT_REVENUE_HEAD_ID not configured for this hotel");
+                }
+                const voucher_no1 = yield helper.generateVoucherNo("JV", trx);
+                const voucherRes = yield accountModel.insertAccVoucher([
+                    {
+                        acc_head_id: receivable_head.head_id,
+                        created_by: id,
+                        debit: grand_total,
+                        credit: 0,
+                        description: `Receivable for order ${existingOrder.order_no}`,
+                        voucher_date: today,
+                        voucher_no: voucher_no1,
+                        hotel_code,
+                    },
+                    {
+                        acc_head_id: sales_head.head_id,
+                        created_by: id,
+                        debit: 0,
+                        credit: grand_total,
+                        description: `Sales for order ${existingOrder.order_no}`,
+                        voucher_date: today,
+                        voucher_no: voucher_no1,
+                        hotel_code,
+                    },
+                ]);
+                // ________________________ Accounting END ___________________________
+                yield restaurantOrderModel.updateOrder({
                     id: Number(order_id),
                     payload: {
-                        order_type: (_a = rest.order_type) !== null && _a !== void 0 ? _a : existingOrder.order_type,
-                        guest: (_b = rest.guest) !== null && _b !== void 0 ? _b : existingOrder.guest,
-                        table_id: (_c = rest.table_id) !== null && _c !== void 0 ? _c : existingOrder.table_id,
-                        staff_id: (_d = rest.staff_id) !== null && _d !== void 0 ? _d : existingOrder.staff_id,
-                        room_no: (_e = rest.room_no) !== null && _e !== void 0 ? _e : existingOrder.room_no,
-                        discount: (_f = rest.discount) !== null && _f !== void 0 ? _f : Number(existingOrder.discount),
-                        discount_type: (_g = rest.discount_type) !== null && _g !== void 0 ? _g : existingOrder.discount_type,
-                        service_charge: (_h = rest.service_charge) !== null && _h !== void 0 ? _h : Number(existingOrder.service_charge),
-                        service_charge_type: (_j = rest.service_charge_type) !== null && _j !== void 0 ? _j : existingOrder.service_charge_type,
-                        vat_rate: (_k = rest.vat_rate) !== null && _k !== void 0 ? _k : Number(existingOrder.vat_rate),
-                        vat_amount,
-                        net_total: net_total,
-                        sub_total,
-                        grand_total: grand_Total,
+                        staff_id: rest.staff_id,
+                        order_type: rest.order_type,
+                        guest_name: rest.customer_name,
+                        table_id: rest.table_id,
+                        sub_total: sub_total,
+                        discount: (_g = rest.discount) !== null && _g !== void 0 ? _g : Number(existingOrder.discount),
+                        discount_type: (_h = rest.discount_type) !== null && _h !== void 0 ? _h : existingOrder.discount_type,
+                        service_charge: (_j = rest.service_charge) !== null && _j !== void 0 ? _j : Number(existingOrder.service_charge),
+                        grand_total: grand_total,
+                        service_charge_type: (_k = rest.service_charge_type) !== null && _k !== void 0 ? _k : existingOrder.service_charge_type,
+                        vat: (_l = rest.vat) !== null && _l !== void 0 ? _l : Number(existingOrder.vat),
+                        vat_type: (_m = rest.vat_type) !== null && _m !== void 0 ? _m : existingOrder.vat_type,
+                        room_no: rest.room_no,
+                        kitchen_status: rest.kitchen_status,
                         updated_by: id,
+                        discount_amount: discountAmount,
+                        service_charge_amount: serviceChargeAmount,
+                        vat_amount: vatAmount,
+                        credit_voucher_id: voucherRes[0].id,
                     },
                 });
-                if (order_items === null || order_items === void 0 ? void 0 : order_items.length) {
-                    yield restaurantOrderModel.deleteOrderItems({
-                        order_id: Number(order_id),
-                    });
-                    yield Promise.all(order_items.map((item) => __awaiter(this, void 0, void 0, function* () {
-                        const food = yield restaurantFoodModel.getFoods({
-                            id: item.food_id,
-                            hotel_code,
-                            restaurant_id,
-                        });
-                        if (!food.data.length) {
-                            throw new customEror_1.default(`Food with ID ${item.food_id} not found`, this.StatusCode.HTTP_NOT_FOUND);
-                        }
-                        yield restaurantOrderModel.createOrderItems({
+                // delete existing order items
+                if (order_items && order_items.length > 0) {
+                    // order items payload then insert
+                    const order_items_payload = order_items.map((item) => {
+                        const food = foodItemsCopy.find((f) => f.id === item.food_id);
+                        return {
                             order_id: Number(order_id),
                             food_id: item.food_id,
-                            name: food.data[0].name,
-                            rate: Number(food.data[0].retail_price),
+                            name: food === null || food === void 0 ? void 0 : food.name,
+                            rate: Number(food === null || food === void 0 ? void 0 : food.retail_price) || 0,
                             quantity: Number(item.quantity),
-                            total: Number(item.quantity) *
-                                Number(food.data[0].retail_price),
-                        });
-                    })));
+                            total: Number(item.quantity) * (Number(food === null || food === void 0 ? void 0 : food.retail_price) || 0),
+                            debit_voucher_id: voucherRes[1].id,
+                        };
+                    });
+                    yield restaurantOrderModel.createOrderItems(order_items_payload);
                 }
+                // update accounts voucher
                 return {
                     success: true,
                     code: this.StatusCode.HTTP_SUCCESSFUL,
                     message: "Order updated successfully.",
-                    data: { id: updatedOrder[0].id },
                 };
             }));
         });

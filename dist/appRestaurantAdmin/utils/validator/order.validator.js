@@ -8,24 +8,22 @@ class RestaurantOrderValidator {
     constructor() {
         this.createOrderValidator = joi_1.default.object({
             staff_id: joi_1.default.number().integer().optional(),
+            customer_name: joi_1.default.string().optional(),
+            customer_phone: joi_1.default.string().optional(),
+            customer_id: joi_1.default.number().optional(),
             order_type: joi_1.default.string()
-                .valid("in-dine", "takeout", "delivery")
+                .valid("walk-in", "reservation-guest", "takeout", "delivery")
                 .required(),
-            guest: joi_1.default.string().optional(),
             table_id: joi_1.default.number().integer().required(),
-            sub_total: joi_1.default.number().precision(2).required(),
             discount: joi_1.default.number().precision(2).optional().default(0),
             discount_type: joi_1.default.string()
                 .valid("percentage", "fixed")
                 .optional()
                 .default(null),
-            net_total: joi_1.default.number().precision(2).required(),
             service_charge: joi_1.default.number().precision(2).required(),
-            service_charge_type: joi_1.default.string()
-                .valid("percentage", "fixed")
-                .required(),
-            vat_rate: joi_1.default.number().precision(2).required(),
-            grand_total: joi_1.default.number().precision(2).required(),
+            service_charge_type: joi_1.default.string().valid("percentage", "fixed").required(),
+            vat_type: joi_1.default.string().valid("percentage", "fixed").required(),
+            vat: joi_1.default.number().precision(2).required(),
             room_no: joi_1.default.number().optional().default(null),
             order_items: joi_1.default.array()
                 .items(joi_1.default.object({
@@ -37,32 +35,31 @@ class RestaurantOrderValidator {
         });
         this.completeOrderPaymentValidator = joi_1.default.object({
             payable_amount: joi_1.default.number().precision(2).required(),
+            acc_id: joi_1.default.number().optional(),
+            booking_id: joi_1.default.number().optional(),
+            room_id: joi_1.default.number().optional(),
+            pay_with: joi_1.default.string().valid("by_booking", "by_room", "instant").required(),
         });
         this.updateOrderValidator = joi_1.default.object({
             staff_id: joi_1.default.number().integer().optional(),
             order_type: joi_1.default.string()
-                .valid("in-dine", "takeout", "delivery")
+                .valid("walk-in", "reservation-guest", "takeout", "delivery")
                 .required(),
-            customer: joi_1.default.string()
-                .pattern(/^(?:\+8801|01)[3-9]\d{8}$/)
-                .required()
-                .messages({
-                "string.pattern.base": "Customer must be a valid Bangladeshi phone number",
-            }),
-            total: joi_1.default.number().precision(2).required(),
-            service_charge: joi_1.default.number().precision(2).required(),
-            service_charge_type: joi_1.default.string()
-                .valid("percentage", "fixed")
-                .required(),
-            discount: joi_1.default.number().precision(2).optional().default(null),
+            guest: joi_1.default.string().optional(),
+            customer_name: joi_1.default.string().optional(),
+            customer_phone: joi_1.default.string().optional(),
+            customer_id: joi_1.default.number().optional(),
+            table_id: joi_1.default.number().integer().required(),
+            discount: joi_1.default.number().precision(2).optional().default(0),
             discount_type: joi_1.default.string()
                 .valid("percentage", "fixed")
                 .optional()
                 .default(null),
-            vat_rate: joi_1.default.number().precision(2).required(),
-            sub_total: joi_1.default.number().precision(2).required(),
-            grand_total: joi_1.default.number().precision(2).required(),
-            room_no: joi_1.default.number().optional().default(null),
+            service_charge: joi_1.default.number().precision(2).required(),
+            service_charge_type: joi_1.default.string().valid("percentage", "fixed").required(),
+            vat_type: joi_1.default.string().valid("percentage", "fixed").required(),
+            vat: joi_1.default.number().precision(2).required(),
+            room_no: joi_1.default.number().optional(),
             order_items: joi_1.default.array()
                 .items(joi_1.default.object({
                 food_id: joi_1.default.number().integer().required(),

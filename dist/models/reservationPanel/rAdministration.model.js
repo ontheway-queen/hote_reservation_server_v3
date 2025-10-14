@@ -291,6 +291,72 @@ class RAdministrationModel extends schema_1.default {
             });
         });
     }
+    // delete all permission
+    deleteRolePermissionByRoleID({ hotel_code, role_id, }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("role_permissions")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .del()
+                .where({ role_id })
+                .andWhere({ hotel_code });
+        });
+    }
+    //create audit
+    createAudit(payload) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("audit_trail")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .insert(payload);
+        });
+    }
+    //get audit
+    getAudit(payload) {
+        var _a;
+        return __awaiter(this, void 0, void 0, function* () {
+            const data = yield this.db("audit_trail as at")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .select("at.id", "ua.name as created_by", "at.type", "at.details", "at.created_at")
+                .leftJoin("user_admin as ua", "ua.id", "at.created_by")
+                .andWhere((qb) => {
+                if (payload.created_by) {
+                    qb.andWhere("at.created_by", payload.created_by);
+                }
+                if (payload.type) {
+                    qb.andWhere("at.type", payload.type);
+                }
+                if (payload.from_date && payload.to_date) {
+                    qb.andWhereBetween("at.created_at", [
+                        payload.from_date,
+                        payload.to_date,
+                    ]);
+                }
+            })
+                .limit(payload.limit || 100)
+                .offset(payload.skip || 0)
+                .orderBy("at.id", "desc");
+            const total = yield this.db("audit_trail as at")
+                .count("at.id as total")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .andWhere((qb) => {
+                if (payload.created_by) {
+                    qb.andWhere("at.created_by", payload.created_by);
+                }
+                if (payload.type) {
+                    qb.andWhere("at.type", payload.type);
+                }
+                if (payload.from_date && payload.to_date) {
+                    qb.andWhereBetween("at.created_at", [
+                        payload.from_date,
+                        payload.to_date,
+                    ]);
+                }
+            });
+            return {
+                data,
+                total: (_a = total[0]) === null || _a === void 0 ? void 0 : _a.total,
+            };
+        });
+    }
 }
 exports.default = RAdministrationModel;
 //# sourceMappingURL=rAdministration.model.js.map

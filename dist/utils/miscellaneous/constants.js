@@ -10,7 +10,9 @@ exports.origin = [
     "http://10.10.220.47:3030",
     "http://10.10.220.47:3000",
     "http://10.10.220.147:3000",
+    "http://10.10.220.147:4060",
     "http://localhost:4050",
+    "http://localhost:4060",
     "http://10.10.220.147:4050",
     "https://admin-v3.hotel360.world",
     "https://www.admin-v3.hotel360.world",
@@ -25,8 +27,6 @@ exports.origin = [
     "https://www.admin.thehotel360.com",
     "http://10.10.220.49:3000",
     "http://10.10.220.147:4050",
-    "http://localhost:4060",
-    "http://10.10.220.147:4060",
 ];
 exports.allStrings = [
     1,
@@ -128,6 +128,7 @@ exports.ACC_HEAD_CONFIG = {
     HOTEL_REVENUE_HEAD_ID: "HOTEL_REVENUE_HEAD_ID",
     ACCOUNT_PAYABLE_HEAD_ID: "ACCOUNT_PAYABLE_HEAD_ID",
     FIXED_ASSET_HEAD_ID: "FIXED_ASSET_HEAD_ID",
+    RESTAURANT_REVENUE_HEAD_ID: "RESTAURANT_REVENUE_HEAD_ID",
 };
 exports.CONTENT_TYPE_PHOTO = "PHOTO";
 exports.CONTENT_TYPE_VIDEO = "VIDEO";
