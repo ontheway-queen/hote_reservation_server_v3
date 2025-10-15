@@ -35,12 +35,16 @@ class RestaurantHotelController extends abstract_controller_1.default {
             const _a = yield this.service.geAllBookings(req), { code } = _a, data = __rest(_a, ["code"]);
             res.status(code).json(data);
         }));
+        this.getBookingRoomsByBookingRef = this.asyncWrapper.wrap({}, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _b = yield this.service.getBookingRoomsByBookingRef(req), { code } = _b, data = __rest(_b, ["code"]);
+            res.status(code).json(data);
+        }));
         this.getAllAccount = this.asyncWrapper.wrap({ querySchema: this.validator.getAllAccountQueryValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _b = yield this.service.getAllAccount(req), { code } = _b, data = __rest(_b, ["code"]);
+            const _c = yield this.service.getAllAccount(req), { code } = _c, data = __rest(_c, ["code"]);
             res.status(code).json(data);
         }));
         this.getAllFloors = this.asyncWrapper.wrap({}, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _c = yield this.service.getAllFloors(req), { code } = _c, data = __rest(_c, ["code"]);
+            const _d = yield this.service.getAllFloors(req), { code } = _d, data = __rest(_d, ["code"]);
             res.status(code).json(data);
         }));
     }

@@ -139,7 +139,6 @@ class RestaurantOrderModel extends Schema {
         "o.order_no",
         "o.staff_id",
         "eu.name as staff_name",
-
         "o.status",
         "o.kitchen_status",
         "o.created_at",
@@ -154,6 +153,8 @@ class RestaurantOrderModel extends Schema {
         "o.vat",
         "o.booking_ref",
         "o.include_with_hotel_booking",
+        "o.booking_id",
+        "o.room_id",
         "o.room_no",
         "o.vat_amount",
         "o.grand_total",

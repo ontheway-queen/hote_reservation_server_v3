@@ -19,6 +19,16 @@ class RestaurantHotelController extends AbstractController {
     }
   );
 
+  public getBookingRoomsByBookingRef = this.asyncWrapper.wrap(
+    {},
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.getBookingRoomsByBookingRef(
+        req
+      );
+      res.status(code).json(data);
+    }
+  );
+
   public getAllAccount = this.asyncWrapper.wrap(
     { querySchema: this.validator.getAllAccountQueryValidator },
     async (req: Request, res: Response) => {

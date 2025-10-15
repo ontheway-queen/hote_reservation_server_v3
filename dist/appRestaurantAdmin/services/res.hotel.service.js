@@ -32,6 +32,22 @@ class RestaurantHotelService extends abstract_service_1.default {
             return Object.assign({ success: true, code: this.StatusCode.HTTP_SUCCESSFUL }, data);
         });
     }
+    getBookingRoomsByBookingRef(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { hotel_code } = req.restaurant_admin;
+            const data = yield this.restaurantModel
+                .restaurantHotelModel()
+                .getBookingRoomsByBookingRef({
+                hotel_code,
+                booking_ref: req.params.ref,
+            });
+            return {
+                success: true,
+                code: this.StatusCode.HTTP_OK,
+                data,
+            };
+        });
+    }
     getAllAccount(req) {
         return __awaiter(this, void 0, void 0, function* () {
             const { hotel_code } = req.restaurant_admin;

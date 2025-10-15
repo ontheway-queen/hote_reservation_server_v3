@@ -1,11 +1,12 @@
 export interface IOrderRequest {
   staff_id?: number;
-  order_type: string;
+  order_type: "walk-in" | "reservation";
   room_no?: number;
   table_id: number;
   customer_name: string;
   customer_phone: string;
-  customer_id: number;
+  // customer_id?: number;
+  booking_id?: number;
   discount_type?: "percentage" | "fixed";
   discount: number;
   net_total: number;
@@ -25,6 +26,7 @@ export interface IOrderPayload {
   hotel_code: number;
   restaurant_id: number;
   table_id: number;
+  booking_id?: number;
   staff_id?: number;
   order_no: string;
   created_by: number;
@@ -42,7 +44,8 @@ export interface IOrderPayload {
   discount_amount: number;
   service_charge_amount: number;
   vat_amount: number;
-  credit_voucher_id: number;
+  customer_id?: number;
+  // credit_voucher_id: number;
 }
 
 export interface IOrderItemsPayload {
@@ -52,7 +55,7 @@ export interface IOrderItemsPayload {
   rate: number;
   quantity: number;
   total: number;
-  debit_voucher_id: number;
+  // debit_voucher_id: number;
 }
 
 export interface IGetOrders {
@@ -83,7 +86,9 @@ export interface IGetOrder {
   table_name: string;
   order_no: string;
   staff_id: number;
+  booking_id: number;
   staff_name: string;
+  guest_name: string;
   order_type: string;
   status: string;
   kitchen_status: string;
@@ -99,6 +104,7 @@ export interface IGetOrder {
   debit_voucher_id: number;
   credit_voucher_id: number;
   created_by_name: string;
+  booking_ref: string;
   is_paid: boolean;
   room_no: number | null;
   guest: string | null;
@@ -144,6 +150,7 @@ export interface IUpdateOrderPayload {
   order_type?: string;
   guest_name?: string | null;
   table_id?: number;
+  booking_id?: number;
   staff_id?: number;
   room_no?: any;
   sub_total?: number;
@@ -156,6 +163,7 @@ export interface IUpdateOrderPayload {
   vat?: number;
   grand_total?: number;
   updated_by?: number;
+  booking_ref?: string;
   kitchen_status?: string;
   discount_amount?: number;
   service_charge_amount?: number;

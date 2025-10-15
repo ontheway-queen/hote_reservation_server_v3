@@ -83,7 +83,7 @@ class RestaurantOrderModel extends schema_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("orders as o")
                 .withSchema(this.RESTAURANT_SCHEMA)
-                .select("o.id", "o.hotel_code", "o.restaurant_id", "o.table_id", "rt.name as table_name", "o.guest_name", "o.order_type", "o.order_no", "o.staff_id", "eu.name as staff_name", "o.status", "o.kitchen_status", "o.created_at", "o.discount_type", "o.discount", "o.discount_amount", "o.service_charge_amount", "o.service_charge", "o.service_charge_type", "o.sub_total", "o.vat_type", "o.vat", "o.booking_ref", "o.include_with_hotel_booking", "o.room_no", "o.vat_amount", "o.grand_total", "o.is_paid", "ua.id as created_by_id", "ua.name as created_by_name", "o.credit_voucher_id", this.db.raw(`
+                .select("o.id", "o.hotel_code", "o.restaurant_id", "o.table_id", "rt.name as table_name", "o.guest_name", "o.order_type", "o.order_no", "o.staff_id", "eu.name as staff_name", "o.status", "o.kitchen_status", "o.created_at", "o.discount_type", "o.discount", "o.discount_amount", "o.service_charge_amount", "o.service_charge", "o.service_charge_type", "o.sub_total", "o.vat_type", "o.vat", "o.booking_ref", "o.include_with_hotel_booking", "o.booking_id", "o.room_id", "o.room_no", "o.vat_amount", "o.grand_total", "o.is_paid", "ua.id as created_by_id", "ua.name as created_by_name", "o.credit_voucher_id", this.db.raw(`
 				COALESCE(
 					json_agg(
 						json_build_object(

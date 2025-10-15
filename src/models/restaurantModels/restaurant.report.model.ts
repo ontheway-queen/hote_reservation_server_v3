@@ -64,28 +64,28 @@ class RestaurantReportModel extends Schema {
     from_date: string;
   }): Promise<{ dates: string[]; counts: number[] }> {
     const { hotel_code, restaurant_id, to_date, from_date } = query;
-    console.log({ to_date, from_date });
+
     const result = await this.db
       .withSchema(this.RESTAURANT_SCHEMA)
       .select(
         this.db.raw(`
-      gs.date::date AS "date",
-      COUNT(o.id) AS "count"
-    `)
+        TO_CHAR(gs.date::date, 'YYYY-MM-DD') AS "date",
+        COUNT(o.id) AS "count"
+      `)
       )
       .fromRaw(
         `
-  generate_series(
-    '${from_date}'::date,
-    '${to_date}'::date,
-    interval '1 day'
-  ) AS gs(date)
-  LEFT JOIN hotel_restaurant.orders o
-    ON DATE(o.created_at) = gs.date
-    AND o.hotel_code = ${hotel_code}
-    AND o.restaurant_id = ${restaurant_id}
-    AND o.status = 'completed'
-`
+      generate_series(
+        '${from_date}'::date,
+        '${to_date}'::date,
+        interval '1 day'
+      ) AS gs(date)
+      LEFT JOIN hotel_restaurant.orders o
+        ON DATE(o.created_at) = gs.date
+        AND o.hotel_code = ${hotel_code}
+        AND o.restaurant_id = ${restaurant_id}
+        AND o.status = 'completed'
+    `
       )
       .groupBy("gs.date")
       .orderBy("gs.date");
@@ -152,69 +152,48 @@ class RestaurantReportModel extends Schema {
     };
   }
 
-  public async getSellingItems(query: {
+  public async getFoodSalesSummary(query: {
     hotel_code: number;
     restaurant_id: number;
-  }): Promise<{
-    fastSellingItems: ISellingItems[];
-    slowSellingItems: ISellingItems[];
-  }> {
+  }): Promise<
+    {
+      food_id: number;
+      food_name: string;
+      total_sold_quantity: number;
+    }[]
+  > {
     const { hotel_code, restaurant_id } = query;
+    const db = this.db;
 
-    const fastSellingItems = await this.db
+    const result = await db
       .withSchema(this.RESTAURANT_SCHEMA)
       .select(
-        this.db.raw(`
-        oi.food_id AS item_food_id,
-        oi.name AS product_name,
-        oi.rate AS product_retail_price,
-        mc.name AS food_category_name,
-        SUM(oi.quantity) AS total_quantity,
-        SUM(CASE WHEN DATE(oi.created_at) = CURRENT_DATE THEN oi.quantity ELSE 0 END) AS daily_quantity,
-        SUM(CASE WHEN DATE_TRUNC('week', oi.created_at) = DATE_TRUNC('week', CURRENT_DATE) THEN oi.quantity ELSE 0 END) AS weekly_quantity
-      `)
+        "f.id as food_id",
+        "f.name as food_name",
+        "mc.name as category_name",
+        db.raw(`COALESCE(SUM(oi.quantity), 0) AS total_sold_quantity`)
       )
-      .from("order_items as oi")
-      .join("orders as o", "o.id", "oi.order_id")
-      .join("foods as f", "f.id", "oi.food_id")
-      .join("menu_categories as mc", "mc.id", "f.menu_category_id")
-      .where("o.status", "completed")
-      .andWhere("o.hotel_code", hotel_code)
-      .andWhere("o.restaurant_id", restaurant_id)
-      .andWhere("oi.is_deleted", false)
-      .groupBy("oi.food_id", "oi.name", "oi.rate", "mc.name")
-      .orderBy("total_quantity", "desc")
-      .limit(5);
+      .from("foods as f")
+      .leftJoin("order_items as oi", function () {
+        this.on("oi.food_id", "=", "f.id").andOn(
+          "oi.is_deleted",
+          "=",
+          db.raw("false")
+        );
+      })
+      .leftJoin("orders as o", function () {
+        this.on("o.id", "=", "oi.order_id")
+          .andOn("o.status", "=", db.raw(`'completed'`))
+          .andOn("o.hotel_code", "=", db.raw("?", [hotel_code]))
+          .andOn("o.restaurant_id", "=", db.raw("?", [restaurant_id]));
+      })
+      .leftJoin("menu_categories as mc", "f.menu_category_id", "mc.id")
+      .where("f.hotel_code", hotel_code)
+      .andWhere("f.restaurant_id", restaurant_id)
+      .groupBy("f.id", "f.name", "mc.name")
+      .orderBy("total_sold_quantity", "desc");
 
-    const slowSellingItems = await this.db
-      .withSchema(this.RESTAURANT_SCHEMA)
-      .select(
-        this.db.raw(`
-        oi.food_id AS item_food_id,
-        oi.name AS product_name,
-        oi.rate AS product_retail_price,
-        mc.name AS food_category_name,
-        SUM(oi.quantity) AS total_quantity,
-        SUM(CASE WHEN DATE(oi.created_at) = CURRENT_DATE THEN oi.quantity ELSE 0 END) AS daily_quantity,
-        SUM(CASE WHEN DATE_TRUNC('week', oi.created_at) = DATE_TRUNC('week', CURRENT_DATE) THEN oi.quantity ELSE 0 END) AS weekly_quantity
-      `)
-      )
-      .from("order_items as oi")
-      .join("orders as o", "o.id", "oi.order_id")
-      .join("foods as f", "f.id", "oi.food_id")
-      .join("menu_categories as mc", "mc.id", "f.menu_category_id")
-      .where("o.status", "completed")
-      .andWhere("o.hotel_code", hotel_code)
-      .andWhere("o.restaurant_id", restaurant_id)
-      .andWhere("oi.is_deleted", false)
-      .groupBy("oi.food_id", "oi.name", "oi.rate", "mc.name")
-      .orderBy("total_quantity", "asc")
-      .limit(5);
-
-    return {
-      fastSellingItems,
-      slowSellingItems,
-    };
+    return result;
   }
 
   public async getSellsReport(query: {

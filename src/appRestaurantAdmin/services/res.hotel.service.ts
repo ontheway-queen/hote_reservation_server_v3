@@ -27,6 +27,23 @@ class RestaurantHotelService extends AbstractServices {
     };
   }
 
+  public async getBookingRoomsByBookingRef(req: Request) {
+    const { hotel_code } = req.restaurant_admin;
+
+    const data = await this.restaurantModel
+      .restaurantHotelModel()
+      .getBookingRoomsByBookingRef({
+        hotel_code,
+        booking_ref: req.params.ref,
+      });
+
+    return {
+      success: true,
+      code: this.StatusCode.HTTP_OK,
+      data,
+    };
+  }
+
   public async getAllAccount(req: Request) {
     const { hotel_code } = req.restaurant_admin;
 

@@ -11,6 +11,9 @@ class HotelRouter extends AbstractRouter {
 
   private callV1Router() {
     this.router.route("/bookings").get(this.controller.geAllBookings);
+    this.router
+      .route("/booking-rooms/by-booking-ref/:ref")
+      .get(this.controller.getBookingRoomsByBookingRef);
 
     this.router.route("/account").get(this.controller.getAllAccount);
 

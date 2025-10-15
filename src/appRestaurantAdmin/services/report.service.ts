@@ -42,31 +42,11 @@ class RestaurantReportService extends AbstractServices {
     };
   }
 
-  public async getHourlyOrders(req: Request) {
-    const { hotel_code, restaurant_id } = req.restaurant_admin;
-    const model = this.restaurantModel.restaurantReportModel();
-
-    const { from_date, to_date } = req.query;
-
-    const data = await model.getHourlyOrders({
-      hotel_code,
-      restaurant_id,
-      to_date: to_date as string,
-      from_date: from_date as string,
-    });
-
-    return {
-      success: true,
-      code: this.StatusCode.HTTP_SUCCESSFUL,
-      ...data,
-    };
-  }
-
   public async getSellingItems(req: Request) {
     const { hotel_code, restaurant_id } = req.restaurant_admin;
     const model = this.restaurantModel.restaurantReportModel();
 
-    const data = await model.getSellingItems({
+    const data = await model.getFoodSalesSummary({
       hotel_code,
       restaurant_id,
     });
@@ -74,7 +54,7 @@ class RestaurantReportService extends AbstractServices {
     return {
       success: true,
       code: this.StatusCode.HTTP_SUCCESSFUL,
-      ...data,
+      data,
     };
   }
 

@@ -27,14 +27,6 @@ class RestaurantReportController extends AbstractController {
     }
   );
 
-  public getHourlyOrders = this.asyncWrapper.wrap(
-    { querySchema: this.validator.getDailyReportValidator },
-    async (req: Request, res: Response) => {
-      const { code, ...data } = await this.service.getHourlyOrders(req);
-      res.status(code).json(data);
-    }
-  );
-
   public getSellingItems = this.asyncWrapper.wrap(
     null,
     async (req: Request, res: Response) => {

@@ -16,12 +16,7 @@ class RestaurantReportRouter extends abstract_router_1.default {
         this.router
             .route("/daily-order-counts")
             .get(this.controller.getDailyOrderCounts);
-        this.router
-            .route("/hourly-order-counts")
-            .get(this.controller.getHourlyOrders);
-        this.router
-            .route("/get-selling-items")
-            .get(this.controller.getSellingItems);
+        this.router.route("/sales-summary").get(this.controller.getSellingItems);
         this.router.route("/sells-report").get(this.controller.getSellsReport);
         this.router
             .route("/products-report")

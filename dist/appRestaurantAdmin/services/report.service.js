@@ -46,29 +46,19 @@ class RestaurantReportService extends abstract_service_1.default {
             return Object.assign({ success: true, code: this.StatusCode.HTTP_SUCCESSFUL }, data);
         });
     }
-    getHourlyOrders(req) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const { hotel_code, restaurant_id } = req.restaurant_admin;
-            const model = this.restaurantModel.restaurantReportModel();
-            const { from_date, to_date } = req.query;
-            const data = yield model.getHourlyOrders({
-                hotel_code,
-                restaurant_id,
-                to_date: to_date,
-                from_date: from_date,
-            });
-            return Object.assign({ success: true, code: this.StatusCode.HTTP_SUCCESSFUL }, data);
-        });
-    }
     getSellingItems(req) {
         return __awaiter(this, void 0, void 0, function* () {
             const { hotel_code, restaurant_id } = req.restaurant_admin;
             const model = this.restaurantModel.restaurantReportModel();
-            const data = yield model.getSellingItems({
+            const data = yield model.getFoodSalesSummary({
                 hotel_code,
                 restaurant_id,
             });
-            return Object.assign({ success: true, code: this.StatusCode.HTTP_SUCCESSFUL }, data);
+            return {
+                success: true,
+                code: this.StatusCode.HTTP_SUCCESSFUL,
+                data,
+            };
         });
     }
     getSellsReport(req) {

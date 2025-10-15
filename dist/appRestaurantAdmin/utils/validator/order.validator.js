@@ -9,11 +9,11 @@ class RestaurantOrderValidator {
         this.createOrderValidator = joi_1.default.object({
             staff_id: joi_1.default.number().integer().optional(),
             customer_name: joi_1.default.string().optional(),
-            customer_phone: joi_1.default.string().optional(),
-            customer_id: joi_1.default.number().optional(),
+            customer_phone: joi_1.default.string().allow("").optional(),
             order_type: joi_1.default.string()
-                .valid("walk-in", "reservation-guest", "takeout", "delivery")
+                .valid("walk-in", "reservation", "takeout", "delivery")
                 .required(),
+            booking_id: joi_1.default.number().optional(),
             table_id: joi_1.default.number().integer().required(),
             discount: joi_1.default.number().precision(2).optional().default(0),
             discount_type: joi_1.default.string()
@@ -38,17 +38,17 @@ class RestaurantOrderValidator {
             acc_id: joi_1.default.number().optional(),
             booking_id: joi_1.default.number().optional(),
             room_id: joi_1.default.number().optional(),
-            pay_with: joi_1.default.string().valid("by_booking", "by_room", "instant").required(),
+            pay_with: joi_1.default.string().valid("reservation", "instant").required(),
         });
         this.updateOrderValidator = joi_1.default.object({
             staff_id: joi_1.default.number().integer().optional(),
             order_type: joi_1.default.string()
-                .valid("walk-in", "reservation-guest", "takeout", "delivery")
+                .valid("walk-in", "reservation", "takeout", "delivery")
                 .required(),
             guest: joi_1.default.string().optional(),
+            booking_id: joi_1.default.number().optional(),
             customer_name: joi_1.default.string().optional(),
             customer_phone: joi_1.default.string().optional(),
-            customer_id: joi_1.default.number().optional(),
             table_id: joi_1.default.number().integer().required(),
             discount: joi_1.default.number().precision(2).optional().default(0),
             discount_type: joi_1.default.string()
