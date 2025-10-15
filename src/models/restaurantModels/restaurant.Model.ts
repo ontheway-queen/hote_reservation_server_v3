@@ -1,4 +1,6 @@
 import {
+	IGetRestaurantResponse,
+	IGetSingleRestaurant,
 	IRestaurantPayload,
 	IUpdateRestaurantPayload,
 } from "../../appAdmin/utlis/interfaces/restaurant.hotel.interface";
@@ -28,7 +30,10 @@ class RestaurantModel extends Schema {
 		name?: string;
 		key?: string;
 		hotel_code: number;
-	}) {
+	}): Promise<{
+		data: IGetRestaurantResponse[];
+		total: number;
+	}> {
 		const { key, limit, skip, hotel_code } = payload;
 
 		const dtbs = this.db("restaurant as r");
@@ -82,7 +87,7 @@ class RestaurantModel extends Schema {
 	public async getRestaurantWithAdmin(where: {
 		restaurant_id: number;
 		hotel_code: number;
-	}) {
+	}): Promise<IGetSingleRestaurant> {
 		const { restaurant_id, hotel_code } = where;
 		return await this.db("restaurant as r")
 			.select(

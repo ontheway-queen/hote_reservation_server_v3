@@ -1,6 +1,9 @@
+import { IStaff } from "../../../appRestaurantAdmin/utils/interface/staff.interface";
+
 export interface ICreateRestaurantRequest {
 	user: IRestaurantUserAdminRequest;
 	restaurant: IRestaurantRequest;
+	staffs: number[];
 }
 
 export interface IRestaurantRequest {
@@ -58,4 +61,35 @@ export interface IUpdateRestaurantPayload extends Partial<IRestaurantPayload> {
 export interface IUpdateRestaurantUserAdminPayload
 	extends Partial<IRestaurantUserAdminPayload> {
 	status?: "active" | "blocked";
+}
+
+export interface IGetRestaurantResponse {
+	id: number;
+	name: string;
+	email: string;
+	status: string;
+	phone: string;
+	photo: string;
+	is_deleted: boolean;
+}
+
+export interface IGetSingleRestaurant {
+	id: number;
+	photo: string;
+	name: string;
+	email: string;
+	phone: string;
+	address: string;
+	city: string;
+	country: string;
+	bin_no: string;
+	status: string;
+	is_deleted: boolean;
+	admin_id: number;
+	admin_name: string;
+	admin_photo: string;
+	admin_phone: string;
+	admin_email: string;
+	admin_status: string;
+	staffs: IStaff[];
 }

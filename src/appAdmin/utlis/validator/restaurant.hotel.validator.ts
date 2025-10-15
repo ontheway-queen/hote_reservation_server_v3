@@ -36,6 +36,23 @@ class HotelRestaurantValidator {
 				});
 			}
 		}),
+
+		staffs: Joi.string().custom((value, helpers) => {
+			try {
+				const parsed = JSON.parse(value);
+				const restaurentType = typeof parsed;
+				if (!Array.isArray(parsed)) {
+					return helpers.message({
+						custom: "Invalid staffs. Expected an array of numbers",
+					});
+				}
+				return parsed;
+			} catch (err) {
+				return helpers.message({
+					custom: "Invalid staffs.",
+				});
+			}
+		}),
 	});
 
 	public updateHotelRestaurantValidator = Joi.object({
