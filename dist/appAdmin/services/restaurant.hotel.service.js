@@ -14,6 +14,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const abstract_service_1 = __importDefault(require("../../abstarcts/abstract.service"));
 const restaurantCredential_template_1 = require("../../templates/restaurantCredential.template");
+const customEror_1 = __importDefault(require("../../utils/lib/customEror"));
 const lib_1 = __importDefault(require("../../utils/lib/lib"));
 const constants_1 = require("../../utils/miscellaneous/constants");
 class HotelRestaurantService extends abstract_service_1.default {
@@ -24,7 +25,8 @@ class HotelRestaurantService extends abstract_service_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
                 const { hotel_code, id: admin_id } = req.hotel_admin;
-                const { user, restaurant } = req.body;
+                const { user, restaurant, staffs } = req.body;
+                console.log({ staffs });
                 const files = req.files;
                 for (const { fieldname, filename } of files) {
                     switch (fieldname) {
@@ -40,6 +42,8 @@ class HotelRestaurantService extends abstract_service_1.default {
                 }
                 const restaurantModel = this.restaurantModel.restaurantModel(trx);
                 const restaurantAdminModel = this.restaurantModel.restaurantAdminModel(trx);
+                const restaurantStaffModel = this.restaurantModel.restaurantStaffModel(trx);
+                const employeeModel = this.Model.employeeModel(trx);
                 const checkRestaurant = yield restaurantModel.getAllRestaurant({
                     hotel_code,
                 });
@@ -113,6 +117,19 @@ class HotelRestaurantService extends abstract_service_1.default {
                     created_by: admin_id,
                     owner: true,
                 });
+                if (staffs) {
+                    for (const staff of staffs) {
+                        const checkEmployee = yield employeeModel.getSingleEmployee(staff, hotel_code);
+                        if (!checkEmployee) {
+                            throw new customEror_1.default(`The requested employee with ID: ${staff} does not exist`, this.StatusCode.HTTP_NOT_FOUND);
+                        }
+                        yield restaurantStaffModel.insertStaffData({
+                            employee_id: staff,
+                            hotel_code,
+                            restaurant_id: newRestaurant.id,
+                        });
+                    }
+                }
                 yield lib_1.default.sendEmail(user.email, constants_1.OTP_FOR_CREDENTIALS, (0, restaurantCredential_template_1.newResutaurantUserAccount)(user.email, user.password, user.name));
                 return {
                     success: true,
@@ -148,13 +165,16 @@ class HotelRestaurantService extends abstract_service_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             const { hotel_code } = req.hotel_admin;
             const { id } = req.params;
-            const data = yield this.restaurantModel
+            const restaurant = yield this.restaurantModel
                 .restaurantModel()
                 .getRestaurantWithAdmin({
                 restaurant_id: parseInt(id),
                 hotel_code,
             });
-            if (!data) {
+            const { data } = yield this.restaurantModel
+                .restaurantStaffModel()
+                .getAllStaffs({ restaurant_id: parseInt(id), hotel_code });
+            if (!restaurant) {
                 return {
                     success: false,
                     code: this.StatusCode.HTTP_NOT_FOUND,
@@ -164,7 +184,7 @@ class HotelRestaurantService extends abstract_service_1.default {
             return {
                 success: true,
                 code: this.StatusCode.HTTP_OK,
-                data,
+                data: Object.assign(Object.assign({}, restaurant), { staffs: data }),
             };
         });
     }
@@ -237,6 +257,64 @@ class HotelRestaurantService extends abstract_service_1.default {
                     success: true,
                     code: this.StatusCode.HTTP_OK,
                     message: "Restaurant updated successfully",
+                };
+            }));
+        });
+    }
+    addStaffs(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
+                const { hotel_code } = req.hotel_admin;
+                const body = req.body;
+                const employeeModel = this.Model.employeeModel(trx);
+                const restaurantStaffModel = this.restaurantModel.restaurantStaffModel(trx);
+                for (const staff of body) {
+                    const checkEmployee = yield employeeModel.getSingleEmployee(staff.employee_id, hotel_code);
+                    if (!checkEmployee) {
+                        throw new customEror_1.default(`The requested employee does not exist`, this.StatusCode.HTTP_NOT_FOUND);
+                    }
+                    const checkStaff = yield restaurantStaffModel.getSingleStaff({
+                        employee_id: staff.employee_id,
+                        restaurant_id: staff.restaurant_id,
+                        hotel_code,
+                    });
+                    if (checkStaff) {
+                        throw new customEror_1.default(`The requested employee is already added to the restaurant`, this.StatusCode.HTTP_CONFLICT);
+                    }
+                    const newdata = yield restaurantStaffModel.insertStaffData(Object.assign(Object.assign({}, staff), { hotel_code }));
+                    console.log({ newdata });
+                }
+                return {
+                    success: true,
+                    code: this.StatusCode.HTTP_OK,
+                    message: "Staff added successfully",
+                };
+            }));
+        });
+    }
+    removeStaff(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
+                const { hotel_code } = req.hotel_admin;
+                const body = req.body;
+                const restaurantStaffModel = this.restaurantModel.restaurantStaffModel(trx);
+                const checkStaff = yield restaurantStaffModel.getSingleStaff({
+                    id: body.id,
+                    restaurant_id: body.restaurant_id,
+                    hotel_code,
+                });
+                if (!checkStaff) {
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_NOT_FOUND,
+                        message: "Staff not found in the restaurant",
+                    };
+                }
+                yield restaurantStaffModel.removeStaff(Object.assign(Object.assign({}, body), { hotel_code }));
+                return {
+                    success: true,
+                    code: this.StatusCode.HTTP_OK,
+                    message: "Staff removed successfully",
                 };
             }));
         });

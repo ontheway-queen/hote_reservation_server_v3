@@ -2,6 +2,7 @@ import {
 	IRestaurantUserAdminPayload,
 	IUpdateRestaurantUserAdminPayload,
 } from "../../appAdmin/utlis/interfaces/restaurant.hotel.interface";
+import { IRestaurantAdminProfile } from "../../appRestaurantAdmin/utils/interface/restaurant.interface";
 import { TDB } from "../../common/types/commontypes";
 import Schema from "../../utils/miscellaneous/schema";
 
@@ -33,15 +34,6 @@ class HotelRestaurantAdminModel extends Schema {
 			.orderBy("id", "desc");
 
 		return data.length > 0 ? data[0] : null;
-	}
-
-	public async getAllRestaurantAdmin(payload: { hotel_code: number }) {
-		const { hotel_code } = payload;
-		const dtbs = this.db("user_admin as ua");
-		return await dtbs
-			.withSchema(this.RESTAURANT_SCHEMA)
-			.where({ "ua.hotel_code": hotel_code, "ua.is_deleted": false })
-			.orderBy("id", "desc");
 	}
 
 	public async getRestaurantAdmin(payload: { id?: number; email?: string }) {
@@ -86,7 +78,7 @@ class HotelRestaurantAdminModel extends Schema {
 		id: number;
 		hotel_code: number;
 		restaurant_id: number;
-	}) {
+	}): Promise<IRestaurantAdminProfile> {
 		const { id, hotel_code } = payload;
 		const dtbs = this.db("user_admin as ua");
 		return await dtbs
@@ -98,6 +90,7 @@ class HotelRestaurantAdminModel extends Schema {
 				"ua.phone",
 				"ua.photo",
 				"ua.status",
+				"ua.role_id",
 				"r.id as restaurant_id",
 				"r.name as restaurant_name",
 				"r.photo as restaurant_photo",

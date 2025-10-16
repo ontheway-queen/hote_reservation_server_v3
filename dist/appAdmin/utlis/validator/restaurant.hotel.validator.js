@@ -16,6 +16,7 @@ class HotelRestaurantValidator {
                             custom: "Invalid user, should be a JSON object",
                         });
                     }
+                    console.log({ user: parsed });
                     return parsed;
                 }
                 catch (err) {
@@ -33,11 +34,29 @@ class HotelRestaurantValidator {
                             custom: "Invalid restaurent, should be a JSON object",
                         });
                     }
+                    console.log({ restaurant: parsed });
                     return parsed;
                 }
                 catch (err) {
                     return helpers.message({
                         custom: "Invalid restaurent, should be a valid JSON Object",
+                    });
+                }
+            }),
+            staffs: joi_1.default.string().custom((value, helpers) => {
+                try {
+                    const parsed = JSON.parse(value);
+                    const restaurentType = typeof parsed;
+                    if (!Array.isArray(parsed)) {
+                        return helpers.message({
+                            custom: "Invalid staffs. Expected an array of numbers",
+                        });
+                    }
+                    return parsed;
+                }
+                catch (err) {
+                    return helpers.message({
+                        custom: "Invalid staffs.",
                     });
                 }
             }),

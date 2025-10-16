@@ -54,6 +54,13 @@ class Wrapper {
                         message: err.detail,
                     });
                 }
+                else if ((err === null || err === void 0 ? void 0 : err.code) === "P0001") {
+                    const message = err.message.split("-")[1];
+                    res.status(statusCode_1.default.HTTP_CONFLICT).json({
+                        success: false,
+                        message,
+                    });
+                }
                 else {
                     next(new customEror_1.default(err.message, err.status));
                 }

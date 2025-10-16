@@ -10,9 +10,10 @@ const food_router_1 = __importDefault(require("./routers/food.router"));
 const menuCategory_router_1 = __importDefault(require("./routers/menuCategory.router"));
 const order_router_1 = __importDefault(require("./routers/order.router"));
 const report_router_1 = __importDefault(require("./routers/report.router"));
-const restaurantTable_router_1 = __importDefault(require("./routers/restaurantTable.router"));
-const unit_router_1 = __importDefault(require("./routers/unit.router"));
 const res_hotel_router_1 = __importDefault(require("./routers/res.hotel.router"));
+const restaurantTable_router_1 = __importDefault(require("./routers/restaurantTable.router"));
+const staff_routers_1 = __importDefault(require("./routers/staff.routers"));
+const unit_router_1 = __importDefault(require("./routers/unit.router"));
 class RestaurantRootRouter {
     constructor() {
         this.router = (0, express_1.Router)();
@@ -27,6 +28,7 @@ class RestaurantRootRouter {
         this.router.use("/food", this.authChecker.hotelRestaurantAuthChecker, new food_router_1.default().router);
         this.router.use("/order", this.authChecker.hotelRestaurantAuthChecker, new order_router_1.default().router);
         this.router.use("/report", this.authChecker.hotelRestaurantAuthChecker, new report_router_1.default().router);
+        this.router.use("/staff", this.authChecker.hotelRestaurantAuthChecker, new staff_routers_1.default().router);
     }
 }
 exports.RestaurantRootRouter = RestaurantRootRouter;

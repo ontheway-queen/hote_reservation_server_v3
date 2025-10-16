@@ -37,16 +37,6 @@ class HotelRestaurantAdminModel extends schema_1.default {
             return data.length > 0 ? data[0] : null;
         });
     }
-    getAllRestaurantAdmin(payload) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const { hotel_code } = payload;
-            const dtbs = this.db("user_admin as ua");
-            return yield dtbs
-                .withSchema(this.RESTAURANT_SCHEMA)
-                .where({ "ua.hotel_code": hotel_code, "ua.is_deleted": false })
-                .orderBy("id", "desc");
-        });
-    }
     getRestaurantAdmin(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             const { id, email } = payload;
@@ -85,7 +75,7 @@ class HotelRestaurantAdminModel extends schema_1.default {
             const dtbs = this.db("user_admin as ua");
             return yield dtbs
                 .withSchema(this.RESTAURANT_SCHEMA)
-                .select("ua.id", "ua.name", "ua.email", "ua.phone", "ua.photo", "ua.status", "r.id as restaurant_id", "r.name as restaurant_name", "r.photo as restaurant_photo", "r.email as restaurant_email", "r.phone as restaurant_phone", "r.address as restaurant_address", "r.city as restaurant_city", "r.country as restaurant_country", "r.bin_no as restaurant_bin_no", "r.status as restaurant_status")
+                .select("ua.id", "ua.name", "ua.email", "ua.phone", "ua.photo", "ua.status", "ua.role_id", "r.id as restaurant_id", "r.name as restaurant_name", "r.photo as restaurant_photo", "r.email as restaurant_email", "r.phone as restaurant_phone", "r.address as restaurant_address", "r.city as restaurant_city", "r.country as restaurant_country", "r.bin_no as restaurant_bin_no", "r.status as restaurant_status")
                 .leftJoin("restaurant as r", "r.id", "ua.restaurant_id")
                 .where({ "ua.id": id, "ua.hotel_code": hotel_code })
                 .first();
