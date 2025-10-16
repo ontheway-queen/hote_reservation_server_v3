@@ -27,7 +27,7 @@ class RestaurantReportService extends abstract_service_1.default {
             });
             return {
                 success: true,
-                code: this.StatusCode.HTTP_SUCCESSFUL,
+                code: this.StatusCode.HTTP_OK,
                 data,
             };
         });
@@ -43,77 +43,90 @@ class RestaurantReportService extends abstract_service_1.default {
                 to_date: to_date,
                 from_date: from_date,
             });
-            return Object.assign({ success: true, code: this.StatusCode.HTTP_SUCCESSFUL }, data);
-        });
-    }
-    getSellingItems(req) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const { hotel_code, restaurant_id } = req.restaurant_admin;
-            const model = this.restaurantModel.restaurantReportModel();
-            const data = yield model.getFoodSalesSummary({
-                hotel_code,
-                restaurant_id,
-            });
-            return {
-                success: true,
-                code: this.StatusCode.HTTP_SUCCESSFUL,
-                data,
-            };
-        });
-    }
-    getSellsReport(req) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const { hotel_code, restaurant_id } = req.restaurant_admin;
-            const model = this.restaurantModel.restaurantReportModel();
-            const { from_date, to_date } = req.query;
-            const data = yield model.getSellsReport({
-                from_date: from_date,
-                to_date: to_date,
-                hotel_code,
-                restaurant_id,
-            });
-            return {
-                success: true,
-                code: this.StatusCode.HTTP_SUCCESSFUL,
-                data,
-            };
+            return Object.assign({ success: true, code: this.StatusCode.HTTP_OK }, data);
         });
     }
     getProductsReport(req) {
         return __awaiter(this, void 0, void 0, function* () {
             const { hotel_code, restaurant_id } = req.restaurant_admin;
-            const model = this.restaurantModel.restaurantReportModel();
-            const { from_date, to_date, name, category } = req.query;
-            const data = yield model.getProductsReport({
-                from_date: from_date,
-                to_date: to_date,
-                name: name,
-                category: category,
+            const data = yield this.restaurantModel
+                .restaurantReportModel()
+                .getProductsReport({
                 hotel_code,
                 restaurant_id,
+                from_date: req.query.from_date,
+                to_date: req.query.to_date,
             });
             return {
                 success: true,
-                code: this.StatusCode.HTTP_SUCCESSFUL,
+                code: this.StatusCode.HTTP_OK,
                 data,
             };
         });
     }
-    getUserSellsReport(req) {
+    getSalesChart(req) {
         return __awaiter(this, void 0, void 0, function* () {
             const { hotel_code, restaurant_id } = req.restaurant_admin;
-            const model = this.restaurantModel.restaurantReportModel();
-            const { from_date, to_date, user_id } = req.query;
-            const data = yield model.getUserSellsReport({
+            const { from_date, to_date } = req.query;
+            const data = yield this.restaurantModel
+                .restaurantReportModel()
+                .getSalesChart({
                 from_date: from_date,
                 to_date: to_date,
-                user_id: Number(user_id),
                 hotel_code,
                 restaurant_id,
             });
             return {
                 success: true,
-                code: this.StatusCode.HTTP_SUCCESSFUL,
+                code: this.StatusCode.HTTP_OK,
+                data,
+            };
+        });
+    }
+    getSalesReport(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { hotel_code, restaurant_id } = req.restaurant_admin;
+            const { from_date, to_date, order_type, limit, skip } = req.query;
+            const { data, total, totals } = yield this.restaurantModel
+                .restaurantReportModel()
+                .getSalesReport({
+                from_date: from_date,
+                to_date: to_date,
+                hotel_code,
+                restaurant_id,
+                order_type: order_type,
+                limit: limit,
+                skip: skip,
+            });
+            return {
+                success: true,
+                code: this.StatusCode.HTTP_OK,
+                total,
+                totals,
+                data,
+            };
+        });
+    }
+    getUserSalesReport(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { hotel_code, restaurant_id } = req.restaurant_admin;
+            const { from_date, to_date, user_id, limit, skip } = req.query;
+            const { data, total, totals } = yield this.restaurantModel
+                .restaurantReportModel()
+                .getUserSalesReport({
+                from_date: from_date,
+                to_date: to_date,
+                user_id: user_id,
+                hotel_code,
+                restaurant_id,
+                limit: limit,
+                skip: skip,
+            });
+            return {
+                success: true,
+                code: this.StatusCode.HTTP_OK,
+                total,
+                totals,
                 data,
             };
         });

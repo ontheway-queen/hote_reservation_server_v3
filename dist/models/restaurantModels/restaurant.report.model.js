@@ -125,13 +125,13 @@ class RestaurantReportModel extends schema_1.default {
             };
         });
     }
-    getFoodSalesSummary(query) {
+    getProductsReport(query) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { hotel_code, restaurant_id } = query;
+            const { hotel_code, restaurant_id, from_date, to_date } = query;
             const db = this.db;
             const result = yield db
                 .withSchema(this.RESTAURANT_SCHEMA)
-                .select("f.id as food_id", "f.name as food_name", "mc.name as category_name", db.raw(`COALESCE(SUM(oi.quantity), 0) AS total_sold_quantity`))
+                .select("f.id as food_id", "f.name as food_name", "mc.name as category_name", db.raw(`COALESCE(SUM(oi.quantity), 0) AS total_sold_quantity`), this.db.raw("COALESCE(SUM(oi.quantity * oi.rate), 0) as total_sales_amount"))
                 .from("foods as f")
                 .leftJoin("order_items as oi", function () {
                 this.on("oi.food_id", "=", "f.id").andOn("oi.is_deleted", "=", db.raw("false"));
@@ -145,12 +145,21 @@ class RestaurantReportModel extends schema_1.default {
                 .leftJoin("menu_categories as mc", "f.menu_category_id", "mc.id")
                 .where("f.hotel_code", hotel_code)
                 .andWhere("f.restaurant_id", restaurant_id)
+                .andWhere(function () {
+                if (from_date && to_date) {
+                    const endDate = new Date(new Date(to_date).setDate(new Date(to_date).getDate() + 1));
+                    this.whereRaw(`o.created_at::date BETWEEN ? AND ?`, [
+                        from_date,
+                        to_date,
+                    ]);
+                }
+            })
                 .groupBy("f.id", "f.name", "mc.name")
                 .orderBy("total_sold_quantity", "desc");
             return result;
         });
     }
-    getSellsReport(query) {
+    getSalesChart(query) {
         return __awaiter(this, void 0, void 0, function* () {
             const { from_date, to_date, hotel_code, restaurant_id } = query;
             const salesOverview = yield this.db
@@ -183,58 +192,245 @@ class RestaurantReportModel extends schema_1.default {
             };
         });
     }
-    getProductsReport(query) {
+    // public async getSalesReport(query: {
+    //   from_date: string;
+    //   to_date: string;
+    //   hotel_code: number;
+    //   restaurant_id: number;
+    //   order_type: string;
+    //   limit: string;
+    //   skip: string;
+    // }) {
+    //   const {
+    //     from_date,
+    //     to_date,
+    //     hotel_code,
+    //     restaurant_id,
+    //     limit,
+    //     skip,
+    //     order_type,
+    //   } = query;
+    //   const data = await this.db
+    //     .withSchema(this.RESTAURANT_SCHEMA)
+    //     .select(
+    //       "o.id",
+    //       "o.order_no",
+    //       "o.guest_name",
+    //       "o.room_no",
+    //       "o.order_type",
+    //       "o.discount_amount",
+    //       "o.service_charge_amount",
+    //       "o.vat_amount",
+    //       "o.grand_total",
+    //       "o.created_at",
+    //       "u.name as user_name"
+    //     )
+    //     .from("orders as o")
+    //     .leftJoin("user_admin as u", "o.created_by", "u.id")
+    //     .where("o.status", "completed")
+    //     .andWhere("o.hotel_code", hotel_code)
+    //     .andWhere("o.restaurant_id", restaurant_id)
+    //     .andWhere(function () {
+    //       if (from_date && to_date) {
+    //         this.andWhereRaw("DATE(o.created_at) BETWEEN ? AND ?", [
+    //           from_date,
+    //           to_date,
+    //         ]);
+    //       }
+    //     })
+    //     .andWhere(function () {
+    //       if (order_type) {
+    //         this.andWhere("o.order_type", order_type);
+    //       }
+    //     })
+    //     .limit(limit ? Number(limit) : 100)
+    //     .offset(skip ? Number(skip) : 0)
+    //     .orderBy("o.created_at", "asc");
+    //   const total = await this.db("orders as o")
+    //     .withSchema(this.RESTAURANT_SCHEMA)
+    //     .count("o.id as total")
+    //     .where("o.status", "completed")
+    //     .andWhere("o.hotel_code", hotel_code)
+    //     .andWhere("o.restaurant_id", restaurant_id)
+    //     .andWhere(function () {
+    //       if (from_date && to_date) {
+    //         this.andWhereRaw("DATE(o.created_at) BETWEEN ? AND ?", [
+    //           from_date,
+    //           to_date,
+    //         ]);
+    //       }
+    //     })
+    //     .andWhere(function () {
+    //       if (order_type) {
+    //         this.andWhere("o.order_type", order_type);
+    //       }
+    //     });
+    //   return {
+    //     data,
+    //     total: Number(total[0].total as string),
+    //   };
+    // }
+    getSalesReport(query) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { from_date, to_date, hotel_code, restaurant_id, name, category } = query;
-            return yield this.db
+            const { from_date, to_date, hotel_code, restaurant_id, limit, skip, order_type, } = query;
+            const limitNum = Number(limit) || 100;
+            const skipNum = Number(skip) || 0;
+            const data = yield this.db
                 .withSchema(this.RESTAURANT_SCHEMA)
-                .select("oi.food_id", "f.name as name", "fc.name as category", "oi.rate as price", this.db.raw("COALESCE(SUM(oi.quantity), 0) as total_quantity"), this.db.raw("COALESCE(SUM(oi.quantity * oi.rate), 0) as total_sales"))
-                .from("order_items as oi")
-                .leftJoin("orders as o", "oi.order_id", "o.id")
-                .leftJoin("foods as f", "oi.food_id", "f.id")
-                .leftJoin("menu_categories as fc", "f.menu_category_id", "fc.id")
-                .where("o.status", "completed")
-                .andWhere("o.hotel_code", hotel_code)
-                .andWhere("o.restaurant_id", restaurant_id)
-                .andWhereRaw("DATE(o.created_at) BETWEEN ? AND ?", [from_date, to_date])
-                .modify((queryBuilder) => {
-                if (name) {
-                    queryBuilder.andWhere("f.name", "ilike", `%${name}%`);
-                }
-                if (category) {
-                    queryBuilder.andWhere("fc.name", "ilike", `%${category}%`);
-                }
-            })
-                .groupBy("oi.food_id", "oi.rate", "f.name", "fc.name")
-                .orderBy("total_sales", "desc");
-        });
-    }
-    getUserSellsReport(query) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const { from_date, to_date, hotel_code, restaurant_id, user_id } = query;
-            return yield this.db
-                .withSchema(this.RESTAURANT_SCHEMA)
-                .select("o.id", "o.order_no", "o.guest", "o.room_no", "o.order_type", "o.sub_total", "o.discount", "o.discount_type", this.db.raw(`
-            CASE 
-                WHEN o.discount_type = 'percentage' 
-                THEN ROUND(o.sub_total * o.discount / 100, 2)
-                ELSE o.discount
-            END AS discount_amount
-        `), "o.net_total", "o.service_charge", "o.service_charge_type", this.db.raw(`
-            CASE 
-                WHEN o.service_charge_type = 'percentage' 
-                THEN ROUND(o.net_total * o.service_charge / 100, 2)
-                ELSE o.service_charge
-            END AS service_charge_amount
-        `), "o.vat_rate", "o.vat_amount", "o.grand_total", "o.created_at", "u.name as user_name")
+                .select("o.id", "o.order_no", "o.guest_name", "o.room_no", "o.order_type", "o.discount_amount", "o.service_charge_amount", "o.vat_amount", "o.grand_total", "o.created_at", "u.name as user_name")
                 .from("orders as o")
                 .leftJoin("user_admin as u", "o.created_by", "u.id")
                 .where("o.status", "completed")
                 .andWhere("o.hotel_code", hotel_code)
                 .andWhere("o.restaurant_id", restaurant_id)
-                .andWhere("o.created_by", user_id)
-                .andWhereRaw("DATE(o.created_at) BETWEEN ? AND ?", [from_date, to_date])
-                .orderBy("o.created_at", "asc");
+                .modify((qb) => {
+                if (from_date && to_date) {
+                    qb.andWhereRaw("DATE(o.created_at) BETWEEN ? AND ?", [
+                        from_date,
+                        to_date,
+                    ]);
+                }
+                if (order_type) {
+                    qb.andWhere("o.order_type", order_type);
+                }
+            })
+                .orderBy("o.created_at", "asc")
+                .limit(limitNum)
+                .offset(skipNum);
+            // Get total record count
+            const total = yield this.db("orders as o")
+                .withSchema(this.RESTAURANT_SCHEMA)
+                .count("o.id as total")
+                .where("o.status", "completed")
+                .andWhere("o.hotel_code", hotel_code)
+                .andWhere("o.restaurant_id", restaurant_id)
+                .modify((qb) => {
+                if (from_date && to_date) {
+                    qb.andWhereRaw("DATE(o.created_at) BETWEEN ? AND ?", [
+                        from_date,
+                        to_date,
+                    ]);
+                }
+                if (order_type) {
+                    qb.andWhere("o.order_type", order_type);
+                }
+            })
+                .first();
+            const totals = yield this.db("orders as o")
+                .withSchema(this.RESTAURANT_SCHEMA)
+                .sum({ total_discount_amount: "o.discount_amount" })
+                .sum({ total_vat_amount: "o.vat_amount" })
+                .sum({ total_service_charge_amount: "o.service_charge_amount" })
+                .sum({ total_grand_amount: "o.grand_total" })
+                .where("o.status", "completed")
+                .andWhere("o.hotel_code", hotel_code)
+                .andWhere("o.restaurant_id", restaurant_id)
+                .modify((qb) => {
+                if (from_date && to_date) {
+                    qb.andWhereRaw("DATE(o.created_at) BETWEEN ? AND ?", [
+                        from_date,
+                        to_date,
+                    ]);
+                }
+                if (order_type) {
+                    qb.andWhere("o.order_type", order_type);
+                }
+            })
+                .first();
+            return {
+                data,
+                total: Number((total === null || total === void 0 ? void 0 : total.total) || 0),
+                totals: {
+                    total_discount_amount: Number((totals === null || totals === void 0 ? void 0 : totals.total_discount_amount) || 0),
+                    total_vat_amount: Number((totals === null || totals === void 0 ? void 0 : totals.total_vat_amount) || 0),
+                    total_service_charge_amount: Number((totals === null || totals === void 0 ? void 0 : totals.total_service_charge_amount) || 0),
+                    total_grand_amount: Number((totals === null || totals === void 0 ? void 0 : totals.total_grand_amount) || 0),
+                },
+            };
+        });
+    }
+    getUserSalesReport(query) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { from_date, to_date, hotel_code, restaurant_id, user_id, limit, skip, } = query;
+            const limitNum = Number(limit) || 100;
+            const skipNum = Number(skip) || 0;
+            const data = yield this.db
+                .withSchema(this.RESTAURANT_SCHEMA)
+                .select("o.id", "o.order_no", "o.guest_name", "o.room_no", "o.order_type", "o.discount_amount", "o.service_charge_amount", "o.vat_amount", "o.grand_total", "o.created_at", "u.name as order_created_by", "emp.name as waiter_name")
+                .from("orders as o")
+                .leftJoin("user_admin as u", "o.created_by", "u.id")
+                .joinRaw("LEFT JOIN hr.employee as emp on o.staff_id = emp.id")
+                .where("o.status", "completed")
+                .andWhere("o.hotel_code", hotel_code)
+                .andWhere("o.restaurant_id", restaurant_id)
+                .andWhere(function () {
+                if (user_id)
+                    this.andWhere("o.staff_id", user_id);
+            })
+                .modify((qb) => {
+                if (from_date && to_date) {
+                    qb.andWhereRaw("DATE(o.created_at) BETWEEN ? AND ?", [
+                        from_date,
+                        to_date,
+                    ]);
+                }
+            })
+                .orderBy("o.created_at", "asc")
+                .limit(limitNum)
+                .offset(skipNum);
+            // Get total count
+            const total = yield this.db("orders as o")
+                .withSchema(this.RESTAURANT_SCHEMA)
+                .count("o.id as total")
+                .where("o.status", "completed")
+                .andWhere("o.hotel_code", hotel_code)
+                .andWhere("o.restaurant_id", restaurant_id)
+                .andWhere(function () {
+                if (user_id)
+                    this.andWhere("o.staff_id", user_id);
+            })
+                .modify((qb) => {
+                if (from_date && to_date) {
+                    qb.andWhereRaw("DATE(o.created_at) BETWEEN ? AND ?", [
+                        from_date,
+                        to_date,
+                    ]);
+                }
+            })
+                .first();
+            // Get summary totals (discount, VAT, service charge)
+            const totals = yield this.db("orders as o")
+                .withSchema(this.RESTAURANT_SCHEMA)
+                .sum({ total_discount_amount: "o.discount_amount" })
+                .sum({ total_vat_amount: "o.vat_amount" })
+                .sum({ total_service_charge_amount: "o.service_charge_amount" })
+                .sum({ total_amount: "o.grand_total" })
+                .where("o.status", "completed")
+                .andWhere("o.hotel_code", hotel_code)
+                .andWhere("o.restaurant_id", restaurant_id)
+                .andWhere(function () {
+                if (user_id)
+                    this.andWhere("o.staff_id", user_id);
+            })
+                .modify((qb) => {
+                if (from_date && to_date) {
+                    qb.andWhereRaw("DATE(o.created_at) BETWEEN ? AND ?", [
+                        from_date,
+                        to_date,
+                    ]);
+                }
+            })
+                .first();
+            return {
+                data,
+                total: (total === null || total === void 0 ? void 0 : total.total) || 0,
+                totals: {
+                    total_amount: Number((totals === null || totals === void 0 ? void 0 : totals.total_amount) || 0),
+                    total_discount_amount: Number((totals === null || totals === void 0 ? void 0 : totals.total_discount_amount) || 0),
+                    total_vat_amount: Number((totals === null || totals === void 0 ? void 0 : totals.total_vat_amount) || 0),
+                    total_service_charge_amount: Number((totals === null || totals === void 0 ? void 0 : totals.total_service_charge_amount) || 0),
+                },
+            };
         });
     }
 }

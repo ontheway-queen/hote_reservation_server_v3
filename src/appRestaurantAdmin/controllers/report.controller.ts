@@ -27,34 +27,34 @@ class RestaurantReportController extends AbstractController {
     }
   );
 
-  public getSellingItems = this.asyncWrapper.wrap(
-    null,
-    async (req: Request, res: Response) => {
-      const { code, ...data } = await this.service.getSellingItems(req);
-      res.status(code).json(data);
-    }
-  );
-
-  public getSellsReport = this.asyncWrapper.wrap(
-    { querySchema: this.validator.getDailyReportValidator },
-    async (req: Request, res: Response) => {
-      const { code, ...data } = await this.service.getSellsReport(req);
-      res.status(code).json(data);
-    }
-  );
-
   public getProductsReport = this.asyncWrapper.wrap(
-    { querySchema: this.validator.getProductsReportValidator },
+    null,
     async (req: Request, res: Response) => {
       const { code, ...data } = await this.service.getProductsReport(req);
       res.status(code).json(data);
     }
   );
 
-  public getUserSellsReport = this.asyncWrapper.wrap(
-    null,
+  public getSalesChart = this.asyncWrapper.wrap(
+    { querySchema: this.validator.getDailyReportValidator },
     async (req: Request, res: Response) => {
-      const { code, ...data } = await this.service.getUserSellsReport(req);
+      const { code, ...data } = await this.service.getSalesChart(req);
+      res.status(code).json(data);
+    }
+  );
+
+  public getSalesReport = this.asyncWrapper.wrap(
+    { querySchema: this.validator.getDailyReportValidator },
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.getSalesReport(req);
+      res.status(code).json(data);
+    }
+  );
+
+  public getUserSalesReport = this.asyncWrapper.wrap(
+    { querySchema: this.validator.getUsersSaleReportValidator },
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.getUserSalesReport(req);
       res.status(code).json(data);
     }
   );

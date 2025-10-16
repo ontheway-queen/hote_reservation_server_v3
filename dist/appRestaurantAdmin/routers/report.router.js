@@ -16,14 +16,14 @@ class RestaurantReportRouter extends abstract_router_1.default {
         this.router
             .route("/daily-order-counts")
             .get(this.controller.getDailyOrderCounts);
-        this.router.route("/sales-summary").get(this.controller.getSellingItems);
-        this.router.route("/sells-report").get(this.controller.getSellsReport);
+        this.router.route("/sales-chart").get(this.controller.getSalesChart);
+        this.router.route("/sales-report").get(this.controller.getSalesReport);
         this.router
             .route("/products-report")
             .get(this.controller.getProductsReport);
         this.router
-            .route("/user-sells-report")
-            .get(this.controller.getUserSellsReport);
+            .route("/user-sales-report")
+            .get(this.controller.getUserSalesReport);
     }
 }
 exports.default = RestaurantReportRouter;

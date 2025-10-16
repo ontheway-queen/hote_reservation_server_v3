@@ -6,30 +6,19 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const joi_1 = __importDefault(require("joi"));
 class RestaurantReportValidator {
     constructor() {
+        this.getUsersSaleReportValidator = joi_1.default.object({
+            user_id: joi_1.default.number().optional(),
+            from_date: joi_1.default.string().optional(),
+            limit: joi_1.default.string().optional(),
+            skip: joi_1.default.string().optional(),
+            to_date: joi_1.default.string().optional(),
+        });
         this.getDailyReportValidator = joi_1.default.object({
-            from_date: joi_1.default.string().required().label("From Date"),
-            to_date: joi_1.default.string()
-                .required()
-                .label("To Date")
-                .custom((value, helpers) => {
-                const { from_date } = helpers.state.ancestors[0];
-                if (!from_date)
-                    return value;
-                const fromDateObj = new Date(from_date);
-                const toDateObj = new Date(value);
-                if (isNaN(fromDateObj.getTime()) ||
-                    isNaN(toDateObj.getTime())) {
-                    return helpers.error("any.invalid", {
-                        message: "Invalid date format",
-                    });
-                }
-                if (toDateObj <= fromDateObj) {
-                    return helpers.error("any.invalid", {
-                        message: "To Date must be greater than From Date",
-                    });
-                }
-                return value;
-            }),
+            order_type: joi_1.default.string().optional(),
+            from_date: joi_1.default.string().optional(),
+            limit: joi_1.default.string().optional(),
+            skip: joi_1.default.string().optional(),
+            to_date: joi_1.default.string().optional(),
         });
         this.getProductsReportValidator = joi_1.default.object({
             from_date: joi_1.default.string().required().label("From Date"),
@@ -42,8 +31,7 @@ class RestaurantReportValidator {
                     return value;
                 const fromDateObj = new Date(from_date);
                 const toDateObj = new Date(value);
-                if (isNaN(fromDateObj.getTime()) ||
-                    isNaN(toDateObj.getTime())) {
+                if (isNaN(fromDateObj.getTime()) || isNaN(toDateObj.getTime())) {
                     return helpers.error("any.invalid", {
                         message: "Invalid date format",
                     });

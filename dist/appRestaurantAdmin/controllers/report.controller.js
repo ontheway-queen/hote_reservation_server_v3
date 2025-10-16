@@ -39,20 +39,20 @@ class RestaurantReportController extends abstract_controller_1.default {
             const _b = yield this.service.getDailyOrderCounts(req), { code } = _b, data = __rest(_b, ["code"]);
             res.status(code).json(data);
         }));
-        this.getSellingItems = this.asyncWrapper.wrap(null, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _c = yield this.service.getSellingItems(req), { code } = _c, data = __rest(_c, ["code"]);
+        this.getProductsReport = this.asyncWrapper.wrap(null, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _c = yield this.service.getProductsReport(req), { code } = _c, data = __rest(_c, ["code"]);
             res.status(code).json(data);
         }));
-        this.getSellsReport = this.asyncWrapper.wrap({ querySchema: this.validator.getDailyReportValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _d = yield this.service.getSellsReport(req), { code } = _d, data = __rest(_d, ["code"]);
+        this.getSalesChart = this.asyncWrapper.wrap({ querySchema: this.validator.getDailyReportValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _d = yield this.service.getSalesChart(req), { code } = _d, data = __rest(_d, ["code"]);
             res.status(code).json(data);
         }));
-        this.getProductsReport = this.asyncWrapper.wrap({ querySchema: this.validator.getProductsReportValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _e = yield this.service.getProductsReport(req), { code } = _e, data = __rest(_e, ["code"]);
+        this.getSalesReport = this.asyncWrapper.wrap({ querySchema: this.validator.getDailyReportValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _e = yield this.service.getSalesReport(req), { code } = _e, data = __rest(_e, ["code"]);
             res.status(code).json(data);
         }));
-        this.getUserSellsReport = this.asyncWrapper.wrap(null, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _f = yield this.service.getUserSellsReport(req), { code } = _f, data = __rest(_f, ["code"]);
+        this.getUserSalesReport = this.asyncWrapper.wrap({ querySchema: this.validator.getUsersSaleReportValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _f = yield this.service.getUserSalesReport(req), { code } = _f, data = __rest(_f, ["code"]);
             res.status(code).json(data);
         }));
     }

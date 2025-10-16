@@ -17,7 +17,7 @@ class RestaurantReportService extends AbstractServices {
 
     return {
       success: true,
-      code: this.StatusCode.HTTP_SUCCESSFUL,
+      code: this.StatusCode.HTTP_OK,
       data,
     };
   }
@@ -37,86 +37,98 @@ class RestaurantReportService extends AbstractServices {
 
     return {
       success: true,
-      code: this.StatusCode.HTTP_SUCCESSFUL,
+      code: this.StatusCode.HTTP_OK,
       ...data,
-    };
-  }
-
-  public async getSellingItems(req: Request) {
-    const { hotel_code, restaurant_id } = req.restaurant_admin;
-    const model = this.restaurantModel.restaurantReportModel();
-
-    const data = await model.getFoodSalesSummary({
-      hotel_code,
-      restaurant_id,
-    });
-
-    return {
-      success: true,
-      code: this.StatusCode.HTTP_SUCCESSFUL,
-      data,
-    };
-  }
-
-  public async getSellsReport(req: Request) {
-    const { hotel_code, restaurant_id } = req.restaurant_admin;
-    const model = this.restaurantModel.restaurantReportModel();
-
-    const { from_date, to_date } = req.query;
-
-    const data = await model.getSellsReport({
-      from_date: from_date as string,
-      to_date: to_date as string,
-      hotel_code,
-      restaurant_id,
-    });
-
-    return {
-      success: true,
-      code: this.StatusCode.HTTP_SUCCESSFUL,
-      data,
     };
   }
 
   public async getProductsReport(req: Request) {
     const { hotel_code, restaurant_id } = req.restaurant_admin;
-    const model = this.restaurantModel.restaurantReportModel();
 
-    const { from_date, to_date, name, category } = req.query;
-
-    const data = await model.getProductsReport({
-      from_date: from_date as string,
-      to_date: to_date as string,
-      name: name as string,
-      category: category as string,
-      hotel_code,
-      restaurant_id,
-    });
+    const data = await this.restaurantModel
+      .restaurantReportModel()
+      .getProductsReport({
+        hotel_code,
+        restaurant_id,
+        from_date: req.query.from_date as string,
+        to_date: req.query.to_date as string,
+      });
 
     return {
       success: true,
-      code: this.StatusCode.HTTP_SUCCESSFUL,
+      code: this.StatusCode.HTTP_OK,
       data,
     };
   }
 
-  public async getUserSellsReport(req: Request) {
+  public async getSalesChart(req: Request) {
     const { hotel_code, restaurant_id } = req.restaurant_admin;
-    const model = this.restaurantModel.restaurantReportModel();
 
-    const { from_date, to_date, user_id } = req.query;
+    const { from_date, to_date } = req.query;
 
-    const data = await model.getUserSellsReport({
-      from_date: from_date as string,
-      to_date: to_date as string,
-      user_id: Number(user_id),
-      hotel_code,
-      restaurant_id,
-    });
+    const data = await this.restaurantModel
+      .restaurantReportModel()
+      .getSalesChart({
+        from_date: from_date as string,
+        to_date: to_date as string,
+        hotel_code,
+        restaurant_id,
+      });
 
     return {
       success: true,
-      code: this.StatusCode.HTTP_SUCCESSFUL,
+      code: this.StatusCode.HTTP_OK,
+      data,
+    };
+  }
+  public async getSalesReport(req: Request) {
+    const { hotel_code, restaurant_id } = req.restaurant_admin;
+
+    const { from_date, to_date, order_type, limit, skip } = req.query;
+
+    const { data, total, totals } = await this.restaurantModel
+      .restaurantReportModel()
+      .getSalesReport({
+        from_date: from_date as string,
+        to_date: to_date as string,
+        hotel_code,
+        restaurant_id,
+        order_type: order_type as string,
+        limit: limit as string,
+        skip: skip as string,
+      });
+
+    return {
+      success: true,
+      code: this.StatusCode.HTTP_OK,
+      total,
+      totals,
+      data,
+    };
+  }
+
+  public async getUserSalesReport(req: Request) {
+    const { hotel_code, restaurant_id } = req.restaurant_admin;
+
+    const { from_date, to_date, user_id, limit, skip } = req.query;
+
+    const { data, total, totals } = await this.restaurantModel
+      .restaurantReportModel()
+      .getUserSalesReport({
+        from_date: from_date as string,
+        to_date: to_date as string,
+        user_id: user_id as string,
+        hotel_code,
+        restaurant_id,
+        limit: limit as string,
+        skip: skip as string,
+      });
+
+    return {
+      success: true,
+      code: this.StatusCode.HTTP_OK,
+      total,
+      totals,
       data,
     };
   }
