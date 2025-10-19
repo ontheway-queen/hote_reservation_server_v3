@@ -58,7 +58,7 @@ class HotelRestaurantController extends AbstractController {
 	);
 
 	public removeStaff = this.asyncWrapper.wrap(
-		null,
+		{ paramSchema: this.Validator.removeStaffValidator },
 		async (req: Request, res: Response) => {
 			const { code, ...data } = await this.Service.removeStaff(req);
 

@@ -31,7 +31,9 @@ class HotelRestaurantRouter extends AbstractRouter {
 			);
 
 		this.router.route("/add-staff").post(this.Controller.addStaffs);
-		this.router.route("/remove-staff").delete(this.Controller.removeStaff);
+		this.router
+			.route("/remove-staff/:staff_id/:restaurant_id")
+			.delete(this.Controller.removeStaff);
 	}
 }
 export default HotelRestaurantRouter;

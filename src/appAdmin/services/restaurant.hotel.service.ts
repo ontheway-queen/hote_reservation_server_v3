@@ -385,18 +385,15 @@ class HotelRestaurantService extends AbstractServices {
 
 	public async removeStaff(req: Request) {
 		return await this.db.transaction(async (trx) => {
+			const { staff_id, restaurant_id } = req.params;
 			const { hotel_code } = req.hotel_admin;
-			const body = req.body as {
-				id: number;
-				restaurant_id: number;
-			};
 
 			const restaurantStaffModel =
 				this.restaurantModel.restaurantStaffModel(trx);
 
 			const checkStaff = await restaurantStaffModel.getSingleStaff({
-				id: body.id,
-				restaurant_id: body.restaurant_id,
+				id: Number(staff_id),
+				restaurant_id: Number(restaurant_id),
 				hotel_code,
 			});
 
@@ -409,7 +406,8 @@ class HotelRestaurantService extends AbstractServices {
 			}
 
 			await restaurantStaffModel.removeStaff({
-				...body,
+				id: Number(staff_id),
+				restaurant_id: Number(restaurant_id),
 				hotel_code,
 			});
 

@@ -99,5 +99,10 @@ class HotelRestaurantValidator {
 		skip: Joi.string().allow("").optional(),
 		key: Joi.string().allow("").optional(),
 	});
+
+	public removeStaffValidator = Joi.object({
+		staff_id: Joi.number().integer().required(),
+		restaurant_id: Joi.number().integer().required(),
+	});
 }
 export default HotelRestaurantValidator;

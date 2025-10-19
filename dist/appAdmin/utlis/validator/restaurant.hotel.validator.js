@@ -106,6 +106,10 @@ class HotelRestaurantValidator {
             skip: joi_1.default.string().allow("").optional(),
             key: joi_1.default.string().allow("").optional(),
         });
+        this.removeStaffValidator = joi_1.default.object({
+            staff_id: joi_1.default.number().integer().required(),
+            restaurant_id: joi_1.default.number().integer().required(),
+        });
     }
 }
 exports.default = HotelRestaurantValidator;

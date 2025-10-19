@@ -295,12 +295,12 @@ class HotelRestaurantService extends abstract_service_1.default {
     removeStaff(req) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
+                const { staff_id, restaurant_id } = req.params;
                 const { hotel_code } = req.hotel_admin;
-                const body = req.body;
                 const restaurantStaffModel = this.restaurantModel.restaurantStaffModel(trx);
                 const checkStaff = yield restaurantStaffModel.getSingleStaff({
-                    id: body.id,
-                    restaurant_id: body.restaurant_id,
+                    id: Number(staff_id),
+                    restaurant_id: Number(restaurant_id),
                     hotel_code,
                 });
                 if (!checkStaff) {
@@ -310,7 +310,11 @@ class HotelRestaurantService extends abstract_service_1.default {
                         message: "Staff not found in the restaurant",
                     };
                 }
-                yield restaurantStaffModel.removeStaff(Object.assign(Object.assign({}, body), { hotel_code }));
+                yield restaurantStaffModel.removeStaff({
+                    id: Number(staff_id),
+                    restaurant_id: Number(restaurant_id),
+                    hotel_code,
+                });
                 return {
                     success: true,
                     code: this.StatusCode.HTTP_OK,

@@ -51,7 +51,7 @@ class HotelRestaurantController extends abstract_controller_1.default {
             const _e = yield this.Service.addStaffs(req), { code } = _e, data = __rest(_e, ["code"]);
             res.status(code).json(data);
         }));
-        this.removeStaff = this.asyncWrapper.wrap(null, (req, res) => __awaiter(this, void 0, void 0, function* () {
+        this.removeStaff = this.asyncWrapper.wrap({ paramSchema: this.Validator.removeStaffValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
             const _f = yield this.Service.removeStaff(req), { code } = _f, data = __rest(_f, ["code"]);
             res.status(code).json(data);
         }));
