@@ -12,9 +12,18 @@ class HotelRestaurantReportRouter extends abstract_router_1.default {
         this.callRouter();
     }
     callRouter() {
+        this.router.route("/sales-report").get(this.controller.getSalesReport);
+        this.router.route("/order-info").get(this.controller.getOrderInfo);
         this.router
-            .route("/sales-report")
-            .get(this.controller.getRestaurantSalesReport);
+            .route("/daily-order-counts")
+            .get(this.controller.getDailyOrderCounts);
+        this.router.route("/sales-chart").get(this.controller.getSalesChart);
+        this.router
+            .route("/products-report")
+            .get(this.controller.getProductsReport);
+        this.router
+            .route("/user-sales-report")
+            .get(this.controller.getUserSalesReport);
     }
 }
 exports.default = HotelRestaurantReportRouter;

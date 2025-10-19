@@ -175,10 +175,7 @@ class RestaurantReportModel extends schema_1.default {
                 .where("o.status", "completed")
                 .andWhere("o.hotel_code", hotel_code)
                 .andWhere("o.restaurant_id", restaurant_id)
-                .andWhereRaw("DATE(o.created_at) BETWEEN ? AND ?", [
-                from_date,
-                to_date,
-            ])
+                .andWhereRaw("DATE(o.created_at) BETWEEN ? AND ?", [from_date, to_date])
                 .first();
             const typeWiseSales = yield this.db
                 .withSchema(this.RESTAURANT_SCHEMA)
@@ -187,10 +184,7 @@ class RestaurantReportModel extends schema_1.default {
                 .where("o.status", "completed")
                 .andWhere("o.hotel_code", hotel_code)
                 .andWhere("o.restaurant_id", restaurant_id)
-                .andWhereRaw("DATE(o.created_at) BETWEEN ? AND ?", [
-                from_date,
-                to_date,
-            ])
+                .andWhereRaw("DATE(o.created_at) BETWEEN ? AND ?", [from_date, to_date])
                 .groupBy("o.order_type");
             return {
                 salesOverview,
@@ -280,6 +274,7 @@ class RestaurantReportModel extends schema_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             const { from_date, to_date, hotel_code, restaurant_id, limit, skip, order_type, } = query;
             console.log({ from_date, to_date });
+            console.log(query, "weeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee");
             const limitNum = Number(limit) || 100;
             const skipNum = Number(skip) || 0;
             const data = yield this.db
