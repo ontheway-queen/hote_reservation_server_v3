@@ -25,6 +25,13 @@ class RestaurantFoodModel extends schema_1.default {
                 .insert(payload, "id");
         });
     }
+    insertFoodIngredients(payload) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("food_ingredients")
+                .withSchema(this.RESTAURANT_SCHEMA)
+                .insert(payload, "id");
+        });
+    }
     getFoods(query) {
         var _a, _b;
         return __awaiter(this, void 0, void 0, function* () {
@@ -61,6 +68,27 @@ class RestaurantFoodModel extends schema_1.default {
             return { total, data };
         });
     }
+    getFood(query) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("foods as f")
+                .withSchema(this.RESTAURANT_SCHEMA)
+                .select("f.id", "f.hotel_code", "f.restaurant_id", "f.photo", "f.name", "f.menu_category_id", "mc.name as menu_category_name", "f.unit_id", "u.name as unit_name", "u.short_code as unit_short_code", "f.retail_price", this.db.raw(`json_agg(
+			json_build_object(
+				'food_id', fi.food_id,
+				'quantity_per_unit', fi.quantity_per_unit
+			)
+		) as ingredients`))
+                .leftJoin("menu_categories as mc", "mc.id", "f.menu_category_id")
+                .leftJoin("units as u", "u.id", "f.unit_id")
+                .leftJoin("food_ingredients as fi", "fi.food_id", "f.id")
+                .where("f.hotel_code", query.hotel_code)
+                .andWhere("f.restaurant_id", query.restaurant_id)
+                .andWhere("f.id", query.id)
+                .andWhere("f.is_deleted", false)
+                .groupBy("f.id", "mc.name", "u.name", "u.short_code")
+                .first();
+        });
+    }
     updateFood({ where: { id }, payload, }) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("foods as f")
@@ -80,4 +108,12 @@ class RestaurantFoodModel extends schema_1.default {
     }
 }
 exports.default = RestaurantFoodModel;
+/*
+[
+  {
+    id: number,
+    quantity: number
+  }
+]
+*/
 //# sourceMappingURL=restaurant.food.table.js.map

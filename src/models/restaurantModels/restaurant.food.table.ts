@@ -20,6 +20,12 @@ class RestaurantFoodModel extends Schema {
 			.insert(payload, "id");
 	}
 
+	public async insertFoodIngredients(payload: any) {
+		return await this.db("food_ingredients")
+			.withSchema(this.RESTAURANT_SCHEMA)
+			.insert(payload, "id");
+	}
+
 	public async getFoods(query: {
 		hotel_code: number;
 		restaurant_id: number;
@@ -82,6 +88,43 @@ class RestaurantFoodModel extends Schema {
 		return { total, data };
 	}
 
+	public async getFood(query: {
+		id: number;
+		hotel_code: number;
+		restaurant_id: number;
+	}) {
+		return await this.db("foods as f")
+			.withSchema(this.RESTAURANT_SCHEMA)
+			.select(
+				"f.id",
+				"f.hotel_code",
+				"f.restaurant_id",
+				"f.photo",
+				"f.name",
+				"f.menu_category_id",
+				"mc.name as menu_category_name",
+				"f.unit_id",
+				"u.name as unit_name",
+				"u.short_code as unit_short_code",
+				"f.retail_price",
+				this.db.raw(`json_agg(
+			json_build_object(
+				'food_id', fi.food_id,
+				'quantity_per_unit', fi.quantity_per_unit
+			)
+		) as ingredients`)
+			)
+			.leftJoin("menu_categories as mc", "mc.id", "f.menu_category_id")
+			.leftJoin("units as u", "u.id", "f.unit_id")
+			.leftJoin("food_ingredients as fi", "fi.food_id", "f.id")
+			.where("f.hotel_code", query.hotel_code)
+			.andWhere("f.restaurant_id", query.restaurant_id)
+			.andWhere("f.id", query.id)
+			.andWhere("f.is_deleted", false)
+			.groupBy("f.id", "mc.name", "u.name", "u.short_code")
+			.first();
+	}
+
 	public async updateFood({
 		where: { id },
 		payload,
@@ -104,3 +147,12 @@ class RestaurantFoodModel extends Schema {
 	}
 }
 export default RestaurantFoodModel;
+
+/* 
+[
+  {
+    id: number,
+    quantity: number
+  }
+]
+*/

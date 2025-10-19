@@ -5,6 +5,12 @@ export interface IFoodRequest {
 	retail_price: number;
 	measurement_per_unit: number;
 	photo?: string;
+	food_receipe: IFoodReceipe[];
+}
+
+export interface IFoodReceipe {
+	id: number;
+	quantity_per_unit: number;
 }
 
 export interface IFoodPayload {

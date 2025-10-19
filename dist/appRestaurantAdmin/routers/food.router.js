@@ -18,6 +18,7 @@ class RestaurantFoodRouter extends abstract_router_1.default {
             .get(this.controller.getFoods);
         this.router
             .route("/:id")
+            .get(this.controller.getFood)
             .patch(this.uploader.cloudUploadRaw(this.fileFolders.RESTAURANT_FILES), this.controller.updateFood)
             .delete(this.controller.deleteFood);
     }

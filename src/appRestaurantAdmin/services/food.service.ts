@@ -12,6 +12,12 @@ class RestaurantFoodService extends AbstractServices {
 			const { id, restaurant_id, hotel_code } = req.restaurant_admin;
 
 			const food = (req.body as any).food as IFoodRequest;
+			const ingredients = (req.body as any).ingredients as {
+				id: number;
+				quantity_per_unit: number;
+			}[];
+
+			console.log({ food, ingredients });
 
 			const files = (req.files as Express.Multer.File[]) || [];
 			if (Array.isArray(files)) {
@@ -26,6 +32,28 @@ class RestaurantFoodService extends AbstractServices {
 				this.restaurantModel.restaurantUnitModel(trx);
 			const restaurantFoodModel =
 				this.restaurantModel.restaurantFoodModel(trx);
+			const inventoryModel = this.Model.inventoryModel(trx);
+
+			const { data: isIngredientsExists } =
+				await inventoryModel.getAllProduct({
+					hotel_code,
+					pd_ids: ingredients.map((i) => i.id),
+				});
+
+			console.log({ isIngredientsExists });
+
+			const foundIds = isIngredientsExists.map((p) => p.id);
+			const missingIngredients = ingredients.filter(
+				(i) => !foundIds.includes(i.id)
+			);
+
+			if (missingIngredients.length > 0) {
+				return {
+					success: false,
+					code: this.StatusCode.HTTP_CONFLICT,
+					message: `Ingredients not found in inventory`,
+				};
+			}
 
 			const isMenuCategoryExists =
 				await restaurantMenuCategoryModel.getMenuCategories({
@@ -56,7 +84,7 @@ class RestaurantFoodService extends AbstractServices {
 				};
 			}
 
-			await restaurantFoodModel.createFood({
+			const newFoodId = await restaurantFoodModel.createFood({
 				name: food.name,
 				photo: food.photo,
 				menu_category_id: food.menu_category_id,
@@ -67,6 +95,14 @@ class RestaurantFoodService extends AbstractServices {
 				restaurant_id,
 				created_by: id,
 			});
+
+			for (const ingredient of ingredients) {
+				await restaurantFoodModel.insertFoodIngredients({
+					food_id: newFoodId[0].id,
+					product_id: ingredient.id,
+					quantity_per_unit: ingredient.quantity_per_unit,
+				});
+			}
 
 			return {
 				success: true,
@@ -94,6 +130,24 @@ class RestaurantFoodService extends AbstractServices {
 			success: true,
 			code: this.StatusCode.HTTP_OK,
 			...data,
+		};
+	}
+
+	public async getFood(req: Request) {
+		const { restaurant_id, hotel_code } = req.restaurant_admin;
+
+		const { id } = req.params;
+
+		const data = await this.restaurantModel.restaurantFoodModel().getFood({
+			hotel_code,
+			restaurant_id,
+			id: Number(id),
+		});
+
+		return {
+			success: true,
+			code: this.StatusCode.HTTP_OK,
+			data,
 		};
 	}
 

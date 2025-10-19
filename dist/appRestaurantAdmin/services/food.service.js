@@ -22,6 +22,8 @@ class RestaurantFoodService extends abstract_service_1.default {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
                 const { id, restaurant_id, hotel_code } = req.restaurant_admin;
                 const food = req.body.food;
+                const ingredients = req.body.ingredients;
+                console.log({ food, ingredients });
                 const files = req.files || [];
                 if (Array.isArray(files)) {
                     for (const file of files) {
@@ -31,6 +33,21 @@ class RestaurantFoodService extends abstract_service_1.default {
                 const restaurantMenuCategoryModel = this.restaurantModel.restaurantCategoryModel(trx);
                 const restaurantUnitModel = this.restaurantModel.restaurantUnitModel(trx);
                 const restaurantFoodModel = this.restaurantModel.restaurantFoodModel(trx);
+                const inventoryModel = this.Model.inventoryModel(trx);
+                const { data: isIngredientsExists } = yield inventoryModel.getAllProduct({
+                    hotel_code,
+                    pd_ids: ingredients.map((i) => i.id),
+                });
+                console.log({ isIngredientsExists });
+                const foundIds = isIngredientsExists.map((p) => p.id);
+                const missingIngredients = ingredients.filter((i) => !foundIds.includes(i.id));
+                if (missingIngredients.length > 0) {
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_CONFLICT,
+                        message: `Ingredients not found in inventory`,
+                    };
+                }
                 const isMenuCategoryExists = yield restaurantMenuCategoryModel.getMenuCategories({
                     hotel_code,
                     restaurant_id,
@@ -55,7 +72,7 @@ class RestaurantFoodService extends abstract_service_1.default {
                         message: "Unit not found.",
                     };
                 }
-                yield restaurantFoodModel.createFood({
+                const newFoodId = yield restaurantFoodModel.createFood({
                     name: food.name,
                     photo: food.photo,
                     menu_category_id: food.menu_category_id,
@@ -66,6 +83,13 @@ class RestaurantFoodService extends abstract_service_1.default {
                     restaurant_id,
                     created_by: id,
                 });
+                for (const ingredient of ingredients) {
+                    yield restaurantFoodModel.insertFoodIngredients({
+                        food_id: newFoodId[0].id,
+                        product_id: ingredient.id,
+                        quantity_per_unit: ingredient.quantity_per_unit,
+                    });
+                }
                 return {
                     success: true,
                     code: this.StatusCode.HTTP_SUCCESSFUL,
@@ -87,6 +111,22 @@ class RestaurantFoodService extends abstract_service_1.default {
                 menu_category_id: Number(category_id),
             });
             return Object.assign({ success: true, code: this.StatusCode.HTTP_OK }, data);
+        });
+    }
+    getFood(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { restaurant_id, hotel_code } = req.restaurant_admin;
+            const { id } = req.params;
+            const data = yield this.restaurantModel.restaurantFoodModel().getFood({
+                hotel_code,
+                restaurant_id,
+                id: Number(id),
+            });
+            return {
+                success: true,
+                code: this.StatusCode.HTTP_OK,
+                data,
+            };
         });
     }
     updateFood(req) {
