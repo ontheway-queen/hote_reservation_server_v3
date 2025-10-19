@@ -292,10 +292,7 @@ class RestaurantReportModel extends schema_1.default {
                 .andWhere("o.restaurant_id", restaurant_id)
                 .modify((qb) => {
                 if (from_date && to_date) {
-                    qb.andWhereRaw("DATE(o.created_at) BETWEEN ? AND ?", [
-                        from_date,
-                        to_date,
-                    ]);
+                    qb.andWhere("o.created_at", ">=", `${from_date} 00:00:00`).andWhere("o.created_at", "<=", `${to_date} 23:59:59`);
                 }
                 if (order_type) {
                     qb.andWhere("o.order_type", order_type);
@@ -313,10 +310,7 @@ class RestaurantReportModel extends schema_1.default {
                 .andWhere("o.restaurant_id", restaurant_id)
                 .modify((qb) => {
                 if (from_date && to_date) {
-                    qb.andWhereRaw("DATE(o.created_at) BETWEEN ? AND ?", [
-                        from_date,
-                        to_date,
-                    ]);
+                    qb.andWhere("o.created_at", ">=", `${from_date} 00:00:00`).andWhere("o.created_at", "<=", `${to_date} 23:59:59`);
                 }
                 if (order_type) {
                     qb.andWhere("o.order_type", order_type);

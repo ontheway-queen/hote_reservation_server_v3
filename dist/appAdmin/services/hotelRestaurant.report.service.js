@@ -21,6 +21,7 @@ class HotelRestaurantReportService extends abstract_service_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             const { hotel_code } = req.hotel_admin;
             const { from_date, to_date, order_type, limit, skip, restaurant_id } = req.query;
+            console.log({ from_date, to_date });
             const { data, total, totals } = yield this.restaurantModel
                 .restaurantReportModel()
                 .getSalesReport({

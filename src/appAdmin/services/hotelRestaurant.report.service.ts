@@ -11,6 +11,7 @@ class HotelRestaurantReportService extends AbstractServices {
 
 		const { from_date, to_date, order_type, limit, skip, restaurant_id } =
 			req.query;
+    console.log({from_date, to_date})
 		const { data, total, totals } = await this.restaurantModel
 			.restaurantReportModel()
 			.getSalesReport({
