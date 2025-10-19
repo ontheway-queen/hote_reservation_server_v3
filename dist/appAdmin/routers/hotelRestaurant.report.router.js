@@ -4,14 +4,18 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const abstract_router_1 = __importDefault(require("../../abstarcts/abstract.router"));
-const restaurant_report_controller_1 = __importDefault(require("../controllers/restaurant.report.controller"));
+const hotelRestaurant_report_controller_1 = __importDefault(require("../controllers/hotelRestaurant.report.controller"));
 class HotelRestaurantReportRouter extends abstract_router_1.default {
     constructor() {
         super();
-        this.controller = new restaurant_report_controller_1.default();
+        this.controller = new hotelRestaurant_report_controller_1.default();
         this.callRouter();
     }
-    callRouter() { }
+    callRouter() {
+        this.router
+            .route("/sales-report")
+            .get(this.controller.getRestaurantSalesReport);
+    }
 }
 exports.default = HotelRestaurantReportRouter;
-//# sourceMappingURL=restaurant.report.router.js.map
+//# sourceMappingURL=hotelRestaurant.report.router.js.map

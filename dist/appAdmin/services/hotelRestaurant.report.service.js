@@ -43,4 +43,4 @@ class HotelRestaurantReportService extends abstract_service_1.default {
     }
 }
 exports.default = HotelRestaurantReportService;
-//# sourceMappingURL=restaurant.report.service.js.map
+//# sourceMappingURL=hotelRestaurant.report.service.js.map

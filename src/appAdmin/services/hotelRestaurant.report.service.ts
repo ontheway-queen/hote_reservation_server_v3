@@ -1,7 +1,7 @@
 import { Request } from "express";
 import AbstractServices from "../../abstarcts/abstract.service";
 
-class RestaurantReportService extends AbstractServices {
+class HotelRestaurantReportService extends AbstractServices {
 	constructor() {
 		super();
 	}
@@ -33,4 +33,4 @@ class RestaurantReportService extends AbstractServices {
 	}
 }
 
-export default RestaurantReportService;
+export default HotelRestaurantReportService;

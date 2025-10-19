@@ -24,16 +24,18 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const abstract_controller_1 = __importDefault(require("../../abstarcts/abstract.controller"));
-const restaurant_report_service_1 = __importDefault(require("../services/restaurant.report.service"));
+const hotelRestaurant_report_service_1 = __importDefault(require("../services/hotelRestaurant.report.service"));
+const hotelRestaurant_report_validator_1 = __importDefault(require("../utlis/validator/hotelRestaurant.report.validator"));
 class HotelRestaurantReportController extends abstract_controller_1.default {
     constructor() {
         super();
-        this.service = new restaurant_report_service_1.default();
-        this.getRestaurantSalesReport = this.asyncWrapper.wrap(null, (req, res) => __awaiter(this, void 0, void 0, function* () {
+        this.service = new hotelRestaurant_report_service_1.default();
+        this.validator = new hotelRestaurant_report_validator_1.default();
+        this.getRestaurantSalesReport = this.asyncWrapper.wrap({ querySchema: this.validator.getRestaurantSalesReport }, (req, res) => __awaiter(this, void 0, void 0, function* () {
             const _a = yield this.service.getRestaurantSalesReport(req), { code } = _a, data = __rest(_a, ["code"]);
             res.status(code).json(data);
         }));
     }
 }
 exports.default = HotelRestaurantReportController;
-//# sourceMappingURL=restaurant.report.controller.js.map
+//# sourceMappingURL=hotelRestaurant.report.controller.js.map

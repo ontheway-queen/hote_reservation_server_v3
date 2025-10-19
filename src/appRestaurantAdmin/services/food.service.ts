@@ -58,6 +58,7 @@ class RestaurantFoodService extends AbstractServices {
 
 			await restaurantFoodModel.createFood({
 				name: food.name,
+				photo: food.photo,
 				menu_category_id: food.menu_category_id,
 				unit_id: food.unit_id,
 				retail_price: food.retail_price,
