@@ -15,7 +15,6 @@ class RestaurantFoodModel extends Schema {
 	}
 
 	public async createFood(payload: IFoodPayload) {
-		console.log({ payload });
 		return await this.db("foods")
 			.withSchema(this.RESTAURANT_SCHEMA)
 			.insert(payload, "id");

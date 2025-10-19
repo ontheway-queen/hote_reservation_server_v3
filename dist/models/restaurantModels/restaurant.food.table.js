@@ -20,7 +20,6 @@ class RestaurantFoodModel extends schema_1.default {
     }
     createFood(payload) {
         return __awaiter(this, void 0, void 0, function* () {
-            console.log({ payload });
             return yield this.db("foods")
                 .withSchema(this.RESTAURANT_SCHEMA)
                 .insert(payload, "id");

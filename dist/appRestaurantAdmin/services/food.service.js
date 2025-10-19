@@ -55,6 +55,16 @@ class RestaurantFoodService extends abstract_service_1.default {
                         message: "Unit not found.",
                     };
                 }
+                yield restaurantFoodModel.createFood({
+                    name: food.name,
+                    menu_category_id: food.menu_category_id,
+                    unit_id: food.unit_id,
+                    retail_price: food.retail_price,
+                    measurement_per_unit: food.measurement_per_unit,
+                    hotel_code,
+                    restaurant_id,
+                    created_by: id,
+                });
                 return {
                     success: true,
                     code: this.StatusCode.HTTP_SUCCESSFUL,
