@@ -109,7 +109,12 @@ class RestaurantFoodModel extends Schema {
 				"f.retail_price",
 				this.db.raw(`json_agg(
 			json_build_object(
-				'food_id', fi.food_id,
+				'product_id', fi.product_id,
+        'product_name', p.name,
+        'product_code', p.product_code,
+        'unit_id', p.unit_id,
+        'unit_name', pu.name,
+        'unit_short_code', pu.short_code,      
 				'quantity_per_unit', fi.quantity_per_unit
 			)
 		) as ingredients`)
@@ -117,6 +122,12 @@ class RestaurantFoodModel extends Schema {
 			.leftJoin("menu_categories as mc", "mc.id", "f.menu_category_id")
 			.leftJoin("units as u", "u.id", "f.unit_id")
 			.leftJoin("food_ingredients as fi", "fi.food_id", "f.id")
+			.joinRaw(`LEFT JOIN ?? AS p ON p.id = fi.product_id`, [
+				`${this.HOTEL_INVENTORY_SCHEMA}.products`,
+			])
+			.joinRaw(`LEFT JOIN ?? AS pu ON pu.id = p.unit_id`, [
+				`${this.HOTEL_INVENTORY_SCHEMA}.units`,
+			])
 			.where("f.hotel_code", query.hotel_code)
 			.andWhere("f.restaurant_id", query.restaurant_id)
 			.andWhere("f.id", query.id)
