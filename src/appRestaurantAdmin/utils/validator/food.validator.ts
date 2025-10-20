@@ -63,15 +63,15 @@ class RestaurantFoodValidator {
 				const schema = Joi.array()
 					.items(
 						Joi.object({
-							id: Joi.number().required().messages({
-								"any.required": "Ingredient ID is required",
+							product_id: Joi.number().required().messages({
+								"any.required": "Product ID is required",
 							}),
 							quantity_per_unit: Joi.number()
 								.positive()
 								.required()
 								.messages({
 									"any.required":
-										"Ingredient quantity is required",
+										"Product quantity is required",
 									"number.positive":
 										"Quantity must be greater than zero",
 								}),
@@ -132,6 +132,73 @@ class RestaurantFoodValidator {
 				const { error, value: validated } = schema.validate(parsed);
 				if (error) return helper.error("any.invalid");
 
+				return validated;
+			}),
+		ingredients: Joi.string()
+			.optional()
+			.custom((value, helper) => {
+				let parsed;
+				try {
+					parsed = JSON.parse(value);
+					console.log({ parsed });
+				} catch {
+					console.log(1);
+					return helper.error("ingredients.invalidJSON", {
+						message: "Invalid JSON format",
+					});
+				}
+
+				const schema = Joi.array()
+					.items(
+						Joi.object({
+							product_id: Joi.number().required().messages({
+								"any.required": "Product ID is required",
+							}),
+							quantity_per_unit: Joi.number()
+								.positive()
+								.required()
+								.messages({
+									"any.required":
+										"Product quantity is required",
+									"number.positive":
+										"Quantity must be greater than zero",
+								}),
+						})
+					)
+					.min(1)
+					.required()
+					.messages({
+						"array.base": "Ingredients must be an array",
+						"array.min": "At least one ingredient is required",
+						"any.required": "Ingredients are required",
+					});
+
+				const { error, value: validated } = schema.validate(parsed);
+				if (error)
+					return helper.error("ingredients.invalidData", {
+						message: error.details[0].message,
+					});
+
+				return validated;
+			})
+			.messages({
+				"any.required": "Ingredients data is required",
+				"ingredients.invalidJSON": "{{#message}}",
+				"ingredients.invalidData": "{{#message}}",
+			}),
+
+		remove_ingredients: Joi.string()
+			.optional()
+			.custom((value, helper) => {
+				let parsed;
+				try {
+					parsed = JSON.parse(value);
+				} catch {
+					return helper.error("any.invalid");
+				}
+				const schema = Joi.array().items(Joi.number().optional());
+				const { error, value: validated } = schema.validate(parsed);
+				if (error) return helper.error("any.invalid");
 				return validated;
 			}),
 	});

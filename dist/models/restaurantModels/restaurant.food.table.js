@@ -74,6 +74,7 @@ class RestaurantFoodModel extends schema_1.default {
                 .withSchema(this.RESTAURANT_SCHEMA)
                 .select("f.id", "f.hotel_code", "f.restaurant_id", "f.photo", "f.name", "f.menu_category_id", "mc.name as menu_category_name", "f.unit_id", "u.name as unit_name", "u.short_code as unit_short_code", "f.retail_price", this.db.raw(`json_agg(
 			json_build_object(
+        'id', fi.id,
 				'product_id', fi.product_id,
         'product_name', p.name,
         'product_code', p.product_code,
@@ -82,7 +83,7 @@ class RestaurantFoodModel extends schema_1.default {
         'unit_short_code', pu.short_code,      
 				'quantity_per_unit', fi.quantity_per_unit
 			)
-		) as ingredients`))
+		) FILTER (WHERE fi.id IS NOT NULL AND fi.is_deleted = false) as ingredients`))
                 .leftJoin("menu_categories as mc", "mc.id", "f.menu_category_id")
                 .leftJoin("units as u", "u.id", "f.unit_id")
                 .leftJoin("food_ingredients as fi", "fi.food_id", "f.id")
@@ -115,6 +116,43 @@ class RestaurantFoodModel extends schema_1.default {
                 .withSchema(this.RESTAURANT_SCHEMA)
                 .update({ is_deleted: true })
                 .where("id", where.id);
+        });
+    }
+    getFoodIngredients(where) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("food_ingredients")
+                .withSchema(this.RESTAURANT_SCHEMA)
+                .where("food_id", where.food_id)
+                .andWhere((qb) => {
+                if (where.id) {
+                    qb.where("id", where.id);
+                }
+                if (where.product_id) {
+                    qb.where("product_id", where.product_id);
+                }
+            })
+                .andWhere("is_deleted", false);
+        });
+    }
+    updateFoodIngredients({ where, payload, }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("food_ingredients")
+                .withSchema(this.RESTAURANT_SCHEMA)
+                .update(payload, "id")
+                .where("product_id", where.product_id)
+                .andWhere("food_id", where.food_id)
+                .andWhere("is_deleted", false);
+        });
+    }
+    deleteFoodIngredients(where) {
+        return __awaiter(this, void 0, void 0, function* () {
+            console.log(where);
+            return yield this.db("food_ingredients")
+                .withSchema(this.RESTAURANT_SCHEMA)
+                .update({ is_deleted: true })
+                .where("id", where.id)
+                .andWhere("food_id", where.food_id)
+                .andWhere("is_deleted", false);
         });
     }
 }

@@ -1,6 +1,7 @@
 import {
 	IFoodPayload,
 	IGetFoods,
+	IGetSingleFood,
 } from "../../appRestaurantAdmin/utils/interface/food.interface";
 
 import { TDB } from "../../common/types/commontypes";
@@ -92,7 +93,7 @@ class RestaurantFoodModel extends Schema {
 		id: number;
 		hotel_code: number;
 		restaurant_id: number;
-	}) {
+	}): Promise<IGetSingleFood> {
 		return await this.db("foods as f")
 			.withSchema(this.RESTAURANT_SCHEMA)
 			.select(
@@ -109,6 +110,7 @@ class RestaurantFoodModel extends Schema {
 				"f.retail_price",
 				this.db.raw(`json_agg(
 			json_build_object(
+        'id', fi.id,
 				'product_id', fi.product_id,
         'product_name', p.name,
         'product_code', p.product_code,
@@ -117,7 +119,7 @@ class RestaurantFoodModel extends Schema {
         'unit_short_code', pu.short_code,      
 				'quantity_per_unit', fi.quantity_per_unit
 			)
-		) as ingredients`)
+		) FILTER (WHERE fi.id IS NOT NULL AND fi.is_deleted = false) as ingredients`)
 			)
 			.leftJoin("menu_categories as mc", "mc.id", "f.menu_category_id")
 			.leftJoin("units as u", "u.id", "f.unit_id")
@@ -155,6 +157,50 @@ class RestaurantFoodModel extends Schema {
 			.withSchema(this.RESTAURANT_SCHEMA)
 			.update({ is_deleted: true })
 			.where("id", where.id);
+	}
+
+	public async getFoodIngredients(where: {
+		food_id: number;
+		id?: number;
+		product_id?: number;
+	}) {
+		return await this.db("food_ingredients")
+			.withSchema(this.RESTAURANT_SCHEMA)
+			.where("food_id", where.food_id)
+			.andWhere((qb) => {
+				if (where.id) {
+					qb.where("id", where.id);
+				}
+				if (where.product_id) {
+					qb.where("product_id", where.product_id);
+				}
+			})
+			.andWhere("is_deleted", false);
+	}
+
+	public async updateFoodIngredients({
+		where,
+		payload,
+	}: {
+		where: { product_id: number; food_id: number };
+		payload: { quantity_per_unit: number };
+	}) {
+		return await this.db("food_ingredients")
+			.withSchema(this.RESTAURANT_SCHEMA)
+			.update(payload, "id")
+			.where("product_id", where.product_id)
+			.andWhere("food_id", where.food_id)
+			.andWhere("is_deleted", false);
+	}
+
+	public async deleteFoodIngredients(where: { id: number; food_id: number }) {
+		console.log(where);
+		return await this.db("food_ingredients")
+			.withSchema(this.RESTAURANT_SCHEMA)
+			.update({ is_deleted: true })
+			.where("id", where.id)
+			.andWhere("food_id", where.food_id)
+			.andWhere("is_deleted", false);
 	}
 }
 export default RestaurantFoodModel;
