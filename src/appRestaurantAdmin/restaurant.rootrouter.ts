@@ -10,60 +10,60 @@ import RestaurantStaffRouter from "./routers/staff.routers";
 import RestaurantUnitRouter from "./routers/unit.router";
 
 export class RestaurantRootRouter {
-	public router = Router();
-	public authChecker = new AuthChecker();
+  public router = Router();
+  public authChecker = new AuthChecker();
 
-	constructor() {
-		this.callRouter();
-	}
+  constructor() {
+    this.callRouter();
+  }
 
-	private callRouter() {
-		this.router.use(
-			"/table",
-			this.authChecker.hotelRestaurantAuthChecker,
-			new RestaurantTableRouter().router
-		);
+  private callRouter() {
+    this.router.use(
+      "/table",
+      this.authChecker.hotelRestaurantAuthChecker,
+      new RestaurantTableRouter().router
+    );
 
-		this.router.use(
-			"/menu-category",
-			this.authChecker.hotelRestaurantAuthChecker,
-			new RestaurantMenuCategoryRouter().router
-		);
+    this.router.use(
+      "/menu-category",
+      this.authChecker.hotelRestaurantAuthChecker,
+      new RestaurantMenuCategoryRouter().router
+    );
 
-		this.router.use(
-			"/hotel",
-			this.authChecker.hotelRestaurantAuthChecker,
-			new HotelRouter().router
-		);
+    this.router.use(
+      "/hotel",
+      this.authChecker.hotelRestaurantAuthChecker,
+      new HotelRouter().router
+    );
 
-		this.router.use(
-			"/unit",
-			this.authChecker.hotelRestaurantAuthChecker,
-			new RestaurantUnitRouter().router
-		);
+    this.router.use(
+      "/unit",
+      this.authChecker.hotelRestaurantAuthChecker,
+      new RestaurantUnitRouter().router
+    );
 
-		this.router.use(
-			"/food",
-			this.authChecker.hotelRestaurantAuthChecker,
-			new RestaurantFoodRouter().router
-		);
+    this.router.use(
+      "/food",
+      this.authChecker.hotelRestaurantAuthChecker,
+      new RestaurantFoodRouter().router
+    );
 
-		this.router.use(
-			"/order",
-			this.authChecker.hotelRestaurantAuthChecker,
-			new RestaurantOrderRouter().router
-		);
+    this.router.use(
+      "/order",
+      this.authChecker.hotelRestaurantAuthChecker,
+      new RestaurantOrderRouter().router
+    );
 
-		this.router.use(
-			"/report",
-			this.authChecker.hotelRestaurantAuthChecker,
-			new RestaurantReportRouter().router
-		);
+    this.router.use(
+      "/report",
+      this.authChecker.hotelRestaurantAuthChecker,
+      new RestaurantReportRouter().router
+    );
 
-		this.router.use(
-			"/staff",
-			this.authChecker.hotelRestaurantAuthChecker,
-			new RestaurantStaffRouter().router
-		);
-	}
+    this.router.use(
+      "/staff",
+      this.authChecker.hotelRestaurantAuthChecker,
+      new RestaurantStaffRouter().router
+    );
+  }
 }

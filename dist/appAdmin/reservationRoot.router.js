@@ -15,7 +15,6 @@ const common_router_1 = __importDefault(require("./routers/common.router"));
 const expense_router_1 = __importDefault(require("./routers/expense.router"));
 const folio_router_1 = __importDefault(require("./routers/folio.router"));
 const guest_router_1 = __importDefault(require("./routers/guest.router"));
-const hotelRestaurant_report_router_1 = __importDefault(require("./routers/hotelRestaurant.report.router"));
 const hr_router_1 = __importDefault(require("./routers/hr.router"));
 const invoice_router_1 = __importDefault(require("./routers/invoice.router"));
 const money_reciept_router_1 = __importDefault(require("./routers/money-reciept.router"));
@@ -55,7 +54,6 @@ class ReservationRootRouter {
         this.router.use("/service-categories", this.authChecker.hotelAdminAuthChecker, new serviceCategories_router_1.default().router);
         this.router.use("/services", this.authChecker.hotelAdminAuthChecker, new service_router_1.default().router);
         this.router.use("/restaurant", this.authChecker.hotelAdminAuthChecker, new restaurant_hotel_router_1.default().router);
-        this.router.use("/hotel-restaurant-report", this.authChecker.hotelAdminAuthChecker, new hotelRestaurant_report_router_1.default().router);
         this.router.use("/", this.authChecker.hotelAdminAuthChecker, new reservation_router_1.ReservationRouter().router);
     }
 }

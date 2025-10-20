@@ -17,11 +17,10 @@ class HotelRestaurantReportService extends abstract_service_1.default {
     constructor() {
         super();
     }
-    getRestaurantSalesReport(req) {
+    getSalesReport(req) {
         return __awaiter(this, void 0, void 0, function* () {
             const { hotel_code } = req.hotel_admin;
             const { from_date, to_date, order_type, limit, skip, restaurant_id } = req.query;
-            console.log({ from_date, to_date });
             const { data, total, totals } = yield this.restaurantModel
                 .restaurantReportModel()
                 .getSalesReport({
@@ -30,6 +29,97 @@ class HotelRestaurantReportService extends abstract_service_1.default {
                 hotel_code,
                 restaurant_id: Number(restaurant_id),
                 order_type: order_type,
+                limit: limit,
+                skip: skip,
+            });
+            return {
+                success: true,
+                code: this.StatusCode.HTTP_OK,
+                total,
+                totals,
+                data,
+            };
+        });
+    }
+    getOrderInfo(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { hotel_code } = req.hotel_admin;
+            const model = this.restaurantModel.restaurantReportModel();
+            const data = yield model.getOrderInfo({
+                hotel_code,
+                restaurant_id: Number(req.query.restaurant_id),
+            });
+            return {
+                success: true,
+                code: this.StatusCode.HTTP_OK,
+                data,
+            };
+        });
+    }
+    getDailyOrderCounts(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { hotel_code } = req.hotel_admin;
+            const model = this.restaurantModel.restaurantReportModel();
+            const { from_date, to_date, order_type, restaurant_id } = req.query;
+            const data = yield model.getDailyOrderCounts({
+                hotel_code,
+                restaurant_id: Number(restaurant_id),
+                to_date: to_date,
+                from_date: from_date,
+            });
+            return Object.assign({ success: true, code: this.StatusCode.HTTP_OK }, data);
+        });
+    }
+    getProductsReport(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { hotel_code } = req.hotel_admin;
+            const { restaurant_id, from_date, to_date } = req.query;
+            const data = yield this.restaurantModel
+                .restaurantReportModel()
+                .getProductsReport({
+                hotel_code,
+                restaurant_id: Number(restaurant_id),
+                from_date: req.query.from_date,
+                to_date: req.query.to_date,
+            });
+            return {
+                success: true,
+                code: this.StatusCode.HTTP_OK,
+                data,
+            };
+        });
+    }
+    getSalesChart(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { hotel_code } = req.hotel_admin;
+            const { from_date, to_date, restaurant_id } = req.query;
+            const data = yield this.restaurantModel
+                .restaurantReportModel()
+                .getSalesChart({
+                from_date: from_date,
+                to_date: to_date,
+                hotel_code,
+                restaurant_id: Number(restaurant_id),
+            });
+            return {
+                success: true,
+                code: this.StatusCode.HTTP_OK,
+                data,
+            };
+        });
+    }
+    getUserSalesReport(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { hotel_code } = req.hotel_admin;
+            const { from_date, to_date, user_id, limit, skip, restaurant_id } = req.query;
+            const { data, total, totals } = yield this.restaurantModel
+                .restaurantReportModel()
+                .getUserSalesReport({
+                from_date: from_date,
+                to_date: to_date,
+                user_id: user_id,
+                hotel_code,
+                restaurant_id: Number(restaurant_id),
                 limit: limit,
                 skip: skip,
             });
