@@ -86,6 +86,7 @@ class RestaurantOrderService extends AbstractServices {
 				);
 			}
 
+			// Testing with new pc //
 			// ===================== Ingredients Start ===================== //
 			console.log({ uniqueFoodIds });
 
@@ -109,40 +110,6 @@ class RestaurantOrderService extends AbstractServices {
 			}
 			// ===================== Ingredients End ===================== //
 			return;
-			// calculate sub_total and grand total
-			foodItems.data.forEach((food) => {
-				const item = order_items.find((i) => i.food_id === food.id);
-				if (item) {
-					sub_total +=
-						Number(item.quantity) * Number(food.retail_price);
-				}
-			});
-
-			const discountAmount = Lib.calculatePercentageToAmount(
-				sub_total,
-				rest.discount,
-				rest.discount_type
-			);
-
-			let gross_amount = sub_total - discountAmount;
-
-			const serviceChargeAmount = Lib.calculatePercentageToAmount(
-				gross_amount,
-				rest.service_charge,
-				rest.service_charge_type
-			);
-
-			gross_amount += serviceChargeAmount;
-
-			const vatAmount = Lib.calculatePercentageToAmount(
-				gross_amount,
-				rest.vat,
-				rest.vat_type
-			);
-
-			gross_amount += vatAmount;
-
-			const grand_total = gross_amount;
 
 			// -------------- Double Entry Accounting -----------------
 
@@ -200,163 +167,6 @@ class RestaurantOrderService extends AbstractServices {
 			// ]);
 			// ------------------ End ---------------------//
 			let orderId;
-			if (order_type === "walk-in") {
-				let customerId;
-
-				if (
-					(customer_name || customer_phone) &&
-					customer_name &&
-					customer_phone
-				) {
-					const { data: checkCusomer } = await this.restaurantModel
-						.restaurantModel()
-						.getAllCustomer({
-							contact_no: customer_phone,
-							hotel_code,
-						});
-					if (checkCusomer.length === 0) {
-						const [cus] = await this.restaurantModel
-							.restaurantModel(trx)
-							.createCustomer({
-								name: customer_name,
-								contact_no: customer_phone,
-								hotel_code,
-							});
-						customerId = cus.id;
-					}
-				}
-
-				const [newOrder] = await restaurantOrderModel.createOrder({
-					hotel_code,
-					restaurant_id,
-					order_no: orderNo,
-					created_by: id,
-					table_id: rest.table_id,
-					order_type: order_type,
-					guest_name: customer_name,
-					customer_id: customerId,
-					sub_total: sub_total,
-					discount: rest.discount,
-					discount_type: rest.discount_type,
-					service_charge: rest.service_charge,
-					service_charge_type: rest.service_charge_type,
-					vat: rest.vat,
-					vat_type: rest.vat_type,
-					grand_total: grand_total,
-					staff_id: rest.staff_id,
-					room_no: rest.room_no,
-					discount_amount: discountAmount,
-					service_charge_amount: serviceChargeAmount,
-					vat_amount: vatAmount,
-					//  credit_voucher_id: voucherRes[0].id + 1,
-				});
-
-				orderId = newOrder.id;
-
-				await Promise.all(
-					order_items.map(async (item) => {
-						const food = await restaurantFoodModel.getFoods({
-							id: item.food_id,
-							hotel_code,
-							restaurant_id,
-						});
-						if (!food.data.length) {
-							throw new CustomError(
-								"Food not found",
-								this.StatusCode.HTTP_NOT_FOUND
-							);
-						}
-
-						await restaurantOrderModel.createOrderItems({
-							order_id: newOrder.id,
-							food_id: item.food_id,
-							name: food.data[0].name,
-							rate: Number(food.data[0].retail_price),
-							quantity: Number(item.quantity),
-							total:
-								Number(item.quantity) *
-								Number(food.data[0].retail_price),
-							//  debit_voucher_id: voucherRes[0].id,
-						});
-					})
-				);
-			} else if (order_type === "reservation") {
-				// if (!booking_id) {
-				//   return {
-				//     success: false,
-				//     code: this.StatusCode.HTTP_NOT_FOUND,
-				//     message: "Please give booking ID",
-				//   };
-				// }
-				const [newOrder] = await restaurantOrderModel.createOrder({
-					hotel_code,
-					booking_id: booking_id as number,
-					restaurant_id,
-					order_no: orderNo,
-					created_by: id,
-					table_id: rest.table_id,
-					order_type: order_type,
-					guest_name: customer_name,
-					sub_total: sub_total,
-					discount: rest.discount,
-					discount_type: rest.discount_type,
-					service_charge: rest.service_charge,
-					service_charge_type: rest.service_charge_type,
-					vat: rest.vat,
-					vat_type: rest.vat_type,
-					grand_total: grand_total,
-					staff_id: rest.staff_id,
-					room_no: rest.room_no,
-					discount_amount: discountAmount,
-					service_charge_amount: serviceChargeAmount,
-					vat_amount: vatAmount,
-					//  credit_voucher_id: voucherRes[0].id + 1,
-				});
-
-				orderId = newOrder.id;
-
-				await Promise.all(
-					order_items.map(async (item) => {
-						const food = await restaurantFoodModel.getFoods({
-							id: item.food_id,
-							hotel_code,
-							restaurant_id,
-						});
-						if (!food.data.length) {
-							throw new CustomError(
-								"Food not found",
-								this.StatusCode.HTTP_NOT_FOUND
-							);
-						}
-
-						await restaurantOrderModel.createOrderItems({
-							order_id: newOrder.id,
-							food_id: item.food_id,
-							name: food.data[0].name,
-							rate: Number(food.data[0].retail_price),
-							quantity: Number(item.quantity),
-							total:
-								Number(item.quantity) *
-								Number(food.data[0].retail_price),
-							//  debit_voucher_id: voucherRes[0].id,
-						});
-					})
-				);
-			}
-
-			await restaurantTableModel.updateTable({
-				id: rest.table_id,
-				payload: {
-					status: "booked",
-				},
-			});
-
-			return {
-				success: true,
-				code: this.StatusCode.HTTP_SUCCESSFUL,
-				message: "Order Confirmed Successfully.",
-				data: { id: orderId },
-			};
 		});
 	}
 
