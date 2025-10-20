@@ -74,11 +74,30 @@ class RestaurantOrderService extends abstract_service_1.default {
                 if (foodItems.data.length !== uniqueFoodIds.length) {
                     throw new customEror_1.default("One or more food items not found.", this.StatusCode.HTTP_NOT_FOUND);
                 }
+                // ===================== Ingredients Start ===================== //
+                console.log({ uniqueFoodIds });
+                for (const item of order_items) {
+                    const food = yield restaurantFoodModel.getFood({
+                        id: item.food_id,
+                        hotel_code,
+                        restaurant_id,
+                    });
+                    if (food.ingredients === null) {
+                        throw new customEror_1.default("No ingredients found for this food item.", this.StatusCode.HTTP_NOT_FOUND);
+                    }
+                    const { ingredients } = food;
+                    console.log({ ingredients });
+                    const product_ids = ingredients.map((i) => i.product_id);
+                    console.log({ product_ids });
+                }
+                // ===================== Ingredients End ===================== //
+                return;
                 // calculate sub_total and grand total
                 foodItems.data.forEach((food) => {
                     const item = order_items.find((i) => i.food_id === food.id);
                     if (item) {
-                        sub_total += Number(item.quantity) * Number(food.retail_price);
+                        sub_total +=
+                            Number(item.quantity) * Number(food.retail_price);
                     }
                 });
                 const discountAmount = lib_1.default.calculatePercentageToAmount(sub_total, rest.discount, rest.discount_type);
@@ -199,7 +218,8 @@ class RestaurantOrderService extends abstract_service_1.default {
                             name: food.data[0].name,
                             rate: Number(food.data[0].retail_price),
                             quantity: Number(item.quantity),
-                            total: Number(item.quantity) * Number(food.data[0].retail_price),
+                            total: Number(item.quantity) *
+                                Number(food.data[0].retail_price),
                             //  debit_voucher_id: voucherRes[0].id,
                         });
                     })));
@@ -252,7 +272,8 @@ class RestaurantOrderService extends abstract_service_1.default {
                             name: food.data[0].name,
                             rate: Number(food.data[0].retail_price),
                             quantity: Number(item.quantity),
-                            total: Number(item.quantity) * Number(food.data[0].retail_price),
+                            total: Number(item.quantity) *
+                                Number(food.data[0].retail_price),
                             //  debit_voucher_id: voucherRes[0].id,
                         });
                     })));
@@ -276,7 +297,9 @@ class RestaurantOrderService extends abstract_service_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             const { restaurant_id, hotel_code } = req.restaurant_admin;
             const { limit, skip, table_id, from_date, to_date, order_type, kitchen_status, status, } = req.query;
-            const data = yield this.restaurantModel.restaurantOrderModel().getOrders({
+            const data = yield this.restaurantModel
+                .restaurantOrderModel()
+                .getOrders({
                 limit: Number(limit),
                 skip: Number(skip),
                 hotel_code,
@@ -898,7 +921,8 @@ class RestaurantOrderService extends abstract_service_1.default {
                     foodItems.data.forEach((food) => {
                         const item = order_items.find((i) => i.food_id === food.id);
                         if (item) {
-                            sub_total += Number(item.quantity) * Number(food.retail_price);
+                            sub_total +=
+                                Number(item.quantity) * Number(food.retail_price);
                         }
                     });
                 }
@@ -994,7 +1018,8 @@ class RestaurantOrderService extends abstract_service_1.default {
                             name: (_a = food === null || food === void 0 ? void 0 : food.name) !== null && _a !== void 0 ? _a : "",
                             rate: Number(food === null || food === void 0 ? void 0 : food.retail_price) || 0,
                             quantity: Number(item.quantity),
-                            total: Number(item.quantity) * (Number(food === null || food === void 0 ? void 0 : food.retail_price) || 0),
+                            total: Number(item.quantity) *
+                                (Number(food === null || food === void 0 ? void 0 : food.retail_price) || 0),
                         };
                     });
                     yield restaurantOrderModel.createOrderItems(order_items_payload);
