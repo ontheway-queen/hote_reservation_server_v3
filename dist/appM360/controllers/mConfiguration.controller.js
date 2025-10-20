@@ -115,6 +115,36 @@ class MConfigurationController extends abstract_controller_1.default {
             const _t = yield this.service.deleteAmenities(req), { code } = _t, data = __rest(_t, ["code"]);
             res.status(code).json(data);
         }));
+        this.createResPermissionGroup = this.asyncWrapper.wrap({ bodySchema: this.validator.createPermissionGroupValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _u = yield this.service.createResPermissionGroup(req), { code } = _u, data = __rest(_u, ["code"]);
+            res.status(code).json(data);
+        }));
+        // get permission group
+        this.getResPermissionGroup = this.asyncWrapper.wrap(null, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _v = yield this.service.getResPermissionGroup(req), { code } = _v, data = __rest(_v, ["code"]);
+            res.status(code).json(data);
+        }));
+        this.createResPermission = this.asyncWrapper.wrap({ bodySchema: this.validator.createPermissionValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _w = yield this.service.createResPermission(req), { code } = _w, data = __rest(_w, ["code"]);
+            res.status(code).json(data);
+        }));
+        this.getSingleResPermission = this.asyncWrapper.wrap({
+            paramSchema: this.commonValidator.singleParamValidator("hotel_code"),
+        }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _x = yield this.service.getSingleResPermission(req), { code } = _x, data = __rest(_x, ["code"]);
+            res.status(code).json(data);
+        }));
+        this.updateSingleResPermission = this.asyncWrapper.wrap({
+            paramSchema: this.commonValidator.singleParamValidator("hotel_code"),
+            bodySchema: this.validator.updatePermissionValidator,
+        }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _y = yield this.service.updateSingleResPermission(req), { code } = _y, data = __rest(_y, ["code"]);
+            res.status(code).json(data);
+        }));
+        this.getAllResPermission = this.asyncWrapper.wrap(null, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _z = yield this.service.getAllResPermission(req), { code } = _z, data = __rest(_z, ["code"]);
+            res.status(code).json(data);
+        }));
     }
 }
 exports.default = MConfigurationController;

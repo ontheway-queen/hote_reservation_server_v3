@@ -9,6 +9,7 @@ FileFolder.HOTEL_FILES = "hotel-files";
 FileFolder.RESTAURANT_FILES = "restaurant-files";
 FileFolder.HALL_FILES = "hall-files";
 FileFolder.HOTEL_ADMIN_FILES = "hotel-admin-files";
+FileFolder.RES_ADMIN_FILES = "hotel-admin-files";
 FileFolder.HOTEL_EMPLOYEE_FILES = "employee-files";
 FileFolder.HOTEL_USER_FILES = "hotel-user-files";
 FileFolder.HOTEL_PAYROLL_FILES = "hotel-payroll-files";

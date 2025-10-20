@@ -188,6 +188,70 @@ class MConfigurationController extends AbstractController {
       res.status(code).json(data);
     }
   );
+
+  public createResPermissionGroup = this.asyncWrapper.wrap(
+    { bodySchema: this.validator.createPermissionGroupValidator },
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.createResPermissionGroup(
+        req
+      );
+
+      res.status(code).json(data);
+    }
+  );
+
+  // get permission group
+  public getResPermissionGroup = this.asyncWrapper.wrap(
+    null,
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.getResPermissionGroup(req);
+
+      res.status(code).json(data);
+    }
+  );
+
+  public createResPermission = this.asyncWrapper.wrap(
+    { bodySchema: this.validator.createPermissionValidator },
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.createResPermission(req);
+
+      res.status(code).json(data);
+    }
+  );
+
+  public getSingleResPermission = this.asyncWrapper.wrap(
+    {
+      paramSchema: this.commonValidator.singleParamValidator("hotel_code"),
+    },
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.getSingleResPermission(req);
+
+      res.status(code).json(data);
+    }
+  );
+
+  public updateSingleResPermission = this.asyncWrapper.wrap(
+    {
+      paramSchema: this.commonValidator.singleParamValidator("hotel_code"),
+      bodySchema: this.validator.updatePermissionValidator,
+    },
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.updateSingleResPermission(
+        req
+      );
+
+      res.status(code).json(data);
+    }
+  );
+
+  public getAllResPermission = this.asyncWrapper.wrap(
+    null,
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.getAllResPermission(req);
+
+      res.status(code).json(data);
+    }
+  );
 }
 
 export default MConfigurationController;

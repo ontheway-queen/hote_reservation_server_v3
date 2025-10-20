@@ -8,6 +8,7 @@ import HotelRouter from "./routers/res.hotel.router";
 import RestaurantTableRouter from "./routers/restaurantTable.router";
 import RestaurantStaffRouter from "./routers/staff.routers";
 import RestaurantUnitRouter from "./routers/unit.router";
+import ResAdministrationRouter from "./routers/res.administration.router";
 
 export class RestaurantRootRouter {
   public router = Router();
@@ -18,6 +19,12 @@ export class RestaurantRootRouter {
   }
 
   private callRouter() {
+    this.router.use(
+      "/administration",
+      this.authChecker.hotelRestaurantAuthChecker,
+      new ResAdministrationRouter().router
+    );
+
     this.router.use(
       "/table",
       this.authChecker.hotelRestaurantAuthChecker,

@@ -17,6 +17,7 @@ class RootRouter {
         this.callV1Router();
     }
     callV1Router() {
+        //
         this.v1Router.use("/common", new common_router_1.default().router);
         this.v1Router.use("/auth", new auth_router_1.default().AuthRouter);
         this.v1Router.use("/payment", new paymentRouter_1.default().router);

@@ -37,6 +37,22 @@ class MConfigurationRouter extends AbstractRouter {
       .post(this.controller.createPermission)
       .get(this.controller.getAllPermission);
 
+    //_____ __ __ __ __ __ __ __ __ _ restaurant __________________ //
+    this.router
+      .route("/restaurant/permission-group")
+      .post(this.controller.createResPermissionGroup)
+      .get(this.controller.getResPermissionGroup);
+
+    this.router
+      .route("/restaurant/permission/by-hotel-code/:hotel_code")
+      .get(this.controller.getSingleResPermission)
+      .patch(this.controller.updateSingleResPermission);
+
+    this.router
+      .route("/restaurant/permission")
+      .post(this.controller.createResPermission)
+      .get(this.controller.getAllResPermission);
+
     //-------------------------
 
     this.router.route("/country").get(this.controller.getAllCountry);

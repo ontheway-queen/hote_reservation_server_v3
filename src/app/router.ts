@@ -15,6 +15,7 @@ class RootRouter {
   }
 
   private callV1Router() {
+    //
     this.v1Router.use("/common", new CommonRouter().router);
 
     this.v1Router.use("/auth", new AuthRouter().AuthRouter);

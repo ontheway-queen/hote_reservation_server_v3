@@ -282,6 +282,93 @@ class MConfigurationModel extends schema_1.default {
                 .del();
         });
     }
+    // ------------------------ restaurant permission ------------------------
+    createResPermissionGroup(body) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("permission_group")
+                .withSchema(this.RESTAURANT_SCHEMA)
+                .insert(body);
+        });
+    }
+    getAllResRolePermissionGroup(payload) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { id, name } = payload;
+            return yield this.db("permission_group")
+                .withSchema(this.RESTAURANT_SCHEMA)
+                .select("id", "name")
+                .where(function () {
+                if (name) {
+                    this.where("name", "like", `%${name}%`);
+                }
+                if (id) {
+                    this.andWhere({ id });
+                }
+            });
+        });
+    }
+    getSingleResPermissionGroup(id) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("permission_group")
+                .withSchema(this.RESTAURANT_SCHEMA)
+                .select("*")
+                .where({ id });
+        });
+    }
+    createResPermission(payload) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("permissions")
+                .withSchema(this.RESTAURANT_SCHEMA)
+                .insert(payload);
+        });
+    }
+    getAllResPermissionByHotel(hotel_code) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("restaurant_permission_view")
+                .withSchema(this.RESTAURANT_SCHEMA)
+                .select("*")
+                .where({ hotel_code })
+                .first();
+        });
+    }
+    getAllResPermission(payload) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { ids } = payload;
+            return yield this.db("permissions AS p")
+                .withSchema(this.RESTAURANT_SCHEMA)
+                .select("p.id AS permission_id", "p.name As permission_name", "p.permission_group_id", "pg.name AS permission_group_name")
+                .join("permission_group AS pg", "p.permission_group_id", "pg.id")
+                .where(function () {
+                if (ids === null || ids === void 0 ? void 0 : ids.length) {
+                    this.whereIn("p.id", ids);
+                }
+            });
+        });
+    }
+    addedResPermission(payload) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("restaurant_permission")
+                .withSchema(this.RESTAURANT_SCHEMA)
+                .insert(payload, "id");
+        });
+    }
+    deleteResPermission(hotel_code, permission_id) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("restaurant_permission")
+                .withSchema(this.RESTAURANT_SCHEMA)
+                .whereIn("permission_id", permission_id)
+                .andWhere({ hotel_code })
+                .delete();
+        });
+    }
+    deleteResRolePermission(hotel_code, h_permission_id) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("role_permissions")
+                .withSchema(this.RESTAURANT_SCHEMA)
+                .whereIn("h_permission_id", h_permission_id)
+                .andWhere({ hotel_code })
+                .delete();
+        });
+    }
 }
 exports.default = MConfigurationModel;
 //# sourceMappingURL=mConfigurationModel.js.map

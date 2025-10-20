@@ -501,6 +501,254 @@ class MConfigurationService extends AbstractServices {
       };
     });
   }
+
+  public async createResPermissionGroup(req: Request) {
+    const { id } = req.admin;
+    const model = this.Model.mConfigurationModel();
+
+    // get all permission group
+    const checkGroup = await model.getAllResRolePermissionGroup({
+      name: req.body.name,
+    });
+
+    if (checkGroup.length) {
+      return {
+        success: false,
+        code: this.StatusCode.HTTP_CONFLICT,
+        message: this.ResMsg.HTTP_CONFLICT,
+      };
+    }
+
+    await model.createResPermissionGroup({
+      ...req.body,
+      created_by: id,
+    });
+
+    return {
+      success: true,
+      code: this.StatusCode.HTTP_SUCCESSFUL,
+      message: this.ResMsg.HTTP_SUCCESSFUL,
+    };
+  }
+
+  public async getResPermissionGroup(req: Request) {
+    const model = this.Model.mConfigurationModel();
+    const data = await model.getAllResRolePermissionGroup({});
+
+    return {
+      success: true,
+      code: this.StatusCode.HTTP_OK,
+      data,
+    };
+  }
+
+  // create permission
+  public async createResPermission(req: Request) {
+    const { id } = req.admin;
+
+    const { permission_group_id, name } = req.body;
+
+    // check group
+    const check =
+      await this.Model.mConfigurationModel().getSingleResPermissionGroup(
+        permission_group_id
+      );
+
+    if (!check.length) {
+      return {
+        success: false,
+        code: this.StatusCode.HTTP_BAD_REQUEST,
+        message: "Invalid group ID",
+      };
+    }
+
+    const insertObj = name.map((item: string) => {
+      return {
+        permission_group_id,
+        name: item,
+        created_by: id,
+      };
+    });
+
+    await this.Model.mConfigurationModel().createResPermission(insertObj);
+
+    return {
+      success: true,
+      code: this.StatusCode.HTTP_SUCCESSFUL,
+      message: this.ResMsg.HTTP_SUCCESSFUL,
+    };
+  }
+
+  public async getSingleResPermission(req: Request) {
+    const { hotel_code } = req.params;
+
+    const data =
+      await this.Model.mConfigurationModel().getAllResPermissionByHotel(
+        parseInt(hotel_code)
+      );
+
+    console.log({ data });
+
+    const { permissions } = data;
+
+    const groupedPermissions: any = {};
+
+    permissions?.forEach((entry) => {
+      const permissionGroupId = entry.permission_group_id;
+      const permission = {
+        permission_id: entry.permission_id,
+        permission_name: entry.permission_name,
+      };
+
+      if (!groupedPermissions[permissionGroupId]) {
+        groupedPermissions[permissionGroupId] = {
+          permissionGroupId: permissionGroupId,
+          permissionGroupName: entry.permission_group_name,
+          permissions: [permission],
+        };
+      } else {
+        groupedPermissions[permissionGroupId].permissions.push(permission);
+      }
+    });
+
+    const result = Object.values(groupedPermissions);
+
+    return {
+      success: true,
+      code: this.StatusCode.HTTP_OK,
+      data: result,
+    };
+  }
+
+  public async updateSingleResPermission(req: Request) {
+    return await this.db.transaction(async (trx) => {
+      const hotel_code = parseInt(req.params.hotel_code);
+      const { added = [], deleted = [] }: UpdateHotelPermissionReqBody =
+        req.body;
+
+      const model = this.Model.mConfigurationModel(trx);
+
+      const checkHotelPermission = await model.getAllResPermissionByHotel(
+        hotel_code
+      );
+
+      const existingPermissions: HotelPermission[] =
+        checkHotelPermission?.permissions || [];
+
+      const existingPermissionIds = new Set(
+        existingPermissions.map((perm) => perm.permission_id)
+      );
+      const existingHPermissionMap = new Map<number, number>();
+      existingPermissions.forEach((perm) =>
+        existingHPermissionMap.set(perm.permission_id, perm.h_permission_id)
+      );
+
+      // Filter only new permissions to add
+      const newPermissionIds = added.filter(
+        (permId) => !existingPermissionIds.has(permId)
+      );
+
+      if (newPermissionIds.length > 0) {
+        const insertPayload = newPermissionIds.map((permId) => ({
+          hotel_code: hotel_code,
+          permission_id: permId,
+        }));
+        await model.addedResPermission(insertPayload);
+      }
+
+      if (deleted.length > 0) {
+        const hPermissionIdsToDelete = deleted
+          .map((permId) => existingHPermissionMap.get(permId))
+          .filter((id): id is number => id !== undefined);
+
+        if (hPermissionIdsToDelete.length > 0) {
+          await model.deleteResRolePermission(
+            hotel_code,
+            hPermissionIdsToDelete
+          );
+        }
+
+        await model.deleteResPermission(hotel_code, deleted);
+      }
+
+      // updated permission will be assign for hotel user owner
+      // const rAdmModel = this.Model.rAdministrationModel(trx);
+      // const checkUser = await rAdmModel.getSingleAdmin({
+      //   owner: "true",
+      //   hotel_code,
+      // });
+
+      // if (checkUser) {
+      //   const role_id = Number(checkUser.role_id);
+
+      //   // Delete existing permissions
+      //   await rAdmModel.deleteRolePermissionByRoleID({
+      //     role_id,
+      //     hotel_code,
+      //   });
+
+      //   // Get all hotel permissions
+      //   const hotelPermissions = await model.getAllPermissionByHotel(
+      //     hotel_code
+      //   );
+
+      //   if (hotelPermissions?.permissions?.length) {
+      //     const rolePermissionPayload = hotelPermissions.permissions.map(
+      //       (perm: { h_permission_id: number }) => ({
+      //         hotel_code,
+      //         h_permission_id: perm.h_permission_id,
+      //         read: 1,
+      //         write: 1,
+      //         update: 1,
+      //         delete: 1,
+      //         role_id,
+      //       })
+      //     );
+
+      //     // Bulk insert role permissions
+      //     await rAdmModel.insertInRolePermission(rolePermissionPayload);
+      //   }
+      // }
+
+      return {
+        success: true,
+        code: this.StatusCode.HTTP_OK,
+        message: "Successfully Permission Updated",
+      };
+    });
+  }
+
+  public async getAllResPermission(req: Request) {
+    const data = await this.Model.mConfigurationModel().getAllResPermission({});
+
+    const groupedPermissions: any = {};
+
+    data.forEach((entry) => {
+      const permission_group_id = entry.permission_group_id;
+      const permission = {
+        permission_id: entry.permission_id,
+        permission_name: entry.permission_name,
+      };
+
+      if (!groupedPermissions[permission_group_id]) {
+        groupedPermissions[permission_group_id] = {
+          permission_group_id: permission_group_id,
+          permissionGroupName: entry.permission_group_name,
+          permissions: [permission],
+        };
+      } else {
+        groupedPermissions[permission_group_id].permissions.push(permission);
+      }
+    });
+
+    const result = Object.values(groupedPermissions);
+
+    return {
+      success: true,
+      code: this.StatusCode.HTTP_OK,
+      data: result,
+    };
+  }
 }
 
 export default MConfigurationService;

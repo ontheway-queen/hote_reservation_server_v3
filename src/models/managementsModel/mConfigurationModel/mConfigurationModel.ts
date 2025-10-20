@@ -352,5 +352,125 @@ class MConfigurationModel extends Schema {
       .where({ id })
       .del();
   }
+
+  // ------------------------ restaurant permission ------------------------
+
+  public async createResPermissionGroup(body: {
+    name: string;
+    created_by: number;
+  }) {
+    return await this.db("permission_group")
+      .withSchema(this.RESTAURANT_SCHEMA)
+      .insert(body);
+  }
+
+  public async getAllResRolePermissionGroup(payload: {
+    name?: string;
+    id?: number;
+  }) {
+    const { id, name } = payload;
+
+    return await this.db("permission_group")
+      .withSchema(this.RESTAURANT_SCHEMA)
+      .select("id", "name")
+      .where(function () {
+        if (name) {
+          this.where("name", "like", `%${name}%`);
+        }
+
+        if (id) {
+          this.andWhere({ id });
+        }
+      });
+  }
+
+  public async getSingleResPermissionGroup(id: number) {
+    return await this.db("permission_group")
+      .withSchema(this.RESTAURANT_SCHEMA)
+      .select("*")
+      .where({ id });
+  }
+
+  public async createResPermission(
+    payload: {
+      permission_group_id: number;
+      name: string[];
+      created_by: number;
+    }[]
+  ) {
+    return await this.db("permissions")
+      .withSchema(this.RESTAURANT_SCHEMA)
+      .insert(payload);
+  }
+
+  public async getAllResPermissionByHotel(hotel_code: number): Promise<{
+    hotel_id: number;
+    hotel_code: string;
+    name: string;
+    permissions: {
+      h_permission_id: number;
+      permission_group_id: number;
+      permission_group_name: string;
+      permission_id: number;
+      permission_name: string;
+    }[];
+  }> {
+    return await this.db("restaurant_permission_view")
+      .withSchema(this.RESTAURANT_SCHEMA)
+      .select("*")
+      .where({ hotel_code })
+      .first();
+  }
+
+  public async getAllResPermission(payload: { ids?: number[] }) {
+    const { ids } = payload;
+    return await this.db("permissions AS p")
+      .withSchema(this.RESTAURANT_SCHEMA)
+      .select(
+        "p.id AS permission_id",
+        "p.name As permission_name",
+        "p.permission_group_id",
+        "pg.name AS permission_group_name"
+      )
+      .join("permission_group AS pg", "p.permission_group_id", "pg.id")
+      .where(function () {
+        if (ids?.length) {
+          this.whereIn("p.id", ids);
+        }
+      });
+  }
+
+  public async addedResPermission(
+    payload: {
+      hotel_code: number;
+      permission_id: number;
+    }[]
+  ) {
+    return await this.db("restaurant_permission")
+      .withSchema(this.RESTAURANT_SCHEMA)
+      .insert(payload, "id");
+  }
+
+  public async deleteResPermission(
+    hotel_code: number,
+    permission_id: number[]
+  ) {
+    return await this.db("restaurant_permission")
+      .withSchema(this.RESTAURANT_SCHEMA)
+      .whereIn("permission_id", permission_id)
+      .andWhere({ hotel_code })
+      .delete();
+  }
+
+  public async deleteResRolePermission(
+    hotel_code: number,
+    h_permission_id: number[]
+  ) {
+    return await this.db("role_permissions")
+      .withSchema(this.RESTAURANT_SCHEMA)
+      .whereIn("h_permission_id", h_permission_id)
+      .andWhere({ hotel_code })
+      .delete();
+  }
 }
 export default MConfigurationModel;
