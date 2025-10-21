@@ -38,6 +38,7 @@ class RestaurantOrderService extends abstract_service_1.default {
                 const restaurantTableModel = this.restaurantModel.restaurantTableModel(trx);
                 const restaurantOrderModel = this.restaurantModel.restaurantOrderModel(trx);
                 const restaurantFoodModel = this.restaurantModel.restaurantFoodModel(trx);
+                const hotelInventoryModel = this.Model.inventoryModel(trx);
                 const { data } = yield restaurantTableModel.getTables({
                     id: rest.table_id,
                     hotel_code,
@@ -74,25 +75,27 @@ class RestaurantOrderService extends abstract_service_1.default {
                 if (foodItems.data.length !== uniqueFoodIds.length) {
                     throw new customEror_1.default("One or more food items not found.", this.StatusCode.HTTP_NOT_FOUND);
                 }
-                // Testing with new pc //
-                // ===================== Ingredients Start ===================== //
-                console.log({ uniqueFoodIds });
-                for (const item of order_items) {
-                    const food = yield restaurantFoodModel.getFood({
-                        id: item.food_id,
-                        hotel_code,
-                        restaurant_id,
-                    });
-                    if (food.ingredients === null) {
-                        throw new customEror_1.default("No ingredients found for this food item.", this.StatusCode.HTTP_NOT_FOUND);
+                yield lib_1.default.checkAndUpdateIngredientStock({
+                    trx,
+                    hotel_code,
+                    restaurant_id,
+                    type: "create",
+                    order_items,
+                });
+                // calculate sub_total and grand total
+                foodItems.data.forEach((food) => {
+                    const item = order_items.find((i) => i.food_id === food.id);
+                    if (item) {
+                        sub_total += Number(item.quantity) * Number(food.retail_price);
                     }
-                    const { ingredients } = food;
-                    console.log({ ingredients });
-                    const product_ids = ingredients.map((i) => i.product_id);
-                    console.log({ product_ids });
-                }
-                // ===================== Ingredients End ===================== //
-                return;
+                });
+                const discountAmount = lib_1.default.calculatePercentageToAmount(sub_total, rest.discount, rest.discount_type);
+                let gross_amount = sub_total - discountAmount;
+                const serviceChargeAmount = lib_1.default.calculatePercentageToAmount(gross_amount, rest.service_charge, rest.service_charge_type);
+                gross_amount += serviceChargeAmount;
+                const vatAmount = lib_1.default.calculatePercentageToAmount(gross_amount, rest.vat, rest.vat_type);
+                gross_amount += vatAmount;
+                const grand_total = gross_amount;
                 // -------------- Double Entry Accounting -----------------
                 // const helper = new HelperFunction();
                 // const hotelModel = this.Model.HotelModel(trx);
@@ -142,6 +145,138 @@ class RestaurantOrderService extends abstract_service_1.default {
                 // ]);
                 // ------------------ End ---------------------//
                 let orderId;
+                if (order_type === "walk-in") {
+                    let customerId;
+                    if ((customer_name || customer_phone) &&
+                        customer_name &&
+                        customer_phone) {
+                        const { data: checkCusomer } = yield this.restaurantModel
+                            .restaurantModel()
+                            .getAllCustomer({
+                            contact_no: customer_phone,
+                            hotel_code,
+                        });
+                        if (checkCusomer.length === 0) {
+                            const [cus] = yield this.restaurantModel
+                                .restaurantModel(trx)
+                                .createCustomer({
+                                name: customer_name,
+                                contact_no: customer_phone,
+                                hotel_code,
+                            });
+                            customerId = cus.id;
+                        }
+                    }
+                    const [newOrder] = yield restaurantOrderModel.createOrder({
+                        hotel_code,
+                        restaurant_id,
+                        order_no: orderNo,
+                        created_by: id,
+                        table_id: rest.table_id,
+                        order_type: order_type,
+                        guest_name: customer_name,
+                        customer_id: customerId,
+                        sub_total: sub_total,
+                        discount: rest.discount,
+                        discount_type: rest.discount_type,
+                        service_charge: rest.service_charge,
+                        service_charge_type: rest.service_charge_type,
+                        vat: rest.vat,
+                        vat_type: rest.vat_type,
+                        grand_total: grand_total,
+                        staff_id: rest.staff_id,
+                        room_no: rest.room_no,
+                        discount_amount: discountAmount,
+                        service_charge_amount: serviceChargeAmount,
+                        vat_amount: vatAmount,
+                        //  credit_voucher_id: voucherRes[0].id + 1,
+                    });
+                    orderId = newOrder.id;
+                    yield Promise.all(order_items.map((item) => __awaiter(this, void 0, void 0, function* () {
+                        const food = yield restaurantFoodModel.getFoods({
+                            id: item.food_id,
+                            hotel_code,
+                            restaurant_id,
+                        });
+                        if (!food.data.length) {
+                            throw new customEror_1.default("Food not found", this.StatusCode.HTTP_NOT_FOUND);
+                        }
+                        yield restaurantOrderModel.createOrderItems({
+                            order_id: newOrder.id,
+                            food_id: item.food_id,
+                            name: food.data[0].name,
+                            rate: Number(food.data[0].retail_price),
+                            quantity: Number(item.quantity),
+                            total: Number(item.quantity) * Number(food.data[0].retail_price),
+                            //  debit_voucher_id: voucherRes[0].id,
+                        });
+                    })));
+                }
+                else if (order_type === "reservation") {
+                    // if (!booking_id) {
+                    //   return {
+                    //     success: false,
+                    //     code: this.StatusCode.HTTP_NOT_FOUND,
+                    //     message: "Please give booking ID",
+                    //   };
+                    // }
+                    const [newOrder] = yield restaurantOrderModel.createOrder({
+                        hotel_code,
+                        booking_id: booking_id,
+                        restaurant_id,
+                        order_no: orderNo,
+                        created_by: id,
+                        table_id: rest.table_id,
+                        order_type: order_type,
+                        guest_name: customer_name,
+                        sub_total: sub_total,
+                        discount: rest.discount,
+                        discount_type: rest.discount_type,
+                        service_charge: rest.service_charge,
+                        service_charge_type: rest.service_charge_type,
+                        vat: rest.vat,
+                        vat_type: rest.vat_type,
+                        grand_total: grand_total,
+                        staff_id: rest.staff_id,
+                        room_no: rest.room_no,
+                        discount_amount: discountAmount,
+                        service_charge_amount: serviceChargeAmount,
+                        vat_amount: vatAmount,
+                        //  credit_voucher_id: voucherRes[0].id + 1,
+                    });
+                    orderId = newOrder.id;
+                    yield Promise.all(order_items.map((item) => __awaiter(this, void 0, void 0, function* () {
+                        const food = yield restaurantFoodModel.getFoods({
+                            id: item.food_id,
+                            hotel_code,
+                            restaurant_id,
+                        });
+                        if (!food.data.length) {
+                            throw new customEror_1.default("Food not found", this.StatusCode.HTTP_NOT_FOUND);
+                        }
+                        yield restaurantOrderModel.createOrderItems({
+                            order_id: newOrder.id,
+                            food_id: item.food_id,
+                            name: food.data[0].name,
+                            rate: Number(food.data[0].retail_price),
+                            quantity: Number(item.quantity),
+                            total: Number(item.quantity) * Number(food.data[0].retail_price),
+                            //  debit_voucher_id: voucherRes[0].id,
+                        });
+                    })));
+                }
+                yield restaurantTableModel.updateTable({
+                    id: rest.table_id,
+                    payload: {
+                        status: "booked",
+                    },
+                });
+                return {
+                    success: true,
+                    code: this.StatusCode.HTTP_SUCCESSFUL,
+                    message: "Order Confirmed Successfully.",
+                    data: { id: orderId },
+                };
             }));
         });
     }
@@ -149,9 +284,7 @@ class RestaurantOrderService extends abstract_service_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             const { restaurant_id, hotel_code } = req.restaurant_admin;
             const { limit, skip, table_id, from_date, to_date, order_type, kitchen_status, status, } = req.query;
-            const data = yield this.restaurantModel
-                .restaurantOrderModel()
-                .getOrders({
+            const data = yield this.restaurantModel.restaurantOrderModel().getOrders({
                 limit: Number(limit),
                 skip: Number(skip),
                 hotel_code,
@@ -235,6 +368,18 @@ class RestaurantOrderService extends abstract_service_1.default {
                         message: "Order not found.",
                     };
                 }
+                const { order_items } = isOrderExists;
+                const parsedOrder = order_items.map((item) => ({
+                    food_id: item.food_id,
+                    quantity: item.quantity,
+                }));
+                yield lib_1.default.checkAndUpdateIngredientStock({
+                    trx,
+                    hotel_code,
+                    restaurant_id,
+                    type: "cancel",
+                    order_items: parsedOrder,
+                });
                 yield restaurantOrderModel.cancelOrder({
                     id: parseInt(id),
                 });
@@ -773,9 +918,26 @@ class RestaurantOrderService extends abstract_service_1.default {
                     foodItems.data.forEach((food) => {
                         const item = order_items.find((i) => i.food_id === food.id);
                         if (item) {
-                            sub_total +=
-                                Number(item.quantity) * Number(food.retail_price);
+                            sub_total += Number(item.quantity) * Number(food.retail_price);
                         }
+                    });
+                    const { order_items: orderItems } = existingOrder;
+                    const parsedOrder = orderItems.map((item) => ({
+                        food_id: item.food_id,
+                        quantity: item.quantity,
+                    }));
+                    console.log({
+                        parsedOrder,
+                        order_items,
+                    });
+                    // throw new CustomError("error", 400);
+                    yield lib_1.default.checkAndUpdateIngredientStock({
+                        trx,
+                        hotel_code,
+                        restaurant_id,
+                        type: "update",
+                        order_items,
+                        previous_order_items: parsedOrder,
                     });
                 }
                 else {
@@ -870,8 +1032,7 @@ class RestaurantOrderService extends abstract_service_1.default {
                             name: (_a = food === null || food === void 0 ? void 0 : food.name) !== null && _a !== void 0 ? _a : "",
                             rate: Number(food === null || food === void 0 ? void 0 : food.retail_price) || 0,
                             quantity: Number(item.quantity),
-                            total: Number(item.quantity) *
-                                (Number(food === null || food === void 0 ? void 0 : food.retail_price) || 0),
+                            total: Number(item.quantity) * (Number(food === null || food === void 0 ? void 0 : food.retail_price) || 0),
                         };
                     });
                     yield restaurantOrderModel.createOrderItems(order_items_payload);
