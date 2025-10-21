@@ -18,6 +18,20 @@ class RestaurantFoodService extends abstract_service_1.default {
     constructor() {
         super();
     }
+    getAllProduct(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { hotel_code } = req.restaurant_admin;
+            const { data, total } = yield this.Model.inventoryModel().getAllProduct({
+                hotel_code,
+            });
+            return {
+                success: true,
+                code: this.StatusCode.HTTP_OK,
+                total,
+                data,
+            };
+        });
+    }
     createFood(req) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
@@ -214,8 +228,7 @@ class RestaurantFoodService extends abstract_service_1.default {
                         }
                     }
                 }
-                if (Array.isArray(remove_ingredients) &&
-                    remove_ingredients.length > 0) {
+                if (Array.isArray(remove_ingredients) && remove_ingredients.length > 0) {
                     for (const id of remove_ingredients) {
                         const isDeleted = yield restaurantFoodModel.deleteFoodIngredients({
                             id: id,

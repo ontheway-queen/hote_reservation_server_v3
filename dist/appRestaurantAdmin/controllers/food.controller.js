@@ -31,29 +31,33 @@ class RestaurantFoodController extends abstract_controller_1.default {
         super();
         this.validator = new food_validator_1.default();
         this.service = new food_service_1.default();
+        this.getAllProduct = this.asyncWrapper.wrap(null, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _a = yield this.service.getAllProduct(req), { code } = _a, data = __rest(_a, ["code"]);
+            res.status(code).json(data);
+        }));
         this.createFood = this.asyncWrapper.wrap({ bodySchema: this.validator.createFoodValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _a = yield this.service.createFood(req), { code } = _a, data = __rest(_a, ["code"]);
+            const _b = yield this.service.createFood(req), { code } = _b, data = __rest(_b, ["code"]);
             res.status(code).json(data);
         }));
         this.getFoods = this.asyncWrapper.wrap({ querySchema: this.validator.getFoodsValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _b = yield this.service.getFoods(req), { code } = _b, data = __rest(_b, ["code"]);
+            const _c = yield this.service.getFoods(req), { code } = _c, data = __rest(_c, ["code"]);
             res.status(code).json(data);
         }));
         this.getFood = this.asyncWrapper.wrap({ paramSchema: this.commonValidator.singleParamStringValidator() }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _c = yield this.service.getFood(req), { code } = _c, data = __rest(_c, ["code"]);
+            const _d = yield this.service.getFood(req), { code } = _d, data = __rest(_d, ["code"]);
             res.status(code).json(data);
         }));
         this.updateFood = this.asyncWrapper.wrap({
             bodySchema: this.validator.updateFoodValidator,
             paramSchema: this.commonValidator.singleParamStringValidator(),
         }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _d = yield this.service.updateFood(req), { code } = _d, data = __rest(_d, ["code"]);
+            const _e = yield this.service.updateFood(req), { code } = _e, data = __rest(_e, ["code"]);
             res.status(code).json(data);
         }));
         this.deleteFood = this.asyncWrapper.wrap({
             paramSchema: this.commonValidator.singleParamStringValidator(),
         }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _e = yield this.service.deleteFood(req), { code } = _e, data = __rest(_e, ["code"]);
+            const _f = yield this.service.deleteFood(req), { code } = _f, data = __rest(_f, ["code"]);
             res.status(code).json(data);
         }));
     }
