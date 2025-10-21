@@ -4,6 +4,7 @@ import {
 } from "../../appAdmin/utlis/interfaces/restaurant.hotel.interface";
 import {
   IcreateRolePermission,
+  IsingleRolePermission,
   IUserAdminWithHotel,
 } from "../../appRestaurantAdmin/utils/interface/res.admin.interface";
 import { IRestaurantAdminProfile } from "../../appRestaurantAdmin/utils/interface/restaurant.interface";
@@ -218,11 +219,18 @@ class HotelRestaurantAdminModel extends Schema {
   }) {
     return await this.db("role_permissions")
       .withSchema(this.RESTAURANT_SCHEMA)
-      .select("h_permission_id", "role_id", "read", "write", "update", "delete")
+      .select(
+        "res_permission_id",
+        "role_id",
+        "read",
+        "write",
+        "update",
+        "delete"
+      )
       .where("hotel_code", hotel_code)
       .andWhere(function () {
         if (h_permission_ids?.length) {
-          this.whereIn("h_permission_id", h_permission_ids);
+          this.whereIn("res_permission_id", h_permission_ids);
         }
       })
       .andWhere("role_id", role_id);
@@ -235,7 +243,7 @@ class HotelRestaurantAdminModel extends Schema {
   ) {
     const res = await this.db("role_permission")
       .withSchema(this.RESTAURANT_SCHEMA)
-      .andWhere("h_permission_id", h_permission_id)
+      .andWhere("res_permission_id", h_permission_id)
       .andWhere("permission_type", permission_type)
       .andWhere("role_id", role_id)
       .delete();
@@ -318,23 +326,7 @@ class HotelRestaurantAdminModel extends Schema {
     id?: number;
     hotel_code: number;
     role_name?: string;
-  }): Promise<{
-    role_id: number;
-    role_name: string;
-    hotel_code: number;
-    init_role: boolean;
-    permissions: {
-      permission_group_id: number;
-      permission_group_name: string;
-      res_permission_id: number;
-      permission_id: number;
-      permission_name: string;
-      read: number;
-      write: number;
-      update: number;
-      delete: number;
-    }[];
-  }> {
+  }): Promise<IsingleRolePermission> {
     return await this.db("role_permission_view")
       .withSchema(this.RESTAURANT_SCHEMA)
       .select("*")

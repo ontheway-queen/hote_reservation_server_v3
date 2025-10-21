@@ -1,6 +1,6 @@
-import { number } from "joi";
 import {
   IcreateRolePermission,
+  IsingleRolePermissionByView,
   IUserAdminWithHotel,
 } from "../../appAdmin/utlis/interfaces/reservationAdmin.interface";
 import {
@@ -9,11 +9,11 @@ import {
 } from "../../auth/utils/interfaces/hotel-admin.auth.types";
 import { TDB } from "../../common/types/commontypes";
 
-import Schema from "../../utils/miscellaneous/schema";
 import {
   ICreateAuditTrailPayload,
   IGetAuditTrailQuery,
 } from "../../common/interfaces/commonInterface";
+import Schema from "../../utils/miscellaneous/schema";
 
 class RAdministrationModel extends Schema {
   private db: TDB;
@@ -223,23 +223,7 @@ class RAdministrationModel extends Schema {
     id?: number;
     hotel_code: number;
     role_name?: string;
-  }): Promise<{
-    role_id: number;
-    role_name: string;
-    hotel_code: number;
-    init_role: boolean;
-    permissions: {
-      permission_group_id: number;
-      permission_group_name: string;
-      h_permission_id: number;
-      permission_id: number;
-      permission_name: string;
-      read: number;
-      write: number;
-      update: number;
-      delete: number;
-    }[];
-  }> {
+  }): Promise<IsingleRolePermissionByView> {
     return await this.db("role_permission_view")
       .withSchema(this.RESERVATION_SCHEMA)
       .select("*")

@@ -140,11 +140,11 @@ class HotelRestaurantAdminModel extends schema_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("role_permissions")
                 .withSchema(this.RESTAURANT_SCHEMA)
-                .select("h_permission_id", "role_id", "read", "write", "update", "delete")
+                .select("res_permission_id", "role_id", "read", "write", "update", "delete")
                 .where("hotel_code", hotel_code)
                 .andWhere(function () {
                 if (h_permission_ids === null || h_permission_ids === void 0 ? void 0 : h_permission_ids.length) {
-                    this.whereIn("h_permission_id", h_permission_ids);
+                    this.whereIn("res_permission_id", h_permission_ids);
                 }
             })
                 .andWhere("role_id", role_id);
@@ -154,7 +154,7 @@ class HotelRestaurantAdminModel extends schema_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             const res = yield this.db("role_permission")
                 .withSchema(this.RESTAURANT_SCHEMA)
-                .andWhere("h_permission_id", h_permission_id)
+                .andWhere("res_permission_id", h_permission_id)
                 .andWhere("permission_type", permission_type)
                 .andWhere("role_id", role_id)
                 .delete();

@@ -109,7 +109,20 @@ class HotelAdminAuthService extends AbstractServices {
       });
     }
 
-    const output_data: any[] = [];
+    const output_data: {
+      permission_group_id: number;
+      permission_group_name: string;
+      subModules: {
+        permission_id: number;
+        permission_name: string;
+        permissions: {
+          read: 0 | 1;
+          write: 0 | 1;
+          update: 0 | 1;
+          delete: 0 | 1;
+        };
+      }[];
+    }[] = [];
     const { permissions } = singleRolePermissions || {};
 
     if (permissions?.length) {

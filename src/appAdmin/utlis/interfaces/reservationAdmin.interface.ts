@@ -34,3 +34,21 @@ export interface IUserAdminWithHotel {
   created_at: Date | string;
   hotel_contact_details: HotelContactDetails;
 }
+
+export interface IsingleRolePermissionByView {
+  role_id: number;
+  role_name: string;
+  hotel_code: number;
+  init_role: boolean;
+  permissions: {
+    permission_group_id: number;
+    permission_group_name: string;
+    h_permission_id: number;
+    permission_id: number;
+    permission_name: string;
+    read: 0 | 1;
+    write: 0 | 1;
+    update: 0 | 1;
+    delete: 0 | 1;
+  }[];
+}

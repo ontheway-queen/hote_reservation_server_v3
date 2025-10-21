@@ -88,10 +88,62 @@ class AuthHotelRestaurantAdminService extends AbstractServices {
       };
     }
 
+    const singleRolePermissions =
+      await restaurantAdminModel.getSingleRoleByView({
+        id: data.role_id,
+        hotel_code,
+      });
+
+    const output_data: {
+      permission_group_id: number;
+      permission_group_name: string;
+      subModules: {
+        permission_id: number;
+        permission_name: string;
+        permissions: {
+          read: 0 | 1;
+          write: 0 | 1;
+          update: 0 | 1;
+          delete: 0 | 1;
+        };
+      }[];
+    }[] = [];
+    const { permissions } = singleRolePermissions || {};
+
+    if (permissions?.length) {
+      for (const perm of permissions) {
+        let group = output_data.find(
+          (g) => g.permission_group_id === perm.permission_group_id
+        );
+        if (!group) {
+          group = {
+            permission_group_id: perm.permission_group_id,
+            permission_group_name: perm.permission_group_name,
+            subModules: [],
+          };
+          output_data.push(group);
+        }
+
+        // Push permission submodule
+        group.subModules.push({
+          permission_id: perm.permission_id,
+          permission_name: perm.permission_name,
+          permissions: {
+            read: perm.read,
+            write: perm.write,
+            update: perm.update,
+            delete: perm.delete,
+          },
+        });
+      }
+    }
     return {
       success: true,
       code: this.StatusCode.HTTP_OK,
-      data,
+      data: {
+        ...data,
+        permissions: output_data,
+      },
     };
   }
 
