@@ -16,6 +16,7 @@ exports.ReservationService = void 0;
 const helperFunction_1 = require("../utlis/library/helperFunction");
 const subreservation_service_1 = require("./subreservation.service");
 const abstract_service_1 = __importDefault(require("../../abstarcts/abstract.service"));
+const lib_1 = __importDefault(require("../../utils/lib/lib"));
 class ReservationService extends abstract_service_1.default {
     constructor() {
         super();
@@ -671,12 +672,29 @@ class ReservationService extends abstract_service_1.default {
                     };
                 }
                 const { check_out } = singleRoom;
-                if (check_out > new Date().toISOString()) {
+                const totalNights = lib_1.default.calculateNights(singleRoom.check_in, singleRoom.check_out);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const checkOutDate = new Date(check_out);
+                checkOutDate.setHours(0, 0, 0, 0);
+                const dayBeforeCheckout = new Date(checkOutDate);
+                dayBeforeCheckout.setDate(dayBeforeCheckout.getDate() - 1);
+                console.log({ totalNights, dayBeforeCheckout, today });
+                if (totalNights == 1 && dayBeforeCheckout.getTime() !== today.getTime()) {
                     return {
                         success: false,
                         code: this.StatusCode.HTTP_BAD_REQUEST,
-                        message: `You can only check out when the check-out date is or after ${check_out}`,
+                        message: `You can only check out on or after ${check_out}`,
                     };
+                }
+                if (totalNights > 1) {
+                    if (new Date(check_out) > new Date()) {
+                        return {
+                            success: false,
+                            code: this.StatusCode.HTTP_BAD_REQUEST,
+                            message: `You can only check out on or after ${check_out}`,
+                        };
+                    }
                 }
                 const checkoutRoom = booking_rooms.find((room) => room.room_id == roomID);
                 if (!checkoutRoom) {

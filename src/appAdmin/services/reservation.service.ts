@@ -8,6 +8,7 @@ import { HelperFunction } from "../utlis/library/helperFunction";
 
 import { SubReservationService } from "./subreservation.service";
 import AbstractServices from "../../abstarcts/abstract.service";
+import Lib from "../../utils/lib/lib";
 
 export class ReservationService extends AbstractServices {
   constructor() {
@@ -920,14 +921,38 @@ export class ReservationService extends AbstractServices {
       }
       const { check_out } = singleRoom;
 
-      if (check_out > new Date().toISOString()) {
+      const totalNights = Lib.calculateNights(
+        singleRoom.check_in,
+        singleRoom.check_out
+      );
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const checkOutDate = new Date(check_out);
+      checkOutDate.setHours(0, 0, 0, 0);
+
+      const dayBeforeCheckout = new Date(checkOutDate);
+      dayBeforeCheckout.setDate(dayBeforeCheckout.getDate() - 1);
+      console.log({ totalNights, dayBeforeCheckout, today });
+
+      if (totalNights == 1 && dayBeforeCheckout.getTime() !== today.getTime()) {
         return {
           success: false,
           code: this.StatusCode.HTTP_BAD_REQUEST,
-          message: `You can only check out when the check-out date is or after ${check_out}`,
+          message: `You can only check out on or after ${check_out}`,
         };
       }
 
+      if (totalNights > 1) {
+        if (new Date(check_out) > new Date()) {
+          return {
+            success: false,
+            code: this.StatusCode.HTTP_BAD_REQUEST,
+            message: `You can only check out on or after ${check_out}`,
+          };
+        }
+      }
       const checkoutRoom = booking_rooms.find((room) => room.room_id == roomID);
 
       if (!checkoutRoom) {
