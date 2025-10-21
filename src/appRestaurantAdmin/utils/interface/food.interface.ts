@@ -5,6 +5,12 @@ export interface IFoodRequest {
 	retail_price: number;
 	measurement_per_unit: number;
 	photo?: string;
+	food_receipe: IFoodReceipe[];
+}
+
+export interface IFoodReceipe {
+	id: number;
+	quantity_per_unit: number;
 }
 
 export interface IFoodPayload {
@@ -35,3 +41,29 @@ export interface IGetFoods {
 }
 
 export interface IFoodUpdatePayload {}
+
+export interface IGetSingleFood {
+	id: number;
+	hotel_code: number;
+	restaurant_id: number;
+	photo: string;
+	name: string;
+	menu_category_id: number;
+	menu_category_name: string;
+	unit_id: number;
+	unit_name: string;
+	unit_short_code: string;
+	retail_price: string;
+	ingredients: Ingredient[];
+}
+
+export interface Ingredient {
+	id: number;
+	product_id: number;
+	product_name: string;
+	product_code: string;
+	unit_id: number;
+	unit_name: string;
+	unit_short_code: string;
+	quantity_per_unit: number;
+}

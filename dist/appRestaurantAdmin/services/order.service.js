@@ -38,6 +38,7 @@ class RestaurantOrderService extends abstract_service_1.default {
                 const restaurantTableModel = this.restaurantModel.restaurantTableModel(trx);
                 const restaurantOrderModel = this.restaurantModel.restaurantOrderModel(trx);
                 const restaurantFoodModel = this.restaurantModel.restaurantFoodModel(trx);
+                const hotelInventoryModel = this.Model.inventoryModel(trx);
                 const { data } = yield restaurantTableModel.getTables({
                     id: rest.table_id,
                     hotel_code,
@@ -74,6 +75,13 @@ class RestaurantOrderService extends abstract_service_1.default {
                 if (foodItems.data.length !== uniqueFoodIds.length) {
                     throw new customEror_1.default("One or more food items not found.", this.StatusCode.HTTP_NOT_FOUND);
                 }
+                yield lib_1.default.checkAndUpdateIngredientStock({
+                    trx,
+                    hotel_code,
+                    restaurant_id,
+                    type: "create",
+                    order_items,
+                });
                 // calculate sub_total and grand total
                 foodItems.data.forEach((food) => {
                     const item = order_items.find((i) => i.food_id === food.id);
@@ -360,6 +368,18 @@ class RestaurantOrderService extends abstract_service_1.default {
                         message: "Order not found.",
                     };
                 }
+                const { order_items } = isOrderExists;
+                const parsedOrder = order_items.map((item) => ({
+                    food_id: item.food_id,
+                    quantity: item.quantity,
+                }));
+                yield lib_1.default.checkAndUpdateIngredientStock({
+                    trx,
+                    hotel_code,
+                    restaurant_id,
+                    type: "cancel",
+                    order_items: parsedOrder,
+                });
                 yield restaurantOrderModel.cancelOrder({
                     id: parseInt(id),
                 });
@@ -900,6 +920,24 @@ class RestaurantOrderService extends abstract_service_1.default {
                         if (item) {
                             sub_total += Number(item.quantity) * Number(food.retail_price);
                         }
+                    });
+                    const { order_items: orderItems } = existingOrder;
+                    const parsedOrder = orderItems.map((item) => ({
+                        food_id: item.food_id,
+                        quantity: item.quantity,
+                    }));
+                    console.log({
+                        parsedOrder,
+                        order_items,
+                    });
+                    // throw new CustomError("error", 400);
+                    yield lib_1.default.checkAndUpdateIngredientStock({
+                        trx,
+                        hotel_code,
+                        restaurant_id,
+                        type: "update",
+                        order_items,
+                        previous_order_items: parsedOrder,
                     });
                 }
                 else {

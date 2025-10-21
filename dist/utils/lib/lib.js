@@ -23,6 +23,9 @@ const hotel_model_1 = __importDefault(require("../../models/reservationPanel/hot
 const restaurant_order_model_1 = __importDefault(require("../../models/restaurantModels/restaurant.order.model"));
 const chartOfAcc_1 = require("../miscellaneous/chartOfAcc");
 const constants_1 = require("../miscellaneous/constants");
+const restaurant_food_table_1 = __importDefault(require("../../models/restaurantModels/restaurant.food.table"));
+const inventory_model_1 = __importDefault(require("../../models/reservationPanel/inventoryModel/inventory.model"));
+const customEror_1 = __importDefault(require("./customEror"));
 class Lib {
     // make hashed password
     static hashPass(password) {
@@ -323,6 +326,77 @@ class Lib {
             return percentage;
         const amount = (totalAmount * percentage) / 100;
         return parseFloat(amount.toFixed(2));
+    }
+    static checkAndUpdateIngredientStock({ trx, hotel_code, restaurant_id, type, order_items, previous_order_items, }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const restaurantFoodModel = new restaurant_food_table_1.default(trx);
+            const hotelInventoryModel = new inventory_model_1.default(trx);
+            for (const item of order_items) {
+                const food = yield restaurantFoodModel.getFood({
+                    id: item.food_id,
+                    hotel_code,
+                    restaurant_id,
+                });
+                if (!food.ingredients || food.ingredients.length === 0) {
+                    throw new customEror_1.default(`Some ingredients are missing for food ${food.name}.`, 404);
+                }
+                const { ingredients } = food;
+                const product_ids = ingredients.map((i) => i.product_id);
+                const inventoryList = yield hotelInventoryModel.getAllInventory({
+                    hotel_code,
+                    product_id: product_ids,
+                });
+                const inventoryMap = new Map(inventoryList.map((inv) => [inv.product_id, Object.assign({}, inv)]));
+                console.log({ inventoryMap });
+                for (const ing of ingredients) {
+                    const inventory = inventoryMap.get(ing.product_id);
+                    if (!inventory) {
+                        throw new customEror_1.default(`Product not found in inventory`, 404);
+                    }
+                    const requiredQty = item.quantity * ing.quantity_per_unit;
+                    if (type === "create") {
+                        const newAvailable = inventory.available_quantity - requiredQty;
+                        const newUsed = inventory.quantity_used + requiredQty;
+                        yield hotelInventoryModel.updateInInventory({
+                            available_quantity: newAvailable,
+                            quantity_used: newUsed,
+                        }, { product_id: ing.product_id, id: inventory.id });
+                        inventory.available_quantity = newAvailable;
+                        inventory.quantity_used = newUsed;
+                    }
+                    if (type === "cancel") {
+                        const newAvailable = inventory.available_quantity + requiredQty;
+                        const newUsed = inventory.quantity_used - requiredQty;
+                        yield hotelInventoryModel.updateInInventory({
+                            available_quantity: newAvailable,
+                            quantity_used: newUsed,
+                        }, { product_id: ing.product_id, id: inventory.id });
+                        inventory.available_quantity = newAvailable;
+                        inventory.quantity_used = newUsed;
+                    }
+                    if (type === "update" && previous_order_items) {
+                        const prevOrderMap = new Map();
+                        for (const prev of previous_order_items) {
+                            prevOrderMap.set(prev.food_id, prev.quantity);
+                        }
+                        const prevQty = prevOrderMap.get(item.food_id) || 0;
+                        if (prevQty === item.quantity)
+                            continue;
+                        const newRequiredQty = item.quantity * ing.quantity_per_unit;
+                        const prevRequiredQty = prevQty * ing.quantity_per_unit;
+                        const qtyDiff = newRequiredQty - prevRequiredQty;
+                        const finalAvailable = inventory.available_quantity - qtyDiff;
+                        const finalUsed = inventory.quantity_used + qtyDiff;
+                        yield hotelInventoryModel.updateInInventory({
+                            available_quantity: finalAvailable,
+                            quantity_used: finalUsed,
+                        }, { product_id: ing.product_id, id: inventory.id });
+                        inventory.available_quantity = finalAvailable;
+                        inventory.quantity_used = finalUsed;
+                    }
+                }
+            }
+        });
     }
 }
 exports.default = Lib;

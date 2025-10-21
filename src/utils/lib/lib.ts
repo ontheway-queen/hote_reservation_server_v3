@@ -18,6 +18,9 @@ import {
 } from "../miscellaneous/chartOfAcc";
 import { allStrings } from "../miscellaneous/constants";
 import { Knex } from "knex";
+import RestaurantFoodModel from "../../models/restaurantModels/restaurant.food.table";
+import InventoryModel from "../../models/reservationPanel/inventoryModel/inventory.model";
+import CustomError from "./customEror";
 
 class Lib {
   // make hashed password
@@ -396,6 +399,123 @@ class Lib {
 
     const amount = (totalAmount * percentage) / 100;
     return parseFloat(amount.toFixed(2));
+  }
+
+  public static async checkAndUpdateIngredientStock({
+    trx,
+    hotel_code,
+    restaurant_id,
+    type,
+    order_items,
+    previous_order_items,
+  }: {
+    trx: Knex.Transaction;
+    hotel_code: number;
+    restaurant_id: number;
+    type: "create" | "update" | "cancel";
+    order_items: { food_id: number; quantity: number }[];
+    previous_order_items?: { food_id: number; quantity: number }[];
+  }) {
+    const restaurantFoodModel = new RestaurantFoodModel(trx);
+    const hotelInventoryModel = new InventoryModel(trx);
+
+    for (const item of order_items) {
+      const food = await restaurantFoodModel.getFood({
+        id: item.food_id,
+        hotel_code,
+        restaurant_id,
+      });
+
+      if (!food.ingredients || food.ingredients.length === 0) {
+        throw new CustomError(
+          `Some ingredients are missing for food ${food.name}.`,
+          404
+        );
+      }
+
+      const { ingredients } = food;
+      const product_ids = ingredients.map((i) => i.product_id);
+
+      const inventoryList = await hotelInventoryModel.getAllInventory({
+        hotel_code,
+        product_id: product_ids,
+      });
+
+      const inventoryMap = new Map(
+        inventoryList.map((inv) => [inv.product_id, { ...inv }])
+      );
+      console.log({ inventoryMap });
+
+      for (const ing of ingredients) {
+        const inventory = inventoryMap.get(ing.product_id);
+        if (!inventory) {
+          throw new CustomError(`Product not found in inventory`, 404);
+        }
+
+        const requiredQty = item.quantity * ing.quantity_per_unit;
+
+        if (type === "create") {
+          const newAvailable = inventory.available_quantity - requiredQty;
+          const newUsed = inventory.quantity_used + requiredQty;
+
+          await hotelInventoryModel.updateInInventory(
+            {
+              available_quantity: newAvailable,
+              quantity_used: newUsed,
+            },
+            { product_id: ing.product_id, id: inventory.id }
+          );
+
+          inventory.available_quantity = newAvailable;
+          inventory.quantity_used = newUsed;
+        }
+
+        if (type === "cancel") {
+          const newAvailable = inventory.available_quantity + requiredQty;
+          const newUsed = inventory.quantity_used - requiredQty;
+
+          await hotelInventoryModel.updateInInventory(
+            {
+              available_quantity: newAvailable,
+              quantity_used: newUsed,
+            },
+            { product_id: ing.product_id, id: inventory.id }
+          );
+
+          inventory.available_quantity = newAvailable;
+          inventory.quantity_used = newUsed;
+        }
+
+        if (type === "update" && previous_order_items) {
+          const prevOrderMap = new Map<number, number>();
+          for (const prev of previous_order_items) {
+            prevOrderMap.set(prev.food_id, prev.quantity);
+          }
+
+          const prevQty = prevOrderMap.get(item.food_id) || 0;
+
+          if (prevQty === item.quantity) continue;
+
+          const newRequiredQty = item.quantity * ing.quantity_per_unit;
+          const prevRequiredQty = prevQty * ing.quantity_per_unit;
+          const qtyDiff = newRequiredQty - prevRequiredQty;
+
+          const finalAvailable = inventory.available_quantity - qtyDiff;
+          const finalUsed = inventory.quantity_used + qtyDiff;
+
+          await hotelInventoryModel.updateInInventory(
+            {
+              available_quantity: finalAvailable,
+              quantity_used: finalUsed,
+            },
+            { product_id: ing.product_id, id: inventory.id }
+          );
+
+          inventory.available_quantity = finalAvailable;
+          inventory.quantity_used = finalUsed;
+        }
+      }
+    }
   }
 }
 export default Lib;

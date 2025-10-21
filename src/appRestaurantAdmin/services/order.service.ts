@@ -30,6 +30,7 @@ class RestaurantOrderService extends AbstractServices {
       const restaurantOrderModel =
         this.restaurantModel.restaurantOrderModel(trx);
       const restaurantFoodModel = this.restaurantModel.restaurantFoodModel(trx);
+      const hotelInventoryModel = this.Model.inventoryModel(trx);
 
       const { data } = await restaurantTableModel.getTables({
         id: rest.table_id,
@@ -80,6 +81,14 @@ class RestaurantOrderService extends AbstractServices {
           this.StatusCode.HTTP_NOT_FOUND
         );
       }
+
+      await Lib.checkAndUpdateIngredientStock({
+        trx,
+        hotel_code,
+        restaurant_id,
+        type: "create",
+        order_items,
+      });
 
       // calculate sub_total and grand total
       foodItems.data.forEach((food) => {
@@ -439,6 +448,21 @@ class RestaurantOrderService extends AbstractServices {
           message: "Order not found.",
         };
       }
+
+      const { order_items } = isOrderExists;
+
+      const parsedOrder = order_items.map((item) => ({
+        food_id: item.food_id,
+        quantity: item.quantity,
+      }));
+
+      await Lib.checkAndUpdateIngredientStock({
+        trx,
+        hotel_code,
+        restaurant_id,
+        type: "cancel",
+        order_items: parsedOrder,
+      });
 
       await restaurantOrderModel.cancelOrder({
         id: parseInt(id),
@@ -1095,6 +1119,29 @@ class RestaurantOrderService extends AbstractServices {
           if (item) {
             sub_total += Number(item.quantity) * Number(food.retail_price);
           }
+        });
+
+        const { order_items: orderItems } = existingOrder;
+
+        const parsedOrder = orderItems.map((item) => ({
+          food_id: item.food_id,
+          quantity: item.quantity,
+        }));
+
+        console.log({
+          parsedOrder,
+          order_items,
+        });
+
+        // throw new CustomError("error", 400);
+
+        await Lib.checkAndUpdateIngredientStock({
+          trx,
+          hotel_code,
+          restaurant_id,
+          type: "update",
+          order_items,
+          previous_order_items: parsedOrder,
         });
       } else {
         sub_total = Number(existingOrder.sub_total);
