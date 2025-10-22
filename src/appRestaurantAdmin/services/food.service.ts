@@ -118,7 +118,7 @@ class RestaurantFoodService extends AbstractServices {
   public async getFoods(req: Request) {
     const { restaurant_id, hotel_code } = req.restaurant_admin;
 
-    const { limit, skip, name, category_id } = req.query;
+    const { limit, skip, name, category_id, status } = req.query;
 
     const data = await this.restaurantModel.restaurantFoodModel().getFoods({
       hotel_code,
@@ -127,6 +127,7 @@ class RestaurantFoodService extends AbstractServices {
       skip: Number(skip),
       name: name as string,
       menu_category_id: Number(category_id),
+      status: status as "available" | "unavailable",
     });
 
     return {

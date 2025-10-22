@@ -55,6 +55,9 @@ class RestaurantFoodModel extends schema_1.default {
             if (query.food_ids) {
                 baseQuery.whereIn("f.id", query.food_ids);
             }
+            if (query.status) {
+                baseQuery.andWhere("f.status", query.status);
+            }
             const data = yield baseQuery
                 .clone()
                 .select("f.id", "f.hotel_code", "f.restaurant_id", "f.photo", "f.name", "mc.name as menu_category_name", "ua.id as created_by_id", "u.name as unit_name", "u.short_code as unit_short_code", "ua.name as created_by_name", "f.status", "f.retail_price", "f.is_deleted")
@@ -72,7 +75,7 @@ class RestaurantFoodModel extends schema_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("foods as f")
                 .withSchema(this.RESTAURANT_SCHEMA)
-                .select("f.id", "f.hotel_code", "f.restaurant_id", "f.photo", "f.name", "f.menu_category_id", "mc.name as menu_category_name", "f.unit_id", "u.name as unit_name", "u.short_code as unit_short_code", "f.retail_price", this.db.raw(`json_agg(
+                .select("f.id", "f.hotel_code", "f.restaurant_id", "f.photo", "f.name", "f.menu_category_id", "mc.name as menu_category_name", "f.unit_id", "u.name as unit_name", "u.short_code as unit_short_code", "f.measurement_per_unit", "f.retail_price", this.db.raw(`json_agg(
 			json_build_object(
         'id', fi.id,
 				'product_id', fi.product_id,
@@ -157,12 +160,4 @@ class RestaurantFoodModel extends schema_1.default {
     }
 }
 exports.default = RestaurantFoodModel;
-/*
-[
-  {
-    id: number,
-    quantity: number
-  }
-]
-*/
 //# sourceMappingURL=restaurant.food.table.js.map

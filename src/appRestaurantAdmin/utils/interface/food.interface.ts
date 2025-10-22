@@ -1,69 +1,70 @@
 export interface IFoodRequest {
-	name: string;
-	menu_category_id: number;
-	unit_id: number;
-	retail_price: number;
-	measurement_per_unit: number;
-	photo?: string;
-	food_receipe: IFoodReceipe[];
+  name: string;
+  menu_category_id: number;
+  unit_id: number;
+  retail_price: number;
+  measurement_per_unit: number;
+  photo?: string;
+  food_receipe: IFoodReceipe[];
 }
 
 export interface IFoodReceipe {
-	id: number;
-	quantity_per_unit: number;
+  id: number;
+  quantity_per_unit: number;
 }
 
 export interface IFoodPayload {
-	hotel_code: number;
-	restaurant_id: number;
-	name: string;
-	menu_category_id: number;
-	unit_id: number;
-	retail_price: number;
-	measurement_per_unit: number;
-	photo?: string;
-	created_by: number;
+  hotel_code: number;
+  restaurant_id: number;
+  name: string;
+  menu_category_id: number;
+  unit_id: number;
+  retail_price: number;
+  measurement_per_unit: number;
+  photo?: string;
+  created_by: number;
 }
 
 export interface IGetFoods {
-	id: number;
-	hotel_code: number;
-	restaurant_id: number;
-	name: string;
-	menu_category_name: string;
-	created_by_id: number;
-	unit_name: string;
-	unit_short_code: string;
-	created_by_name: string;
-	status: string;
-	retail_price: string;
-	is_deleted: boolean;
+  id: number;
+  hotel_code: number;
+  restaurant_id: number;
+  name: string;
+  menu_category_name: string;
+  created_by_id: number;
+  unit_name: string;
+  unit_short_code: string;
+  created_by_name: string;
+  status: string;
+  retail_price: string;
+  is_deleted: boolean;
 }
 
 export interface IFoodUpdatePayload {}
 
 export interface IGetSingleFood {
-	id: number;
-	hotel_code: number;
-	restaurant_id: number;
-	photo: string;
-	name: string;
-	menu_category_id: number;
-	menu_category_name: string;
-	unit_id: number;
-	unit_name: string;
-	unit_short_code: string;
-	retail_price: string;
-	ingredients: Ingredient[];
+  id: number;
+  hotel_code: number;
+  restaurant_id: number;
+  photo: string;
+  name: string;
+  menu_category_id: number;
+  menu_category_name: string;
+  unit_id: number;
+  unit_name: string;
+  unit_short_code: string;
+  retail_price: string;
+  ingredients: Ingredient[];
+  measurment_per_unit: number;
 }
 
 export interface Ingredient {
-	id: number;
-	product_id: number;
-	product_name: string;
-	product_code: string;
-	unit_id: number;
-	unit_name: string;
-	unit_short_code: string;
-	quantity_per_unit: number;
+  id: number;
+  product_id: number;
+  product_name: string;
+  product_code: string;
+  unit_id: number;
+  unit_name: string;
+  unit_short_code: string;
+  quantity_per_unit: number;
 }

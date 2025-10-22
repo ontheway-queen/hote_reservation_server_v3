@@ -108,7 +108,7 @@ class RestaurantFoodService extends abstract_service_1.default {
     getFoods(req) {
         return __awaiter(this, void 0, void 0, function* () {
             const { restaurant_id, hotel_code } = req.restaurant_admin;
-            const { limit, skip, name, category_id } = req.query;
+            const { limit, skip, name, category_id, status } = req.query;
             const data = yield this.restaurantModel.restaurantFoodModel().getFoods({
                 hotel_code,
                 restaurant_id,
@@ -116,6 +116,7 @@ class RestaurantFoodService extends abstract_service_1.default {
                 skip: Number(skip),
                 name: name,
                 menu_category_id: Number(category_id),
+                status: status,
             });
             return Object.assign({ success: true, code: this.StatusCode.HTTP_OK }, data);
         });

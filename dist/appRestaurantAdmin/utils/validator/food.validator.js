@@ -67,10 +67,7 @@ class RestaurantFoodValidator {
                     product_id: joi_1.default.number().required().messages({
                         "any.required": "Product ID is required",
                     }),
-                    quantity_per_unit: joi_1.default.number()
-                        .positive()
-                        .required()
-                        .messages({
+                    quantity_per_unit: joi_1.default.number().positive().required().messages({
                         "any.required": "Product quantity is required",
                         "number.positive": "Quantity must be greater than zero",
                     }),
@@ -100,6 +97,7 @@ class RestaurantFoodValidator {
             skip: joi_1.default.number().optional(),
             name: joi_1.default.string().optional(),
             category_id: joi_1.default.number().optional(),
+            status: joi_1.default.string().valid("available", "unavailable").optional(),
         });
         this.updateFoodValidator = joi_1.default.object({
             food: joi_1.default.string()
@@ -118,9 +116,7 @@ class RestaurantFoodValidator {
                     retail_price: joi_1.default.number().optional(),
                     measurement_per_unit: joi_1.default.number().optional(),
                     unit_id: joi_1.default.number().optional(),
-                    status: joi_1.default.string()
-                        .valid("available", "unavailable")
-                        .optional(),
+                    status: joi_1.default.string().valid("available", "unavailable").optional(),
                 });
                 const { error, value: validated } = schema.validate(parsed);
                 if (error)
@@ -146,10 +142,7 @@ class RestaurantFoodValidator {
                     product_id: joi_1.default.number().required().messages({
                         "any.required": "Product ID is required",
                     }),
-                    quantity_per_unit: joi_1.default.number()
-                        .positive()
-                        .required()
-                        .messages({
+                    quantity_per_unit: joi_1.default.number().positive().required().messages({
                         "any.required": "Product quantity is required",
                         "number.positive": "Quantity must be greater than zero",
                     }),
