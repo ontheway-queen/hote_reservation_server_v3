@@ -234,6 +234,58 @@ class HotelRestaurantService extends AbstractServices {
     };
   }
 
+  public async assignFoodIngredientsToRestaurant(req: Request) {
+    const { hotel_code } = req.hotel_admin;
+
+    const payload = req.body.productIds.map((item: number) => {
+      return {
+        hotel_code,
+        product_id: item,
+      };
+    });
+
+    await this.restaurantModel
+      .restaurantModel()
+      .assignFoodIngredientsToRestaurant(payload);
+
+    return {
+      success: true,
+      code: this.StatusCode.HTTP_SUCCESSFUL,
+      message: this.ResMsg.HTTP_SUCCESSFUL,
+    };
+  }
+
+  public async getAssignFoodIngredientsToRestaurant(req: Request) {
+    const { hotel_code } = req.hotel_admin;
+
+    const data = await this.restaurantModel
+      .restaurantModel()
+      .getAssignFoodIngredientsToRestaurant(hotel_code);
+
+    return {
+      success: true,
+      code: this.StatusCode.HTTP_OK,
+      data,
+    };
+  }
+
+  public async deleteAssignFoodIngredientsToRestaurant(req: Request) {
+    const { hotel_code } = req.hotel_admin;
+
+    await this.restaurantModel
+      .restaurantModel()
+      .deleteAssignFoodIngredientsToRestaurant(
+        hotel_code,
+        Number(req.params.id)
+      );
+
+    return {
+      success: true,
+      code: this.StatusCode.HTTP_SUCCESSFUL,
+      message: this.ResMsg.HTTP_SUCCESSFUL,
+    };
+  }
+
   public async updateHotelRestaurantAndAdmin(req: Request) {
     return await this.db.transaction(async (trx) => {
       const { hotel_code } = req.hotel_admin;

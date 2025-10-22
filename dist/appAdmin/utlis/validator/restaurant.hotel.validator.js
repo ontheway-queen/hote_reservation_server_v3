@@ -110,6 +110,9 @@ class HotelRestaurantValidator {
             staff_id: joi_1.default.number().integer().required(),
             restaurant_id: joi_1.default.number().integer().required(),
         });
+        this.assignFoodIngredientsToRestaurant = joi_1.default.object({
+            productIds: joi_1.default.array().items(joi_1.default.number().required()).required(),
+        });
     }
 }
 exports.default = HotelRestaurantValidator;

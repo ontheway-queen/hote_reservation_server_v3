@@ -18,6 +18,10 @@ class HotelRouter extends AbstractRouter {
     this.router.route("/account").get(this.controller.getAllAccount);
 
     this.router.route("/floors").get(this.controller.getAllFloors);
+
+    this.router
+      .route("/ingredients")
+      .get(this.controller.getAssignFoodIngredientsToRestaurant);
   }
 }
 

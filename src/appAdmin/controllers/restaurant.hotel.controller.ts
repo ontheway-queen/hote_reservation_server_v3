@@ -36,6 +36,33 @@ class HotelRestaurantController extends AbstractController {
     }
   );
 
+  public assignFoodIngredientsToRestaurant = this.asyncWrapper.wrap(
+    { bodySchema: this.Validator.assignFoodIngredientsToRestaurant },
+    async (req: Request, res: Response) => {
+      const { code, ...data } =
+        await this.Service.assignFoodIngredientsToRestaurant(req);
+      res.status(code).json(data);
+    }
+  );
+
+  public getAssignFoodIngredientsToRestaurant = this.asyncWrapper.wrap(
+    {},
+    async (req: Request, res: Response) => {
+      const { code, ...data } =
+        await this.Service.getAssignFoodIngredientsToRestaurant(req);
+      res.status(code).json(data);
+    }
+  );
+
+  public deleteAssignFoodIngredientsToRestaurant = this.asyncWrapper.wrap(
+    { paramSchema: this.commonValidator.singleParamValidator() },
+    async (req: Request, res: Response) => {
+      const { code, ...data } =
+        await this.Service.deleteAssignFoodIngredientsToRestaurant(req);
+      res.status(code).json(data);
+    }
+  );
+
   public updateHotelRestaurantAndAdmin = this.asyncWrapper.wrap(
     { bodySchema: this.Validator.updateHotelRestaurantValidator },
     async (req: Request, res: Response) => {

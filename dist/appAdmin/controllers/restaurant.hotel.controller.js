@@ -43,16 +43,28 @@ class HotelRestaurantController extends abstract_controller_1.default {
             const _c = yield this.Service.getRestaurantWithAdmin(req), { code } = _c, data = __rest(_c, ["code"]);
             res.status(code).json(data);
         }));
+        this.assignFoodIngredientsToRestaurant = this.asyncWrapper.wrap({ bodySchema: this.Validator.assignFoodIngredientsToRestaurant }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _d = yield this.Service.assignFoodIngredientsToRestaurant(req), { code } = _d, data = __rest(_d, ["code"]);
+            res.status(code).json(data);
+        }));
+        this.getAssignFoodIngredientsToRestaurant = this.asyncWrapper.wrap({}, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _e = yield this.Service.getAssignFoodIngredientsToRestaurant(req), { code } = _e, data = __rest(_e, ["code"]);
+            res.status(code).json(data);
+        }));
+        this.deleteAssignFoodIngredientsToRestaurant = this.asyncWrapper.wrap({ paramSchema: this.commonValidator.singleParamValidator() }, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _f = yield this.Service.deleteAssignFoodIngredientsToRestaurant(req), { code } = _f, data = __rest(_f, ["code"]);
+            res.status(code).json(data);
+        }));
         this.updateHotelRestaurantAndAdmin = this.asyncWrapper.wrap({ bodySchema: this.Validator.updateHotelRestaurantValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _d = yield this.Service.updateHotelRestaurantAndAdmin(req), { code } = _d, data = __rest(_d, ["code"]);
+            const _g = yield this.Service.updateHotelRestaurantAndAdmin(req), { code } = _g, data = __rest(_g, ["code"]);
             res.status(code).json(data);
         }));
         this.addStaffs = this.asyncWrapper.wrap(null, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _e = yield this.Service.addStaffs(req), { code } = _e, data = __rest(_e, ["code"]);
+            const _h = yield this.Service.addStaffs(req), { code } = _h, data = __rest(_h, ["code"]);
             res.status(code).json(data);
         }));
         this.removeStaff = this.asyncWrapper.wrap({ paramSchema: this.Validator.removeStaffValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _f = yield this.Service.removeStaff(req), { code } = _f, data = __rest(_f, ["code"]);
+            const _j = yield this.Service.removeStaff(req), { code } = _j, data = __rest(_j, ["code"]);
             res.status(code).json(data);
         }));
     }

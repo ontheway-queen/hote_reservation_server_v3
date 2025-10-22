@@ -162,6 +162,41 @@ class RestaurantModel extends Schema {
       .withSchema(this.RESTAURANT_SCHEMA)
       .insert(payload, "id");
   }
+
+  public async assignFoodIngredientsToRestaurant(
+    payload: { hotel_code: number; product_id: number }[]
+  ) {
+    return await this.db("ingredients")
+      .withSchema(this.RESTAURANT_SCHEMA)
+      .insert(payload);
+  }
+
+  public async getAssignFoodIngredientsToRestaurant(hotel_code: number) {
+    return await this.db("ingredients as i")
+      .withSchema(this.RESTAURANT_SCHEMA)
+      .select(
+        "i.id",
+        "i.product_id",
+        "p.name",
+        "p.image",
+        "u.name as unit_name"
+      )
+      .joinRaw("Left join hotel_inventory.products as p on i.product_id =p.id")
+      .joinRaw("Left join hotel_inventory.units as u on p.unit_id =u.id")
+      .where("i.hotel_code", hotel_code)
+      .andWhere("i.is_deleted", false);
+  }
+
+  public async deleteAssignFoodIngredientsToRestaurant(
+    hotel_code: number,
+    id: number
+  ) {
+    return await this.db("ingredients as i")
+      .withSchema(this.RESTAURANT_SCHEMA)
+      .update({ is_deleted: true })
+      .where("i.hotel_code", hotel_code)
+      .andWhere("i.id", id);
+  }
 }
 
 export default RestaurantModel;

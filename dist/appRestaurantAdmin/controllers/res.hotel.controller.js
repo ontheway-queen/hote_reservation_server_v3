@@ -47,6 +47,10 @@ class RestaurantHotelController extends abstract_controller_1.default {
             const _d = yield this.service.getAllFloors(req), { code } = _d, data = __rest(_d, ["code"]);
             res.status(code).json(data);
         }));
+        this.getAssignFoodIngredientsToRestaurant = this.asyncWrapper.wrap({}, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _e = yield this.service.getAssignFoodIngredientsToRestaurant(req), { code } = _e, data = __rest(_e, ["code"]);
+            res.status(code).json(data);
+        }));
     }
 }
 exports.default = RestaurantHotelController;

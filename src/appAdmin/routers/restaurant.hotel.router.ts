@@ -26,6 +26,16 @@ class HotelRestaurantRouter extends AbstractRouter {
 
     this.router.use("/report", new HotelRestaurantReportRouter().router);
 
+    // assign ingredients
+    this.router
+      .route("/assign-food-ingredients")
+      .post(this.Controller.assignFoodIngredientsToRestaurant)
+      .get(this.Controller.getAssignFoodIngredientsToRestaurant);
+
+    this.router
+      .route("/assign-food-ingredients/:id")
+      .delete(this.Controller.deleteAssignFoodIngredientsToRestaurant);
+
     this.router
       .route("/:id")
       .get(this.Controller.getRestaurantWithAdmin)

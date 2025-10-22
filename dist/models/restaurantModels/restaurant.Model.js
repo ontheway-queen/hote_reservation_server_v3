@@ -100,6 +100,33 @@ class RestaurantModel extends schema_1.default {
                 .insert(payload, "id");
         });
     }
+    assignFoodIngredientsToRestaurant(payload) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("ingredients")
+                .withSchema(this.RESTAURANT_SCHEMA)
+                .insert(payload);
+        });
+    }
+    getAssignFoodIngredientsToRestaurant(hotel_code) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("ingredients as i")
+                .withSchema(this.RESTAURANT_SCHEMA)
+                .select("i.id", "i.product_id", "p.name", "p.image", "u.name as unit_name")
+                .joinRaw("Left join hotel_inventory.products as p on i.product_id =p.id")
+                .joinRaw("Left join hotel_inventory.units as u on p.unit_id =u.id")
+                .where("i.hotel_code", hotel_code)
+                .andWhere("i.is_deleted", false);
+        });
+    }
+    deleteAssignFoodIngredientsToRestaurant(hotel_code, id) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("ingredients as i")
+                .withSchema(this.RESTAURANT_SCHEMA)
+                .update({ is_deleted: true })
+                .where("i.hotel_code", hotel_code)
+                .andWhere("i.id", id);
+        });
+    }
 }
 exports.default = RestaurantModel;
 //# sourceMappingURL=restaurant.Model.js.map

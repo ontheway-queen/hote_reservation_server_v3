@@ -81,6 +81,20 @@ class RestaurantHotelService extends AbstractServices {
       data,
     };
   }
+
+  public async getAssignFoodIngredientsToRestaurant(req: Request) {
+    const { hotel_code } = req.restaurant_admin;
+
+    const data = await this.restaurantModel
+      .restaurantModel()
+      .getAssignFoodIngredientsToRestaurant(hotel_code);
+
+    return {
+      success: true,
+      code: this.StatusCode.HTTP_OK,
+      data,
+    };
+  }
 }
 
 export default RestaurantHotelService;

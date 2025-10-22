@@ -40,7 +40,7 @@ class AuthHotelRestaurantAdminService extends abstract_service_1.default {
                 return {
                     success: false,
                     code: this.StatusCode.HTTP_UNAUTHORIZED,
-                    message: this.ResMsg.HTTP_UNAUTHORIZED,
+                    message: this.ResMsg.WRONG_CREDENTIALS,
                 };
             }
             if (user.status !== "active") {

@@ -22,6 +22,14 @@ class HotelRestaurantRouter extends abstract_router_1.default {
             .route("/remove-staff/:staff_id/:restaurant_id")
             .delete(this.Controller.removeStaff);
         this.router.use("/report", new hotelRestaurant_report_router_1.default().router);
+        // assign ingredients
+        this.router
+            .route("/assign-food-ingredients")
+            .post(this.Controller.assignFoodIngredientsToRestaurant)
+            .get(this.Controller.getAssignFoodIngredientsToRestaurant);
+        this.router
+            .route("/assign-food-ingredients/:id")
+            .delete(this.Controller.deleteAssignFoodIngredientsToRestaurant);
         this.router
             .route("/:id")
             .get(this.Controller.getRestaurantWithAdmin)

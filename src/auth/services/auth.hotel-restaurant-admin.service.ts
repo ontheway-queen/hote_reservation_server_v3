@@ -21,7 +21,7 @@ class AuthHotelRestaurantAdminService extends AbstractServices {
       return {
         success: false,
         code: this.StatusCode.HTTP_UNAUTHORIZED,
-        message: this.ResMsg.HTTP_UNAUTHORIZED,
+        message: this.ResMsg.WRONG_CREDENTIALS,
       };
     }
 

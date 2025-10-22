@@ -188,6 +188,51 @@ class HotelRestaurantService extends abstract_service_1.default {
             };
         });
     }
+    assignFoodIngredientsToRestaurant(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { hotel_code } = req.hotel_admin;
+            const payload = req.body.productIds.map((item) => {
+                return {
+                    hotel_code,
+                    product_id: item,
+                };
+            });
+            yield this.restaurantModel
+                .restaurantModel()
+                .assignFoodIngredientsToRestaurant(payload);
+            return {
+                success: true,
+                code: this.StatusCode.HTTP_SUCCESSFUL,
+                message: this.ResMsg.HTTP_SUCCESSFUL,
+            };
+        });
+    }
+    getAssignFoodIngredientsToRestaurant(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { hotel_code } = req.hotel_admin;
+            const data = yield this.restaurantModel
+                .restaurantModel()
+                .getAssignFoodIngredientsToRestaurant(hotel_code);
+            return {
+                success: true,
+                code: this.StatusCode.HTTP_OK,
+                data,
+            };
+        });
+    }
+    deleteAssignFoodIngredientsToRestaurant(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { hotel_code } = req.hotel_admin;
+            yield this.restaurantModel
+                .restaurantModel()
+                .deleteAssignFoodIngredientsToRestaurant(hotel_code, Number(req.params.id));
+            return {
+                success: true,
+                code: this.StatusCode.HTTP_SUCCESSFUL,
+                message: this.ResMsg.HTTP_SUCCESSFUL,
+            };
+        });
+    }
     updateHotelRestaurantAndAdmin(req) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {

@@ -44,6 +44,15 @@ class RestaurantHotelController extends AbstractController {
       res.status(code).json(data);
     }
   );
+
+  public getAssignFoodIngredientsToRestaurant = this.asyncWrapper.wrap(
+    {},
+    async (req: Request, res: Response) => {
+      const { code, ...data } =
+        await this.service.getAssignFoodIngredientsToRestaurant(req);
+      res.status(code).json(data);
+    }
+  );
 }
 
 export default RestaurantHotelController;
