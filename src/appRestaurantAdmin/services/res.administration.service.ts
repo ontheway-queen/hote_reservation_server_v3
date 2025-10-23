@@ -152,7 +152,7 @@ class ResAdministrationService extends AbstractServices {
     const { permissions } = await model.getResPermissionViewByHotel({
       hotel_code,
     });
-    console.log({ permissions });
+
     const groupedPermissions: any = {};
 
     permissions.forEach((entry) => {
@@ -197,16 +197,12 @@ class ResAdministrationService extends AbstractServices {
         }[];
       };
 
-      console.log(permissions);
-
-      console.log("first");
-
       const { id, hotel_code, restaurant_id } = req.restaurant_admin;
       const model = this.restaurantModel.restaurantAdminModel(trx);
 
       // check role
       const checkRole = await model.getRoleByName(role_name, hotel_code);
-      console.log({ checkRole });
+
       if (checkRole.length) {
         return {
           success: false,
@@ -233,8 +229,6 @@ class ResAdministrationService extends AbstractServices {
         ids: permissionIds,
         hotel_code,
       });
-
-      console.log({ checkAllPermission });
 
       if (checkAllPermission.length != uniquePermissionIds.length) {
         // return {

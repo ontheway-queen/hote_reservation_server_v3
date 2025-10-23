@@ -334,7 +334,8 @@ class InventoryModel extends Schema {
     hotel_code: number;
   }): Promise<{
     data: {
-      id: number | null;
+      id: number;
+      product_id: number;
       product_code: string;
       product_name: string;
       category: string;
@@ -351,10 +352,13 @@ class InventoryModel extends Schema {
       .withSchema(this.HOTEL_INVENTORY_SCHEMA)
       .select(
         "i.id",
+        "p.id as product_id",
         "p.product_code",
         "p.name as product_name",
         "c.name as category",
-        this.db.raw("COALESCE(i.available_quantity, 0) as available_quantity"),
+        this.db.raw(
+          "COALESCE(i.available_quantity, 0) - COALESCE(i.quantity_used, 0)-COALESCE(i.total_damaged, 0) as available_quantity"
+        ),
         this.db.raw("COALESCE(i.quantity_used, 0) as quantity_used"),
         this.db.raw("COALESCE(i.total_damaged, 0) as total_damaged")
       )
@@ -398,7 +402,26 @@ class InventoryModel extends Schema {
     hotel_code: number;
     id?: number;
     product_id?: number;
-  }) {
+  }): Promise<{
+    id: number;
+    hotel_code: number;
+    product_id: number;
+    product_code: string;
+    product_model: string;
+    product_name: string;
+    product_details: string;
+    product_image: string;
+    product_status: string;
+    category_id: number;
+    category: string;
+    unit_id: number;
+    unit: string;
+    brand_id: number;
+    brand: string;
+    available_quantity: number;
+    quantity_used: number;
+    total_damaged: number;
+  }> {
     const { hotel_code, id } = payload;
     return await this.db("inventory as i")
       .withSchema(this.HOTEL_INVENTORY_SCHEMA)
@@ -545,6 +568,7 @@ class InventoryModel extends Schema {
       hotel_code: number;
       product_id: number;
       available_quantity: number;
+      quantity_used?: number;
     }[]
   ) {
     return await this.db("inventory")

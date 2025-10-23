@@ -152,7 +152,6 @@ class ResAdministrationService extends abstract_service_1.default {
             const { permissions } = yield model.getResPermissionViewByHotel({
                 hotel_code,
             });
-            console.log({ permissions });
             const groupedPermissions = {};
             permissions.forEach((entry) => {
                 const permission_group_id = entry.permission_group_id;
@@ -185,13 +184,10 @@ class ResAdministrationService extends abstract_service_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
                 const { role_name, permissions } = req.body;
-                console.log(permissions);
-                console.log("first");
                 const { id, hotel_code, restaurant_id } = req.restaurant_admin;
                 const model = this.restaurantModel.restaurantAdminModel(trx);
                 // check role
                 const checkRole = yield model.getRoleByName(role_name, hotel_code);
-                console.log({ checkRole });
                 if (checkRole.length) {
                     return {
                         success: false,
@@ -214,7 +210,6 @@ class ResAdministrationService extends abstract_service_1.default {
                     ids: permissionIds,
                     hotel_code,
                 });
-                console.log({ checkAllPermission });
                 if (checkAllPermission.length != uniquePermissionIds.length) {
                     // return {
                     //   success: false,

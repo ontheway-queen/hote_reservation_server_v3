@@ -32,6 +32,163 @@ class RestaurantFoodModel extends schema_1.default {
                 .insert(payload, "id");
         });
     }
+    insertInStocks(payload) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("stocks")
+                .withSchema(this.RESTAURANT_SCHEMA)
+                .insert(payload, "id");
+        });
+    }
+    // public async getStocks(where: {
+    //   hotel_code: number;
+    //   restaurant_id: number;
+    //   stock_date?: string; // optional
+    // }) {
+    //   const { hotel_code, restaurant_id, stock_date } = where;
+    //   const dateCondition = stock_date
+    //     ? `s.stock_date = '${stock_date}'`
+    //     : `s.stock_date = CURRENT_DATE`;
+    //   return await this.db
+    //     .select(
+    //       "f.id as food_id",
+    //       "f.name",
+    //       "f.recipe_type",
+    //       this.db.raw(`
+    //       CASE
+    //         WHEN f.recipe_type IN ('stock', 'ingredient') THEN
+    //           COALESCE(
+    //             (
+    //               SELECT i.available_quantity
+    //               FROM hotel_inventory.inventory i
+    //               WHERE i.product_id = f.linked_inventory_item_id
+    //                 AND i.hotel_code = f.hotel_code
+    //                 AND i.is_deleted = false
+    //               LIMIT 1
+    //             ),
+    //             0
+    //           )
+    //         ELSE
+    //           COALESCE(
+    //             (
+    //               SELECT (s.quantity - s.sold_quantity)
+    //               FROM hotel_restaurant.stocks s
+    //               WHERE s.food_id = f.id
+    //                 AND s.hotel_code = f.hotel_code
+    //                 AND s.restaurant_id = f.restaurant_id
+    //                 AND ${dateCondition}
+    //               LIMIT 1
+    //             ),
+    //             0
+    //           )
+    //       END AS available_stock
+    //     `),
+    //       this.db.raw(`
+    //       CASE
+    //         WHEN f.recipe_type IN ('stock', 'ingredient') THEN ''
+    //         ELSE
+    //           COALESCE(
+    //             (
+    //               SELECT TO_CHAR(s.stock_date, 'YYYY-MM-DD')
+    //               FROM hotel_restaurant.stocks s
+    //               WHERE s.food_id = f.id
+    //                 AND s.hotel_code = f.hotel_code
+    //                 AND s.restaurant_id = f.restaurant_id
+    //                 AND ${dateCondition}
+    //               LIMIT 1
+    //             ),
+    //             ''
+    //           )
+    //       END AS stock_date
+    //     `)
+    //     )
+    //     .from("hotel_restaurant.foods as f")
+    //     .where("f.hotel_code", hotel_code)
+    //     .andWhere("f.restaurant_id", restaurant_id)
+    //     .andWhere("f.is_deleted", false);
+    // }
+    getStocks(where) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { hotel_code, restaurant_id, stock_date } = where;
+            const dateCondition = stock_date
+                ? `AND s.stock_date = '${stock_date}'`
+                : "";
+            return yield this.db
+                .select("f.id as food_id", "f.name", "f.recipe_type", this.db.raw(`
+        CASE 
+          WHEN f.recipe_type IN ('stock', 'ingredient') THEN
+            COALESCE(
+              (
+                SELECT i.available_quantity
+                FROM hotel_inventory.inventory i
+                WHERE i.product_id = f.linked_inventory_item_id
+                  AND i.hotel_code = f.hotel_code
+                  AND i.is_deleted = false
+                LIMIT 1
+              ),
+              0
+            )
+          ELSE
+            COALESCE(
+              (
+                SELECT (s.quantity - s.sold_quantity)
+                FROM hotel_restaurant.stocks s
+                WHERE s.food_id = f.id
+                  AND s.hotel_code = f.hotel_code
+                  AND s.restaurant_id = f.restaurant_id
+                  ${dateCondition}
+                ORDER BY s.stock_date DESC
+                LIMIT 1
+              ),
+              0
+            )
+        END AS available_stock
+      `), this.db.raw(`
+        CASE 
+          WHEN f.recipe_type IN ('stock', 'ingredient') THEN ''
+          ELSE
+            COALESCE(
+              (
+                SELECT TO_CHAR(s.stock_date, 'YYYY-MM-DD')
+                FROM hotel_restaurant.stocks s
+                WHERE s.food_id = f.id
+                  AND s.hotel_code = f.hotel_code
+                  AND s.restaurant_id = f.restaurant_id
+                  ${dateCondition}
+                ORDER BY s.stock_date DESC
+                LIMIT 1
+              ),
+              ''
+            )
+        END AS stock_date
+      `))
+                .from("hotel_restaurant.foods as f")
+                .where("f.hotel_code", hotel_code)
+                .andWhere("f.restaurant_id", restaurant_id)
+                .andWhere("f.is_deleted", false);
+        });
+    }
+    updateStocks({ where, payload, }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("stocks")
+                .withSchema(this.RESTAURANT_SCHEMA)
+                .update(payload, "id")
+                .where("food_id", where.food_id)
+                .andWhere("stock_date", where.stock_date)
+                .andWhere("is_deleted", false);
+        });
+    }
+    getSingleStockWithFoodAndDate(where) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("stocks")
+                .withSchema(this.RESTAURANT_SCHEMA)
+                .where("food_id", where.food_id)
+                .andWhere("stock_date", where.stock_date)
+                .andWhere("is_deleted", false)
+                .andWhere("hotel_code", where.hotel_code)
+                .andWhere("restaurant_id", where.restaurant_id)
+                .first();
+        });
+    }
     getFoods(query) {
         var _a, _b;
         return __awaiter(this, void 0, void 0, function* () {
@@ -58,9 +215,12 @@ class RestaurantFoodModel extends schema_1.default {
             if (query.status) {
                 baseQuery.andWhere("f.status", query.status);
             }
+            if (query.recipe_type) {
+                baseQuery.andWhere("f.recipe_type", query.recipe_type);
+            }
             const data = yield baseQuery
                 .clone()
-                .select("f.id", "f.hotel_code", "f.restaurant_id", "f.photo", "f.name", "mc.name as menu_category_name", "ua.id as created_by_id", "u.name as unit_name", "u.short_code as unit_short_code", "ua.name as created_by_name", "f.status", "f.retail_price", "f.is_deleted")
+                .select("f.id", "f.hotel_code", "f.restaurant_id", "f.photo", "f.name", "mc.name as menu_category_name", "ua.id as created_by_id", "u.name as unit_name", "u.short_code as unit_short_code", "ua.name as created_by_name", "f.recipe_type", "f.status", "f.retail_price", "f.is_deleted")
                 .orderBy("f.id", "desc")
                 .limit((_a = query.limit) !== null && _a !== void 0 ? _a : 100)
                 .offset((_b = query.skip) !== null && _b !== void 0 ? _b : 0);
@@ -75,7 +235,7 @@ class RestaurantFoodModel extends schema_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("foods as f")
                 .withSchema(this.RESTAURANT_SCHEMA)
-                .select("f.id", "f.hotel_code", "f.restaurant_id", "f.photo", "f.name", "f.menu_category_id", "mc.name as menu_category_name", "f.unit_id", "u.name as unit_name", "u.short_code as unit_short_code", "f.measurement_per_unit", "f.retail_price", this.db.raw(`json_agg(
+                .select("f.id", "f.hotel_code", "f.restaurant_id", "f.photo", "f.name", "f.menu_category_id", "mc.name as menu_category_name", "f.unit_id", "u.name as unit_name", "u.short_code as unit_short_code", "f.serving_quantity", "f.recipe_type", "f.retail_price", this.db.raw(`json_agg(
 			json_build_object(
         'id', fi.id,
 				'product_id', fi.product_id,
@@ -155,6 +315,15 @@ class RestaurantFoodModel extends schema_1.default {
                 .update({ is_deleted: true })
                 .where("id", where.id)
                 .andWhere("food_id", where.food_id)
+                .andWhere("is_deleted", false);
+        });
+    }
+    deleteFoodIngredientsByFood(where) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("food_ingredients")
+                .withSchema(this.RESTAURANT_SCHEMA)
+                .update({ is_deleted: true })
+                .where("food_id", where.food_id)
                 .andWhere("is_deleted", false);
         });
     }

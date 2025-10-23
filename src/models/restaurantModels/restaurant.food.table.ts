@@ -27,10 +27,207 @@ class RestaurantFoodModel extends Schema {
       .insert(payload, "id");
   }
 
+  public async insertInStocks(
+    payload: {
+      hotel_code: number;
+      restaurant_id: number;
+      food_id: number;
+      quantity: number;
+      stock_date: string;
+      created_by: number;
+    }[]
+  ) {
+    return await this.db("stocks")
+      .withSchema(this.RESTAURANT_SCHEMA)
+      .insert(payload, "id");
+  }
+
+  // public async getStocks(where: {
+  //   hotel_code: number;
+  //   restaurant_id: number;
+  //   stock_date?: string; // optional
+  // }) {
+  //   const { hotel_code, restaurant_id, stock_date } = where;
+
+  //   const dateCondition = stock_date
+  //     ? `s.stock_date = '${stock_date}'`
+  //     : `s.stock_date = CURRENT_DATE`;
+
+  //   return await this.db
+  //     .select(
+  //       "f.id as food_id",
+  //       "f.name",
+  //       "f.recipe_type",
+  //       this.db.raw(`
+  //       CASE
+  //         WHEN f.recipe_type IN ('stock', 'ingredient') THEN
+  //           COALESCE(
+  //             (
+  //               SELECT i.available_quantity
+  //               FROM hotel_inventory.inventory i
+  //               WHERE i.product_id = f.linked_inventory_item_id
+  //                 AND i.hotel_code = f.hotel_code
+  //                 AND i.is_deleted = false
+  //               LIMIT 1
+  //             ),
+  //             0
+  //           )
+  //         ELSE
+  //           COALESCE(
+  //             (
+  //               SELECT (s.quantity - s.sold_quantity)
+  //               FROM hotel_restaurant.stocks s
+  //               WHERE s.food_id = f.id
+  //                 AND s.hotel_code = f.hotel_code
+  //                 AND s.restaurant_id = f.restaurant_id
+  //                 AND ${dateCondition}
+  //               LIMIT 1
+  //             ),
+  //             0
+  //           )
+  //       END AS available_stock
+  //     `),
+  //       this.db.raw(`
+  //       CASE
+  //         WHEN f.recipe_type IN ('stock', 'ingredient') THEN ''
+  //         ELSE
+  //           COALESCE(
+  //             (
+  //               SELECT TO_CHAR(s.stock_date, 'YYYY-MM-DD')
+  //               FROM hotel_restaurant.stocks s
+  //               WHERE s.food_id = f.id
+  //                 AND s.hotel_code = f.hotel_code
+  //                 AND s.restaurant_id = f.restaurant_id
+  //                 AND ${dateCondition}
+  //               LIMIT 1
+  //             ),
+  //             ''
+  //           )
+  //       END AS stock_date
+  //     `)
+  //     )
+  //     .from("hotel_restaurant.foods as f")
+  //     .where("f.hotel_code", hotel_code)
+  //     .andWhere("f.restaurant_id", restaurant_id)
+  //     .andWhere("f.is_deleted", false);
+  // }
+
+  public async getStocks(where: {
+    hotel_code: number;
+    restaurant_id: number;
+    stock_date?: string; // optional
+  }) {
+    const { hotel_code, restaurant_id, stock_date } = where;
+
+    const dateCondition = stock_date
+      ? `AND s.stock_date = '${stock_date}'`
+      : "";
+
+    return await this.db
+      .select(
+        "f.id as food_id",
+        "f.name",
+        "f.recipe_type",
+        this.db.raw(`
+        CASE 
+          WHEN f.recipe_type IN ('stock', 'ingredient') THEN
+            COALESCE(
+              (
+                SELECT i.available_quantity
+                FROM hotel_inventory.inventory i
+                WHERE i.product_id = f.linked_inventory_item_id
+                  AND i.hotel_code = f.hotel_code
+                  AND i.is_deleted = false
+                LIMIT 1
+              ),
+              0
+            )
+          ELSE
+            COALESCE(
+              (
+                SELECT (s.quantity - s.sold_quantity)
+                FROM hotel_restaurant.stocks s
+                WHERE s.food_id = f.id
+                  AND s.hotel_code = f.hotel_code
+                  AND s.restaurant_id = f.restaurant_id
+                  ${dateCondition}
+                ORDER BY s.stock_date DESC
+                LIMIT 1
+              ),
+              0
+            )
+        END AS available_stock
+      `),
+        this.db.raw(`
+        CASE 
+          WHEN f.recipe_type IN ('stock', 'ingredient') THEN ''
+          ELSE
+            COALESCE(
+              (
+                SELECT TO_CHAR(s.stock_date, 'YYYY-MM-DD')
+                FROM hotel_restaurant.stocks s
+                WHERE s.food_id = f.id
+                  AND s.hotel_code = f.hotel_code
+                  AND s.restaurant_id = f.restaurant_id
+                  ${dateCondition}
+                ORDER BY s.stock_date DESC
+                LIMIT 1
+              ),
+              ''
+            )
+        END AS stock_date
+      `)
+      )
+      .from("hotel_restaurant.foods as f")
+      .where("f.hotel_code", hotel_code)
+      .andWhere("f.restaurant_id", restaurant_id)
+      .andWhere("f.is_deleted", false);
+  }
+
+  public async updateStocks({
+    where,
+    payload,
+  }: {
+    where: { food_id: number; stock_date: string };
+    payload: { quantity: number };
+  }) {
+    return await this.db("stocks")
+      .withSchema(this.RESTAURANT_SCHEMA)
+      .update(payload, "id")
+      .where("food_id", where.food_id)
+      .andWhere("stock_date", where.stock_date)
+      .andWhere("is_deleted", false);
+  }
+
+  public async getSingleStockWithFoodAndDate(where: {
+    hotel_code: number;
+    restaurant_id: number;
+    food_id: number;
+    stock_date: string;
+  }): Promise<{
+    id: number;
+    hotel_code: number;
+    restaurant_id: number;
+    food_id: number;
+    quantity: number;
+    stock_date: string;
+    created_by: number;
+  }> {
+    return await this.db("stocks")
+      .withSchema(this.RESTAURANT_SCHEMA)
+      .where("food_id", where.food_id)
+      .andWhere("stock_date", where.stock_date)
+      .andWhere("is_deleted", false)
+      .andWhere("hotel_code", where.hotel_code)
+      .andWhere("restaurant_id", where.restaurant_id)
+      .first();
+  }
+
   public async getFoods(query: {
     hotel_code: number;
     restaurant_id: number;
     limit?: number;
+    recipe_type?: "ingredients" | "non-ingredients" | "stock";
     skip?: number;
     id?: number;
     food_ids?: number[];
@@ -64,6 +261,9 @@ class RestaurantFoodModel extends Schema {
       baseQuery.andWhere("f.status", query.status);
     }
 
+    if (query.recipe_type) {
+      baseQuery.andWhere("f.recipe_type", query.recipe_type);
+    }
     const data = await baseQuery
       .clone()
       .select(
@@ -77,6 +277,7 @@ class RestaurantFoodModel extends Schema {
         "u.name as unit_name",
         "u.short_code as unit_short_code",
         "ua.name as created_by_name",
+        "f.recipe_type",
         "f.status",
         "f.retail_price",
         "f.is_deleted"
@@ -112,7 +313,8 @@ class RestaurantFoodModel extends Schema {
         "f.unit_id",
         "u.name as unit_name",
         "u.short_code as unit_short_code",
-        "f.measurement_per_unit",
+        "f.serving_quantity",
+        "f.recipe_type",
         "f.retail_price",
         this.db.raw(`json_agg(
 			json_build_object(
@@ -168,7 +370,14 @@ class RestaurantFoodModel extends Schema {
     food_id: number;
     id?: number;
     product_id?: number;
-  }) {
+  }): Promise<
+    {
+      id: number;
+      food_id: number;
+      product_id: number;
+      quantity_per_unit: number;
+    }[]
+  > {
     return await this.db("food_ingredients")
       .withSchema(this.RESTAURANT_SCHEMA)
       .where("food_id", where.food_id)
@@ -205,6 +414,17 @@ class RestaurantFoodModel extends Schema {
       .update({ is_deleted: true })
       .where("id", where.id)
       .andWhere("food_id", where.food_id)
+      .andWhere("is_deleted", false);
+  }
+
+  public async deleteFoodIngredientsByFood(where: {
+    hotel_code: number;
+    food_id: number;
+  }) {
+    return await this.db("food_ingredients")
+      .withSchema(this.RESTAURANT_SCHEMA)
+      .update({ is_deleted: true })
+      .where("food_id", where.food_id)
       .andWhere("is_deleted", false);
   }
 }

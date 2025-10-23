@@ -14,11 +14,15 @@ class RestaurantFoodRouter extends AbstractRouter {
       .route("/")
       .post(
         this.uploader.cloudUploadRaw(this.fileFolders.RESTAURANT_FILES),
-        this.controller.createFood
+        this.controller.createFoodV2
       )
       .get(this.controller.getFoods);
 
+    this.router.route("/prepared").post(this.controller.insertPreparedFood);
+
     this.router.route("/ingredients").get(this.controller.getAllProduct);
+
+    this.router.route("/stocks").get(this.controller.geFoodStocks);
 
     this.router
       .route("/:id")

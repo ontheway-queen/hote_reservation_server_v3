@@ -82,13 +82,110 @@ class RestaurantOrderService extends AbstractServices {
         );
       }
 
-      await Lib.checkAndUpdateIngredientStock({
-        trx,
-        hotel_code,
-        restaurant_id,
-        type: "create",
-        order_items,
-      });
+      // check and update ingredient stock
+      for (const item of order_items) {
+        const food = foodItems.data.find((f) => f.id === item.food_id);
+        if (!food) {
+          throw new CustomError(
+            `Food item with ID ${item.food_id} not found.`,
+            this.StatusCode.HTTP_NOT_FOUND
+          );
+        }
+        if (food.recipe_type === "ingredients") {
+          const foodReceipe = await restaurantFoodModel.getFoodIngredients({
+            food_id: item.food_id,
+          });
+
+          for (const recipe of foodReceipe) {
+            const requiredQuantity =
+              recipe.quantity_per_unit * Number(item.quantity);
+
+            const inventoryItem =
+              await hotelInventoryModel.getSingleInventoryDetails({
+                hotel_code,
+                product_id: recipe.product_id,
+              });
+
+            console.log({ inventoryItem });
+            // if (!inventoryItem) {
+            //   throw new CustomError(
+            //     `Inventory item with ID ${recipe.id} not found for food ID ${item.food_id}.`,
+            //     this.StatusCode.HTTP_NOT_FOUND
+            //   );
+            // }
+            // if (Number(inventoryItem.available_quantity) < requiredQuantity) {
+            //   throw new CustomError(
+            //     `Insufficient stock for inventory item ID ${recipe.id} required for food ID ${item.food_id}.`,
+            //     this.StatusCode.HTTP_CONFLICT
+            //   );
+            // }
+
+            // update inventory stock
+            const newUsedQuantity =
+              (inventoryItem?.quantity_used || 0) + requiredQuantity;
+
+            if (!inventoryItem) {
+              // insert inventory if not found
+              await hotelInventoryModel.insertInInventory([
+                {
+                  hotel_code,
+                  product_id: recipe.product_id,
+                  quantity_used: 0,
+                  available_quantity: 0,
+                },
+              ]);
+            }
+
+            await hotelInventoryModel.updateInInventory(
+              {
+                quantity_used: newUsedQuantity,
+              },
+              {
+                product_id: recipe.product_id,
+              }
+            );
+          }
+        } else if (food.recipe_type === "non-ingredients") {
+          // stock deduction for non-ingredients type
+          const inventoryItem =
+            await restaurantFoodModel.getSingleStockWithFoodAndDate({
+              hotel_code,
+              restaurant_id,
+              food_id: item.food_id,
+              stock_date: new Date().toISOString().split("T")[0],
+            });
+          if (!inventoryItem) {
+            throw new CustomError(
+              `Inventory item not found for food ID ${item.food_id}.`,
+              this.StatusCode.HTTP_NOT_FOUND
+            );
+          }
+          if (Number(inventoryItem.quantity) < Number(item.quantity)) {
+            throw new CustomError(
+              `Insufficient stock for food ID ${item.food_id}.`,
+              this.StatusCode.HTTP_CONFLICT
+            );
+          }
+
+          const newQuantity =
+            Number(inventoryItem.quantity) - Number(item.quantity);
+          await restaurantFoodModel.updateStocks({
+            where: {
+              food_id: inventoryItem.food_id,
+              stock_date: new Date().toISOString().split("T")[0],
+            },
+            payload: { quantity: newQuantity },
+          });
+        }
+      }
+
+      // await Lib.checkAndUpdateIngredientStock({
+      //   trx,
+      //   hotel_code,
+      //   restaurant_id,
+      //   type: "create",
+      //   order_items,
+      // });
 
       // calculate sub_total and grand total
       foodItems.data.forEach((food) => {
@@ -431,17 +528,19 @@ class RestaurantOrderService extends AbstractServices {
 
       const restaurantOrderModel =
         this.restaurantModel.restaurantOrderModel(trx);
-
+      const restaurantFoodModel = this.restaurantModel.restaurantFoodModel(trx);
       const restaurantTableModel =
         this.restaurantModel.restaurantTableModel(trx);
+      const hotelInventoryModel = this.Model.inventoryModel(trx);
 
-      const isOrderExists = await restaurantOrderModel.getOrderById({
+      //  existing order
+      const existingOrder = await restaurantOrderModel.getOrderById({
+        id: parseInt(id),
         hotel_code,
         restaurant_id,
-        id: parseInt(id),
       });
 
-      if (!isOrderExists) {
+      if (!existingOrder) {
         return {
           success: false,
           code: this.StatusCode.HTTP_NOT_FOUND,
@@ -449,31 +548,65 @@ class RestaurantOrderService extends AbstractServices {
         };
       }
 
-      const { order_items } = isOrderExists;
+      const { order_items } = existingOrder;
 
-      const parsedOrder = order_items.map((item) => ({
-        food_id: item.food_id,
-        quantity: item.quantity,
-      }));
+      // Restore stock/ingredients
+      for (const item of order_items) {
+        const food = await restaurantFoodModel.getFoods({
+          id: item.food_id,
+          hotel_code,
+          restaurant_id,
+        });
+        const f = food.data[0];
+        if (!f) continue;
 
-      await Lib.checkAndUpdateIngredientStock({
-        trx,
-        hotel_code,
-        restaurant_id,
-        type: "cancel",
-        order_items: parsedOrder,
-      });
+        if (f.recipe_type === "ingredients") {
+          const recipes = await restaurantFoodModel.getFoodIngredients({
+            food_id: item.food_id,
+          });
+          for (const r of recipes) {
+            const restoreQty = r.quantity_per_unit * Number(item.quantity);
+            const inv = await hotelInventoryModel.getSingleInventoryDetails({
+              hotel_code,
+              product_id: r.product_id,
+            });
+            if (inv) {
+              const restoredUsed = Number(inv.quantity_used) + restoreQty;
+              await hotelInventoryModel.updateInInventory(
+                { quantity_used: restoredUsed },
+                { product_id: r.product_id }
+              );
+            }
+          }
+        } else if (f.recipe_type === "non-ingredients") {
+          const stock = await restaurantFoodModel.getSingleStockWithFoodAndDate(
+            {
+              hotel_code,
+              restaurant_id,
+              food_id: f.id,
+              stock_date: new Date().toISOString().split("T")[0],
+            }
+          );
+          if (stock) {
+            const restoredQty = Number(stock.quantity) + Number(item.quantity);
+            await restaurantFoodModel.updateStocks({
+              where: { food_id: stock.food_id, stock_date: stock.stock_date },
+              payload: { quantity: restoredQty },
+            });
+          }
+        }
+      }
 
-      await restaurantOrderModel.cancelOrder({
-        id: parseInt(id),
-      });
+      // Cancel order in database
+      await restaurantOrderModel.cancelOrder({ id: parseInt(id) });
 
-      await restaurantTableModel.updateTable({
-        id: isOrderExists.table_id,
-        payload: {
-          status: "available",
-        },
-      });
+      // Update table status
+      if (existingOrder.table_id) {
+        await restaurantTableModel.updateTable({
+          id: existingOrder.table_id,
+          payload: { status: "available" },
+        });
+      }
 
       return {
         success: true,
@@ -815,218 +948,6 @@ class RestaurantOrderService extends AbstractServices {
     });
   }
 
-  // public async updateOrder(req: Request) {
-  //   return await this.db.transaction(async (trx) => {
-  //     const { id, restaurant_id, hotel_code } = req.restaurant_admin;
-  //     const { id: order_id } = req.params;
-  //     const { order_items, ...rest } = req.body as IUpdateOrderRequest;
-
-  //     const restaurantOrderModel =
-  //       this.restaurantModel.restaurantOrderModel(trx);
-
-  //     const restaurantFoodModel = this.restaurantModel.restaurantFoodModel(trx);
-
-  //     const existingOrder = await restaurantOrderModel.getOrderById({
-  //       id: Number(order_id),
-  //       hotel_code,
-  //       restaurant_id,
-  //     });
-
-  //     if (!existingOrder) {
-  //       return {
-  //         success: false,
-  //         code: this.StatusCode.HTTP_NOT_FOUND,
-  //         message: "Order not found",
-  //       };
-  //     }
-
-  //     // again caluculate sub_total, grand_total
-  //     let sub_total = 0;
-
-  //     let foodItemsCopy: IGetFoods[] = [];
-  //     if (order_items && order_items.length > 0) {
-  //       const foodIds = order_items.map((item) => item.food_id);
-  //       const uniqueFoodIds = Array.from(new Set(foodIds));
-  //       if (uniqueFoodIds.length !== order_items.length) {
-  //         throw new CustomError(
-  //           "Duplicate food items found in the order.",
-  //           this.StatusCode.HTTP_BAD_REQUEST
-  //         );
-  //       }
-
-  //       // get food and calculate sub_total
-  //       const foodItems = await restaurantFoodModel.getFoods({
-  //         hotel_code,
-  //         restaurant_id,
-  //         food_ids: uniqueFoodIds,
-  //       });
-
-  //       if (foodItems.data.length !== uniqueFoodIds.length) {
-  //         throw new CustomError(
-  //           "One or more food items not found.",
-  //           this.StatusCode.HTTP_NOT_FOUND
-  //         );
-  //       }
-  //       foodItemsCopy = foodItems.data;
-  //       // calculate sub_total and grand total
-  //       foodItems.data.forEach((food) => {
-  //         const item = order_items.find((i) => i.food_id === food.id);
-  //         if (item) {
-  //           sub_total += Number(item.quantity) * Number(food.retail_price);
-  //         }
-  //       });
-  //     }
-  //     const discountAmount = Lib.calculatePercentageToAmount(
-  //       sub_total,
-  //       rest.discount ?? Number(existingOrder.discount),
-  //       rest.discount_type ??
-  //         (existingOrder.discount_type as "percentage" | "fixed")
-  //     );
-
-  //     console.log({ sub_total, discountAmount });
-  //     let gross_amount = sub_total - discountAmount;
-
-  //     const serviceChargeAmount = Lib.calculatePercentageToAmount(
-  //       gross_amount,
-  //       rest.service_charge ?? Number(existingOrder.service_charge),
-  //       rest.service_charge_type ??
-  //         (existingOrder.service_charge_type as "percentage" | "fixed")
-  //     );
-
-  //     gross_amount += serviceChargeAmount;
-
-  //     const vatAmount = Lib.calculatePercentageToAmount(
-  //       gross_amount,
-  //       rest.vat ?? Number(existingOrder.vat),
-  //       rest.vat_type ?? (existingOrder.vat_type as "percentage" | "fixed")
-  //     );
-
-  //     gross_amount += vatAmount;
-  //     const grand_total = gross_amount;
-
-  //     //_____________________ delete order items _______________________
-  //     await restaurantOrderModel.deleteOrderItems({
-  //       order_id: Number(order_id),
-  //     });
-
-  //     // ________________________ Accounting ___________________________
-
-  //     // const helper = new HelperFunction();
-  //     // const hotelModel = this.Model.HotelModel(trx);
-  //     // const accountModel = this.Model.accountModel(trx);
-  //     // const today = new Date().toISOString();
-
-  //     // const heads = await hotelModel.getHotelAccConfig(hotel_code, [
-  //     //   "RECEIVABLE_HEAD_ID",
-  //     //   "RESTAURANT_REVENUE_HEAD_ID",
-  //     // ]);
-
-  //     // console.log({ heads, hotel_code });
-
-  //     // const receivable_head = heads.find(
-  //     //   (h) => h.config === "RECEIVABLE_HEAD_ID"
-  //     // );
-
-  //     // if (!receivable_head) {
-  //     //   throw new Error("RECEIVABLE_HEAD_ID not configured for this hotel");
-  //     // }
-
-  //     // const sales_head = heads.find(
-  //     //   (h) => h.config === "RESTAURANT_REVENUE_HEAD_ID"
-  //     // );
-  //     // if (!sales_head) {
-  //     //   throw new Error(
-  //     //     "RESTAURANT_REVENUE_HEAD_ID not configured for this hotel"
-  //     //   );
-  //     // }
-  //     // const voucher_no1 = await helper.generateVoucherNo("JV", trx);
-
-  //     // const voucherRes = await accountModel.insertAccVoucher([
-  //     //   {
-  //     //     acc_head_id: receivable_head.head_id,
-  //     //     created_by: id,
-  //     //     debit: grand_total,
-  //     //     credit: 0,
-  //     //     description: `Receivable for order ${existingOrder.order_no}`,
-  //     //     voucher_date: today,
-  //     //     voucher_no: voucher_no1,
-  //     //     hotel_code,
-  //     //   },
-  //     //   {
-  //     //     acc_head_id: sales_head.head_id,
-  //     //     created_by: id,
-  //     //     debit: 0,
-  //     //     credit: grand_total,
-  //     //     description: `Sales for order ${existingOrder.order_no}`,
-  //     //     voucher_date: today,
-  //     //     voucher_no: voucher_no1,
-  //     //     hotel_code,
-  //     //   },
-  //     // ]);
-
-  //     // ________________________ Accounting END ___________________________
-  //     await restaurantOrderModel.updateOrder({
-  //       id: Number(order_id),
-  //       payload: {
-  //         staff_id: rest.staff_id,
-  //         order_type: rest.order_type,
-  //         guest_name: rest.customer_name,
-  //         table_id: rest.table_id,
-  //         booking_id:rest.booking_id,
-  //         sub_total: sub_total,
-  //         booking_ref:rest.booking_ref,
-  //         discount: rest.discount ?? Number(existingOrder.discount),
-  //         discount_type:
-  //           rest.discount_type ??
-  //           (existingOrder.discount_type as "percentage" | "fixed"),
-  //         service_charge:
-  //           rest.service_charge ?? Number(existingOrder.service_charge),
-  //         grand_total: grand_total,
-  //         service_charge_type:
-  //           rest.service_charge_type ??
-  //           (existingOrder.service_charge_type as "percentage" | "fixed"),
-  //         vat: rest.vat ?? Number(existingOrder.vat),
-  //         vat_type:
-  //           rest.vat_type ?? (existingOrder.vat_type as "percentage" | "fixed"),
-  //         room_no: rest.room_no,
-  //         kitchen_status: rest.kitchen_status,
-  //         updated_by: id,
-  //         discount_amount: discountAmount,
-  //         service_charge_amount: serviceChargeAmount,
-  //         vat_amount: vatAmount,
-  //         // credit_voucher_id: voucherRes[0].id,
-  //       },
-  //     });
-
-  //     // delete existing order items
-  //     if (order_items && order_items.length > 0) {
-  //       // order items payload then insert
-  //       const order_items_payload = order_items.map((item) => {
-  //         const food = foodItemsCopy.find((f) => f.id === item.food_id);
-  //         return {
-  //           order_id: Number(order_id),
-  //           food_id: item.food_id,
-  //           name: food?.name as string,
-  //           rate: Number(food?.retail_price) || 0,
-  //           quantity: Number(item.quantity),
-  //           total: Number(item.quantity) * (Number(food?.retail_price) || 0),
-  //           // debit_voucher_id: voucherRes[1].id,
-  //         };
-  //       });
-
-  //       await restaurantOrderModel.createOrderItems(order_items_payload);
-  //     }
-
-  //     // update accounts voucher
-
-  //     return {
-  //       success: true,
-  //       code: this.StatusCode.HTTP_SUCCESSFUL,
-  //       message: "Order updated successfully.",
-  //     };
-  //   });
-  // }
-
   public async updateOrder(req: Request) {
     return await this.db.transaction(async (trx) => {
       const { id, restaurant_id, hotel_code } = req.restaurant_admin;
@@ -1045,8 +966,9 @@ class RestaurantOrderService extends AbstractServices {
       const restaurantFoodModel = this.restaurantModel.restaurantFoodModel(trx);
       const restaurantTableModel =
         this.restaurantModel.restaurantTableModel(trx);
+      const hotelInventoryModel = this.Model.inventoryModel(trx);
 
-      // Fetch existing order
+      // fetch existing order
       const existingOrder = await restaurantOrderModel.getOrderById({
         id: Number(order_id),
         hotel_code,
@@ -1061,7 +983,7 @@ class RestaurantOrderService extends AbstractServices {
         };
       }
 
-      //  Validate new table (if changed)
+      // validate table change
       if (rest.table_id && rest.table_id !== existingOrder.table_id) {
         const { data } = await restaurantTableModel.getTables({
           id: rest.table_id,
@@ -1084,68 +1006,152 @@ class RestaurantOrderService extends AbstractServices {
         }
       }
 
-      // Calculate subtotal and totals
-      let sub_total = 0;
-      let foodItemsCopy: IGetFoods[] = [];
+      // Validate & fetch foods
+      const foodIds = order_items?.map((item) => item.food_id);
+      const uniqueFoodIds = Array.from(new Set(foodIds));
 
-      if (order_items && order_items.length > 0) {
-        const foodIds = order_items.map((item) => item.food_id);
-        const uniqueFoodIds = Array.from(new Set(foodIds));
-
-        if (uniqueFoodIds.length !== order_items.length) {
-          throw new CustomError(
-            "Duplicate food items found in the order.",
-            this.StatusCode.HTTP_BAD_REQUEST
-          );
-        }
-
-        const foodItems = await restaurantFoodModel.getFoods({
-          hotel_code,
-          restaurant_id,
-          food_ids: uniqueFoodIds,
-        });
-
-        if (foodItems.data.length !== uniqueFoodIds.length) {
-          throw new CustomError(
-            "One or more food items not found.",
-            this.StatusCode.HTTP_NOT_FOUND
-          );
-        }
-
-        foodItemsCopy = foodItems.data;
-
-        foodItems.data.forEach((food) => {
-          const item = order_items.find((i) => i.food_id === food.id);
-          if (item) {
-            sub_total += Number(item.quantity) * Number(food.retail_price);
-          }
-        });
-
-        const { order_items: orderItems } = existingOrder;
-
-        const parsedOrder = orderItems.map((item) => ({
-          food_id: item.food_id,
-          quantity: item.quantity,
-        }));
-
-        console.log({
-          parsedOrder,
-          order_items,
-        });
-
-        // throw new CustomError("error", 400);
-
-        await Lib.checkAndUpdateIngredientStock({
-          trx,
-          hotel_code,
-          restaurant_id,
-          type: "update",
-          order_items,
-          previous_order_items: parsedOrder,
-        });
-      } else {
-        sub_total = Number(existingOrder.sub_total);
+      if (uniqueFoodIds.length !== order_items?.length) {
+        throw new CustomError(
+          "Duplicate food items found in the order.",
+          this.StatusCode.HTTP_BAD_REQUEST
+        );
       }
+
+      const foodItems = await restaurantFoodModel.getFoods({
+        hotel_code,
+        restaurant_id,
+        food_ids: uniqueFoodIds,
+      });
+
+      if (foodItems.data.length !== uniqueFoodIds.length) {
+        throw new CustomError(
+          "One or more food items not found.",
+          this.StatusCode.HTTP_NOT_FOUND
+        );
+      }
+
+      // Restore old stock
+      const { order_items: oldOrderItems } = existingOrder;
+      for (const old of oldOrderItems) {
+        const oldFood = await restaurantFoodModel.getFoods({
+          id: old.food_id,
+          hotel_code,
+          restaurant_id,
+        });
+        const food = oldFood.data[0];
+        if (!food) continue;
+
+        if (food.recipe_type === "ingredients") {
+          const recipes = await restaurantFoodModel.getFoodIngredients({
+            food_id: old.food_id,
+          });
+          for (const r of recipes) {
+            const restoreQty = r.quantity_per_unit * Number(old.quantity);
+            const inv = await hotelInventoryModel.getSingleInventoryDetails({
+              hotel_code,
+              product_id: r.product_id,
+            });
+            if (inv) {
+              const restoredUsed = Number(inv.quantity_used) + restoreQty;
+              await hotelInventoryModel.updateInInventory(
+                { quantity_used: restoredUsed },
+                { product_id: r.product_id }
+              );
+            }
+          }
+        } else if (food.recipe_type === "non-ingredients") {
+          const stock = await restaurantFoodModel.getSingleStockWithFoodAndDate(
+            {
+              hotel_code,
+              restaurant_id,
+              food_id: food.id,
+              stock_date: new Date().toISOString().split("T")[0],
+            }
+          );
+          if (stock) {
+            const restoredQty = Number(stock.quantity) + Number(old.quantity);
+            await restaurantFoodModel.updateStocks({
+              where: { food_id: stock.food_id, stock_date: stock.stock_date },
+              payload: { quantity: restoredQty },
+            });
+          }
+        }
+      }
+
+      // Deduct new stock
+      for (const item of order_items) {
+        const food = foodItems.data.find((f) => f.id === item.food_id);
+        if (!food) continue;
+
+        if (food.recipe_type === "ingredients") {
+          const recipes = await restaurantFoodModel.getFoodIngredients({
+            food_id: item.food_id,
+          });
+          for (const r of recipes) {
+            const requiredQty = r.quantity_per_unit * Number(item.quantity);
+            const inv = await hotelInventoryModel.getSingleInventoryDetails({
+              hotel_code,
+              product_id: r.product_id,
+            });
+
+            if (!inv) {
+              throw new CustomError(
+                `Inventory item ${r.product_id} not found.`,
+                this.StatusCode.HTTP_NOT_FOUND
+              );
+            }
+
+            if (Number(inv.available_quantity) < requiredQty) {
+              throw new CustomError(
+                `Insufficient stock for product ${r.product_id}.`,
+                this.StatusCode.HTTP_CONFLICT
+              );
+            }
+
+            const updatedUsed = Number(inv.quantity_used) - requiredQty;
+            await hotelInventoryModel.updateInInventory(
+              { quantity_used: updatedUsed },
+              { product_id: r.product_id }
+            );
+          }
+        } else if (food.recipe_type === "non-ingredients") {
+          const stock = await restaurantFoodModel.getSingleStockWithFoodAndDate(
+            {
+              hotel_code,
+              restaurant_id,
+              food_id: item.food_id,
+              stock_date: new Date().toISOString().split("T")[0],
+            }
+          );
+          if (!stock) {
+            throw new CustomError(
+              `Stock not found for food ID ${item.food_id}.`,
+              this.StatusCode.HTTP_NOT_FOUND
+            );
+          }
+          if (Number(stock.quantity) < Number(item.quantity)) {
+            throw new CustomError(
+              `Insufficient stock for food ID ${item.food_id}.`,
+              this.StatusCode.HTTP_CONFLICT
+            );
+          }
+
+          const newQty = Number(stock.quantity) - Number(item.quantity);
+          await restaurantFoodModel.updateStocks({
+            where: { food_id: stock.food_id, stock_date: stock.stock_date },
+            payload: { quantity: newQty },
+          });
+        }
+      }
+
+      // Recalculate totals
+      let sub_total = 0;
+      foodItems.data.forEach((food) => {
+        const item = order_items.find((i) => i.food_id === food.id);
+        if (item) {
+          sub_total += Number(item.quantity) * Number(food.retail_price);
+        }
+      });
 
       const discountAmount = Lib.calculatePercentageToAmount(
         sub_total,
@@ -1173,10 +1179,11 @@ class RestaurantOrderService extends AbstractServices {
 
       const grand_total = gross_amount + vatAmount;
 
-      // Handle order type specific logic
+      // order_type logic (walk-in / reservation)
       let finalGuestName = existingOrder.guest_name;
       let finalBookingId: number | undefined = existingOrder.booking_id;
       let customerId;
+
       if (order_type === "walk-in") {
         if (
           (customer_name || customer_phone) &&
@@ -1207,7 +1214,6 @@ class RestaurantOrderService extends AbstractServices {
         finalGuestName = customer_name ?? existingOrder.guest_name;
         finalBookingId = undefined;
       } else if (order_type === "reservation") {
-        // Must have booking_id
         if (!booking_id) {
           return {
             success: false,
@@ -1220,32 +1226,26 @@ class RestaurantOrderService extends AbstractServices {
         finalBookingId = booking_id;
       }
 
-      // Step 5: Update main order
+      // Update main order
       await restaurantOrderModel.updateOrder({
         id: Number(order_id),
         payload: {
           staff_id: rest.staff_id ?? existingOrder.staff_id,
+          table_id: rest.table_id ?? existingOrder.table_id,
           order_type: order_type ?? existingOrder.order_type,
           guest_name: finalGuestName,
-          table_id: rest.table_id ?? existingOrder.table_id,
           booking_id: finalBookingId,
-          booking_ref: existingOrder.booking_ref,
           room_no: rest.room_no ?? existingOrder.room_no,
           sub_total,
           discount: rest.discount ?? Number(existingOrder.discount),
-          discount_type:
-            rest.discount_type ??
-            (existingOrder.discount_type as "percentage" | "fixed"),
+          discount_type: rest.discount_type ?? existingOrder.discount_type,
           service_charge:
             rest.service_charge ?? Number(existingOrder.service_charge),
           service_charge_type:
-            rest.service_charge_type ??
-            (existingOrder.service_charge_type as "percentage" | "fixed"),
+            rest.service_charge_type ?? existingOrder.service_charge_type,
           vat: rest.vat ?? Number(existingOrder.vat),
-          vat_type:
-            rest.vat_type ?? (existingOrder.vat_type as "percentage" | "fixed"),
+          vat_type: rest.vat_type ?? existingOrder.vat_type,
           grand_total,
-          kitchen_status: rest.kitchen_status ?? existingOrder.kitchen_status,
           updated_by: id,
           discount_amount: discountAmount,
           service_charge_amount: serviceChargeAmount,
@@ -1253,42 +1253,37 @@ class RestaurantOrderService extends AbstractServices {
         },
       });
 
-      // 🧩 Step 6: Replace order items (if provided)
-      if (order_items && order_items.length > 0) {
-        await restaurantOrderModel.deleteOrderItems({
-          order_id: Number(order_id),
-        });
+      // Replace order items
+      await restaurantOrderModel.deleteOrderItems({
+        order_id: Number(order_id),
+      });
 
-        const order_items_payload = order_items.map((item) => {
-          const food = foodItemsCopy.find((f) => f.id === item.food_id);
-          return {
+      await Promise.all(
+        order_items.map(async (item) => {
+          const food = foodItems.data.find((f) => f.id === item.food_id);
+          await restaurantOrderModel.createOrderItems({
             order_id: Number(order_id),
             food_id: item.food_id,
             name: food?.name ?? "",
             rate: Number(food?.retail_price) || 0,
             quantity: Number(item.quantity),
             total: Number(item.quantity) * (Number(food?.retail_price) || 0),
-          };
-        });
+          });
+        })
+      );
 
-        await restaurantOrderModel.createOrderItems(order_items_payload);
-      }
-
-      // 🧩 Step 7: Update table status if changed
+      // Table status update
       if (rest.table_id && rest.table_id !== existingOrder.table_id) {
         await restaurantTableModel.updateTable({
           id: rest.table_id,
           payload: { status: "booked" },
         });
-
-        // Free old table if was booked
         await restaurantTableModel.updateTable({
           id: existingOrder.table_id,
           payload: { status: "available" },
         });
       }
 
-      // 🧩 Step 8: Return response
       return {
         success: true,
         code: this.StatusCode.HTTP_SUCCESSFUL,

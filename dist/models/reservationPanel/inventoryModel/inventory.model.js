@@ -251,7 +251,7 @@ class InventoryModel extends schema_1.default {
             // --- data query ---
             const dataQuery = this.db("products as p")
                 .withSchema(this.HOTEL_INVENTORY_SCHEMA)
-                .select("i.id", "p.product_code", "p.name as product_name", "c.name as category", this.db.raw("COALESCE(i.available_quantity, 0) as available_quantity"), this.db.raw("COALESCE(i.quantity_used, 0) as quantity_used"), this.db.raw("COALESCE(i.total_damaged, 0) as total_damaged"))
+                .select("i.id", "p.id as product_id", "p.product_code", "p.name as product_name", "c.name as category", this.db.raw("COALESCE(i.available_quantity, 0) - COALESCE(i.quantity_used, 0)-COALESCE(i.total_damaged, 0) as available_quantity"), this.db.raw("COALESCE(i.quantity_used, 0) as quantity_used"), this.db.raw("COALESCE(i.total_damaged, 0) as total_damaged"))
                 .leftJoin("categories as c", "c.id", "p.category_id")
                 .leftJoin("inventory as i", function () {
                 this.on("i.product_id", "p.id").andOnVal("i.hotel_code", hotel_code);

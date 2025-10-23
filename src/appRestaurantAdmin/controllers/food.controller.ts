@@ -19,10 +19,25 @@ class RestaurantFoodController extends AbstractController {
     }
   );
 
-  public createFood = this.asyncWrapper.wrap(
-    { bodySchema: this.validator.createFoodValidator },
+  public insertPreparedFood = this.asyncWrapper.wrap(
+    { bodySchema: this.validator.preparedFoodValidator },
     async (req: Request, res: Response) => {
-      const { code, ...data } = await this.service.createFood(req);
+      const { code, ...data } = await this.service.insertPreparedFood(req);
+      res.status(code).json(data);
+    }
+  );
+
+  // public createFood = this.asyncWrapper.wrap(
+  //   { bodySchema: this.validator.createFoodValidator },
+  //   async (req: Request, res: Response) => {
+  //     const { code, ...data } = await this.service.createFood(req);
+  //     res.status(code).json(data);
+  //   }
+  // );
+  public createFoodV2 = this.asyncWrapper.wrap(
+    { bodySchema: this.validator.createFoodV2Validator },
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.createFoodV2(req);
       res.status(code).json(data);
     }
   );
@@ -43,9 +58,19 @@ class RestaurantFoodController extends AbstractController {
     }
   );
 
+  // public updateFood = this.asyncWrapper.wrap(
+  //   {
+  //     bodySchema: this.validator.updateFoodValidator,
+  //     paramSchema: this.commonValidator.singleParamStringValidator(),
+  //   },
+  //   async (req: Request, res: Response) => {
+  //     const { code, ...data } = await this.service.updateFood(req);
+  //     res.status(code).json(data);
+  //   }
+  // );
   public updateFood = this.asyncWrapper.wrap(
     {
-      bodySchema: this.validator.updateFoodValidator,
+      bodySchema: this.validator.updateFoodV2Validator,
       paramSchema: this.commonValidator.singleParamStringValidator(),
     },
     async (req: Request, res: Response) => {
@@ -60,6 +85,14 @@ class RestaurantFoodController extends AbstractController {
     },
     async (req: Request, res: Response) => {
       const { code, ...data } = await this.service.deleteFood(req);
+      res.status(code).json(data);
+    }
+  );
+
+  public geFoodStocks = this.asyncWrapper.wrap(
+    null,
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.getFoodStocks(req);
       res.status(code).json(data);
     }
   );
