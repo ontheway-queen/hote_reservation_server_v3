@@ -18,6 +18,8 @@ class RestaurantFoodRouter extends AbstractRouter {
       )
       .get(this.controller.getFoods);
 
+    this.router.route("/wastage").post(this.controller.insertPreparedFood);
+
     this.router.route("/prepared").post(this.controller.insertPreparedFood);
 
     this.router.route("/ingredients").get(this.controller.getAllProduct);

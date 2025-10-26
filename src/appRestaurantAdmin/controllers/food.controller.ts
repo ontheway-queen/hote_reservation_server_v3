@@ -27,6 +27,14 @@ class RestaurantFoodController extends AbstractController {
     }
   );
 
+  public wastageFood = this.asyncWrapper.wrap(
+    { bodySchema: this.validator.wastageFoodValidator },
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.wastageFood(req);
+      res.status(code).json(data);
+    }
+  );
+
   public createFoodV2 = this.asyncWrapper.wrap(
     { bodySchema: this.validator.createFoodV2Validator },
     async (req: Request, res: Response) => {
@@ -73,7 +81,7 @@ class RestaurantFoodController extends AbstractController {
   );
 
   public geFoodStocks = this.asyncWrapper.wrap(
-    null,
+    { querySchema: this.validator.getFoodStocksValidator },
     async (req: Request, res: Response) => {
       const { code, ...data } = await this.service.getFoodStocks(req);
       res.status(code).json(data);

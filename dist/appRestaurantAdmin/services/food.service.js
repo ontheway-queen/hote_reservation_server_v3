@@ -284,6 +284,89 @@ class RestaurantFoodService extends abstract_service_1.default {
             };
         });
     }
+    wastageFood(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { restaurant_id, hotel_code, id } = req.restaurant_admin;
+            const { food_id, quantity, type, remarks, stock_date } = req.body;
+            const restaurantFoodModel = this.restaurantModel.restaurantFoodModel();
+            const foodDetails = yield restaurantFoodModel.getFood({
+                id: food_id,
+                hotel_code,
+                restaurant_id,
+            });
+            if (!foodDetails) {
+                throw new customEror_1.default(`Food with ID ${food_id} not found.`, this.StatusCode.HTTP_NOT_FOUND);
+            }
+            if (type == "wastage") {
+                if (foodDetails.recipe_type !== "non-ingredients") {
+                    throw new customEror_1.default(`Food with ID ${food_id} is not of 'non-ingredients' recipe type.`, this.StatusCode.HTTP_BAD_REQUEST);
+                }
+                // insert in wastage
+                yield restaurantFoodModel.insertInWastage([
+                    {
+                        restaurant_id,
+                        created_by: id,
+                        food_id,
+                        hotel_code,
+                        quantity,
+                        remarks,
+                        wastage_date: new Date().toISOString().split("T")[0],
+                    },
+                ]);
+                const stocksData = yield this.restaurantModel
+                    .restaurantFoodModel()
+                    .getStocks({
+                    hotel_code,
+                    restaurant_id,
+                    stock_date: req.query.date,
+                });
+                yield restaurantFoodModel.updateStocks({
+                    payload: {
+                        wastage_quantity: Number(stocksData[0].wastage_quantity) + quantity,
+                    },
+                    where: {
+                        food_id,
+                        stock_date: new Date().toISOString().split("T")[0],
+                    },
+                });
+            }
+            else {
+                const existInStock = yield restaurantFoodModel.getSingleStockWithFoodAndDate({
+                    food_id: food_id,
+                    hotel_code,
+                    restaurant_id,
+                    stock_date: new Date().toISOString(),
+                });
+                if (existInStock) {
+                    const nowQuantity = Number(existInStock.received_quantity) + quantity;
+                    yield restaurantFoodModel.updateStocks({
+                        payload: {
+                            received_quantity: nowQuantity,
+                        },
+                        where: {
+                            food_id,
+                            stock_date,
+                        },
+                    });
+                }
+            }
+            // insertStockPayload.push({
+            //   food_id: item.food_id,
+            //   quantity: item.quantity,
+            //   hotel_code,
+            //   restaurant_id,
+            //   stock_date: new Date().toISOString(),
+            //   created_by: req.restaurant_admin.id,
+            // });
+            // insert into stock
+            // await restaurantFoodModel.insertInStocks(insertStockPayload);
+            return {
+                success: true,
+                code: this.StatusCode.HTTP_SUCCESSFUL,
+                message: "Prepared food stock inserted successfully.",
+            };
+        });
+    }
     getFoods(req) {
         return __awaiter(this, void 0, void 0, function* () {
             const { restaurant_id, hotel_code } = req.restaurant_admin;
@@ -575,7 +658,9 @@ class RestaurantFoodService extends abstract_service_1.default {
             const data = yield this.restaurantModel.restaurantFoodModel().getStocks({
                 hotel_code,
                 restaurant_id,
+                stock_date: req.query.date,
             });
+            console.log({ data });
             return {
                 success: true,
                 code: this.StatusCode.HTTP_OK,

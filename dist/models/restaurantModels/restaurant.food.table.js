@@ -39,155 +39,74 @@ class RestaurantFoodModel extends schema_1.default {
                 .insert(payload, "id");
         });
     }
-    // public async getStocks(where: {
-    //   hotel_code: number;
-    //   restaurant_id: number;
-    //   stock_date?: string; // optional
-    // }) {
-    //   const { hotel_code, restaurant_id, stock_date } = where;
-    //   const dateCondition = stock_date
-    //     ? `AND s.stock_date = '${stock_date}'`
-    //     : "";
-    //   return await this.db
-    //     .select(
-    //       "f.id as food_id",
-    //       "f.name",
-    //       "f.recipe_type",
-    //       this.db.raw(`
-    //       CASE
-    //         WHEN f.recipe_type IN ('stock', 'ingredient') THEN
-    //           COALESCE(
-    //             (
-    //               SELECT i.available_quantity
-    //               FROM hotel_inventory.inventory i
-    //               WHERE i.product_id = f.linked_inventory_item_id
-    //                 AND i.hotel_code = f.hotel_code
-    //                 AND i.is_deleted = false
-    //               LIMIT 1
-    //             ),
-    //             0
-    //           )
-    //         ELSE
-    //           COALESCE(
-    //             (
-    //               SELECT (s.quantity - s.sold_quantity)
-    //               FROM hotel_restaurant.stocks s
-    //               WHERE s.food_id = f.id
-    //                 AND s.hotel_code = f.hotel_code
-    //                 AND s.restaurant_id = f.restaurant_id
-    //                 ${dateCondition}
-    //               ORDER BY s.stock_date DESC
-    //               LIMIT 1
-    //             ),
-    //             0
-    //           )
-    //       END AS available_stock
-    //     `),
-    //       this.db.raw(`
-    //       CASE
-    //         WHEN f.recipe_type IN ('stock', 'ingredient') THEN ''
-    //         ELSE
-    //           COALESCE(
-    //             (
-    //               SELECT TO_CHAR(s.stock_date, 'YYYY-MM-DD')
-    //               FROM hotel_restaurant.stocks s
-    //               WHERE s.food_id = f.id
-    //                 AND s.hotel_code = f.hotel_code
-    //                 AND s.restaurant_id = f.restaurant_id
-    //                 ${dateCondition}
-    //               ORDER BY s.stock_date DESC
-    //               LIMIT 1
-    //             ),
-    //             ''
-    //           )
-    //       END AS stock_date
-    //     `)
-    //     )
-    //     .from("hotel_restaurant.foods as f")
-    //     .where("f.hotel_code", hotel_code)
-    //     .andWhere("f.restaurant_id", restaurant_id)
-    //     .andWhere("f.is_deleted", false);
-    // }
+    insertInWastage(payload) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.db("wastage")
+                .withSchema(this.RESTAURANT_SCHEMA)
+                .insert(payload, "id");
+        });
+    }
     getStocks(where) {
         return __awaiter(this, void 0, void 0, function* () {
             const { hotel_code, restaurant_id, stock_date } = where;
-            const dateCondition = stock_date
-                ? this.db.raw("AND s.stock_date = ?", [stock_date])
-                : this.db.raw("");
-            return yield this.db
-                .select("f.id as food_id", "f.name", "f.recipe_type", "f.photo", 
-            // available_stock
-            this.db.raw(`
+            // Base query for stocks
+            const stocksSubquery = this.db
+                .select("s.food_id", "s.hotel_code", "s.restaurant_id", "s.quantity", "s.sold_quantity", "s.wastage_quantity", this.db.raw("TO_CHAR(s.stock_date, 'YYYY-MM-DD') as stock_date"))
+                .from("hotel_restaurant.stocks as s")
+                .where("s.hotel_code", hotel_code)
+                .andWhere("s.restaurant_id", restaurant_id)
+                .modify((qb) => {
+                if (stock_date) {
+                    qb.andWhere("s.stock_date", stock_date);
+                }
+                else {
+                    qb.distinctOn(["s.food_id"])
+                        .orderBy("s.food_id")
+                        .orderBy("s.stock_date", "desc");
+                }
+            })
+                .as("st");
+            // Final main query
+            const result = yield this.db
+                .select("f.id as food_id", "f.name", "f.recipe_type", "f.photo", this.db.raw(`
         CASE 
-          WHEN f.recipe_type IN ('stock', 'ingredient') THEN
-            COALESCE((
-              SELECT i.quantity
-              FROM hotel_inventory.inventory i
-              WHERE i.product_id = f.linked_inventory_item_id
-                AND i.hotel_code = f.hotel_code
-                AND i.is_deleted = false
-              LIMIT 1
-            ), 0)
-          ELSE
-            COALESCE((
-              SELECT (s.quantity - s.sold_quantity)
-              FROM hotel_restaurant.stocks s
-              WHERE s.food_id = f.id
-                AND s.hotel_code = f.hotel_code
-                AND s.restaurant_id = f.restaurant_id
-                ${dateCondition}
-              ORDER BY s.stock_date DESC
-              LIMIT 1
-            ), 0)
+          WHEN f.recipe_type IN ('stock', 'ingredient') THEN COALESCE(i.quantity, 0)
+          ELSE COALESCE(st.quantity - st.sold_quantity, 0)
         END AS available_stock
-      `), 
-            // quantity_used
-            this.db.raw(`
+      `), this.db.raw(`
         CASE 
-          WHEN f.recipe_type IN ('stock', 'ingredient') THEN
-            COALESCE((
-              SELECT i.quantity_used
-              FROM hotel_inventory.inventory i
-              WHERE i.product_id = f.linked_inventory_item_id
-                AND i.hotel_code = f.hotel_code
-                AND i.is_deleted = false
-              LIMIT 1
-            ), 0)
-          ELSE
-            COALESCE((
-              SELECT s.sold_quantity
-              FROM hotel_restaurant.stocks s
-              WHERE s.food_id = f.id
-                AND s.hotel_code = f.hotel_code
-                AND s.restaurant_id = f.restaurant_id
-                ${dateCondition}
-              ORDER BY s.stock_date DESC
-              LIMIT 1
-            ), 0)
+          WHEN f.recipe_type IN ('stock', 'ingredient') THEN COALESCE(i.quantity_used, 0)
+          ELSE COALESCE(st.sold_quantity, 0)
         END AS quantity_used
       `), 
-            // stock_date
+            // wastage_quantity
             this.db.raw(`
         CASE 
+          WHEN f.recipe_type IN ('stock', 'ingredient') THEN 0
+          ELSE COALESCE(st.wastage_quantity, 0)
+        END AS wastage_quantity
+      `), this.db.raw(`
+        CASE 
           WHEN f.recipe_type IN ('stock', 'ingredient') THEN ''
-          ELSE
-            COALESCE((
-              SELECT TO_CHAR(s.stock_date, 'YYYY-MM-DD')
-              FROM hotel_restaurant.stocks s
-              WHERE s.food_id = f.id
-                AND s.hotel_code = f.hotel_code
-                AND s.restaurant_id = f.restaurant_id
-                ${dateCondition}
-              ORDER BY s.stock_date DESC
-              LIMIT 1
-            ), '')
+          ELSE COALESCE(st.stock_date, '')
         END AS stock_date
       `))
                 .from("hotel_restaurant.foods as f")
+                .leftJoin("hotel_inventory.inventory as i", function () {
+                this.on("i.product_id", "=", "f.linked_inventory_item_id")
+                    .andOn("i.hotel_code", "=", "f.hotel_code")
+                    .andOnVal("i.is_deleted", "=", false);
+            })
+                .leftJoin(stocksSubquery, function () {
+                this.on("st.food_id", "=", "f.id")
+                    .andOn("st.hotel_code", "=", "f.hotel_code")
+                    .andOn("st.restaurant_id", "=", "f.restaurant_id");
+            })
                 .where("f.hotel_code", hotel_code)
                 .andWhere("f.restaurant_id", restaurant_id)
                 .andWhere("f.is_deleted", false)
-                .whereIn("f.recipe_type", ["non-ingredients", "stock"]);
+                .whereIn("f.recipe_type", ["non-ingredients", "stock", "ingredient"]);
+            return result;
         });
     }
     updateStocks({ where, payload, }) {

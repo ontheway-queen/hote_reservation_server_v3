@@ -180,6 +180,13 @@ class RestaurantFoodValidator {
     ),
   });
 
+  public wastageFoodValidator = Joi.object({
+    food_id: Joi.number().required(),
+    remarks: Joi.string().optional(),
+    type: Joi.string().allow("transfer", "wastage"),
+    quantity: Joi.number().required(),
+  });
+
   public getFoodsValidator = Joi.object({
     limit: Joi.number().optional(),
     skip: Joi.number().optional(),
@@ -189,6 +196,12 @@ class RestaurantFoodValidator {
       .valid("ingredients", "non-ingredients", "stock")
       .optional(),
     status: Joi.string().valid("available", "unavailable").optional(),
+  });
+  public getFoodStocksValidator = Joi.object({
+    limit: Joi.number().optional(),
+    skip: Joi.number().optional(),
+
+    date: Joi.string().required(),
   });
 
   // public updateFoodValidator = Joi.object({

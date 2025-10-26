@@ -94,3 +94,14 @@ export interface Ingredient {
   unit_short_code: string;
   quantity_per_unit: number;
 }
+
+export interface StockItem {
+  food_id: number;
+  name: string;
+  recipe_type: "stock" | "ingredient" | "non-ingredients";
+  photo: string | null;
+  available_stock: number;
+  quantity_used: number;
+  stock_date: string;
+  wastage_quantity: string;
+}
