@@ -137,15 +137,14 @@ class InventoryService extends abstract_service_1.default {
                         const inventoryItem = getInventoryProduct.find((g) => g.product_id === payloadItem.product_id);
                         if (inventoryItem) {
                             modifyInventoryProduct.push({
-                                available_quantity: parseFloat(inventoryItem.available_quantity) +
-                                    payloadItem.quantity,
+                                quantity: parseFloat(inventoryItem.quantity) + payloadItem.quantity,
                                 id: inventoryItem.id,
                             });
                         }
                         else {
                             addedInventoryProduct.push({
                                 hotel_code,
-                                available_quantity: payloadItem.quantity,
+                                quantity: payloadItem.quantity,
                                 product_id: payloadItem.product_id,
                             });
                         }
@@ -156,7 +155,7 @@ class InventoryService extends abstract_service_1.default {
                     }
                     if (modifyInventoryProduct.length) {
                         yield Promise.all(modifyInventoryProduct.map((item) => __awaiter(this, void 0, void 0, function* () {
-                            yield PModel.updateInInventory({ available_quantity: item.available_quantity }, { id: item.id });
+                            yield PModel.updateInInventory({ quantity: item.quantity }, { id: item.id });
                         })));
                     }
                 }
@@ -195,8 +194,7 @@ class InventoryService extends abstract_service_1.default {
                         const inventoryItem = getInventoryProduct.find((g) => g.product_id === payloadItem.product_id);
                         if (inventoryItem) {
                             modifyInventoryProduct.push({
-                                available_quantity: parseFloat(inventoryItem.available_quantity) -
-                                    payloadItem.quantity,
+                                quantity: parseFloat(inventoryItem.quantity) - payloadItem.quantity,
                                 quantity_used: parseFloat(inventoryItem.quantity_used) + payloadItem.quantity,
                                 id: inventoryItem.id,
                             });
@@ -205,7 +203,7 @@ class InventoryService extends abstract_service_1.default {
                     if (modifyInventoryProduct.length) {
                         yield Promise.all(modifyInventoryProduct.map((item) => __awaiter(this, void 0, void 0, function* () {
                             yield PModel.updateInInventory({
-                                available_quantity: item.available_quantity,
+                                quantity: item.quantity,
                                 quantity_used: item.quantity_used,
                             }, { id: item.id });
                         })));
@@ -294,7 +292,7 @@ class InventoryService extends abstract_service_1.default {
             if (type === "increase") {
                 yield model.updateStockItems({ quantity: Number(findProduct.quantity) + quantity }, { id: findProduct.id });
                 yield model.updateInInventory({
-                    available_quantity: isInventoryExists.available_quantity + quantity,
+                    quantity: isInventoryExists.quantity + quantity,
                 }, { product_id: findProduct.product_id });
             }
             else {
@@ -307,7 +305,7 @@ class InventoryService extends abstract_service_1.default {
                 }
                 yield model.updateStockItems({ quantity: findProduct.quantity - quantity }, { id: findProduct.id });
                 yield model.updateInInventory({
-                    available_quantity: isInventoryExists.available_quantity - quantity,
+                    quantity: isInventoryExists.quantity - quantity,
                 }, { product_id: findProduct.product_id });
             }
             return {

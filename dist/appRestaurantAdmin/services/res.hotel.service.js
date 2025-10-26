@@ -29,7 +29,7 @@ class RestaurantHotelService extends abstract_service_1.default {
                 skip: skip,
                 search: search,
             });
-            return Object.assign({ success: true, code: this.StatusCode.HTTP_SUCCESSFUL }, data);
+            return Object.assign({ success: true, code: this.StatusCode.HTTP_OK }, data);
         });
     }
     getBookingRoomsByBookingRef(req) {

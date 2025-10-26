@@ -210,15 +210,14 @@ class ReportService extends abstract_service_1.default {
     }
     getReservationReport(req) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { data, total } = yield this.Model.reportModel().getAllReservationByRoom({
+            const { data, total } = yield this.Model.reportModel().getReservationReport({
                 hotel_code: req.hotel_admin.hotel_code,
-                room_id: Number(req.query.room_id),
-                checkin: req.query.checkin,
-                checkout: req.query.checkout,
                 status: req.query.status,
                 booking_type: req.query.booking_type,
                 limit: req.query.limit,
                 skip: req.query.skip,
+                from_date: req.query.from_date,
+                to_date: req.query.from_date,
             });
             return {
                 success: true,
@@ -230,4 +229,4 @@ class ReportService extends abstract_service_1.default {
     }
 }
 exports.default = ReportService;
-//# sourceMappingURL=report.dashBoard.service.js.map
+//# sourceMappingURL=report.service.js.map

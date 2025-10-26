@@ -260,7 +260,6 @@ class ResAdministrationService extends abstract_service_1.default {
             });
             const { permissions } = data, rest = __rest(data, ["permissions"]);
             const output_data = [];
-            console.log(data);
             permissions === null || permissions === void 0 ? void 0 : permissions.forEach((entry) => {
                 const permissionGroupId = entry.permission_group_id;
                 const permission = {

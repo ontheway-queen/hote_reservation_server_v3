@@ -27,13 +27,6 @@ class RestaurantFoodController extends AbstractController {
     }
   );
 
-  // public createFood = this.asyncWrapper.wrap(
-  //   { bodySchema: this.validator.createFoodValidator },
-  //   async (req: Request, res: Response) => {
-  //     const { code, ...data } = await this.service.createFood(req);
-  //     res.status(code).json(data);
-  //   }
-  // );
   public createFoodV2 = this.asyncWrapper.wrap(
     { bodySchema: this.validator.createFoodV2Validator },
     async (req: Request, res: Response) => {
@@ -58,16 +51,6 @@ class RestaurantFoodController extends AbstractController {
     }
   );
 
-  // public updateFood = this.asyncWrapper.wrap(
-  //   {
-  //     bodySchema: this.validator.updateFoodValidator,
-  //     paramSchema: this.commonValidator.singleParamStringValidator(),
-  //   },
-  //   async (req: Request, res: Response) => {
-  //     const { code, ...data } = await this.service.updateFood(req);
-  //     res.status(code).json(data);
-  //   }
-  // );
   public updateFood = this.asyncWrapper.wrap(
     {
       bodySchema: this.validator.updateFoodV2Validator,

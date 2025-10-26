@@ -98,7 +98,8 @@ class RestaurantOrderService extends AbstractServices {
 
           for (const recipe of foodReceipe) {
             const requiredQuantity =
-              recipe.quantity_per_unit * Number(item.quantity);
+              Number(recipe.quantity_per_unit) * Number(item.quantity);
+            console.log(requiredQuantity, "rq");
 
             const inventoryItem =
               await hotelInventoryModel.getSingleInventoryDetails({
@@ -122,7 +123,7 @@ class RestaurantOrderService extends AbstractServices {
 
             // update inventory stock
             const newUsedQuantity =
-              (inventoryItem?.quantity_used || 0) + requiredQuantity;
+              Number(inventoryItem?.quantity_used || 0) + requiredQuantity;
 
             if (!inventoryItem) {
               // insert inventory if not found
@@ -131,7 +132,7 @@ class RestaurantOrderService extends AbstractServices {
                   hotel_code,
                   product_id: recipe.product_id,
                   quantity_used: 0,
-                  available_quantity: 0,
+                  quantity: 0,
                 },
               ]);
             }
@@ -154,6 +155,7 @@ class RestaurantOrderService extends AbstractServices {
               food_id: item.food_id,
               stock_date: new Date().toISOString().split("T")[0],
             });
+
           if (!inventoryItem) {
             throw new CustomError(
               `Inventory item not found for food ID ${item.food_id}.`,
@@ -167,14 +169,14 @@ class RestaurantOrderService extends AbstractServices {
             );
           }
 
-          const newQuantity =
-            Number(inventoryItem.quantity) - Number(item.quantity);
+          // const newQuantity =
+          //   Number(inventoryItem.quantity) - Number(item.quantity);
           await restaurantFoodModel.updateStocks({
             where: {
               food_id: inventoryItem.food_id,
               stock_date: new Date().toISOString().split("T")[0],
             },
-            payload: { quantity: newQuantity },
+            payload: { sold_quantity: Number(item.quantity) },
           });
         }
       }
@@ -565,13 +567,14 @@ class RestaurantOrderService extends AbstractServices {
             food_id: item.food_id,
           });
           for (const r of recipes) {
-            const restoreQty = r.quantity_per_unit * Number(item.quantity);
+            const restoreQty =
+              Number(r.quantity_per_unit) * Number(item.quantity);
             const inv = await hotelInventoryModel.getSingleInventoryDetails({
               hotel_code,
               product_id: r.product_id,
             });
             if (inv) {
-              const restoredUsed = Number(inv.quantity_used) + restoreQty;
+              const restoredUsed = Number(inv.quantity_used) - restoreQty;
               await hotelInventoryModel.updateInInventory(
                 { quantity_used: restoredUsed },
                 { product_id: r.product_id }
@@ -588,10 +591,11 @@ class RestaurantOrderService extends AbstractServices {
             }
           );
           if (stock) {
-            const restoredQty = Number(stock.quantity) + Number(item.quantity);
+            const restoredQty =
+              Number(stock.sold_quantity) - Number(item.quantity);
             await restaurantFoodModel.updateStocks({
               where: { food_id: stock.food_id, stock_date: stock.stock_date },
-              payload: { quantity: restoredQty },
+              payload: { sold_quantity: restoredQty },
             });
           }
         }
@@ -1032,6 +1036,8 @@ class RestaurantOrderService extends AbstractServices {
 
       // Restore old stock
       const { order_items: oldOrderItems } = existingOrder;
+
+      console.log({ oldOrderItems });
       for (const old of oldOrderItems) {
         const oldFood = await restaurantFoodModel.getFoods({
           id: old.food_id,
@@ -1046,13 +1052,14 @@ class RestaurantOrderService extends AbstractServices {
             food_id: old.food_id,
           });
           for (const r of recipes) {
-            const restoreQty = r.quantity_per_unit * Number(old.quantity);
+            const restoreQty =
+              Number(r.quantity_per_unit) * Number(old.quantity);
             const inv = await hotelInventoryModel.getSingleInventoryDetails({
               hotel_code,
               product_id: r.product_id,
             });
             if (inv) {
-              const restoredUsed = Number(inv.quantity_used) + restoreQty;
+              const restoredUsed = Number(inv.quantity_used) - restoreQty;
               await hotelInventoryModel.updateInInventory(
                 { quantity_used: restoredUsed },
                 { product_id: r.product_id }
@@ -1069,10 +1076,11 @@ class RestaurantOrderService extends AbstractServices {
             }
           );
           if (stock) {
-            const restoredQty = Number(stock.quantity) + Number(old.quantity);
+            const restoredQty =
+              Number(stock.sold_quantity) - Number(old.quantity);
             await restaurantFoodModel.updateStocks({
               where: { food_id: stock.food_id, stock_date: stock.stock_date },
-              payload: { quantity: restoredQty },
+              payload: { sold_quantity: restoredQty },
             });
           }
         }
@@ -1088,7 +1096,8 @@ class RestaurantOrderService extends AbstractServices {
             food_id: item.food_id,
           });
           for (const r of recipes) {
-            const requiredQty = r.quantity_per_unit * Number(item.quantity);
+            const requiredQty =
+              Number(r.quantity_per_unit) * Number(item.quantity);
             const inv = await hotelInventoryModel.getSingleInventoryDetails({
               hotel_code,
               product_id: r.product_id,
@@ -1101,14 +1110,15 @@ class RestaurantOrderService extends AbstractServices {
               );
             }
 
-            if (Number(inv.available_quantity) < requiredQty) {
-              throw new CustomError(
-                `Insufficient stock for product ${r.product_id}.`,
-                this.StatusCode.HTTP_CONFLICT
-              );
-            }
+            // if (Number(inv.available_quantity) < requiredQty) {
+            //   throw new CustomError(
+            //     `Insufficient stock for product ${r.product_id}.`,
+            //     this.StatusCode.HTTP_CONFLICT
+            //   );
+            // }
 
-            const updatedUsed = Number(inv.quantity_used) - requiredQty;
+            const updatedUsed = Number(inv.quantity_used) + requiredQty;
+            console.log({ updatedUsed }, { product_id: r.product_id });
             await hotelInventoryModel.updateInInventory(
               { quantity_used: updatedUsed },
               { product_id: r.product_id }
@@ -1136,10 +1146,10 @@ class RestaurantOrderService extends AbstractServices {
             );
           }
 
-          const newQty = Number(stock.quantity) - Number(item.quantity);
+          const newQty = Number(stock.sold_quantity) + Number(item.quantity);
           await restaurantFoodModel.updateStocks({
             where: { food_id: stock.food_id, stock_date: stock.stock_date },
-            payload: { quantity: newQty },
+            payload: { sold_quantity: newQty },
           });
         }
       }

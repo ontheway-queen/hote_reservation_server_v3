@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import AbstractController from "../../abstarcts/abstract.controller";
-import ReportService from "../services/report.dashBoard.service";
+import ReportService from "../services/report.service";
 import DashBoardValidator from "../utlis/validator/dashboard.validator";
 import ReportValidator from "../utlis/validator/reports.validator";
 
@@ -111,6 +111,16 @@ class ReportController extends AbstractController {
     async (req: Request, res: Response) => {
       const { code, ...data } = await this.reportService.getRoomReport(req);
 
+      res.status(code).json(data);
+    }
+  );
+
+  public getReservationReport = this.asyncWrapper.wrap(
+    {},
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.reportService.getReservationReport(
+        req
+      );
       res.status(code).json(data);
     }
   );

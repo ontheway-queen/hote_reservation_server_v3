@@ -312,7 +312,6 @@ class ResAdministrationService extends AbstractServices {
         delete?: number;
       }[];
     }[] = [];
-    console.log(data);
 
     permissions?.forEach((entry) => {
       const permissionGroupId = entry.permission_group_id;

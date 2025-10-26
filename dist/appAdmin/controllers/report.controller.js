@@ -24,13 +24,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const abstract_controller_1 = __importDefault(require("../../abstarcts/abstract.controller"));
-const report_dashBoard_service_1 = __importDefault(require("../services/report.dashBoard.service"));
+const report_service_1 = __importDefault(require("../services/report.service"));
 const dashboard_validator_1 = __importDefault(require("../utlis/validator/dashboard.validator"));
 const reports_validator_1 = __importDefault(require("../utlis/validator/reports.validator"));
 class ReportController extends abstract_controller_1.default {
     constructor() {
         super();
-        this.reportService = new report_dashBoard_service_1.default();
+        this.reportService = new report_service_1.default();
         this.dashBoardValidator = new dashboard_validator_1.default();
         this.reportValidator = new reports_validator_1.default();
         this.getHotelStatistics = this.asyncWrapper.wrap(null, (req, res) => __awaiter(this, void 0, void 0, function* () {
@@ -77,6 +77,10 @@ class ReportController extends abstract_controller_1.default {
         }));
         this.getRoomReport = this.asyncWrapper.wrap({ querySchema: this.dashBoardValidator.getAllRoomsQueryValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
             const _k = yield this.reportService.getRoomReport(req), { code } = _k, data = __rest(_k, ["code"]);
+            res.status(code).json(data);
+        }));
+        this.getReservationReport = this.asyncWrapper.wrap({}, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _l = yield this.reportService.getReservationReport(req), { code } = _l, data = __rest(_l, ["code"]);
             res.status(code).json(data);
         }));
     }

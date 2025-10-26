@@ -22,7 +22,7 @@ class RestaurantHotelService extends AbstractServices {
 
     return {
       success: true,
-      code: this.StatusCode.HTTP_SUCCESSFUL,
+      code: this.StatusCode.HTTP_OK,
       ...data,
     };
   }

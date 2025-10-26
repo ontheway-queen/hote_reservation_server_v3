@@ -69,7 +69,7 @@ class InventoryModel extends Schema {
         "u.name as unit",
         "p.brand_id",
         "b.name as brand",
-        "i.available_quantity as in_stock",
+        "i.quantity as in_stock",
         "p.status as status",
         "p.details",
         "p.image"
@@ -104,13 +104,13 @@ class InventoryModel extends Schema {
               this.select("*")
                 .from("hotel_inventory.inventory as i")
                 .whereRaw("i.product_id = p.id")
-                .andWhere("i.available_quantity", ">", 0);
+                .andWhere("i.quantity", ">", 0);
             else if (in_stock === "0")
               this.select("*")
 
                 .from("hotel_inventory.inventory as i")
                 .whereRaw("i.product_id = p.id")
-                .andWhere("i.available_quantity", "<=", 0);
+                .andWhere("i.quantity", "<=", 0);
           });
         }
 
@@ -152,13 +152,13 @@ class InventoryModel extends Schema {
               this.select("*")
                 .from("hotel_inventory.inventory as i")
                 .whereRaw("i.product_id = p.id")
-                .andWhere("i.available_quantity", ">", 0);
+                .andWhere("i.quantity", ">", 0);
             else if (in_stock === "0")
               this.select("*")
 
                 .from("hotel_inventory.inventory as i")
                 .whereRaw("i.product_id = p.id")
-                .andWhere("i.available_quantity", "<=", 0);
+                .andWhere("i.quantity", "<=", 0);
           });
         }
         if (pd_ids) {
@@ -339,7 +339,7 @@ class InventoryModel extends Schema {
       product_code: string;
       product_name: string;
       category: string;
-      available_quantity: number;
+      quantity: number;
       quantity_used: number;
       total_damaged: number;
     }[];
@@ -357,7 +357,7 @@ class InventoryModel extends Schema {
         "p.name as product_name",
         "c.name as category",
         this.db.raw(
-          "COALESCE(i.available_quantity, 0) - COALESCE(i.quantity_used, 0)-COALESCE(i.total_damaged, 0) as available_quantity"
+          "COALESCE(i.quantity, 0) - COALESCE(i.quantity_used, 0)-COALESCE(i.total_damaged, 0) as available_quantity"
         ),
         this.db.raw("COALESCE(i.quantity_used, 0) as quantity_used"),
         this.db.raw("COALESCE(i.total_damaged, 0) as total_damaged")
@@ -418,7 +418,7 @@ class InventoryModel extends Schema {
     unit: string;
     brand_id: number;
     brand: string;
-    available_quantity: number;
+    quantity: number;
     quantity_used: number;
     total_damaged: number;
   }> {
@@ -441,7 +441,7 @@ class InventoryModel extends Schema {
         "u.name as unit",
         "p.brand_id",
         "b.name as brand",
-        "i.available_quantity",
+        "i.quantity",
         "i.quantity_used",
         "i.total_damaged"
       )
@@ -567,7 +567,7 @@ class InventoryModel extends Schema {
     payload: {
       hotel_code: number;
       product_id: number;
-      available_quantity: number;
+      quantity: number;
       quantity_used?: number;
     }[]
   ) {
@@ -579,7 +579,7 @@ class InventoryModel extends Schema {
   // update in inventory
   public async updateInInventory(
     payload: {
-      available_quantity?: number;
+      quantity?: number;
       quantity_used?: number;
     },
     where: { id?: number; product_id?: number }
@@ -637,7 +637,7 @@ class InventoryModel extends Schema {
         "inv.product_id",
         "ing.name",
         "ing.measurement",
-        "inv.available_quantity",
+        "inv.quantity",
         "inv.quantity_used"
       )
       .leftJoin("ingredient as ing", "inv.product_id", "ing.id")

@@ -50,8 +50,8 @@ class RestaurantFoodModel extends Schema {
   //   const { hotel_code, restaurant_id, stock_date } = where;
 
   //   const dateCondition = stock_date
-  //     ? `s.stock_date = '${stock_date}'`
-  //     : `s.stock_date = CURRENT_DATE`;
+  //     ? `AND s.stock_date = '${stock_date}'`
+  //     : "";
 
   //   return await this.db
   //     .select(
@@ -80,7 +80,8 @@ class RestaurantFoodModel extends Schema {
   //               WHERE s.food_id = f.id
   //                 AND s.hotel_code = f.hotel_code
   //                 AND s.restaurant_id = f.restaurant_id
-  //                 AND ${dateCondition}
+  //                 ${dateCondition}
+  //               ORDER BY s.stock_date DESC
   //               LIMIT 1
   //             ),
   //             0
@@ -98,7 +99,8 @@ class RestaurantFoodModel extends Schema {
   //               WHERE s.food_id = f.id
   //                 AND s.hotel_code = f.hotel_code
   //                 AND s.restaurant_id = f.restaurant_id
-  //                 AND ${dateCondition}
+  //                 ${dateCondition}
+  //               ORDER BY s.stock_date DESC
   //               LIMIT 1
   //             ),
   //             ''
@@ -111,77 +113,99 @@ class RestaurantFoodModel extends Schema {
   //     .andWhere("f.restaurant_id", restaurant_id)
   //     .andWhere("f.is_deleted", false);
   // }
-
   public async getStocks(where: {
     hotel_code: number;
     restaurant_id: number;
-    stock_date?: string; // optional
+    stock_date?: string;
   }) {
     const { hotel_code, restaurant_id, stock_date } = where;
 
     const dateCondition = stock_date
-      ? `AND s.stock_date = '${stock_date}'`
-      : "";
+      ? this.db.raw("AND s.stock_date = ?", [stock_date])
+      : this.db.raw("");
 
     return await this.db
       .select(
         "f.id as food_id",
         "f.name",
         "f.recipe_type",
+        "f.photo",
+
+        // available_stock
         this.db.raw(`
         CASE 
           WHEN f.recipe_type IN ('stock', 'ingredient') THEN
-            COALESCE(
-              (
-                SELECT i.available_quantity
-                FROM hotel_inventory.inventory i
-                WHERE i.product_id = f.linked_inventory_item_id
-                  AND i.hotel_code = f.hotel_code
-                  AND i.is_deleted = false
-                LIMIT 1
-              ),
-              0
-            )
+            COALESCE((
+              SELECT i.quantity
+              FROM hotel_inventory.inventory i
+              WHERE i.product_id = f.linked_inventory_item_id
+                AND i.hotel_code = f.hotel_code
+                AND i.is_deleted = false
+              LIMIT 1
+            ), 0)
           ELSE
-            COALESCE(
-              (
-                SELECT (s.quantity - s.sold_quantity)
-                FROM hotel_restaurant.stocks s
-                WHERE s.food_id = f.id
-                  AND s.hotel_code = f.hotel_code
-                  AND s.restaurant_id = f.restaurant_id
-                  ${dateCondition}
-                ORDER BY s.stock_date DESC
-                LIMIT 1
-              ),
-              0
-            )
+            COALESCE((
+              SELECT (s.quantity - s.sold_quantity)
+              FROM hotel_restaurant.stocks s
+              WHERE s.food_id = f.id
+                AND s.hotel_code = f.hotel_code
+                AND s.restaurant_id = f.restaurant_id
+                ${dateCondition}
+              ORDER BY s.stock_date DESC
+              LIMIT 1
+            ), 0)
         END AS available_stock
       `),
+
+        // quantity_used
+        this.db.raw(`
+        CASE 
+          WHEN f.recipe_type IN ('stock', 'ingredient') THEN
+            COALESCE((
+              SELECT i.quantity_used
+              FROM hotel_inventory.inventory i
+              WHERE i.product_id = f.linked_inventory_item_id
+                AND i.hotel_code = f.hotel_code
+                AND i.is_deleted = false
+              LIMIT 1
+            ), 0)
+          ELSE
+            COALESCE((
+              SELECT s.sold_quantity
+              FROM hotel_restaurant.stocks s
+              WHERE s.food_id = f.id
+                AND s.hotel_code = f.hotel_code
+                AND s.restaurant_id = f.restaurant_id
+                ${dateCondition}
+              ORDER BY s.stock_date DESC
+              LIMIT 1
+            ), 0)
+        END AS quantity_used
+      `),
+
+        // stock_date
         this.db.raw(`
         CASE 
           WHEN f.recipe_type IN ('stock', 'ingredient') THEN ''
           ELSE
-            COALESCE(
-              (
-                SELECT TO_CHAR(s.stock_date, 'YYYY-MM-DD')
-                FROM hotel_restaurant.stocks s
-                WHERE s.food_id = f.id
-                  AND s.hotel_code = f.hotel_code
-                  AND s.restaurant_id = f.restaurant_id
-                  ${dateCondition}
-                ORDER BY s.stock_date DESC
-                LIMIT 1
-              ),
-              ''
-            )
+            COALESCE((
+              SELECT TO_CHAR(s.stock_date, 'YYYY-MM-DD')
+              FROM hotel_restaurant.stocks s
+              WHERE s.food_id = f.id
+                AND s.hotel_code = f.hotel_code
+                AND s.restaurant_id = f.restaurant_id
+                ${dateCondition}
+              ORDER BY s.stock_date DESC
+              LIMIT 1
+            ), '')
         END AS stock_date
       `)
       )
       .from("hotel_restaurant.foods as f")
       .where("f.hotel_code", hotel_code)
       .andWhere("f.restaurant_id", restaurant_id)
-      .andWhere("f.is_deleted", false);
+      .andWhere("f.is_deleted", false)
+      .whereIn("f.recipe_type", ["non-ingredients", "stock"]);
   }
 
   public async updateStocks({
@@ -189,7 +213,7 @@ class RestaurantFoodModel extends Schema {
     payload,
   }: {
     where: { food_id: number; stock_date: string };
-    payload: { quantity: number };
+    payload: { quantity?: number; sold_quantity?: number };
   }) {
     return await this.db("stocks")
       .withSchema(this.RESTAURANT_SCHEMA)
@@ -209,6 +233,7 @@ class RestaurantFoodModel extends Schema {
     hotel_code: number;
     restaurant_id: number;
     food_id: number;
+    sold_quantity: number;
     quantity: number;
     stock_date: string;
     created_by: number;
@@ -375,7 +400,7 @@ class RestaurantFoodModel extends Schema {
       id: number;
       food_id: number;
       product_id: number;
-      quantity_per_unit: number;
+      quantity_per_unit: string;
     }[]
   > {
     return await this.db("food_ingredients")

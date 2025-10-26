@@ -100,6 +100,7 @@ class RestaurantOrderModel extends Schema {
         "o.vat_type",
         "o.vat",
         "o.booking_ref",
+        "o.order_no",
         "o.include_with_hotel_booking",
         "o.room_no",
         "o.vat_amount",

@@ -355,23 +355,23 @@ class Lib {
                     }
                     const requiredQty = item.quantity * ing.quantity_per_unit;
                     if (type === "create") {
-                        const newAvailable = inventory.available_quantity - requiredQty;
+                        const newAvailable = inventory.quantity - requiredQty;
                         const newUsed = inventory.quantity_used + requiredQty;
                         yield hotelInventoryModel.updateInInventory({
-                            available_quantity: newAvailable,
+                            quantity: newAvailable,
                             quantity_used: newUsed,
                         }, { product_id: ing.product_id, id: inventory.id });
-                        inventory.available_quantity = newAvailable;
+                        inventory.quantity = newAvailable;
                         inventory.quantity_used = newUsed;
                     }
                     if (type === "cancel") {
-                        const newAvailable = inventory.available_quantity + requiredQty;
+                        const newAvailable = inventory.quantity + requiredQty;
                         const newUsed = inventory.quantity_used - requiredQty;
                         yield hotelInventoryModel.updateInInventory({
-                            available_quantity: newAvailable,
+                            quantity: newAvailable,
                             quantity_used: newUsed,
                         }, { product_id: ing.product_id, id: inventory.id });
-                        inventory.available_quantity = newAvailable;
+                        inventory.quantity = newAvailable;
                         inventory.quantity_used = newUsed;
                     }
                     if (type === "update" && previous_order_items) {
@@ -385,13 +385,13 @@ class Lib {
                         const newRequiredQty = item.quantity * ing.quantity_per_unit;
                         const prevRequiredQty = prevQty * ing.quantity_per_unit;
                         const qtyDiff = newRequiredQty - prevRequiredQty;
-                        const finalAvailable = inventory.available_quantity - qtyDiff;
+                        const finalAvailable = inventory.quantity - qtyDiff;
                         const finalUsed = inventory.quantity_used + qtyDiff;
                         yield hotelInventoryModel.updateInInventory({
-                            available_quantity: finalAvailable,
+                            quantity: finalAvailable,
                             quantity_used: finalUsed,
                         }, { product_id: ing.product_id, id: inventory.id });
-                        inventory.available_quantity = finalAvailable;
+                        inventory.quantity = finalAvailable;
                         inventory.quantity_used = finalUsed;
                     }
                 }

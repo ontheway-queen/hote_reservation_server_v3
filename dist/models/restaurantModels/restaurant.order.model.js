@@ -68,7 +68,7 @@ class RestaurantOrderModel extends schema_1.default {
             }
             const data = yield baseQuery
                 .clone()
-                .select("o.id", "o.hotel_code", "o.restaurant_id", "o.table_id", "rt.name as table_name", "o.order_type", "o.status", "o.kitchen_status", "o.created_at", "o.discount", "o.discount_amount", "o.discount_type", "o.service_charge_amount", "o.service_charge", "o.service_charge_type", "o.sub_total", "o.vat_type", "o.vat", "o.booking_ref", "o.include_with_hotel_booking", "o.room_no", "o.vat_amount", "o.grand_total", "ua.id as created_by_id", "ua.name as created_by_name")
+                .select("o.id", "o.hotel_code", "o.restaurant_id", "o.table_id", "rt.name as table_name", "o.order_type", "o.status", "o.kitchen_status", "o.created_at", "o.discount", "o.discount_amount", "o.discount_type", "o.service_charge_amount", "o.service_charge", "o.service_charge_type", "o.sub_total", "o.vat_type", "o.vat", "o.booking_ref", "o.order_no", "o.include_with_hotel_booking", "o.room_no", "o.vat_amount", "o.grand_total", "ua.id as created_by_id", "ua.name as created_by_name")
                 .orderBy("o.id", "desc")
                 .limit((_a = query.limit) !== null && _a !== void 0 ? _a : 100)
                 .offset((_b = query.skip) !== null && _b !== void 0 ? _b : 0);

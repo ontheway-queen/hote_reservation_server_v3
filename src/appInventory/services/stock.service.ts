@@ -92,13 +92,13 @@ class StockInvService extends AbstractServices {
         // Inventory step
         const modifyInventoryProduct: {
           id: number;
-          available_quantity: number;
+          quantity: number;
         }[] = [];
 
         const addedInventoryProduct: {
           hotel_code: number;
           product_id: number;
-          available_quantity: number;
+          quantity: number;
         }[] = [];
         const purchase_product_ids = stock_items.map((item) => item.product_id);
 
@@ -113,15 +113,14 @@ class StockInvService extends AbstractServices {
           );
           if (inventoryItem) {
             modifyInventoryProduct.push({
-              available_quantity:
-                parseFloat(inventoryItem.available_quantity) +
-                payloadItem.quantity,
+              quantity:
+                parseFloat(inventoryItem.quantity) + payloadItem.quantity,
               id: inventoryItem.id,
             });
           } else {
             addedInventoryProduct.push({
               hotel_code,
-              available_quantity: payloadItem.quantity,
+              quantity: payloadItem.quantity,
               product_id: payloadItem.product_id,
             });
           }
@@ -136,7 +135,7 @@ class StockInvService extends AbstractServices {
           await Promise.all(
             modifyInventoryProduct.map(async (item) => {
               await PModel.updateInInventory(
-                { available_quantity: item.available_quantity },
+                { quantity: item.quantity },
                 { id: item.id }
               );
             })
@@ -174,7 +173,7 @@ class StockInvService extends AbstractServices {
         // Inventory step
         const modifyInventoryProduct: {
           id: number;
-          available_quantity: number;
+          quantity: number;
           quantity_used: number;
         }[] = [];
 
@@ -191,9 +190,8 @@ class StockInvService extends AbstractServices {
           );
           if (inventoryItem) {
             modifyInventoryProduct.push({
-              available_quantity:
-                parseFloat(inventoryItem.available_quantity) -
-                payloadItem.quantity,
+              quantity:
+                parseFloat(inventoryItem.quantity) - payloadItem.quantity,
               quantity_used:
                 parseFloat(inventoryItem.quantity_used) + payloadItem.quantity,
               id: inventoryItem.id,
@@ -206,7 +204,7 @@ class StockInvService extends AbstractServices {
             modifyInventoryProduct.map(async (item) => {
               await PModel.updateInInventory(
                 {
-                  available_quantity: item.available_quantity,
+                  quantity: item.quantity,
                   quantity_used: item.quantity_used,
                 },
                 { id: item.id }
@@ -316,7 +314,7 @@ class StockInvService extends AbstractServices {
       );
       await model.updateInInventory(
         {
-          available_quantity: isInventoryExists.available_quantity + quantity,
+          quantity: Number(isInventoryExists.quantity) + quantity,
         },
         { product_id: findProduct.product_id }
       );
@@ -336,7 +334,7 @@ class StockInvService extends AbstractServices {
 
       await model.updateInInventory(
         {
-          available_quantity: isInventoryExists.available_quantity - quantity,
+          quantity: Number(isInventoryExists.quantity) - quantity,
         },
         { product_id: findProduct.product_id }
       );

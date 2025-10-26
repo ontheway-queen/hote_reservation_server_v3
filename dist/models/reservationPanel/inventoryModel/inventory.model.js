@@ -35,7 +35,7 @@ class InventoryModel extends schema_1.default {
             }
             const data = yield dtbs
                 .withSchema(this.HOTEL_INVENTORY_SCHEMA)
-                .select("p.id", "p.product_code", "p.name", "p.model", "p.category_id", "c.name as category", "p.unit_id", "u.name as unit", "p.brand_id", "b.name as brand", "i.available_quantity as in_stock", "p.status as status", "p.details", "p.image")
+                .select("p.id", "p.product_code", "p.name", "p.model", "p.category_id", "c.name as category", "p.unit_id", "u.name as unit", "p.brand_id", "b.name as brand", "i.quantity as in_stock", "p.status as status", "p.details", "p.image")
                 .where("p.hotel_code", hotel_code)
                 .andWhere("p.is_deleted", false)
                 .leftJoin("categories as c", "p.category_id", "c.id")
@@ -61,12 +61,12 @@ class InventoryModel extends schema_1.default {
                             this.select("*")
                                 .from("hotel_inventory.inventory as i")
                                 .whereRaw("i.product_id = p.id")
-                                .andWhere("i.available_quantity", ">", 0);
+                                .andWhere("i.quantity", ">", 0);
                         else if (in_stock === "0")
                             this.select("*")
                                 .from("hotel_inventory.inventory as i")
                                 .whereRaw("i.product_id = p.id")
-                                .andWhere("i.available_quantity", "<=", 0);
+                                .andWhere("i.quantity", "<=", 0);
                     });
                 }
                 if (pd_ids) {
@@ -102,12 +102,12 @@ class InventoryModel extends schema_1.default {
                             this.select("*")
                                 .from("hotel_inventory.inventory as i")
                                 .whereRaw("i.product_id = p.id")
-                                .andWhere("i.available_quantity", ">", 0);
+                                .andWhere("i.quantity", ">", 0);
                         else if (in_stock === "0")
                             this.select("*")
                                 .from("hotel_inventory.inventory as i")
                                 .whereRaw("i.product_id = p.id")
-                                .andWhere("i.available_quantity", "<=", 0);
+                                .andWhere("i.quantity", "<=", 0);
                     });
                 }
                 if (pd_ids) {
@@ -251,7 +251,7 @@ class InventoryModel extends schema_1.default {
             // --- data query ---
             const dataQuery = this.db("products as p")
                 .withSchema(this.HOTEL_INVENTORY_SCHEMA)
-                .select("i.id", "p.id as product_id", "p.product_code", "p.name as product_name", "c.name as category", this.db.raw("COALESCE(i.available_quantity, 0) - COALESCE(i.quantity_used, 0)-COALESCE(i.total_damaged, 0) as available_quantity"), this.db.raw("COALESCE(i.quantity_used, 0) as quantity_used"), this.db.raw("COALESCE(i.total_damaged, 0) as total_damaged"))
+                .select("i.id", "p.id as product_id", "p.product_code", "p.name as product_name", "c.name as category", this.db.raw("COALESCE(i.quantity, 0) - COALESCE(i.quantity_used, 0)-COALESCE(i.total_damaged, 0) as available_quantity"), this.db.raw("COALESCE(i.quantity_used, 0) as quantity_used"), this.db.raw("COALESCE(i.total_damaged, 0) as total_damaged"))
                 .leftJoin("categories as c", "c.id", "p.category_id")
                 .leftJoin("inventory as i", function () {
                 this.on("i.product_id", "p.id").andOnVal("i.hotel_code", hotel_code);
@@ -291,7 +291,7 @@ class InventoryModel extends schema_1.default {
             const { hotel_code, id } = payload;
             return yield this.db("inventory as i")
                 .withSchema(this.HOTEL_INVENTORY_SCHEMA)
-                .select("i.id", "i.hotel_code", "i.product_id", "p.product_code", "p.model as product_model", "p.name as product_name", "p.details as product_details", "p.image as product_image", "p.status as product_status", "p.category_id", "c.name as category", "p.unit_id", "u.name as unit", "p.brand_id", "b.name as brand", "i.available_quantity", "i.quantity_used", "i.total_damaged")
+                .select("i.id", "i.hotel_code", "i.product_id", "p.product_code", "p.model as product_model", "p.name as product_name", "p.details as product_details", "p.image as product_image", "p.status as product_status", "p.category_id", "c.name as category", "p.unit_id", "u.name as unit", "p.brand_id", "b.name as brand", "i.quantity", "i.quantity_used", "i.total_damaged")
                 .leftJoin("products as p", "p.id", "i.product_id")
                 .leftJoin("categories as c", "c.id", "p.category_id")
                 .leftJoin("units as u", "u.id", "p.unit_id")
@@ -444,7 +444,7 @@ class InventoryModel extends schema_1.default {
             }
             const data = yield dtbs
                 .withSchema(this.HOTEL_INVENTORY_SCHEMA)
-                .select("inv.id", "inv.product_id", "ing.name", "ing.measurement", "inv.available_quantity", "inv.quantity_used")
+                .select("inv.id", "inv.product_id", "ing.name", "ing.measurement", "inv.quantity", "inv.quantity_used")
                 .leftJoin("ingredient as ing", "inv.product_id", "ing.id")
                 .where({ "inv.hotel_code": hotel_code })
                 .andWhere(function () {

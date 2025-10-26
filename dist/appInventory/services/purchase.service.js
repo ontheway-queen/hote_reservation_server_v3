@@ -138,15 +138,14 @@ class PurchaseInvService extends abstract_service_1.default {
                     const inventoryItem = getInventoryProduct.find((g) => g.product_id === payloadItem.product_id);
                     if (inventoryItem) {
                         modifyInventoryProduct.push({
-                            available_quantity: parseFloat(inventoryItem.available_quantity) +
-                                payloadItem.quantity,
+                            quantity: parseFloat(inventoryItem.quantity) + payloadItem.quantity,
                             id: inventoryItem.id,
                         });
                     }
                     else {
                         addedInventoryProduct.push({
                             hotel_code,
-                            available_quantity: payloadItem.quantity,
+                            quantity: payloadItem.quantity,
                             product_id: payloadItem.product_id,
                         });
                     }
@@ -157,7 +156,7 @@ class PurchaseInvService extends abstract_service_1.default {
                 }
                 if (modifyInventoryProduct.length) {
                     yield Promise.all(modifyInventoryProduct.map((item) => __awaiter(this, void 0, void 0, function* () {
-                        yield pInvModel.updateInInventory({ available_quantity: item.available_quantity }, { id: item.id });
+                        yield pInvModel.updateInInventory({ quantity: item.quantity }, { id: item.id });
                     })));
                 }
                 //__________________ accounting __________________ //

@@ -86,7 +86,8 @@ class RestaurantOrderService extends abstract_service_1.default {
                             food_id: item.food_id,
                         });
                         for (const recipe of foodReceipe) {
-                            const requiredQuantity = recipe.quantity_per_unit * Number(item.quantity);
+                            const requiredQuantity = Number(recipe.quantity_per_unit) * Number(item.quantity);
+                            console.log(requiredQuantity, "rq");
                             const inventoryItem = yield hotelInventoryModel.getSingleInventoryDetails({
                                 hotel_code,
                                 product_id: recipe.product_id,
@@ -105,7 +106,7 @@ class RestaurantOrderService extends abstract_service_1.default {
                             //   );
                             // }
                             // update inventory stock
-                            const newUsedQuantity = ((inventoryItem === null || inventoryItem === void 0 ? void 0 : inventoryItem.quantity_used) || 0) + requiredQuantity;
+                            const newUsedQuantity = Number((inventoryItem === null || inventoryItem === void 0 ? void 0 : inventoryItem.quantity_used) || 0) + requiredQuantity;
                             if (!inventoryItem) {
                                 // insert inventory if not found
                                 yield hotelInventoryModel.insertInInventory([
@@ -113,7 +114,7 @@ class RestaurantOrderService extends abstract_service_1.default {
                                         hotel_code,
                                         product_id: recipe.product_id,
                                         quantity_used: 0,
-                                        available_quantity: 0,
+                                        quantity: 0,
                                     },
                                 ]);
                             }
@@ -138,13 +139,14 @@ class RestaurantOrderService extends abstract_service_1.default {
                         if (Number(inventoryItem.quantity) < Number(item.quantity)) {
                             throw new customEror_1.default(`Insufficient stock for food ID ${item.food_id}.`, this.StatusCode.HTTP_CONFLICT);
                         }
-                        const newQuantity = Number(inventoryItem.quantity) - Number(item.quantity);
+                        // const newQuantity =
+                        //   Number(inventoryItem.quantity) - Number(item.quantity);
                         yield restaurantFoodModel.updateStocks({
                             where: {
                                 food_id: inventoryItem.food_id,
                                 stock_date: new Date().toISOString().split("T")[0],
                             },
-                            payload: { quantity: newQuantity },
+                            payload: { sold_quantity: Number(item.quantity) },
                         });
                     }
                 }
@@ -460,13 +462,13 @@ class RestaurantOrderService extends abstract_service_1.default {
                             food_id: item.food_id,
                         });
                         for (const r of recipes) {
-                            const restoreQty = r.quantity_per_unit * Number(item.quantity);
+                            const restoreQty = Number(r.quantity_per_unit) * Number(item.quantity);
                             const inv = yield hotelInventoryModel.getSingleInventoryDetails({
                                 hotel_code,
                                 product_id: r.product_id,
                             });
                             if (inv) {
-                                const restoredUsed = Number(inv.quantity_used) + restoreQty;
+                                const restoredUsed = Number(inv.quantity_used) - restoreQty;
                                 yield hotelInventoryModel.updateInInventory({ quantity_used: restoredUsed }, { product_id: r.product_id });
                             }
                         }
@@ -479,10 +481,10 @@ class RestaurantOrderService extends abstract_service_1.default {
                             stock_date: new Date().toISOString().split("T")[0],
                         });
                         if (stock) {
-                            const restoredQty = Number(stock.quantity) + Number(item.quantity);
+                            const restoredQty = Number(stock.sold_quantity) - Number(item.quantity);
                             yield restaurantFoodModel.updateStocks({
                                 where: { food_id: stock.food_id, stock_date: stock.stock_date },
-                                payload: { quantity: restoredQty },
+                                payload: { sold_quantity: restoredQty },
                             });
                         }
                     }
@@ -837,6 +839,7 @@ class RestaurantOrderService extends abstract_service_1.default {
                 }
                 // Restore old stock
                 const { order_items: oldOrderItems } = existingOrder;
+                console.log({ oldOrderItems });
                 for (const old of oldOrderItems) {
                     const oldFood = yield restaurantFoodModel.getFoods({
                         id: old.food_id,
@@ -851,13 +854,13 @@ class RestaurantOrderService extends abstract_service_1.default {
                             food_id: old.food_id,
                         });
                         for (const r of recipes) {
-                            const restoreQty = r.quantity_per_unit * Number(old.quantity);
+                            const restoreQty = Number(r.quantity_per_unit) * Number(old.quantity);
                             const inv = yield hotelInventoryModel.getSingleInventoryDetails({
                                 hotel_code,
                                 product_id: r.product_id,
                             });
                             if (inv) {
-                                const restoredUsed = Number(inv.quantity_used) + restoreQty;
+                                const restoredUsed = Number(inv.quantity_used) - restoreQty;
                                 yield hotelInventoryModel.updateInInventory({ quantity_used: restoredUsed }, { product_id: r.product_id });
                             }
                         }
@@ -870,10 +873,10 @@ class RestaurantOrderService extends abstract_service_1.default {
                             stock_date: new Date().toISOString().split("T")[0],
                         });
                         if (stock) {
-                            const restoredQty = Number(stock.quantity) + Number(old.quantity);
+                            const restoredQty = Number(stock.sold_quantity) - Number(old.quantity);
                             yield restaurantFoodModel.updateStocks({
                                 where: { food_id: stock.food_id, stock_date: stock.stock_date },
-                                payload: { quantity: restoredQty },
+                                payload: { sold_quantity: restoredQty },
                             });
                         }
                     }
@@ -888,7 +891,7 @@ class RestaurantOrderService extends abstract_service_1.default {
                             food_id: item.food_id,
                         });
                         for (const r of recipes) {
-                            const requiredQty = r.quantity_per_unit * Number(item.quantity);
+                            const requiredQty = Number(r.quantity_per_unit) * Number(item.quantity);
                             const inv = yield hotelInventoryModel.getSingleInventoryDetails({
                                 hotel_code,
                                 product_id: r.product_id,
@@ -896,10 +899,14 @@ class RestaurantOrderService extends abstract_service_1.default {
                             if (!inv) {
                                 throw new customEror_1.default(`Inventory item ${r.product_id} not found.`, this.StatusCode.HTTP_NOT_FOUND);
                             }
-                            if (Number(inv.available_quantity) < requiredQty) {
-                                throw new customEror_1.default(`Insufficient stock for product ${r.product_id}.`, this.StatusCode.HTTP_CONFLICT);
-                            }
-                            const updatedUsed = Number(inv.quantity_used) - requiredQty;
+                            // if (Number(inv.available_quantity) < requiredQty) {
+                            //   throw new CustomError(
+                            //     `Insufficient stock for product ${r.product_id}.`,
+                            //     this.StatusCode.HTTP_CONFLICT
+                            //   );
+                            // }
+                            const updatedUsed = Number(inv.quantity_used) + requiredQty;
+                            console.log({ updatedUsed }, { product_id: r.product_id });
                             yield hotelInventoryModel.updateInInventory({ quantity_used: updatedUsed }, { product_id: r.product_id });
                         }
                     }
@@ -916,10 +923,10 @@ class RestaurantOrderService extends abstract_service_1.default {
                         if (Number(stock.quantity) < Number(item.quantity)) {
                             throw new customEror_1.default(`Insufficient stock for food ID ${item.food_id}.`, this.StatusCode.HTTP_CONFLICT);
                         }
-                        const newQty = Number(stock.quantity) - Number(item.quantity);
+                        const newQty = Number(stock.sold_quantity) + Number(item.quantity);
                         yield restaurantFoodModel.updateStocks({
                             where: { food_id: stock.food_id, stock_date: stock.stock_date },
-                            payload: { quantity: newQty },
+                            payload: { sold_quantity: newQty },
                         });
                     }
                 }

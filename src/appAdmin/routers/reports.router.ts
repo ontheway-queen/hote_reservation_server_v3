@@ -65,6 +65,8 @@ class ReportRouter extends AbstractRouter {
       "/room-type-availability",
       this.reportController.getRoomReport
     );
+
+    this.router.get("/bookings", this.reportController.getReservationReport);
   }
 }
 export default ReportRouter;

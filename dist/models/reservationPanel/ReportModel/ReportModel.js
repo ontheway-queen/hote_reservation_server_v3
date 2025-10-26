@@ -647,6 +647,56 @@ class ReportModel extends schema_1.default {
             };
         });
     }
+    getReservationReport({ hotel_code, from_date, to_date, booking_type, status, limit, skip, }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const data = yield this.db("booking_rooms as br")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .select("br.id", "br.booking_id", this.db.raw(`TO_CHAR(br.check_in, 'YYYY-MM-DD') as check_in`), this.db.raw(`TO_CHAR(br.check_out, 'YYYY-MM-DD') as check_out`), "br.status", "r.id as room_id", "r.room_name as room_no", "b.booking_reference", "b.booking_type", this.db.raw(`TO_CHAR(b.booking_date, 'YYYY-MM-DD') as booking_date`), "b.is_individual_booking", "b.company_name", "g.id as guest_id", "g.first_name", "g.last_name", "g.email as guest_email", "g.phone as guest_phone")
+                .leftJoin("rooms as r", "br.room_id", "r.id")
+                .leftJoin("bookings as b", "br.booking_id", "b.id")
+                .leftJoin("guests as g", "b.guest_id", "g.id")
+                .where("b.hotel_code", hotel_code)
+                .andWhere(function () {
+                if (from_date && to_date) {
+                    this.whereRaw("b.booking_date >= ? AND b.booking_date <= ?", [
+                        from_date,
+                        to_date,
+                    ]);
+                }
+                if (status) {
+                    this.andWhere("br.status", status);
+                }
+                if (booking_type) {
+                    this.andWhere("b.booking_type", booking_type);
+                }
+            })
+                .orderBy("br.id", "desc")
+                .limit(limit ? Number(limit) : 100)
+                .offset(skip ? Number(skip) : 0);
+            const total = yield this.db("booking_rooms as br")
+                .withSchema(this.RESERVATION_SCHEMA)
+                .countDistinct("br.id as total")
+                .leftJoin("rooms as r", "br.room_id", "r.id")
+                .leftJoin("bookings as b", "br.booking_id", "b.id")
+                .leftJoin("guests as g", "b.guest_id", "g.id")
+                .where("b.hotel_code", hotel_code)
+                .andWhere(function () {
+                if (from_date && to_date) {
+                    this.whereRaw("b.booking_date >= ? AND b.booking_date <= ?", [
+                        from_date,
+                        to_date,
+                    ]);
+                }
+                if (status) {
+                    this.andWhere("br.status", status);
+                }
+                if (booking_type) {
+                    this.andWhere("b.booking_type", booking_type);
+                }
+            });
+            return { data, total: Number(total[0].total) };
+        });
+    }
 }
 exports.default = ReportModel;
 //# sourceMappingURL=ReportModel.js.map

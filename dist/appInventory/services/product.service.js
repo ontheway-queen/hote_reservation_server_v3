@@ -144,8 +144,7 @@ class ProductInvService extends abstract_service_1.default {
                     const inventoryItem = getInventoryProduct.find((g) => g.product_id === payloadItem.product_id);
                     if (inventoryItem) {
                         modifyInventoryProduct.push({
-                            available_quantity: parseFloat(inventoryItem.available_quantity) -
-                                payloadItem.quantity,
+                            quantity: parseFloat(inventoryItem.quantity) - payloadItem.quantity,
                             total_damaged: parseFloat(inventoryItem.total_damaged) + payloadItem.quantity,
                             id: inventoryItem.id,
                         });
@@ -154,7 +153,7 @@ class ProductInvService extends abstract_service_1.default {
                 if (modifyInventoryProduct.length) {
                     yield Promise.all(modifyInventoryProduct.map((item) => __awaiter(this, void 0, void 0, function* () {
                         yield PModel.updateInInventory({
-                            available_quantity: item.available_quantity,
+                            quantity: item.quantity,
                             total_damaged: item.total_damaged,
                         }, { id: item.id });
                     })));

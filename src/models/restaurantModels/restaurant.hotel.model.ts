@@ -20,7 +20,7 @@ class RestaurantHotelModel extends Schema {
     skip?: string;
     search?: string;
   }) {
-    const limitNum = limit ? Number(limit) : 50;
+    const limitNum = limit ? Number(limit) : 200;
     const offsetNum = skip ? Number(skip) : 0;
 
     const data = await this.db("bookings as b")

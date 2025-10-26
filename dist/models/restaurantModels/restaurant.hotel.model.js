@@ -21,7 +21,7 @@ class RestaurantHotelModel extends schema_1.default {
     getAllBooking({ hotel_code, limit, search, skip, }) {
         var _a, _b;
         return __awaiter(this, void 0, void 0, function* () {
-            const limitNum = limit ? Number(limit) : 50;
+            const limitNum = limit ? Number(limit) : 200;
             const offsetNum = skip ? Number(skip) : 0;
             const data = yield this.db("bookings as b")
                 .withSchema(this.RESERVATION_SCHEMA)

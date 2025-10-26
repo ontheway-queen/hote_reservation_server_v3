@@ -39,13 +39,6 @@ class RestaurantFoodController extends abstract_controller_1.default {
             const _b = yield this.service.insertPreparedFood(req), { code } = _b, data = __rest(_b, ["code"]);
             res.status(code).json(data);
         }));
-        // public createFood = this.asyncWrapper.wrap(
-        //   { bodySchema: this.validator.createFoodValidator },
-        //   async (req: Request, res: Response) => {
-        //     const { code, ...data } = await this.service.createFood(req);
-        //     res.status(code).json(data);
-        //   }
-        // );
         this.createFoodV2 = this.asyncWrapper.wrap({ bodySchema: this.validator.createFoodV2Validator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
             const _c = yield this.service.createFoodV2(req), { code } = _c, data = __rest(_c, ["code"]);
             res.status(code).json(data);
@@ -58,16 +51,6 @@ class RestaurantFoodController extends abstract_controller_1.default {
             const _e = yield this.service.getFood(req), { code } = _e, data = __rest(_e, ["code"]);
             res.status(code).json(data);
         }));
-        // public updateFood = this.asyncWrapper.wrap(
-        //   {
-        //     bodySchema: this.validator.updateFoodValidator,
-        //     paramSchema: this.commonValidator.singleParamStringValidator(),
-        //   },
-        //   async (req: Request, res: Response) => {
-        //     const { code, ...data } = await this.service.updateFood(req);
-        //     res.status(code).json(data);
-        //   }
-        // );
         this.updateFood = this.asyncWrapper.wrap({
             bodySchema: this.validator.updateFoodV2Validator,
             paramSchema: this.commonValidator.singleParamStringValidator(),

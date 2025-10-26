@@ -156,7 +156,7 @@ class ProductInvService extends AbstractServices {
       // Inventory step
       const modifyInventoryProduct: {
         id: number;
-        available_quantity: number;
+        quantity: number;
         total_damaged: number;
       }[] = [];
 
@@ -174,9 +174,7 @@ class ProductInvService extends AbstractServices {
 
         if (inventoryItem) {
           modifyInventoryProduct.push({
-            available_quantity:
-              parseFloat(inventoryItem.available_quantity) -
-              payloadItem.quantity,
+            quantity: parseFloat(inventoryItem.quantity) - payloadItem.quantity,
             total_damaged:
               parseFloat(inventoryItem.total_damaged) + payloadItem.quantity,
             id: inventoryItem.id,
@@ -189,7 +187,7 @@ class ProductInvService extends AbstractServices {
           modifyInventoryProduct.map(async (item) => {
             await PModel.updateInInventory(
               {
-                available_quantity: item.available_quantity,
+                quantity: item.quantity,
                 total_damaged: item.total_damaged,
               },
 

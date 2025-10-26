@@ -176,7 +176,7 @@ class PurchaseInventoryModel extends Schema {
     payload: {
       hotel_code: number;
       product_id: number;
-      available_quantity: number;
+      quantity: number;
     }[]
   ) {
     return await this.db("inventory")
@@ -187,7 +187,7 @@ class PurchaseInventoryModel extends Schema {
   // update in inventory
   public async updateInInventory(
     payload: {
-      available_quantity?: number;
+      quantity?: number;
       total_damaged?: number;
       quantity_used?: number;
     },

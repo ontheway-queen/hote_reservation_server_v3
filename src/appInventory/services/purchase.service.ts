@@ -164,13 +164,13 @@ class PurchaseInvService extends AbstractServices {
       // Inventory step
       const modifyInventoryProduct: {
         id: number;
-        available_quantity: number;
+        quantity: number;
       }[] = [];
 
       const addedInventoryProduct: {
         hotel_code: number;
         product_id: number;
-        available_quantity: number;
+        quantity: number;
       }[] = [];
 
       const purchase_product_ids = purchase_items.map(
@@ -188,15 +188,13 @@ class PurchaseInvService extends AbstractServices {
         );
         if (inventoryItem) {
           modifyInventoryProduct.push({
-            available_quantity:
-              parseFloat(inventoryItem.available_quantity) +
-              payloadItem.quantity,
+            quantity: parseFloat(inventoryItem.quantity) + payloadItem.quantity,
             id: inventoryItem.id,
           });
         } else {
           addedInventoryProduct.push({
             hotel_code,
-            available_quantity: payloadItem.quantity,
+            quantity: payloadItem.quantity,
             product_id: payloadItem.product_id,
           });
         }
@@ -210,7 +208,7 @@ class PurchaseInvService extends AbstractServices {
         await Promise.all(
           modifyInventoryProduct.map(async (item) => {
             await pInvModel.updateInInventory(
-              { available_quantity: item.available_quantity },
+              { quantity: item.quantity },
               { id: item.id }
             );
           })
