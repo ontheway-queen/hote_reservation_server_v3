@@ -169,14 +169,14 @@ class RestaurantOrderService extends AbstractServices {
             );
           }
 
-          // const newQuantity =
-          //   Number(inventoryItem.quantity) - Number(item.quantity);
+          const newQuantity =
+            Number(inventoryItem.sold_quantity) + Number(item.quantity);
           await restaurantFoodModel.updateStocks({
             where: {
               food_id: inventoryItem.food_id,
               stock_date: new Date().toISOString().split("T")[0],
             },
-            payload: { sold_quantity: Number(item.quantity) },
+            payload: { sold_quantity: newQuantity },
           });
         }
       }
@@ -979,6 +979,8 @@ class RestaurantOrderService extends AbstractServices {
         restaurant_id,
       });
 
+      console.log({ existingOrder });
+
       if (!existingOrder) {
         return {
           success: false,
@@ -1075,6 +1077,8 @@ class RestaurantOrderService extends AbstractServices {
               stock_date: new Date().toISOString().split("T")[0],
             }
           );
+
+          console.log({ stock });
           if (stock) {
             const restoredQty =
               Number(stock.sold_quantity) - Number(old.quantity);
@@ -1085,6 +1089,8 @@ class RestaurantOrderService extends AbstractServices {
           }
         }
       }
+
+      console.log({ order_items }, "end");
 
       // Deduct new stock
       for (const item of order_items) {
@@ -1133,6 +1139,8 @@ class RestaurantOrderService extends AbstractServices {
               stock_date: new Date().toISOString().split("T")[0],
             }
           );
+
+          console.log({ stock });
           if (!stock) {
             throw new CustomError(
               `Stock not found for food ID ${item.food_id}.`,
@@ -1147,6 +1155,7 @@ class RestaurantOrderService extends AbstractServices {
           }
 
           const newQty = Number(stock.sold_quantity) + Number(item.quantity);
+          console.log(stock.sold_quantity, item.quantity, "adsf");
           await restaurantFoodModel.updateStocks({
             where: { food_id: stock.food_id, stock_date: stock.stock_date },
             payload: { sold_quantity: newQty },

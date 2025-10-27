@@ -139,14 +139,13 @@ class RestaurantOrderService extends abstract_service_1.default {
                         if (Number(inventoryItem.quantity) < Number(item.quantity)) {
                             throw new customEror_1.default(`Insufficient stock for food ID ${item.food_id}.`, this.StatusCode.HTTP_CONFLICT);
                         }
-                        // const newQuantity =
-                        //   Number(inventoryItem.quantity) - Number(item.quantity);
+                        const newQuantity = Number(inventoryItem.sold_quantity) + Number(item.quantity);
                         yield restaurantFoodModel.updateStocks({
                             where: {
                                 food_id: inventoryItem.food_id,
                                 stock_date: new Date().toISOString().split("T")[0],
                             },
-                            payload: { sold_quantity: Number(item.quantity) },
+                            payload: { sold_quantity: newQuantity },
                         });
                     }
                 }
@@ -794,6 +793,7 @@ class RestaurantOrderService extends abstract_service_1.default {
                     hotel_code,
                     restaurant_id,
                 });
+                console.log({ existingOrder });
                 if (!existingOrder) {
                     return {
                         success: false,
@@ -872,6 +872,7 @@ class RestaurantOrderService extends abstract_service_1.default {
                             food_id: food.id,
                             stock_date: new Date().toISOString().split("T")[0],
                         });
+                        console.log({ stock });
                         if (stock) {
                             const restoredQty = Number(stock.sold_quantity) - Number(old.quantity);
                             yield restaurantFoodModel.updateStocks({
@@ -881,6 +882,7 @@ class RestaurantOrderService extends abstract_service_1.default {
                         }
                     }
                 }
+                console.log({ order_items }, "end");
                 // Deduct new stock
                 for (const item of order_items) {
                     const food = foodItems.data.find((f) => f.id === item.food_id);
@@ -917,6 +919,7 @@ class RestaurantOrderService extends abstract_service_1.default {
                             food_id: item.food_id,
                             stock_date: new Date().toISOString().split("T")[0],
                         });
+                        console.log({ stock });
                         if (!stock) {
                             throw new customEror_1.default(`Stock not found for food ID ${item.food_id}.`, this.StatusCode.HTTP_NOT_FOUND);
                         }
@@ -924,6 +927,7 @@ class RestaurantOrderService extends abstract_service_1.default {
                             throw new customEror_1.default(`Insufficient stock for food ID ${item.food_id}.`, this.StatusCode.HTTP_CONFLICT);
                         }
                         const newQty = Number(stock.sold_quantity) + Number(item.quantity);
+                        console.log(stock.sold_quantity, item.quantity, "adsf");
                         yield restaurantFoodModel.updateStocks({
                             where: { food_id: stock.food_id, stock_date: stock.stock_date },
                             payload: { sold_quantity: newQty },
