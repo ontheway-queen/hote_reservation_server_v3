@@ -286,84 +286,145 @@ class RestaurantFoodService extends abstract_service_1.default {
     }
     wastageFood(req) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { restaurant_id, hotel_code, id } = req.restaurant_admin;
-            const { food_id, quantity, type, remarks, stock_date } = req.body;
-            const restaurantFoodModel = this.restaurantModel.restaurantFoodModel();
-            const foodDetails = yield restaurantFoodModel.getFood({
-                id: food_id,
-                hotel_code,
-                restaurant_id,
-            });
-            if (!foodDetails) {
-                throw new customEror_1.default(`Food with ID ${food_id} not found.`, this.StatusCode.HTTP_NOT_FOUND);
-            }
-            if (type == "wastage") {
+            return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
+                const { restaurant_id, hotel_code, id } = req.restaurant_admin;
+                const { id: stockId } = req.params;
+                const { quantity, type, remarks, transfer_date } = req.body;
+                console.log(req.body);
+                const restaurantFoodModel = this.restaurantModel.restaurantFoodModel(trx);
+                const stocksData = yield restaurantFoodModel.getStocks({
+                    hotel_code,
+                    restaurant_id,
+                    id: Number(stockId),
+                });
+                if (stocksData[0].available_stock < quantity) {
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_BAD_REQUEST,
+                        message: `You cannot ${type} more than available stock`,
+                    };
+                }
+                const foodDetails = yield restaurantFoodModel.getFood({
+                    id: stocksData[0].food_id,
+                    hotel_code,
+                    restaurant_id,
+                });
+                const { id: food_id } = foodDetails;
+                if (!foodDetails) {
+                    throw new customEror_1.default(`Food with ID ${food_id} not found.`, this.StatusCode.HTTP_NOT_FOUND);
+                }
                 if (foodDetails.recipe_type !== "non-ingredients") {
                     throw new customEror_1.default(`Food with ID ${food_id} is not of 'non-ingredients' recipe type.`, this.StatusCode.HTTP_BAD_REQUEST);
                 }
-                // insert in wastage
-                yield restaurantFoodModel.insertInWastage([
-                    {
-                        restaurant_id,
-                        created_by: id,
-                        food_id,
-                        hotel_code,
-                        quantity,
-                        remarks,
-                        wastage_date: new Date().toISOString().split("T")[0],
-                    },
-                ]);
-                const stocksData = yield this.restaurantModel
-                    .restaurantFoodModel()
-                    .getStocks({
-                    hotel_code,
-                    restaurant_id,
-                    stock_date: req.query.date,
-                });
-                yield restaurantFoodModel.updateStocks({
-                    payload: {
-                        wastage_quantity: Number(stocksData[0].wastage_quantity) + quantity,
-                    },
-                    where: {
-                        food_id,
-                        stock_date: new Date().toISOString().split("T")[0],
-                    },
-                });
-            }
-            else {
-                const existInStock = yield restaurantFoodModel.getSingleStockWithFoodAndDate({
-                    food_id: food_id,
-                    hotel_code,
-                    restaurant_id,
-                    stock_date: new Date().toISOString(),
-                });
-                if (existInStock) {
-                    const nowQuantity = Number(existInStock.received_quantity) + quantity;
+                if (type == "wastage") {
+                    // insert in wastage
+                    yield restaurantFoodModel.insertInWastage([
+                        {
+                            restaurant_id,
+                            created_by: id,
+                            food_id,
+                            hotel_code,
+                            quantity,
+                            remarks,
+                            wastage_date: new Date().toISOString().split("T")[0],
+                        },
+                    ]);
                     yield restaurantFoodModel.updateStocks({
                         payload: {
-                            received_quantity: nowQuantity,
+                            wastage_quantity: Number(stocksData[0].wastage_quantity) + quantity,
                         },
                         where: {
                             food_id,
-                            stock_date,
+                            id: Number(stockId),
                         },
                     });
                 }
-            }
-            // insertStockPayload.push({
-            //   food_id: item.food_id,
-            //   quantity: item.quantity,
-            //   hotel_code,
-            //   restaurant_id,
-            //   stock_date: new Date().toISOString(),
-            //   created_by: req.restaurant_admin.id,
-            // });
-            // insert into stock
-            // await restaurantFoodModel.insertInStocks(insertStockPayload);
+                else {
+                    if (!transfer_date) {
+                        return {
+                            success: false,
+                            code: this.StatusCode.HTTP_BAD_REQUEST,
+                            message: "Stock ID not provided",
+                        };
+                    }
+                    const existInStock = yield restaurantFoodModel.getSingleStockWithFoodAndDate({
+                        food_id: food_id,
+                        hotel_code,
+                        restaurant_id,
+                        stock_date: transfer_date,
+                    });
+                    if (existInStock) {
+                        const nowQuantity = Number(existInStock.received_quantity) + quantity;
+                        // increase received quantity
+                        yield restaurantFoodModel.updateStocks({
+                            payload: {
+                                received_quantity: nowQuantity,
+                            },
+                            where: {
+                                food_id,
+                                stock_date: transfer_date,
+                            },
+                        });
+                        // increase transfer quantity
+                        yield restaurantFoodModel.updateStocks({
+                            payload: {
+                                transfered_quantity: Number(stocksData[0].transfered_quantity) + quantity,
+                            },
+                            where: {
+                                id: Number(stockId),
+                            },
+                        });
+                    }
+                    else {
+                        // increase transfer quantity
+                        yield restaurantFoodModel.updateStocks({
+                            payload: {
+                                transfered_quantity: Number(stocksData[0].transfered_quantity) + quantity,
+                            },
+                            where: {
+                                food_id,
+                                id: Number(stockId),
+                            },
+                        });
+                        // insert in stock if not exist
+                        yield restaurantFoodModel.insertInStocks([
+                            {
+                                food_id: food_id,
+                                quantity: 0,
+                                hotel_code,
+                                restaurant_id,
+                                stock_date: transfer_date,
+                                created_by: id,
+                                received_quantity: quantity,
+                            },
+                        ]);
+                    }
+                }
+                return {
+                    success: true,
+                    code: this.StatusCode.HTTP_OK,
+                    message: "Stock hasbeen updated",
+                };
+            }));
+        });
+    }
+    getWastageFood(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { data, total } = yield this.restaurantModel
+                .restaurantFoodModel()
+                .getWastage({
+                hotel_code: req.restaurant_admin.hotel_code,
+                restaurant_id: req.restaurant_admin.restaurant_id,
+                limit: Number(req.query.limit),
+                skip: Number(req.query.skip),
+                from_date: req.query.from_date,
+                to_date: req.query.to_date,
+            });
             return {
                 success: true,
-                code: this.StatusCode.HTTP_SUCCESSFUL,
-                message: "Prepared food stock inserted successfully.",
+                code: this.StatusCode.HTTP_OK,
+                total,
+                data,
             };
         });
     }
@@ -400,138 +461,6 @@ class RestaurantFoodService extends abstract_service_1.default {
             };
         });
     }
-    // public async updateFood(req: Request) {
-    //   return await this.db.transaction(async (trx) => {
-    //     const { id } = req.params;
-    //     const { restaurant_id, hotel_code } = req.restaurant_admin;
-    //     const food = (req.body as any).food as Partial<IFoodRequest>;
-    //     const ingredients = (req.body as any).ingredients as
-    //       | {
-    //           product_id: number;
-    //           quantity_per_unit: number;
-    //         }[]
-    //       | [];
-    //     const remove_ingredients = (req.body as any).remove_ingredients as
-    //       | number[]
-    //       | [];
-    //     const files = (req.files as Express.Multer.File[]) || [];
-    //     if (Array.isArray(files)) {
-    //       for (const file of files) {
-    //         food.photo = file.filename;
-    //       }
-    //     }
-    //     console.log(1);
-    //     const restaurantFoodModel = this.restaurantModel.restaurantFoodModel(trx);
-    //     const restaurantCategoryModel =
-    //       this.restaurantModel.restaurantCategoryModel(trx);
-    //     const restaurantUnitModel = this.restaurantModel.restaurantUnitModel(trx);
-    //     const inventoryModel = this.Model.inventoryModel(trx);
-    //     const isFoodExists = await restaurantFoodModel.getFood({
-    //       id: Number(id),
-    //       hotel_code,
-    //       restaurant_id,
-    //     });
-    //     if (!isFoodExists) {
-    //       return {
-    //         success: false,
-    //         code: this.StatusCode.HTTP_CONFLICT,
-    //         message: "Food not found.",
-    //       };
-    //     }
-    //     if (food?.menu_category_id) {
-    //       const isMenuCategoryExists =
-    //         await restaurantCategoryModel.getMenuCategories({
-    //           hotel_code,
-    //           restaurant_id,
-    //           id: food.menu_category_id,
-    //         });
-    //       if (isMenuCategoryExists.data.length === 0) {
-    //         return {
-    //           success: false,
-    //           code: this.StatusCode.HTTP_CONFLICT,
-    //           message: "Menu Category not found.",
-    //         };
-    //       }
-    //     }
-    //     if (food?.unit_id) {
-    //       const isUnitExists = await restaurantUnitModel.getUnits({
-    //         hotel_code,
-    //         restaurant_id,
-    //         id: food.unit_id,
-    //       });
-    //       if (isUnitExists.data.length === 0) {
-    //         return {
-    //           success: false,
-    //           code: this.StatusCode.HTTP_CONFLICT,
-    //           message: "Unit not found.",
-    //         };
-    //       }
-    //     }
-    //     if (Array.isArray(ingredients) && ingredients.length > 0) {
-    //       for (const ingredient of ingredients) {
-    //         const isIngredientsExistsInFood =
-    //           await restaurantFoodModel.getFoodIngredients({
-    //             food_id: isFoodExists.id,
-    //             product_id: ingredient.product_id,
-    //           });
-    //         if (isIngredientsExistsInFood.length > 0) {
-    //           await restaurantFoodModel.updateFoodIngredients({
-    //             where: {
-    //               product_id: ingredient.product_id,
-    //               food_id: isFoodExists.id,
-    //             },
-    //             payload: {
-    //               quantity_per_unit: ingredient.quantity_per_unit,
-    //             },
-    //           });
-    //         } else {
-    //           const { data: isIngredientsExists } =
-    //             await inventoryModel.getAllProduct({
-    //               hotel_code,
-    //               pd_ids: [ingredient.product_id],
-    //             });
-    //           if (isIngredientsExists.length === 0) {
-    //             throw new CustomError(
-    //               "Ingredients not found in inventory",
-    //               this.StatusCode.HTTP_NOT_FOUND
-    //             );
-    //           }
-    //           await restaurantFoodModel.insertFoodIngredients({
-    //             food_id: isFoodExists.id,
-    //             product_id: ingredient.product_id,
-    //             quantity_per_unit: ingredient.quantity_per_unit,
-    //           });
-    //         }
-    //       }
-    //     }
-    //     if (Array.isArray(remove_ingredients) && remove_ingredients.length > 0) {
-    //       for (const id of remove_ingredients) {
-    //         const isDeleted = await restaurantFoodModel.deleteFoodIngredients({
-    //           id: id,
-    //           food_id: isFoodExists.id,
-    //         });
-    //         if (isDeleted === 0) {
-    //           throw new CustomError(
-    //             "Ingredient not found for this food.",
-    //             this.StatusCode.HTTP_BAD_REQUEST
-    //           );
-    //         }
-    //       }
-    //     }
-    //     if (food) {
-    //       await restaurantFoodModel.updateFood({
-    //         where: { id: parseInt(id) },
-    //         payload: food,
-    //       });
-    //     }
-    //     return {
-    //       success: true,
-    //       code: this.StatusCode.HTTP_SUCCESSFUL,
-    //       message: "Food updated successfully.",
-    //     };
-    //   });
-    // }
-    // update food v2 like create food v2
     updateFood(req) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {

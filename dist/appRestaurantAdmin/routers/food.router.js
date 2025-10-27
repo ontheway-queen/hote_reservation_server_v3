@@ -16,7 +16,8 @@ class RestaurantFoodRouter extends abstract_router_1.default {
             .route("/")
             .post(this.uploader.cloudUploadRaw(this.fileFolders.RESTAURANT_FILES), this.controller.createFoodV2)
             .get(this.controller.getFoods);
-        this.router.route("/wastage").post(this.controller.insertPreparedFood);
+        this.router.route("/wastage").get(this.controller.getWastageFood);
+        this.router.route("/wastage/:id").post(this.controller.wastageFood);
         this.router.route("/prepared").post(this.controller.insertPreparedFood);
         this.router.route("/ingredients").get(this.controller.getAllProduct);
         this.router.route("/stocks").get(this.controller.geFoodStocks);

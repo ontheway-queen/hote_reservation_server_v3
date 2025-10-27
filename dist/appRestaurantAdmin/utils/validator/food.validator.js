@@ -169,10 +169,10 @@ class RestaurantFoodValidator {
             })),
         });
         this.wastageFoodValidator = joi_1.default.object({
-            food_id: joi_1.default.number().required(),
             remarks: joi_1.default.string().optional(),
             type: joi_1.default.string().allow("transfer", "wastage"),
-            quantity: joi_1.default.number().required(),
+            quantity: joi_1.default.number().required().min(1),
+            transfer_date: joi_1.default.string().optional(),
         });
         this.getFoodsValidator = joi_1.default.object({
             limit: joi_1.default.number().optional(),

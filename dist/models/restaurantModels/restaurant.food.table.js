@@ -46,16 +46,49 @@ class RestaurantFoodModel extends schema_1.default {
                 .insert(payload, "id");
         });
     }
+    getWastage({ hotel_code, restaurant_id, limit, skip, from_date, to_date, }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const data = yield this.db("wastage as w")
+                .withSchema(this.RESTAURANT_SCHEMA)
+                .select("w.id", "w.food_id", "f.name as food_name", "w.quantity", this.db.raw("TO_CHAR(w.wastage_date,'YYYY-MM-DD') as wastage_date"), "w.remarks", "w.created_by", "ua.name as created_by_name")
+                .leftJoin("foods as f", "f.id", "w.food_id")
+                .leftJoin("user_admin as ua", "ua.id", "w.created_by")
+                .where("w.hotel_code", hotel_code)
+                .andWhere("w.restaurant_id", restaurant_id)
+                .andWhere((qb) => {
+                if (from_date && to_date) {
+                    qb.andWhereBetween("w.wastage_date", [from_date, to_date]);
+                }
+            })
+                .orderBy("w.id", "desc")
+                .limit(limit !== null && limit !== void 0 ? limit : 100)
+                .offset(skip !== null && skip !== void 0 ? skip : 0);
+            const countResult = yield this.db("wastage as w")
+                .withSchema(this.RESTAURANT_SCHEMA)
+                .where("w.hotel_code", hotel_code)
+                .andWhere("w.restaurant_id", restaurant_id)
+                .andWhere((qb) => {
+                if (from_date && to_date) {
+                    qb.andWhereBetween("w.wastage_date", [from_date, to_date]);
+                }
+            })
+                .count("w.id as total");
+            const total = Number(countResult[0].total);
+            return { data, total };
+        });
+    }
     getStocks(where) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { hotel_code, restaurant_id, stock_date } = where;
-            // Base query for stocks
+            const { hotel_code, restaurant_id, stock_date, id } = where;
+            // Subquery for stocks
             const stocksSubquery = this.db
-                .select("s.food_id", "s.hotel_code", "s.restaurant_id", "s.quantity", "s.sold_quantity", "s.wastage_quantity", this.db.raw("TO_CHAR(s.stock_date, 'YYYY-MM-DD') as stock_date"))
+                .select("s.id", "s.food_id", "s.hotel_code", "s.restaurant_id", "s.quantity", "s.sold_quantity", "s.wastage_quantity", "s.transfered_quantity", "s.received_quantity", this.db.raw("TO_CHAR(s.stock_date, 'YYYY-MM-DD') as stock_date"))
                 .from("hotel_restaurant.stocks as s")
                 .where("s.hotel_code", hotel_code)
                 .andWhere("s.restaurant_id", restaurant_id)
                 .modify((qb) => {
+                if (id)
+                    qb.andWhere("s.id", id);
                 if (stock_date) {
                     qb.andWhere("s.stock_date", stock_date);
                 }
@@ -68,19 +101,26 @@ class RestaurantFoodModel extends schema_1.default {
                 .as("st");
             // Final main query
             const result = yield this.db
-                .select("f.id as food_id", "f.name", "f.recipe_type", "f.photo", this.db.raw(`
+                .select("st.id as stock_id", "f.id as food_id", "f.name", "f.recipe_type", "f.photo", this.db.raw("COALESCE(st.quantity + st.received_quantity, 0) AS quantity"), this.db.raw(`
         CASE 
           WHEN f.recipe_type IN ('stock', 'ingredient') THEN COALESCE(i.quantity, 0)
-          ELSE COALESCE(st.quantity - st.sold_quantity, 0)
+          ELSE COALESCE(
+            COALESCE(st.quantity, 0)
+            + COALESCE(st.received_quantity, 0)
+            - (
+              COALESCE(st.sold_quantity, 0)
+              + COALESCE(st.wastage_quantity, 0)
+              + COALESCE(st.transfered_quantity, 0)
+            ),
+            0
+          )
         END AS available_stock
       `), this.db.raw(`
         CASE 
           WHEN f.recipe_type IN ('stock', 'ingredient') THEN COALESCE(i.quantity_used, 0)
           ELSE COALESCE(st.sold_quantity, 0)
         END AS quantity_used
-      `), 
-            // wastage_quantity
-            this.db.raw(`
+      `), this.db.raw(`
         CASE 
           WHEN f.recipe_type IN ('stock', 'ingredient') THEN 0
           ELSE COALESCE(st.wastage_quantity, 0)
@@ -90,7 +130,7 @@ class RestaurantFoodModel extends schema_1.default {
           WHEN f.recipe_type IN ('stock', 'ingredient') THEN ''
           ELSE COALESCE(st.stock_date, '')
         END AS stock_date
-      `))
+      `), this.db.raw(`COALESCE(st.transfered_quantity, 0) AS transfered_quantity`), this.db.raw(`COALESCE(st.received_quantity, 0) AS received_quantity`))
                 .from("hotel_restaurant.foods as f")
                 .leftJoin("hotel_inventory.inventory as i", function () {
                 this.on("i.product_id", "=", "f.linked_inventory_item_id")
@@ -114,9 +154,15 @@ class RestaurantFoodModel extends schema_1.default {
             return yield this.db("stocks")
                 .withSchema(this.RESTAURANT_SCHEMA)
                 .update(payload, "id")
-                .where("food_id", where.food_id)
-                .andWhere("stock_date", where.stock_date)
-                .andWhere("is_deleted", false);
+                .where(function () {
+                if (where.stock_date)
+                    this.andWhere("stock_date", where.stock_date);
+                this.andWhere("is_deleted", false);
+                if (where.id)
+                    this.andWhere("id", where.id);
+                if (where.food_id)
+                    this.andWhere("food_id", where.food_id);
+            });
         });
     }
     getSingleStockWithFoodAndDate(where) {

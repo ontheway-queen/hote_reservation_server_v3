@@ -104,4 +104,6 @@ export interface StockItem {
   quantity_used: number;
   stock_date: string;
   wastage_quantity: string;
+  transfered_quantity: number;
+  received_quantity: number;
 }

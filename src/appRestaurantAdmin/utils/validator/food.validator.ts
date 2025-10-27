@@ -181,10 +181,10 @@ class RestaurantFoodValidator {
   });
 
   public wastageFoodValidator = Joi.object({
-    food_id: Joi.number().required(),
     remarks: Joi.string().optional(),
     type: Joi.string().allow("transfer", "wastage"),
-    quantity: Joi.number().required(),
+    quantity: Joi.number().required().min(1),
+    transfer_date: Joi.string().optional(),
   });
 
   public getFoodsValidator = Joi.object({
