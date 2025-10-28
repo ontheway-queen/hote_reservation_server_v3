@@ -63,6 +63,8 @@ class MAdminAuthService extends AbstractServices {
       id: req.admin.id,
     });
     console.log({ data });
+
+    const { password, ...rest } = data[0];
     // const rolePermissionModel = this.Model.mRolePermissionModel();
 
     // const res = await rolePermissionModel.getAdminRolePermission(id);
@@ -100,7 +102,7 @@ class MAdminAuthService extends AbstractServices {
       success: true,
       code: this.StatusCode.HTTP_OK,
       // data: { ...data[0], authorization: output_data },
-      data: { ...data[0] },
+      data: rest,
     };
   }
 
