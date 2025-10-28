@@ -17,6 +17,7 @@ const helperFunction_1 = require("../utlis/library/helperFunction");
 const subreservation_service_1 = require("./subreservation.service");
 const abstract_service_1 = __importDefault(require("../../abstarcts/abstract.service"));
 const lib_1 = __importDefault(require("../../utils/lib/lib"));
+const customEror_1 = __importDefault(require("../../utils/lib/customEror"));
 class ReservationService extends abstract_service_1.default {
     constructor() {
         super();
@@ -584,6 +585,69 @@ class ReservationService extends abstract_service_1.default {
             };
         });
     }
+    // public async checkOut(req: Request) {
+    //   return await this.db.transaction(async (trx) => {
+    //     const hotel_code = req.hotel_admin.hotel_code;
+    //     const booking_id = parseInt(req.params.id);
+    //     const reservationModel = this.Model.reservationModel(trx);
+    //     const sub = new SubReservationService(trx);
+    //     const data = await reservationModel.getSingleBooking(
+    //       hotel_code,
+    //       booking_id
+    //     );
+    //     if (!data) {
+    //       return {
+    //         success: false,
+    //         code: this.StatusCode.HTTP_NOT_FOUND,
+    //         message: this.ResMsg.HTTP_NOT_FOUND,
+    //       };
+    //     }
+    //     const { status, booking_type, booking_rooms, check_in, check_out } = data;
+    //     if (booking_type != "B" && status != "checked_in") {
+    //       return {
+    //         success: false,
+    //         code: this.StatusCode.HTTP_BAD_REQUEST,
+    //         message: "This booking has other status. So, you cannot checkout",
+    //       };
+    //     }
+    //     if (check_out > new Date().toISOString()) {
+    //       return {
+    //         success: false,
+    //         code: this.StatusCode.HTTP_BAD_REQUEST,
+    //         message: `You can only check out when the check-out date is or after ${check_out}`,
+    //       };
+    //     }
+    //     const remainCheckOutRooms: BookingRoom[] = booking_rooms?.filter(
+    //       (room) => room.status !== "checked_out"
+    //     );
+    //     if (remainCheckOutRooms?.length) {
+    //       await sub.updateRoomAvailabilityService({
+    //         reservation_type: "booked_room_decrease",
+    //         rooms: remainCheckOutRooms,
+    //         hotel_code,
+    //       });
+    //     }
+    //     // update reservation
+    //     await reservationModel.updateRoomBooking(
+    //       {
+    //         status: "checked_out",
+    //       },
+    //       hotel_code,
+    //       booking_id
+    //     );
+    //     // update booking rooms status
+    //     await reservationModel.updateAllBookingRoomsByBookingID(
+    //       { status: "checked_out", checked_out_at: new Date().toISOString() },
+    //       { booking_id }
+    //     );
+    //     return {
+    //       success: true,
+    //       code: this.StatusCode.HTTP_OK,
+    //       message: "Successfully Checked out",
+    //     };
+    //   });
+    // }
+    // modified for all check out for 1 night
     checkOut(req) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
@@ -607,13 +671,45 @@ class ReservationService extends abstract_service_1.default {
                         message: "This booking has other status. So, you cannot checkout",
                     };
                 }
-                if (check_out > new Date().toISOString()) {
-                    return {
-                        success: false,
-                        code: this.StatusCode.HTTP_BAD_REQUEST,
-                        message: `You can only check out when the check-out date is or after ${check_out}`,
-                    };
+                const totalNights = lib_1.default.calculateNights(check_in, check_out);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const checkOutDate = new Date(check_out);
+                checkOutDate.setHours(0, 0, 0, 0);
+                const dayBeforeCheckout = new Date(checkOutDate);
+                dayBeforeCheckout.setDate(dayBeforeCheckout.getDate() - 1);
+                if (totalNights > 1) {
+                    if (new Date(check_out) > new Date()) {
+                        console.log("first");
+                        return {
+                            success: false,
+                            code: this.StatusCode.HTTP_BAD_REQUEST,
+                            message: `You can only check out on or after ${check_out}`,
+                        };
+                    }
                 }
+                else {
+                    // logic for same day checkin checkout if 1 night stay, can checkout on check-out date or previous day
+                    if (totalNights == 1 &&
+                        checkOutDate.getTime() !== today.getTime() &&
+                        dayBeforeCheckout.getTime() !== today.getTime()) {
+                        return {
+                            success: false,
+                            code: this.StatusCode.HTTP_BAD_REQUEST,
+                            message: `You can only check out on or after ${check_out}`,
+                        };
+                    }
+                }
+                // if booking room check_in and check_out are different from main booking check_in and check_out
+                // then cannot checkout all rooms together
+                booking_rooms === null || booking_rooms === void 0 ? void 0 : booking_rooms.forEach((room) => {
+                    console.log(room.check_in, room.check_out, "room");
+                    if ((check_in != room.check_in && check_out != room.check_out) ||
+                        (room.check_in == check_in && check_out != room.check_out) ||
+                        (check_in != room.check_in && room.check_out == check_out)) {
+                        throw new customEror_1.default(`Because each room has a different check-in and check-out date, you are unable to check out every room. Please check out each room separately.`, this.StatusCode.HTTP_BAD_REQUEST);
+                    }
+                });
                 const remainCheckOutRooms = booking_rooms === null || booking_rooms === void 0 ? void 0 : booking_rooms.filter((room) => room.status !== "checked_out");
                 if (remainCheckOutRooms === null || remainCheckOutRooms === void 0 ? void 0 : remainCheckOutRooms.length) {
                     yield sub.updateRoomAvailabilityService({
@@ -636,6 +732,97 @@ class ReservationService extends abstract_service_1.default {
             }));
         });
     }
+    // public async individualRoomCheckOut(req: Request) {
+    //   return await this.db.transaction(async (trx) => {
+    //     const hotel_code = req.hotel_admin.hotel_code;
+    //     const booking_id = parseInt(req.params.id);
+    //     const roomID = parseInt(req.params.room_id);
+    //     const reservationModel = this.Model.reservationModel(trx);
+    //     const sub = new SubReservationService(trx);
+    //     const data = await reservationModel.getSingleBooking(
+    //       hotel_code,
+    //       booking_id
+    //     );
+    //     if (!data) {
+    //       return {
+    //         success: false,
+    //         code: this.StatusCode.HTTP_NOT_FOUND,
+    //         message: this.ResMsg.HTTP_NOT_FOUND,
+    //       };
+    //     }
+    //     const { status, booking_type, booking_rooms } = data;
+    //     if (booking_type != "B" && status != "checked_in") {
+    //       return {
+    //         success: false,
+    //         code: this.StatusCode.HTTP_BAD_REQUEST,
+    //         message: "This booking has other status. So, you cannot checkout",
+    //       };
+    //     }
+    //     const singleRoom = await reservationModel.getSingleBookingRoom({
+    //       booking_id,
+    //       room_id: roomID,
+    //     });
+    //     if (!singleRoom) {
+    //       return {
+    //         success: false,
+    //         code: this.StatusCode.HTTP_NOT_FOUND,
+    //         message: this.ResMsg.HTTP_NOT_FOUND,
+    //       };
+    //     }
+    //     const { check_out } = singleRoom;
+    //     if (check_out > new Date().toISOString()) {
+    //       return {
+    //         success: false,
+    //         code: this.StatusCode.HTTP_BAD_REQUEST,
+    //         message: `You can only check out when the check-out date is or after ${check_out}`,
+    //       };
+    //     }
+    //     const checkoutRoom = booking_rooms.find((room) => room.room_id == roomID);
+    //     if (!checkoutRoom) {
+    //       return {
+    //         success: false,
+    //         code: this.StatusCode.HTTP_BAD_REQUEST,
+    //         message: "Room not found by this booking ID",
+    //       };
+    //     }
+    //     // room avaibility decrease
+    //     await sub.updateRoomAvailabilityService({
+    //       reservation_type: "booked_room_decrease",
+    //       rooms: [checkoutRoom],
+    //       hotel_code,
+    //     });
+    //     // update booking rooms status
+    //     await reservationModel.updateSingleBookingRoom(
+    //       { status: "checked_out", checked_out_at: new Date().toISOString() },
+    //       { booking_id, room_id: checkoutRoom.room_id }
+    //     );
+    //     // check all booking rooms are check in or not
+    //     const getSingleBookingRoom = await reservationModel.getSingleBooking(
+    //       hotel_code,
+    //       booking_id
+    //     );
+    //     if (getSingleBookingRoom) {
+    //       const { booking_rooms } = getSingleBookingRoom;
+    //       const isAllCheckout = booking_rooms.every(
+    //         (room) => room.status === "checked_out"
+    //       );
+    //       if (isAllCheckout) {
+    //         // update main booking
+    //         await reservationModel.updateRoomBooking(
+    //           { status: "checked_out" },
+    //           hotel_code,
+    //           booking_id
+    //         );
+    //       }
+    //     }
+    //     return {
+    //       success: true,
+    //       code: this.StatusCode.HTTP_OK,
+    //       message: "Successfully Cheked out",
+    //     };
+    //   });
+    // }
+    // v2
     individualRoomCheckOut(req) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
@@ -679,13 +866,17 @@ class ReservationService extends abstract_service_1.default {
                 checkOutDate.setHours(0, 0, 0, 0);
                 const dayBeforeCheckout = new Date(checkOutDate);
                 dayBeforeCheckout.setDate(dayBeforeCheckout.getDate() - 1);
-                console.log({ totalNights, dayBeforeCheckout, today });
-                if (totalNights == 1 && dayBeforeCheckout.getTime() !== today.getTime()) {
-                    return {
-                        success: false,
-                        code: this.StatusCode.HTTP_BAD_REQUEST,
-                        message: `You can only check out on or after ${check_out}`,
-                    };
+                // here below is the logic for if 1 night stay, can checkout on check-out date or previous day by today date
+                if (totalNights == 1) {
+                    if (checkOutDate.getTime() !== today.getTime() &&
+                        dayBeforeCheckout.getTime() !== today.getTime()) {
+                        console.log("here");
+                        return {
+                            success: false,
+                            code: this.StatusCode.HTTP_BAD_REQUEST,
+                            message: `You can only check out on or after ${check_out}`,
+                        };
+                    }
                 }
                 if (totalNights > 1) {
                     if (new Date(check_out) > new Date()) {
