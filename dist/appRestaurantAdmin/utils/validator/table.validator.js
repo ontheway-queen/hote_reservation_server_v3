@@ -19,6 +19,7 @@ class RestaurantTableValidator {
         });
         this.updateTableValidator = joi_1.default.object({
             name: joi_1.default.string().optional(),
+            capacity: joi_1.default.number().optional(),
             category: joi_1.default.string().valid("in-dine", "takeout", "delivery").optional(),
         });
     }

@@ -16,6 +16,7 @@ class RestaurantTableValidator {
 
   public updateTableValidator = Joi.object({
     name: Joi.string().optional(),
+    capacity: Joi.number().optional(),
     category: Joi.string().valid("in-dine", "takeout", "delivery").optional(),
   });
 }
