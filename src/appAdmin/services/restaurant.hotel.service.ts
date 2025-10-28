@@ -12,6 +12,7 @@ import {
   IUpdateRestaurantPayload,
   IUpdateRestaurantUserAdminPayload,
 } from "../utlis/interfaces/restaurant.hotel.interface";
+import { IcreateRolePermission } from "../../appRestaurantAdmin/utils/interface/res.admin.interface";
 
 class HotelRestaurantService extends AbstractServices {
   constructor() {
@@ -79,19 +80,6 @@ class HotelRestaurantService extends AbstractServices {
         }
       }
 
-      const adminEmailExists =
-        await restaurantAdminModel.getAllRestaurantAdminEmail({
-          email: user.email,
-          hotel_code,
-        });
-
-      if (adminEmailExists) {
-        return {
-          success: false,
-          code: this.StatusCode.HTTP_CONFLICT,
-          message: "Restaurant Admin's email already exists with this hotel.",
-        };
-      }
       const hashPass = await Lib.hashPass(user.password);
 
       // get account heads parentID
@@ -130,6 +118,15 @@ class HotelRestaurantService extends AbstractServices {
         created_by: admin_id,
       });
 
+      // create role
+      const [roleRes] = await restaurantAdminModel.createRole({
+        hotel_code,
+        res_id: newRestaurant.id,
+        name: "Restaurant Admin",
+        created_by: admin_id,
+        init_role: true,
+      });
+
       // Need to check the role and permission before creating the admin user & restaurant.
       await restaurantAdminModel.createRestaurantAdmin({
         restaurant_id: newRestaurant.id,
@@ -138,11 +135,41 @@ class HotelRestaurantService extends AbstractServices {
         name: user.name,
         photo: user.photo,
         phone: user.phone,
-        role_id: user.role,
+        role_id: roleRes.id,
         password: hashPass,
         created_by: admin_id,
         owner: true,
       });
+
+      const getAllResPermisson =
+        await restaurantAdminModel.getHotelAllResPermissionByHotel({
+          hotel_code,
+        });
+
+      if (!getAllResPermisson.length) {
+        return {
+          success: false,
+          code: this.StatusCode.HTTP_NOT_FOUND,
+          message: "No permission found to assign the role",
+        };
+      }
+
+      if (getAllResPermisson && getAllResPermisson.length > 0) {
+        const permissionPayload: IcreateRolePermission[] =
+          getAllResPermisson.map((perm) => ({
+            role_id: roleRes.id,
+            res_permission_id: perm.id,
+            read: 1,
+            write: 1,
+            update: 1,
+            delete: 1,
+            hotel_code,
+            created_by: admin_id,
+          }));
+        await restaurantAdminModel.insertInRolePermission(permissionPayload);
+      }
+
+      console.log(req.body);
 
       if (staffs) {
         for (const staff of staffs) {

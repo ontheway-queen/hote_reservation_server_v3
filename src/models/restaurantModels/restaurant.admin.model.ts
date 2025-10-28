@@ -136,6 +136,24 @@ class HotelRestaurantAdminModel extends Schema {
       });
   }
 
+  public async getAllResPermission(payload: { ids?: number[] }) {
+    const { ids } = payload;
+    return await this.db("permissions AS p")
+      .withSchema(this.RESTAURANT_SCHEMA)
+      .select(
+        "p.id AS permission_id",
+        "p.name As permission_name",
+        "p.permission_group_id",
+        "pg.name AS permission_group_name"
+      )
+      .join("permission_group AS pg", "p.permission_group_id", "pg.id")
+      .where(function () {
+        if (ids?.length) {
+          this.whereIn("p.id", ids);
+        }
+      });
+  }
+
   public async getResPermissionViewByHotel({
     hotel_code,
   }: {

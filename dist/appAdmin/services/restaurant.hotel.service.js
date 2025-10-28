@@ -67,17 +67,6 @@ class HotelRestaurantService extends abstract_service_1.default {
                         };
                     }
                 }
-                const adminEmailExists = yield restaurantAdminModel.getAllRestaurantAdminEmail({
-                    email: user.email,
-                    hotel_code,
-                });
-                if (adminEmailExists) {
-                    return {
-                        success: false,
-                        code: this.StatusCode.HTTP_CONFLICT,
-                        message: "Restaurant Admin's email already exists with this hotel.",
-                    };
-                }
                 const hashPass = yield lib_1.default.hashPass(user.password);
                 // get account heads parentID
                 const hotelModel = this.Model.HotelModel(trx);
@@ -104,6 +93,14 @@ class HotelRestaurantService extends abstract_service_1.default {
                     },
                 });
                 const [newRestaurant] = yield restaurantModel.createRestaurant(Object.assign(Object.assign({}, restaurant), { hotel_code, created_by: admin_id }));
+                // create role
+                const [roleRes] = yield restaurantAdminModel.createRole({
+                    hotel_code,
+                    res_id: newRestaurant.id,
+                    name: "Restaurant Admin",
+                    created_by: admin_id,
+                    init_role: true,
+                });
                 // Need to check the role and permission before creating the admin user & restaurant.
                 yield restaurantAdminModel.createRestaurantAdmin({
                     restaurant_id: newRestaurant.id,
@@ -112,11 +109,35 @@ class HotelRestaurantService extends abstract_service_1.default {
                     name: user.name,
                     photo: user.photo,
                     phone: user.phone,
-                    role_id: user.role,
+                    role_id: roleRes.id,
                     password: hashPass,
                     created_by: admin_id,
                     owner: true,
                 });
+                const getAllResPermisson = yield restaurantAdminModel.getHotelAllResPermissionByHotel({
+                    hotel_code,
+                });
+                if (!getAllResPermisson.length) {
+                    return {
+                        success: false,
+                        code: this.StatusCode.HTTP_NOT_FOUND,
+                        message: "No permission found to assign the role",
+                    };
+                }
+                if (getAllResPermisson && getAllResPermisson.length > 0) {
+                    const permissionPayload = getAllResPermisson.map((perm) => ({
+                        role_id: roleRes.id,
+                        res_permission_id: perm.id,
+                        read: 1,
+                        write: 1,
+                        update: 1,
+                        delete: 1,
+                        hotel_code,
+                        created_by: admin_id,
+                    }));
+                    yield restaurantAdminModel.insertInRolePermission(permissionPayload);
+                }
+                console.log(req.body);
                 if (staffs) {
                     for (const staff of staffs) {
                         const checkEmployee = yield employeeModel.getSingleEmployee(staff, hotel_code);

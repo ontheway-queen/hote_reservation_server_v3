@@ -95,6 +95,20 @@ class HotelRestaurantAdminModel extends schema_1.default {
             });
         });
     }
+    getAllResPermission(payload) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { ids } = payload;
+            return yield this.db("permissions AS p")
+                .withSchema(this.RESTAURANT_SCHEMA)
+                .select("p.id AS permission_id", "p.name As permission_name", "p.permission_group_id", "pg.name AS permission_group_name")
+                .join("permission_group AS pg", "p.permission_group_id", "pg.id")
+                .where(function () {
+                if (ids === null || ids === void 0 ? void 0 : ids.length) {
+                    this.whereIn("p.id", ids);
+                }
+            });
+        });
+    }
     getResPermissionViewByHotel({ hotel_code, }) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db("restaurant_permission_view")
