@@ -137,7 +137,6 @@ class HotelRestaurantService extends abstract_service_1.default {
                     }));
                     yield restaurantAdminModel.insertInRolePermission(permissionPayload);
                 }
-                console.log(req.body);
                 if (staffs) {
                     for (const staff of staffs) {
                         const checkEmployee = yield employeeModel.getSingleEmployee(staff, hotel_code);

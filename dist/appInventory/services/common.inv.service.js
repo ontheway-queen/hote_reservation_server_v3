@@ -171,14 +171,14 @@ class CommonInvService extends abstract_service_1.default {
                 // Category name check
                 const Model = this.Model.CommonInventoryModel(trx);
                 const { data } = yield Model.getAllUnit({
-                    key: name || short_code,
+                    key: short_code,
                     hotel_code,
                 });
                 if (data.length) {
                     return {
                         success: false,
                         code: this.StatusCode.HTTP_CONFLICT,
-                        message: "Unit name already exists",
+                        message: "Unit short code already exists",
                     };
                 }
                 yield Model.createUnit({

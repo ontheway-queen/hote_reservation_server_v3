@@ -72,7 +72,7 @@ Respected dear <strong>${name},</strong><p>
       <br/>
         Welcome to the web world of Restaurant! Your Restaurant account has been created successfully.</p>
         <br/>
-        <p><strong>Web Link: </strong> <a href="https://www.restaurant.hotel360.world/" target="_blank">https://www.restaurant.hotel360.world/</a></p> <br/>
+        <p><strong>Web Link: </strong> <a href="https://restaurant.thehotel360.com" target="_blank">https://restaurant.thehotel360.com/</a></p> <br/>
       <p>You can now access your account using the following credentials:</p>
       <p><strong>Email: </strong>${email}</p>
       <p><strong>Password: </strong> ${password}</p>

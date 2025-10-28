@@ -102,7 +102,7 @@ class CommonInventoryModel extends schema_1.default {
     // Get All Unit
     getAllUnit(payload) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { limit, skip, key, status, hotel_code, excludeId } = payload;
+            const { limit, skip, key, status, hotel_code, excludeId, short_code } = payload;
             const dtbs = this.db("units as u");
             if (limit && skip) {
                 dtbs.limit(parseInt(limit));
@@ -120,6 +120,10 @@ class CommonInventoryModel extends schema_1.default {
                     this.andWhere((qb) => {
                         qb.where("u.name", "like", `%${key}%`).orWhere("u.short_code", "like", `%${key}%`);
                     });
+                }
+                // by lowercase and equal not like
+                if (short_code) {
+                    this.whereRaw("LOWER(u.short_code) = ?", [short_code.toLowerCase()]);
                 }
                 if (status) {
                     this.andWhere("u.status", "like", `%${status}%`);

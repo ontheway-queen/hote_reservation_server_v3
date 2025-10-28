@@ -183,7 +183,7 @@ class CommonInvService extends AbstractServices {
       const Model = this.Model.CommonInventoryModel(trx);
 
       const { data } = await Model.getAllUnit({
-        key: name || (short_code as string),
+        key: short_code as string,
         hotel_code,
       });
 
@@ -191,7 +191,7 @@ class CommonInvService extends AbstractServices {
         return {
           success: false,
           code: this.StatusCode.HTTP_CONFLICT,
-          message: "Unit name already exists",
+          message: "Unit short code already exists",
         };
       }
 

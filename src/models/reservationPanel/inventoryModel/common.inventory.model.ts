@@ -114,11 +114,13 @@ class CommonInventoryModel extends Schema {
     limit?: string;
     skip?: string;
     key: string;
+    short_code?: string;
     status?: string;
     hotel_code: number;
     excludeId?: number;
   }): Promise<{ data: IGetCommonInv[]; total: number }> {
-    const { limit, skip, key, status, hotel_code, excludeId } = payload;
+    const { limit, skip, key, status, hotel_code, excludeId, short_code } =
+      payload;
 
     const dtbs = this.db("units as u");
 
@@ -150,6 +152,11 @@ class CommonInventoryModel extends Schema {
               `%${key}%`
             );
           });
+        }
+
+        // by lowercase and equal not like
+        if (short_code) {
+          this.whereRaw("LOWER(u.short_code) = ?", [short_code.toLowerCase()]);
         }
 
         if (status) {

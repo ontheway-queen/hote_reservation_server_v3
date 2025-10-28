@@ -169,8 +169,6 @@ class HotelRestaurantService extends AbstractServices {
         await restaurantAdminModel.insertInRolePermission(permissionPayload);
       }
 
-      console.log(req.body);
-
       if (staffs) {
         for (const staff of staffs) {
           const checkEmployee = await employeeModel.getSingleEmployee(
