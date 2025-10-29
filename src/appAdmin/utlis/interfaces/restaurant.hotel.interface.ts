@@ -39,6 +39,7 @@ export interface IRestaurantPayload {
   city?: string | null;
   country?: string | null;
   bin_no?: bigint;
+  is_prepare_food_enabled?: boolean;
 }
 
 export interface IRestaurantUserAdminPayload {

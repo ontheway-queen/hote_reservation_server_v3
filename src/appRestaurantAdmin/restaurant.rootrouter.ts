@@ -1,14 +1,15 @@
 import { Router } from "express";
 import AuthChecker from "../common/middleware/authChecker/authChecker";
+import ResConfigurationRouter from "./routers/configuration.router";
 import RestaurantFoodRouter from "./routers/food.router";
 import RestaurantMenuCategoryRouter from "./routers/menuCategory.router";
 import RestaurantOrderRouter from "./routers/order.router";
 import RestaurantReportRouter from "./routers/report.router";
+import ResAdministrationRouter from "./routers/res.administration.router";
 import HotelRouter from "./routers/res.hotel.router";
 import RestaurantTableRouter from "./routers/restaurantTable.router";
 import RestaurantStaffRouter from "./routers/staff.routers";
 import RestaurantUnitRouter from "./routers/unit.router";
-import ResAdministrationRouter from "./routers/res.administration.router";
 
 export class RestaurantRootRouter {
   public router = Router();
@@ -23,6 +24,12 @@ export class RestaurantRootRouter {
       "/administration",
       this.authChecker.hotelRestaurantAuthChecker,
       new ResAdministrationRouter().router
+    );
+
+    this.router.use(
+      "/configuration",
+      this.authChecker.hotelRestaurantAuthChecker,
+      new ResConfigurationRouter().router
     );
 
     this.router.use(

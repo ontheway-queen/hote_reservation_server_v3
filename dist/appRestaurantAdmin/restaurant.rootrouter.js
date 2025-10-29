@@ -6,15 +6,16 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.RestaurantRootRouter = void 0;
 const express_1 = require("express");
 const authChecker_1 = __importDefault(require("../common/middleware/authChecker/authChecker"));
+const configuration_router_1 = __importDefault(require("./routers/configuration.router"));
 const food_router_1 = __importDefault(require("./routers/food.router"));
 const menuCategory_router_1 = __importDefault(require("./routers/menuCategory.router"));
 const order_router_1 = __importDefault(require("./routers/order.router"));
 const report_router_1 = __importDefault(require("./routers/report.router"));
+const res_administration_router_1 = __importDefault(require("./routers/res.administration.router"));
 const res_hotel_router_1 = __importDefault(require("./routers/res.hotel.router"));
 const restaurantTable_router_1 = __importDefault(require("./routers/restaurantTable.router"));
 const staff_routers_1 = __importDefault(require("./routers/staff.routers"));
 const unit_router_1 = __importDefault(require("./routers/unit.router"));
-const res_administration_router_1 = __importDefault(require("./routers/res.administration.router"));
 class RestaurantRootRouter {
     constructor() {
         this.router = (0, express_1.Router)();
@@ -23,6 +24,7 @@ class RestaurantRootRouter {
     }
     callRouter() {
         this.router.use("/administration", this.authChecker.hotelRestaurantAuthChecker, new res_administration_router_1.default().router);
+        this.router.use("/configuration", this.authChecker.hotelRestaurantAuthChecker, new configuration_router_1.default().router);
         this.router.use("/table", this.authChecker.hotelRestaurantAuthChecker, new restaurantTable_router_1.default().router);
         this.router.use("/menu-category", this.authChecker.hotelRestaurantAuthChecker, new menuCategory_router_1.default().router);
         this.router.use("/hotel", this.authChecker.hotelRestaurantAuthChecker, new res_hotel_router_1.default().router);
