@@ -51,12 +51,16 @@ class HotelRestaurantReportController extends abstract_controller_1.default {
             const _e = yield this.service.getSalesChart(req), { code } = _e, data = __rest(_e, ["code"]);
             res.status(code).json(data);
         }));
+        this.getProductCategoryWiseReport = this.asyncWrapper.wrap(null, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _f = yield this.service.getProductCategoryWiseReport(req), { code } = _f, data = __rest(_f, ["code"]);
+            res.status(code).json(data);
+        }));
         this.getSalesReport = this.asyncWrapper.wrap({ querySchema: this.validator.getRestaurantSalesReport }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _f = yield this.service.getSalesReport(req), { code } = _f, data = __rest(_f, ["code"]);
+            const _g = yield this.service.getSalesReport(req), { code } = _g, data = __rest(_g, ["code"]);
             res.status(code).json(data);
         }));
         this.getUserSalesReport = this.asyncWrapper.wrap({ querySchema: this.validator.getUsersSaleReportValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _g = yield this.service.getUserSalesReport(req), { code } = _g, data = __rest(_g, ["code"]);
+            const _h = yield this.service.getUserSalesReport(req), { code } = _h, data = __rest(_h, ["code"]);
             res.status(code).json(data);
         }));
     }

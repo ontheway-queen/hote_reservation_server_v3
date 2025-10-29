@@ -17,6 +17,9 @@ class HotelRestaurantReportRouter extends abstract_router_1.default {
         this.router
             .route("/daily-order-counts")
             .get(this.controller.getDailyOrderCounts);
+        this.router
+            .route("/products-category-report")
+            .get(this.controller.getProductCategoryWiseReport);
         this.router.route("/sales-chart").get(this.controller.getSalesChart);
         this.router
             .route("/products-report")

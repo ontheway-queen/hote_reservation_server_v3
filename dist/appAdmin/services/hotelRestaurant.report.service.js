@@ -89,6 +89,24 @@ class HotelRestaurantReportService extends abstract_service_1.default {
             };
         });
     }
+    getProductCategoryWiseReport(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { hotel_code } = req.hotel_admin;
+            const data = yield this.restaurantModel
+                .restaurantReportModel()
+                .getProductCategoryWiseReport({
+                hotel_code,
+                restaurant_id: Number(req.query.restaurant_id),
+                from_date: req.query.from_date,
+                to_date: req.query.to_date,
+            });
+            return {
+                success: true,
+                code: this.StatusCode.HTTP_OK,
+                data,
+            };
+        });
+    }
     getSalesChart(req) {
         return __awaiter(this, void 0, void 0, function* () {
             const { hotel_code } = req.hotel_admin;

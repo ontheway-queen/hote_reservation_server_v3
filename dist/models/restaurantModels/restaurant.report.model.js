@@ -159,6 +159,42 @@ class RestaurantReportModel extends schema_1.default {
             return result;
         });
     }
+    getProductCategoryWiseReport(query) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { hotel_code, restaurant_id, from_date, to_date } = query;
+            const db = this.db;
+            const result = yield db
+                .withSchema(this.RESTAURANT_SCHEMA)
+                .select("mc.id as category_id", "mc.name as category_name", db.raw(`COALESCE(SUM(oi.quantity), 0) AS total_sold_quantity`), this.db.raw("COALESCE(SUM(oi.quantity * oi.rate), 0) as total_sales_amount"))
+                .from("menu_categories as mc")
+                .leftJoin("foods as f", function () {
+                this.on("f.menu_category_id", "=", "mc.id").andOn("f.is_deleted", "=", db.raw("false"));
+            })
+                .leftJoin("order_items as oi", function () {
+                this.on("oi.food_id", "=", "f.id").andOn("oi.is_deleted", "=", db.raw("false"));
+            })
+                .leftJoin("orders as o", function () {
+                this.on("o.id", "=", "oi.order_id")
+                    .andOn("o.status", "=", db.raw(`'completed'`))
+                    .andOn("o.hotel_code", "=", db.raw("?", [hotel_code]))
+                    .andOn("o.restaurant_id", "=", db.raw("?", [restaurant_id]));
+            })
+                .where("mc.hotel_code", hotel_code)
+                .andWhere("mc.restaurant_id", restaurant_id)
+                .andWhere(function () {
+                if (from_date && to_date) {
+                    const endDate = new Date(new Date(to_date).setDate(new Date(to_date).getDate() + 1));
+                    this.whereRaw(`o.created_at::date BETWEEN ? AND ?`, [
+                        from_date,
+                        endDate,
+                    ]);
+                }
+            })
+                .groupBy("mc.id", "mc.name")
+                .orderBy("total_sold_quantity", "desc");
+            return result;
+        });
+    }
     getSalesChart(query) {
         return __awaiter(this, void 0, void 0, function* () {
             const { from_date, to_date, hotel_code, restaurant_id } = query;

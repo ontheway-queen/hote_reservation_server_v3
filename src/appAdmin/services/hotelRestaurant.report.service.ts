@@ -89,6 +89,25 @@ class HotelRestaurantReportService extends AbstractServices {
     };
   }
 
+  public async getProductCategoryWiseReport(req: Request) {
+    const { hotel_code } = req.hotel_admin;
+
+    const data = await this.restaurantModel
+      .restaurantReportModel()
+      .getProductCategoryWiseReport({
+        hotel_code,
+        restaurant_id: Number(req.query.restaurant_id as string),
+        from_date: req.query.from_date as string,
+        to_date: req.query.to_date as string,
+      });
+
+    return {
+      success: true,
+      code: this.StatusCode.HTTP_OK,
+      data,
+    };
+  }
+
   public async getSalesChart(req: Request) {
     const { hotel_code } = req.hotel_admin;
 

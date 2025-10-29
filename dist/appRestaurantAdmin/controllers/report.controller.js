@@ -43,16 +43,20 @@ class RestaurantReportController extends abstract_controller_1.default {
             const _c = yield this.service.getProductsReport(req), { code } = _c, data = __rest(_c, ["code"]);
             res.status(code).json(data);
         }));
+        this.getProductCategoryWiseReport = this.asyncWrapper.wrap(null, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _d = yield this.service.getProductCategoryWiseReport(req), { code } = _d, data = __rest(_d, ["code"]);
+            res.status(code).json(data);
+        }));
         this.getSalesChart = this.asyncWrapper.wrap({ querySchema: this.validator.getDailyReportValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _d = yield this.service.getSalesChart(req), { code } = _d, data = __rest(_d, ["code"]);
+            const _e = yield this.service.getSalesChart(req), { code } = _e, data = __rest(_e, ["code"]);
             res.status(code).json(data);
         }));
         this.getSalesReport = this.asyncWrapper.wrap({ querySchema: this.validator.getDailyReportValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _e = yield this.service.getSalesReport(req), { code } = _e, data = __rest(_e, ["code"]);
+            const _f = yield this.service.getSalesReport(req), { code } = _f, data = __rest(_f, ["code"]);
             res.status(code).json(data);
         }));
         this.getUserSalesReport = this.asyncWrapper.wrap({ querySchema: this.validator.getUsersSaleReportValidator }, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _f = yield this.service.getUserSalesReport(req), { code } = _f, data = __rest(_f, ["code"]);
+            const _g = yield this.service.getUserSalesReport(req), { code } = _g, data = __rest(_g, ["code"]);
             res.status(code).json(data);
         }));
     }

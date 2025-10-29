@@ -8,12 +8,13 @@ class RestaurantReportService extends AbstractServices {
 
   public async getOrderInfo(req: Request) {
     const { hotel_code, restaurant_id } = req.restaurant_admin;
-    const model = this.restaurantModel.restaurantReportModel();
 
-    const data = await model.getOrderInfo({
-      hotel_code,
-      restaurant_id,
-    });
+    const data = await this.restaurantModel
+      .restaurantReportModel()
+      .getOrderInfo({
+        hotel_code,
+        restaurant_id,
+      });
 
     return {
       success: true,
@@ -24,16 +25,17 @@ class RestaurantReportService extends AbstractServices {
 
   public async getDailyOrderCounts(req: Request) {
     const { hotel_code, restaurant_id } = req.restaurant_admin;
-    const model = this.restaurantModel.restaurantReportModel();
 
     const { from_date, to_date } = req.query;
 
-    const data = await model.getDailyOrderCounts({
-      hotel_code,
-      restaurant_id,
-      to_date: to_date as string,
-      from_date: from_date as string,
-    });
+    const data = await this.restaurantModel
+      .restaurantReportModel()
+      .getDailyOrderCounts({
+        hotel_code,
+        restaurant_id,
+        to_date: to_date as string,
+        from_date: from_date as string,
+      });
 
     return {
       success: true,
@@ -48,6 +50,25 @@ class RestaurantReportService extends AbstractServices {
     const data = await this.restaurantModel
       .restaurantReportModel()
       .getProductsReport({
+        hotel_code,
+        restaurant_id,
+        from_date: req.query.from_date as string,
+        to_date: req.query.to_date as string,
+      });
+
+    return {
+      success: true,
+      code: this.StatusCode.HTTP_OK,
+      data,
+    };
+  }
+
+  public async getProductCategoryWiseReport(req: Request) {
+    const { hotel_code, restaurant_id } = req.restaurant_admin;
+
+    const data = await this.restaurantModel
+      .restaurantReportModel()
+      .getProductCategoryWiseReport({
         hotel_code,
         restaurant_id,
         from_date: req.query.from_date as string,

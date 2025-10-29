@@ -20,8 +20,9 @@ class RestaurantReportService extends abstract_service_1.default {
     getOrderInfo(req) {
         return __awaiter(this, void 0, void 0, function* () {
             const { hotel_code, restaurant_id } = req.restaurant_admin;
-            const model = this.restaurantModel.restaurantReportModel();
-            const data = yield model.getOrderInfo({
+            const data = yield this.restaurantModel
+                .restaurantReportModel()
+                .getOrderInfo({
                 hotel_code,
                 restaurant_id,
             });
@@ -35,9 +36,10 @@ class RestaurantReportService extends abstract_service_1.default {
     getDailyOrderCounts(req) {
         return __awaiter(this, void 0, void 0, function* () {
             const { hotel_code, restaurant_id } = req.restaurant_admin;
-            const model = this.restaurantModel.restaurantReportModel();
             const { from_date, to_date } = req.query;
-            const data = yield model.getDailyOrderCounts({
+            const data = yield this.restaurantModel
+                .restaurantReportModel()
+                .getDailyOrderCounts({
                 hotel_code,
                 restaurant_id,
                 to_date: to_date,
@@ -52,6 +54,24 @@ class RestaurantReportService extends abstract_service_1.default {
             const data = yield this.restaurantModel
                 .restaurantReportModel()
                 .getProductsReport({
+                hotel_code,
+                restaurant_id,
+                from_date: req.query.from_date,
+                to_date: req.query.to_date,
+            });
+            return {
+                success: true,
+                code: this.StatusCode.HTTP_OK,
+                data,
+            };
+        });
+    }
+    getProductCategoryWiseReport(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { hotel_code, restaurant_id } = req.restaurant_admin;
+            const data = yield this.restaurantModel
+                .restaurantReportModel()
+                .getProductCategoryWiseReport({
                 hotel_code,
                 restaurant_id,
                 from_date: req.query.from_date,

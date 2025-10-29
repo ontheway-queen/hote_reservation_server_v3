@@ -51,6 +51,16 @@ class HotelRestaurantReportController extends AbstractController {
     }
   );
 
+  public getProductCategoryWiseReport = this.asyncWrapper.wrap(
+    null,
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.getProductCategoryWiseReport(
+        req
+      );
+      res.status(code).json(data);
+    }
+  );
+
   public getSalesReport = this.asyncWrapper.wrap(
     { querySchema: this.validator.getRestaurantSalesReport },
     async (req: Request, res: Response) => {

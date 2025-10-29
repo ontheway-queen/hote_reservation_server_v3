@@ -22,6 +22,9 @@ class RestaurantReportRouter extends abstract_router_1.default {
             .route("/products-report")
             .get(this.controller.getProductsReport);
         this.router
+            .route("/products-category-report")
+            .get(this.controller.getProductCategoryWiseReport);
+        this.router
             .route("/user-sales-report")
             .get(this.controller.getUserSalesReport);
     }
