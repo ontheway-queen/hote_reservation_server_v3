@@ -31,7 +31,7 @@ class RestaurantConfigurationService extends abstract_service_1.default {
                 return {
                     success: true,
                     code: this.StatusCode.HTTP_OK,
-                    message: "Prepare food option updated",
+                    message: `Prepare food option ${req.body.is_prepare_food_enabled ? "enabled" : "disabled"} successfully.`,
                 };
             }));
         });

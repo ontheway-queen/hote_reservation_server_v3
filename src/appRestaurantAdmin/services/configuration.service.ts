@@ -1,9 +1,5 @@
 import { Request } from "express";
 import AbstractServices from "../../abstarcts/abstract.service";
-import {
-  IUnitRequest,
-  IUpdateUnitRequest,
-} from "../utils/interface/unit.interface";
 
 class RestaurantConfigurationService extends AbstractServices {
   constructor() {
@@ -26,7 +22,9 @@ class RestaurantConfigurationService extends AbstractServices {
       return {
         success: true,
         code: this.StatusCode.HTTP_OK,
-        message: "Prepare food option updated",
+        message: `Prepare food option ${
+          req.body.is_prepare_food_enabled ? "enabled" : "disabled"
+        } successfully.`,
       };
     });
   }
