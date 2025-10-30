@@ -28,10 +28,10 @@ class SupplierController extends AbstractController {
     }
   );
 
-  public getAllSupplierPaymentById = this.asyncWrapper.wrap(
+  public getSingleSupplierPaymentById = this.asyncWrapper.wrap(
     null,
     async (req: Request, res: Response) => {
-      const { code, ...data } = await this.service.getAllSupplierPaymentById(
+      const { code, ...data } = await this.service.getSingleSupplierPaymentById(
         req
       );
 
@@ -88,7 +88,19 @@ class SupplierController extends AbstractController {
   public getAllSupplierTransaction = this.asyncWrapper.wrap(
     {},
     async (req: Request, res: Response) => {
-      const { code, ...data } = await this.service.getAllSupplierPayment(req);
+      const { code, ...data } = await this.service.getAllSupplierTransaction(
+        req
+      );
+      res.status(code).json(data);
+    }
+  );
+
+  public getSingleSupplierTransaction = this.asyncWrapper.wrap(
+    {},
+    async (req: Request, res: Response) => {
+      const { code, ...data } = await this.service.getSingleSupplierTransaction(
+        req
+      );
       res.status(code).json(data);
     }
   );

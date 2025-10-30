@@ -52,18 +52,19 @@ class SupplierService extends AbstractServices {
     };
   }
 
-  public async getAllSupplierPaymentById(req: Request) {
+  public async getSingleSupplierPaymentById(req: Request) {
     const { hotel_code } = req.hotel_admin;
     const { limit, skip, key, from_date, to_date } = req.query;
 
     const { data, total } =
-      await this.Model.supplierModel().getAllSupplierPaymentById({
+      await this.Model.supplierModel().getSingleSupplierPaymentById({
         key: key as string,
         from_date: from_date as string,
         to_date: to_date as string,
         limit: limit as string,
         skip: skip as string,
         hotel_code,
+        sup_id: Number(req.params.id as string),
       });
     return {
       success: true,
@@ -732,10 +733,54 @@ class SupplierService extends AbstractServices {
   }
 
   public async getAllSupplierPayment(req: Request) {
-    const { key, from_date, to_date, limit, skip } = req.query;
+    const { key, from_date, to_date, limit, skip, supplier_id } = req.query;
 
     const { data, total } =
       await this.Model.supplierModel().getAllSupplierPayment({
+        key: key as string,
+        from_date: from_date as string,
+        to_date: to_date as string,
+        limit: limit as string,
+        skip: skip as string,
+        supplier_id: supplier_id as string,
+        hotel_code: req.hotel_admin.hotel_code,
+      });
+
+    return {
+      success: true,
+      code: this.StatusCode.HTTP_OK,
+      total,
+      data,
+    };
+  }
+
+  public async getAllSupplierTransaction(req: Request) {
+    const { key, from_date, to_date, limit, skip, supplier_id } = req.query;
+
+    const { data, total } =
+      await this.Model.supplierModel().getAllSupplierTransaction({
+        key: key as string,
+        from_date: from_date as string,
+        to_date: to_date as string,
+        limit: limit as string,
+        skip: skip as string,
+        supplier_id: supplier_id as string,
+        hotel_code: req.hotel_admin.hotel_code,
+      });
+
+    return {
+      success: true,
+      code: this.StatusCode.HTTP_OK,
+      total,
+      data,
+    };
+  }
+
+  public async getSingleSupplierTransaction(req: Request) {
+    const { key, from_date, to_date, limit, skip } = req.query;
+    const { data, total } =
+      await this.Model.supplierModel().getSingleSupplierTransactionById({
+        supplier_id: Number(req.params.id as string),
         key: key as string,
         from_date: from_date as string,
         to_date: to_date as string,

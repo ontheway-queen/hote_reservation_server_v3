@@ -1233,14 +1233,6 @@ class RestaurantOrderService extends AbstractServices {
         finalGuestName = customer_name ?? existingOrder.guest_name;
         finalBookingId = undefined;
       } else if (order_type === "reservation") {
-        if (!booking_id) {
-          return {
-            success: false,
-            code: this.StatusCode.HTTP_BAD_REQUEST,
-            message: "Please provide booking ID for reservation guest.",
-          };
-        }
-
         finalGuestName = customer_name ?? existingOrder.guest_name;
         finalBookingId = booking_id;
       }

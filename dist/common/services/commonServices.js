@@ -25,6 +25,7 @@ class CommonService extends abstract_service_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.db.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
                 const { email, type } = req.body;
+                console.log({ type });
                 switch (type) {
                     case constants_1.OTP_TYPE_FORGET_M_ADMIN:
                         // const adminModel = this.Model.mUserAdminModel(trx);
@@ -79,14 +80,11 @@ class CommonService extends abstract_service_1.default {
                     default:
                         break;
                 }
-                console.log(1);
                 const commonModel = this.Model.commonModel(trx);
-                console.log(2);
                 const checkOtp = yield commonModel.getOTP({
                     email: email,
                     type: type,
                 });
-                console.log(3);
                 if (checkOtp.length) {
                     return {
                         success: false,
@@ -149,13 +147,11 @@ class CommonService extends abstract_service_1.default {
                     };
                 }
                 const otpValidation = yield lib_1.default.compare(otp, hashed_otp);
-                console.log({ otpValidation });
                 if (otpValidation) {
                     yield commonModel.updateOTP({
                         tried: tried + 1,
                         matched: 1,
                     }, { id: email_otp_id });
-                    console.log({ type });
                     let secret = config_1.default.JWT_SECRET_HOTEL_ADMIN;
                     switch (type) {
                         case constants_1.OTP_TYPE_FORGET_M_ADMIN:
@@ -163,9 +159,6 @@ class CommonService extends abstract_service_1.default {
                             break;
                         case constants_1.OTP_TYPE_FORGET_HOTEL_ADMIN:
                             secret = config_1.default.JWT_SECRET_HOTEL_ADMIN;
-                            break;
-                        case constants_1.OTP_TYPE_FORGET_RES_ADMIN:
-                            secret = config_1.default.JWT_SECRET_H_RESTURANT;
                             break;
                         case constants_1.OTP_TYPE_FORGET_BTOC_USER:
                             secret = config_1.default.JWT_SECRET_H_USER;

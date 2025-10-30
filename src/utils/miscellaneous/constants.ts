@@ -2,6 +2,7 @@ import config from "../../config/config";
 
 export const origin: string[] = [
   "http://localhost:3000",
+  "http://localhost:3001",
   "http://10.10.220.47:3030",
   "http://10.10.220.47:3000",
   "http://10.10.220.147:3000",
@@ -9,6 +10,7 @@ export const origin: string[] = [
   "http://localhost:4050",
   "http://localhost:4060",
   "http://10.10.220.147:4050",
+  "http://10.10.220.128:3001",
   "https://admin-v3.hotel360.world",
   "https://www.admin-v3.hotel360.world",
   "https://v3.hotel360.world",
@@ -103,7 +105,6 @@ export const DIVIDEND_GROUP = "6000";
 export const OTP_TYPE_FORGET_M_ADMIN = "forget_m_admin";
 export const OTP_TYPE_FORGET_HOTEL_ADMIN = "forget_h_admin";
 export const OTP_TYPE_FORGET_BTOC_USER = "forget_btoc_user";
-export const OTP_TYPE_FORGET_RES_ADMIN = "forget_res_admin";
 export const OTP_TYPE_FORGET_RESTAURANT_ADMIN = "forget_restaurant_admin";
 
 // Send OTP Email subject

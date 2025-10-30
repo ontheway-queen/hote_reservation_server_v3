@@ -58,17 +58,18 @@ class SupplierService extends abstract_service_1.default {
             };
         });
     }
-    getAllSupplierPaymentById(req) {
+    getSingleSupplierPaymentById(req) {
         return __awaiter(this, void 0, void 0, function* () {
             const { hotel_code } = req.hotel_admin;
             const { limit, skip, key, from_date, to_date } = req.query;
-            const { data, total } = yield this.Model.supplierModel().getAllSupplierPaymentById({
+            const { data, total } = yield this.Model.supplierModel().getSingleSupplierPaymentById({
                 key: key,
                 from_date: from_date,
                 to_date: to_date,
                 limit: limit,
                 skip: skip,
                 hotel_code,
+                sup_id: Number(req.params.id),
             });
             return {
                 success: true,
@@ -597,8 +598,49 @@ class SupplierService extends abstract_service_1.default {
     }
     getAllSupplierPayment(req) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { key, from_date, to_date, limit, skip } = req.query;
+            const { key, from_date, to_date, limit, skip, supplier_id } = req.query;
             const { data, total } = yield this.Model.supplierModel().getAllSupplierPayment({
+                key: key,
+                from_date: from_date,
+                to_date: to_date,
+                limit: limit,
+                skip: skip,
+                supplier_id: supplier_id,
+                hotel_code: req.hotel_admin.hotel_code,
+            });
+            return {
+                success: true,
+                code: this.StatusCode.HTTP_OK,
+                total,
+                data,
+            };
+        });
+    }
+    getAllSupplierTransaction(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { key, from_date, to_date, limit, skip, supplier_id } = req.query;
+            const { data, total } = yield this.Model.supplierModel().getAllSupplierTransaction({
+                key: key,
+                from_date: from_date,
+                to_date: to_date,
+                limit: limit,
+                skip: skip,
+                supplier_id: supplier_id,
+                hotel_code: req.hotel_admin.hotel_code,
+            });
+            return {
+                success: true,
+                code: this.StatusCode.HTTP_OK,
+                total,
+                data,
+            };
+        });
+    }
+    getSingleSupplierTransaction(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { key, from_date, to_date, limit, skip } = req.query;
+            const { data, total } = yield this.Model.supplierModel().getSingleSupplierTransactionById({
+                supplier_id: Number(req.params.id),
                 key: key,
                 from_date: from_date,
                 to_date: to_date,

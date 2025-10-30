@@ -39,8 +39,8 @@ class SupplierController extends abstract_controller_1.default {
             const _b = yield this.service.getAllSupplier(req), { code } = _b, data = __rest(_b, ["code"]);
             res.status(code).json(data);
         }));
-        this.getAllSupplierPaymentById = this.asyncWrapper.wrap(null, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _c = yield this.service.getAllSupplierPaymentById(req), { code } = _c, data = __rest(_c, ["code"]);
+        this.getSingleSupplierPaymentById = this.asyncWrapper.wrap(null, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _c = yield this.service.getSingleSupplierPaymentById(req), { code } = _c, data = __rest(_c, ["code"]);
             res.status(code).json(data);
         }));
         this.getAllSupplierInvoiceById = this.asyncWrapper.wrap(null, (req, res) => __awaiter(this, void 0, void 0, function* () {
@@ -66,7 +66,11 @@ class SupplierController extends abstract_controller_1.default {
             res.status(code).json(data);
         }));
         this.getAllSupplierTransaction = this.asyncWrapper.wrap({}, (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const _j = yield this.service.getAllSupplierPayment(req), { code } = _j, data = __rest(_j, ["code"]);
+            const _j = yield this.service.getAllSupplierTransaction(req), { code } = _j, data = __rest(_j, ["code"]);
+            res.status(code).json(data);
+        }));
+        this.getSingleSupplierTransaction = this.asyncWrapper.wrap({}, (req, res) => __awaiter(this, void 0, void 0, function* () {
+            const _k = yield this.service.getSingleSupplierTransaction(req), { code } = _k, data = __rest(_k, ["code"]);
             res.status(code).json(data);
         }));
     }
